@@ -29,9 +29,3 @@ jobs:
 
     - name: Run tests with the target-cpu feature
       run: cargo test --features target-cpu
-
-    - name: Build benches
-      run: |
-        cd benches
-        cargo bench dummy # `cargo build` will not actually build it
-        cd ..
