@@ -170,7 +170,7 @@ StartPipelineFn build_pipeline(StageList* stages, void** ip);
 
 extern "C" {
 bool skia_pipe_raster_build_pipeline(StageList *stages, void** ip);
-void skia_pipe_raster_run_pipeline(void** program, bool is_highp, size_t x, size_t y, size_t w, size_t h);
+void skia_pipe_raster_run_pipeline(void** program, bool is_highp, unsigned int x, unsigned int y, unsigned int w, unsigned int h);
 }
 
 #endif //SkRasterPipeline_DEFINED

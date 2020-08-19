@@ -40,7 +40,7 @@ But not just any compiler. You **must** use `clang` (or `clang-cl` on Windows).
 Skia doesn't support any other compilers, so all optimizations will be simply disabled.
 
 You don't need to select the `clang` compiler manually.
-The build script will do this automatically (as long a you have it in the PATH).
+The build script will do this automatically (as long as you have it in the PATH).
 
 The are no other build dependencies.
 

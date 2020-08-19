@@ -44,7 +44,7 @@ bool skia_pipe_raster_build_pipeline(StageList *stages, void** ip)
     return fn == SkOpts::start_pipeline_highp;
 }
 
-void skia_pipe_raster_run_pipeline(void** program, bool is_highp, size_t x, size_t y, size_t w, size_t h)
+void skia_pipe_raster_run_pipeline(void** program, bool is_highp, unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 {
     if (is_highp) {
         SkOpts::start_pipeline_highp(x, y, x+w, y+h, program);

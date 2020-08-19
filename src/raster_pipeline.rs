@@ -15,8 +15,6 @@ pub mod ffi {
 
     use std::ffi::c_void;
 
-    pub type size_t = ::std::os::raw::c_ulong;
-
     #[repr(C)]
     #[derive(Copy, Clone)]
     pub struct skia_pipe_stage_list {
@@ -49,10 +47,10 @@ pub mod ffi {
         pub fn skia_pipe_raster_run_pipeline(
             program: *const *mut c_void,
             is_highp: bool,
-            x: size_t,
-            y: size_t,
-            w: size_t,
-            h: size_t,
+            x: u32,
+            y: u32,
+            w: u32,
+            h: u32,
         );
     }
 }
@@ -339,10 +337,10 @@ impl RasterPipeline {
             ffi::skia_pipe_raster_run_pipeline(
                 self.program.as_ptr(),
                 self.is_highp,
-                rect.x() as ffi::size_t,
-                rect.y() as ffi::size_t,
-                rect.width().get() as ffi::size_t,
-                rect.height().get() as ffi::size_t,
+                rect.x() as u32,
+                rect.y() as u32,
+                rect.width().get() as u32,
+                rect.height().get() as u32,
             );
         }
     }
