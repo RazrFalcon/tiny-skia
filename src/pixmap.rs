@@ -105,6 +105,7 @@ impl Pixmap {
     }
 
     /// Returns a mutable slice of pixels.
+    #[cfg(feature = "png-format")]
     #[inline]
     pub(crate) fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
         unsafe {

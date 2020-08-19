@@ -1,31 +1,27 @@
 name: Rust
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os:
+          - ubuntu-18.04
+          - macos-10.15
         rust:
-          - stable
           - 1.36.0
+          - stable
     steps:
     - name: Checkout
       uses: actions/checkout@v2
 
     - name: Build without default features
-      run: cargo build --no-default-features
+      run: cargo build --verbose --no-default-features
 
     - name: Run tests
-      run: cargo test
-
-    - name: Run tests with the target-cpu feature
-      run: cargo test --features target-cpu
+      run: cargo test --verbose

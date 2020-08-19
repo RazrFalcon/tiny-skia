@@ -42,6 +42,7 @@ fn main() {
 
     #[cfg(not(target_os = "windows"))]
     {
+        build.flag("-std=c++11");
         build.flag("-nostdlib");
         build.flag("-fno-exceptions");
         build.flag("-fno-rtti");
