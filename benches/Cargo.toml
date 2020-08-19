@@ -1,0 +1,24 @@
+[package]
+name = "benchmarks"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+bencher = "0.1.5"
+tiny-skia = { path = "../", features = ["target-cpu"] }
+skia-rs = { path = "../testing-tools/skia-rs" }
+raqote = { version = "0.8", default-features = false }
+# Do not upgrade, because 0.9 uses proc-macros now and it's too slow to compile.
+# And it should not affect the performance anyway, since we are using the system library anyway.
+cairo-rs = { version = "0.8", default-features = false }
+png = "0.16.6"
+
+[[bench]]
+name = "blend"
+path = "blend.rs"
+harness = false
+
+[[bench]]
+name = "png_io"
+path = "png_io.rs"
+harness = false

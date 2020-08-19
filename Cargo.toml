@@ -1,0 +1,34 @@
+[package]
+name = "tiny-skia"
+version = "0.2.0"
+authors = ["Evgeniy Reizner <razrfalcon@gmail.com>"]
+edition = "2018"
+description = "A stripped down Skia fork that supports only 2D shapes rendering on a CPU."
+documentation = "https://docs.rs/tiny-skia/"
+readme = "README.md"
+repository = "https://github.com/RazrFalcon/tiny-skia"
+license = "BSD-3-Clause"
+keywords = ["2d", "rendering", "skia"]
+categories = ["rendering"]
+
+[dependencies]
+checked-geom = { git = "https://github.com/RazrFalcon/checked-geom", rev = "ad21f79" }
+memmap2 = { version = "0.1", optional = true }
+num-ext = { git = "https://github.com/RazrFalcon/num-ext", rev = "32f46bd" }
+pathfinder_simd = "0.5"
+png = { version = "0.16.6", optional = true }
+
+[build-dependencies]
+cc = "1.0"
+
+[features]
+default = ["png-format"]
+
+# Allows loading and saving `Pixmap` as PNG.
+png-format = ["png", "memmap2"]
+
+# Passes `-march=native` to clang.
+# Depending on a CPU, can increase the rendering performance up to 2x.
+# Makes the binary non-portable.
+# This is the prefered way of building the library.
+target-cpu = []

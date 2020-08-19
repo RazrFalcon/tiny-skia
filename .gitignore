@@ -1,0 +1,6 @@
+/target
+Cargo.lock
+.directory
+.idea
+*.iml
+/image.png
