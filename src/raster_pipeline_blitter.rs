@@ -61,12 +61,17 @@ impl RasterPipelineBlitter {
         }
 
         // When we're drawing a constant color in Source mode, we can sometimes just memset.
-        let memset2d_color = if blend_mode == BlendMode::Source {
+        let mut memset2d_color = None;
+        if blend_mode == BlendMode::Source {
             // TODO: will be affected by a shader and dither later on
-            Some(paint.color.premultiply().to_color_u8())
-        } else {
-            None
+            memset2d_color = Some(paint.color.premultiply().to_color_u8());
         };
+
+        // Clear is just a transparent color memset.
+        if blend_mode == BlendMode::Clear {
+            blend_mode = BlendMode::Source;
+            memset2d_color = Some(PremultipliedColorU8::TRANSPARENT);
+        }
 
         let dst_ctx = raster_pipeline::ffi::sk_raster_pipeline_memory_ctx {
             pixels: pixmap.data().as_ptr() as _,

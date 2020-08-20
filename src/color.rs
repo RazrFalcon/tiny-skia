@@ -114,9 +114,12 @@ impl std::fmt::Debug for ColorU8 {
 pub struct PremultipliedColorU8(u32);
 
 impl PremultipliedColorU8 {
+    /// A transparent color.
+    pub const TRANSPARENT: Self = PremultipliedColorU8::from_rgba_unchecked(0, 0, 0, 0);
+
     /// Creates a new color.
     #[inline]
-    pub(crate) fn from_rgba_unchecked(r: u8, g: u8, b: u8, a: u8) -> Self {
+    pub(crate) const fn from_rgba_unchecked(r: u8, g: u8, b: u8, a: u8) -> Self {
         PremultipliedColorU8(pack_rgba(r, g, b, a))
     }
 

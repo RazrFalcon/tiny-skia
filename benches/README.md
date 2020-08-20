@@ -11,7 +11,7 @@ Benchmarking is hard... (c)
 ### Blending modes
 
 ```
-test clear_tiny_skia            ... bench:     264,217 ns/iter (+/- 3,245)
+test clear_tiny_skia            ... bench:      43,649 ns/iter (+/- 429)
 test clear_skia                 ... bench:      50,203 ns/iter (+/- 1,209)
 test clear_cairo                ... bench:      62,331 ns/iter (+/- 758)
 test clear_raqote               ... bench:   1,043,659 ns/iter (+/- 259,923)
