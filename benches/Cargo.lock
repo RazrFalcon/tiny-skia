@@ -84,9 +84,9 @@ checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 [[package]]
 name = "checked-geom"
 version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/checked-geom?rev=6ed8c7f#6ed8c7f8400db6c7617f805c6d4eb438cb3e9ada"
+source = "git+https://github.com/RazrFalcon/checked-geom?rev=7d9d2c6#7d9d2c6566eb62cd52539caac97f3227ae99925e"
 dependencies = [
- "num-ext",
+ "num-ext 0.1.0 (git+https://github.com/RazrFalcon/num-ext?rev=720051c)",
 ]
 
 [[package]]
@@ -170,6 +170,11 @@ checksum = "791daaae1ed6889560f8c4359194f56648355540573244a5448a83ba1ecc7435"
 dependencies = [
  "adler32",
 ]
+
+[[package]]
+name = "num-ext"
+version = "0.1.0"
+source = "git+https://github.com/RazrFalcon/num-ext?rev=32f46bd#32f46bd581932bfa5955c651ed11702ecc8306e7"
 
 [[package]]
 name = "num-ext"
@@ -282,7 +287,7 @@ dependencies = [
  "cc",
  "checked-geom",
  "memmap2",
- "num-ext",
+ "num-ext 0.1.0 (git+https://github.com/RazrFalcon/num-ext?rev=32f46bd)",
  "pathfinder_simd",
  "png 0.16.7",
 ]

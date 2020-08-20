@@ -44,3 +44,43 @@ impl Point {
         self.x == 0.0 && self.y == 0.0
     }
 }
+
+impl std::ops::Add for Point {
+    type Output = Point;
+
+    #[inline]
+    fn add(self, other: Point) -> Self::Output {
+        Point::from_xy(
+            self.x + other.x,
+            self.y + other.y,
+        )
+    }
+}
+
+impl std::ops::AddAssign for Point {
+    #[inline]
+    fn add_assign(&mut self, other: Point) {
+        self.x += other.x;
+        self.y += other.y;
+    }
+}
+
+impl std::ops::Mul for Point {
+    type Output = Point;
+
+    #[inline]
+    fn mul(self, other: Point) -> Self::Output {
+        Point::from_xy(
+            self.x * other.x,
+            self.y * other.y,
+        )
+    }
+}
+
+impl std::ops::MulAssign for Point {
+    #[inline]
+    fn mul_assign(&mut self, other: Point) {
+        self.x *= other.x;
+        self.y *= other.y;
+    }
+}

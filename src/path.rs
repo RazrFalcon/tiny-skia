@@ -4,7 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, PathBuilder, Bounds};
+use crate::{Point, PathBuilder, Bounds, Transform};
+
+use crate::checked_geom_ext::BoundsExt;
 
 const SCALAR_MAX: f32 = 3.402823466e+38;
 
@@ -57,6 +59,53 @@ impl Path {
     #[inline]
     pub fn bounds(&self) -> Bounds {
         self.bounds
+    }
+
+    /// Returns a transformed in-place path.
+    ///
+    /// Some points may become NaN/inf therefore this method can fail.
+    pub fn transform(mut self, ts: &Transform) -> Option<Self> {
+        // TODO: use SIMD
+
+        if ts.is_identity() {
+            return Some(self);
+        }
+
+        if ts.is_translate() {
+            let tp = Point::from_xy(ts.get_translate_x().get(), ts.get_translate_y().get());
+            for p in &mut self.points {
+                *p += tp;
+            }
+        } else if ts.is_scale() {
+            let sp = Point::from_xy(ts.get_scale_x().get(), ts.get_scale_y().get());
+            for p in &mut self.points {
+                *p *= sp;
+            }
+        } else if ts.is_scale_translate() {
+            let tp = Point::from_xy(ts.get_translate_x().get(), ts.get_translate_y().get());
+            let sp = Point::from_xy(ts.get_scale_x().get(), ts.get_scale_y().get());
+            for p in &mut self.points {
+                *p = *p * sp + tp;
+            }
+        } else {
+            let sx = ts.get_scale_x().get();
+            let sy = ts.get_scale_y().get();
+            let kx = ts.get_skew_x().get();
+            let ky = ts.get_skew_y().get();
+            let tx = ts.get_translate_x().get();
+            let ty = ts.get_translate_y().get();
+
+            for p in &mut self.points {
+                let x = p.x * sx + p.y * kx + tx;
+                let y = p.y * ky + p.y * sy + ty;
+                *p = Point::from_xy(x, y);
+            }
+        }
+
+        // Update bounds.
+        self.bounds = Bounds::from_points(&self.points)?;
+
+        Some(self)
     }
 
     /// Sometimes in the drawing pipeline, we have to perform math on path coordinates, even after

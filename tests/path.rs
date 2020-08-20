@@ -198,3 +198,60 @@ fn ver_line() {
         PathSegment::Line(Point::from_xy(10.0, 20.0)),
     ]);
 }
+
+#[test]
+fn translate() {
+    let mut pb = PathBuilder::new();
+    pb.move_to(10.0, 20.0);
+    pb.line_to(30.0, 40.0);
+    let mut path = pb.finish().unwrap();
+
+    path = path.transform(&Transform::from_translate(10.0, 20.0).unwrap()).unwrap();
+
+    assert_eq!(path.segments().collect::<Vec<_>>(), &[
+        PathSegment::Move(Point::from_xy(20.0, 40.0)),
+        PathSegment::Line(Point::from_xy(40.0, 60.0)),
+    ]);
+}
+
+#[test]
+fn scale() {
+    let mut pb = PathBuilder::new();
+    pb.move_to(10.0, 20.0);
+    pb.line_to(30.0, 40.0);
+    let mut path = pb.finish().unwrap();
+
+    path = path.transform(&Transform::from_scale(2.0, 0.5).unwrap()).unwrap();
+
+    assert_eq!(path.segments().collect::<Vec<_>>(), &[
+        PathSegment::Move(Point::from_xy(20.0, 10.0)),
+        PathSegment::Line(Point::from_xy(60.0, 20.0)),
+    ]);
+}
+
+#[test]
+fn transform() {
+    let mut pb = PathBuilder::new();
+    pb.move_to(10.0, 20.0);
+    pb.line_to(30.0, 40.0);
+    let mut path = pb.finish().unwrap();
+
+    path = path.transform(&Transform::from_row(2.0, 0.3, 0.7, 0.5, 10.0, 20.0).unwrap()).unwrap();
+
+    assert_eq!(path.segments().collect::<Vec<_>>(), &[
+        PathSegment::Move(Point::from_xy(36.0, 44.0)),
+        PathSegment::Line(Point::from_xy(82.0, 68.0)),
+    ]);
+}
+
+
+#[test]
+fn invalid_transform() {
+    let mut pb = PathBuilder::new();
+    pb.move_to(10.0, 20.0);
+    pb.line_to(30.0, 40.0);
+    let path = pb.finish().unwrap();
+
+    // will produce infinity
+    assert_eq!(path.transform(&Transform::from_scale(std::f32::MAX, std::f32::MAX).unwrap()), None);
+}
