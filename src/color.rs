@@ -202,7 +202,7 @@ impl std::fmt::Debug for PremultipliedColorU8 {
 
 /// RGBA color value, holding four floating point components.
 ///
-/// The container guarantees that all values are in a 0..=1 range.
+/// The container guarantees that all components are in a 0..=1 range.
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Color {
     r: NormalizedF32,
@@ -282,7 +282,7 @@ impl Color {
 
     /// Converts into a premultiplied color.
     #[inline]
-    pub(crate) fn premultiply(&self) -> PremultipliedColor {
+    pub fn premultiply(&self) -> PremultipliedColor {
         if self.is_opaque() {
             PremultipliedColor {
                 r: self.r,
@@ -311,7 +311,8 @@ impl Color {
 
 /// Premultiplied RGBA color value, holding four floating point components.
 ///
-/// Color components are always in a known order, and are *premultiplied*.
+/// The container guarantees that all components are in a 0..=1 range.
+/// And RGB components are <= A.
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct PremultipliedColor {
     r: NormalizedF32,
@@ -321,26 +322,31 @@ pub struct PremultipliedColor {
 }
 
 impl PremultipliedColor {
+    /// Returns color's red component.
     #[inline]
     pub fn red(&self) -> NormalizedF32 {
         self.r
     }
 
+    /// Returns color's green component.
     #[inline]
     pub fn green(&self) -> NormalizedF32 {
         self.g
     }
 
+    /// Returns color's blue component.
     #[inline]
     pub fn blue(&self) -> NormalizedF32 {
         self.b
     }
 
+    /// Returns color's alpha component.
     #[inline]
     pub fn alpha(&self) -> NormalizedF32 {
         self.a
     }
 
+    /// Returns a demultiplied color.
     #[inline]
     pub fn demultiply(&self) -> Color {
         unsafe {

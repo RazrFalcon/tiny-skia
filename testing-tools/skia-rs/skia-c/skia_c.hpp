@@ -55,6 +55,7 @@ void skiac_canvas_concat(skiac_canvas* c_canvas, skiac_transform c_ts);
 void skiac_canvas_scale(skiac_canvas* c_canvas, float sx, float sy);
 void skiac_canvas_translate(skiac_canvas* c_canvas, float dx, float dy);
 skiac_transform skiac_canvas_get_total_transform(skiac_canvas* c_canvas);
+void skiac_canvas_draw_color(skiac_canvas* c_canvas, float r, float g, float b, float a);
 void skiac_canvas_draw_path(skiac_canvas* c_canvas, skiac_path* c_path, skiac_paint* c_paint);
 void skiac_canvas_draw_rect(
     skiac_canvas* c_canvas,

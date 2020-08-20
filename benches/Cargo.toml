@@ -24,6 +24,11 @@ path = "memset_fill.rs"
 harness = false
 
 [[bench]]
+name = "fill_all"
+path = "fill_all.rs"
+harness = false
+
+[[bench]]
 name = "png_io"
 path = "png_io.rs"
 harness = false

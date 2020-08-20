@@ -65,13 +65,25 @@ impl Default for Paint {
 
 /// A shapes painter.
 pub trait Painter {
-    /// Fills the selected path with a selected paint.
+    /// Fills the entire pixmap with a specified color.
+    ///
+    /// This is essentially a memset, therefore it's very fast.
+    fn fill(&mut self, color: Color);
+
+    /// Draws a filled path onto the pixmap.
     ///
     /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
     fn fill_path(&mut self, path: &Path, paint: &Paint) -> Option<()>;
 }
 
 impl Painter for Pixmap {
+    fn fill(&mut self, color: Color) {
+        let c = color.premultiply().to_color_u8();
+        for p in self.pixels_mut() {
+            *p = c;
+        }
+    }
+
     fn fill_path(&mut self, path: &Path, paint: &Paint) -> Option<()> {
         // This is sort of similar to SkDraw::drawPath
 

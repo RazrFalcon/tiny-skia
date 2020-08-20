@@ -231,3 +231,11 @@ fn memset2d_out_of_bounds() {
 
     assert_eq!(pixmap, expected);
 }
+
+#[test]
+fn fill_pixmap() {
+    let mut pixmap = Pixmap::new(10, 10).unwrap();
+    let c = Color::from_rgba8(50, 100, 150, 200);
+    pixmap.fill(c);
+    assert_eq!(pixmap.pixel(1, 1).unwrap(), c.premultiply().to_color_u8());
+}

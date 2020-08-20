@@ -171,6 +171,17 @@ test source_fill_cairo     ... bench:      48,839 ns/iter (+/- 354)
 test source_fill_raqote    ... bench:     678,795 ns/iter (+/- 10,330)
 ```
 
+### canvas fill
+
+Filling the whole canvas with a color.
+
+```
+test fill_all_tiny_skia ... bench:      46,123 ns/iter (+/- 287)
+test fill_all_skia      ... bench:     554,113 ns/iter (+/- 1,722)
+test fill_all_cairo     ... bench:     285,316 ns/iter (+/- 2,293)
+test fill_all_raqote    ... bench:      46,560 ns/iter (+/- 235)
+```
+
 ### PNG
 
 ```

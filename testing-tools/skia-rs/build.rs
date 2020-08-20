@@ -2,6 +2,9 @@ fn main() {
     println!("cargo:rerun-if-env-changed=SKIA_DIR");
     println!("cargo:rerun-if-env-changed=SKIA_LIB_DIR");
 
+    println!("cargo:rerun-if-changed=skia-c/skia_c.cpp");
+    println!("cargo:rerun-if-changed=skia-c/skia_c.hpp");
+
     #[cfg(target_os = "windows")]
     {
         std::env::set_var("CC", "clang-cl");

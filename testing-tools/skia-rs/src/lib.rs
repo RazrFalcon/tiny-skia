@@ -130,6 +130,11 @@ mod ffi {
             canvas: *mut skiac_canvas,
         ) -> skiac_transform;
 
+        pub fn skiac_canvas_draw_color(
+            canvas: *mut skiac_canvas,
+            r: f32, g: f32, b: f32, a: f32,
+        );
+
         pub fn skiac_canvas_draw_path(
             canvas: *mut skiac_canvas,
             path: *mut skiac_path,
@@ -694,6 +699,11 @@ impl Canvas {
     #[inline]
     pub fn reset_transform(&mut self) {
         unsafe { ffi::skiac_canvas_reset_transform(self.0); }
+    }
+
+    #[inline]
+    pub fn draw_color(&mut self, r: f32, g: f32, b: f32, a: f32) {
+        unsafe { ffi::skiac_canvas_draw_color(self.0, r, g, b, a); }
     }
 
     #[inline]

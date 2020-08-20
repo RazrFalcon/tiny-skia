@@ -164,6 +164,11 @@ skiac_transform skiac_canvas_get_total_transform(skiac_canvas* c_canvas)
     return conv_to_transform(CANVAS_CAST->getTotalMatrix());
 }
 
+void skiac_canvas_draw_color(skiac_canvas* c_canvas, float r, float g, float b, float a)
+{
+    CANVAS_CAST->drawColor(SkColor4f { r, g, b, a});
+}
+
 void skiac_canvas_draw_path(skiac_canvas* c_canvas, skiac_path* c_path, skiac_paint* c_paint)
 {
     CANVAS_CAST->drawPath(*PATH_CAST, *PAINT_CAST);
