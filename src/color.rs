@@ -8,6 +8,8 @@ use pathfinder_simd::default::F32x4;
 
 use crate::NormalizedF32;
 
+use crate::math::bound;
+
 /// 8-bit type for an alpha value. 255 is 100% opaque, zero is 100% transparent.
 pub type AlphaU8 = u8;
 
@@ -298,22 +300,8 @@ impl Color {
     /// Converts into `ColorU8`.
     #[inline]
     pub fn to_color_u8(&self) -> ColorU8 {
-        let c = F32x4::new(
-            self.r.get(),
-            self.g.get(),
-            self.b.get(),
-            self.a.get(),
-        );
-
-        let c = c * F32x4::splat(255.0) + F32x4::splat(0.5);
-        let c = c.to_i32x4();
-
-        ColorU8::from_rgba(
-            c[0] as u8,
-            c[1] as u8,
-            c[2] as u8,
-            c[3] as u8,
-        )
+        let c = color_f32_to_u8(self.r, self.g, self.b, self.a);
+        ColorU8::from_rgba(c[0], c[1], c[2], c[3])
     }
 }
 
@@ -354,13 +342,24 @@ impl PremultipliedColor {
     pub fn demultiply(&self) -> Color {
         unsafe {
             let a = self.a.get();
-            Color {
-                r: NormalizedF32::new_unchecked(self.r.get() / a),
-                g: NormalizedF32::new_unchecked(self.g.get() / a),
-                b: NormalizedF32::new_unchecked(self.b.get() / a),
-                a: self.a,
+            if a == 0.0 {
+                Color::TRANSPARENT
+            } else {
+                Color {
+                    r: NormalizedF32::new_unchecked(self.r.get() / a),
+                    g: NormalizedF32::new_unchecked(self.g.get() / a),
+                    b: NormalizedF32::new_unchecked(self.b.get() / a),
+                    a: self.a,
+                }
             }
         }
+    }
+
+    /// Converts into `PremultipliedColorU8`.
+    #[inline]
+    pub fn to_color_u8(&self) -> PremultipliedColorU8 {
+        let c = color_f32_to_u8(self.r, self.g, self.b, self.a);
+        PremultipliedColorU8::from_rgba_unchecked(c[0], c[1], c[2], c[3])
     }
 }
 
@@ -381,6 +380,27 @@ pub fn premultiply_u8(c: u8, a: u8) -> u8 {
 #[inline]
 const fn pack_rgba(r: u8, g: u8, b: u8, a: u8) -> u32 {
     ((a as u32) << 24) | ((b as u32) << 16) | ((g as u32) << 8) | ((r as u32) << 0)
+}
+
+#[inline]
+fn color_f32_to_u8(r: NormalizedF32, g: NormalizedF32, b: NormalizedF32, a: NormalizedF32) -> [u8; 4] {
+    debug_assert!(r.get().is_finite());
+
+    let c = F32x4::new(
+        r.get(),
+        g.get(),
+        b.get(),
+        a.get(),
+    );
+
+    let c = c * F32x4::splat(255.0) + F32x4::splat(0.5);
+    let c = c.to_i32x4();
+    [
+        bound(0, c[0], 255) as u8,
+        bound(0, c[1], 255) as u8,
+        bound(0, c[2], 255) as u8,
+        bound(0, c[3], 255) as u8,
+    ]
 }
 
 #[cfg(test)]

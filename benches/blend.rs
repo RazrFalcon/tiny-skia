@@ -1,5 +1,3 @@
-// TODO: Filling a simple rect
-
 use bencher::{benchmark_group, benchmark_main, Bencher};
 
 fn fill_tiny_skia(blend_mode: tiny_skia::BlendMode, bencher: &mut Bencher) {

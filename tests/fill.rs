@@ -178,7 +178,6 @@ fn quad_curve() {
     assert_eq!(pixmap, expected);
 }
 
-
 #[test]
 fn cubic_curve() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
@@ -196,6 +195,39 @@ fn cubic_curve() {
 
     pixmap.fill_path(&path, &paint);
     let expected = Pixmap::load_png("tests/images/fill/cubic.png").unwrap();
+
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn memset2d() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint {
+        color: Color::from_rgba8(50, 127, 150, 255), // Must be opaque to trigger memset2d.
+        ..Paint::default()
+    };
+
+    let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 90.0, 90.0).unwrap());
+    pixmap.fill_path(&path, &paint);
+    let expected = Pixmap::load_png("tests/images/fill/memset2d.png").unwrap();
+
+    assert_eq!(pixmap, expected);
+}
+
+// Make sure we do not write past pixmap memory.
+#[test]
+fn memset2d_out_of_bounds() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint {
+        color: Color::from_rgba8(50, 127, 150, 255), // Must be opaque to trigger memset2d.
+        ..Paint::default()
+    };
+
+    let path = PathBuilder::from_bound(Bounds::from_ltrb(50.0, 50.0, 120.0, 120.0).unwrap());
+    pixmap.fill_path(&path, &paint);
+    let expected = Pixmap::load_png("tests/images/fill/memset2d-2.png").unwrap();
 
     assert_eq!(pixmap, expected);
 }

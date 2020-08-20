@@ -83,6 +83,7 @@ impl Painter for Pixmap {
         let path_int_bounds = path_bounds.round_out();
 
         // TODO: ignore ML paths
+        // TODO: ignore paths outside the pixmap
 
         // TODO: draw tiler
         if path_int_bounds.width().get() > MAX_DIM || path_int_bounds.height().get() > MAX_DIM {

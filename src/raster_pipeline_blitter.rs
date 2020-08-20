@@ -6,17 +6,34 @@
 
 use std::ffi::c_void;
 
-use crate::{Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap};
+use crate::{Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8};
 
 use crate::blitter::Blitter;
-use crate::color::ALPHA_OPAQUE;
 use crate::raster_pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
 
+pub fn create_raster_pipeline_blitter(
+    paint: &Paint,
+    ctx_storage: &mut ContextStorage,
+    pixmap: &mut Pixmap,
+) -> RasterPipelineBlitter {
+    let mut shader_pipeline = RasterPipelineBuilder::new();
+
+    // Having no shader makes things nice and easy... just use the paint color.
+    let color_ctx = ctx_storage.create_uniform_color_context(paint.color.premultiply());
+    shader_pipeline.push_with_context(raster_pipeline::Stage::UniformColor, color_ctx);
+
+    RasterPipelineBlitter::new(paint, &shader_pipeline, pixmap)
+}
+
+
 pub struct RasterPipelineBlitter {
-    blend: BlendMode,
+    blend_mode: BlendMode,
     color_pipeline: RasterPipelineBuilder,
 
-    dst_ctx: *const c_void, // Always points to the top-left of `pixmap`.
+    // Always points to the top-left of `pixmap`.
+    img_ctx: raster_pipeline::ffi::sk_raster_pipeline_memory_ctx,
+
+    memset2d_color: Option<PremultipliedColorU8>,
 
     // Built lazily on first use.
     blit_rect_rp: Option<RasterPipeline>,
@@ -26,9 +43,6 @@ impl RasterPipelineBlitter {
     fn new(
         paint: &Paint,
         shader_pipeline: &RasterPipelineBuilder,
-        is_opaque: bool,
-        _is_constant: bool,
-        ctx_storage: &mut ContextStorage,
         pixmap: &mut Pixmap,
     ) -> Self {
         // Our job in this factory is to fill out the blitter's color pipeline.
@@ -40,22 +54,30 @@ impl RasterPipelineBlitter {
         color_pipeline.extend(shader_pipeline);
 
         // We can strength-reduce SrcOver into Src when opaque.
-        let mut blend = paint.blend_mode;
-        if is_opaque && blend == BlendMode::SourceOver {
-            blend = BlendMode::Source;
+        let is_opaque = paint.color.is_opaque(); // TODO: affected by shader
+        let mut blend_mode = paint.blend_mode;
+        if is_opaque && blend_mode == BlendMode::SourceOver {
+            blend_mode = BlendMode::Source;
         }
 
-        let dst_ctx = ctx_storage.push_context(raster_pipeline::ffi::sk_raster_pipeline_memory_ctx {
+        // When we're drawing a constant color in Source mode, we can sometimes just memset.
+        let memset2d_color = if blend_mode == BlendMode::Source {
+            // TODO: will be affected by a shader and dither later on
+            Some(paint.color.premultiply().to_color_u8())
+        } else {
+            None
+        };
+
+        let dst_ctx = raster_pipeline::ffi::sk_raster_pipeline_memory_ctx {
             pixels: pixmap.data().as_ptr() as _,
             stride: pixmap.size().width().get() as i32,
-        });
-
-        // TODO: memset2D
+        };
 
         RasterPipelineBlitter {
-            blend,
+            blend_mode,
             color_pipeline,
-            dst_ctx,
+            img_ctx: dst_ctx,
+            memset2d_color,
             blit_rect_rp: None,
         }
     }
@@ -71,20 +93,45 @@ impl Blitter for RasterPipelineBlitter {
     }
 
     fn blit_rect(&mut self, rect: ScreenIntRect) {
+        // TODO: reject out of bounds access
+
+        if let Some(c) = self.memset2d_color {
+            for y in 0..rect.height().get() {
+                // Cast pixmap data to color.
+                let mut addr = self.img_ctx.pixels.cast::<PremultipliedColorU8>();
+
+                // Calculate pixel offset in bytes.
+                debug_assert!(self.img_ctx.stride > 0);
+                let offset = calc_pixel_offset(rect.x(), rect.y() + y, self.img_ctx.stride as u32);
+                addr = unsafe { addr.add(offset) };
+
+                for _ in 0..rect.width().get() as usize {
+                    unsafe {
+                        *addr = c;
+                        addr = addr.add(1);
+                    }
+                }
+            }
+
+            return;
+        }
+
         if self.blit_rect_rp.is_none() {
             let mut p = RasterPipelineBuilder::new();
             p.extend(&self.color_pipeline);
 
-            if self.blend == BlendMode::SourceOver {
+            let ctx_ptr = &self.img_ctx as *const _ as *const c_void;
+
+            if self.blend_mode == BlendMode::SourceOver {
                 // TODO: ignore when dither_rate is non-zero
-                p.push_with_context(raster_pipeline::Stage::SourceOverRgba8888, self.dst_ctx);
+                p.push_with_context(raster_pipeline::Stage::SourceOverRgba8888, ctx_ptr);
             } else {
-                if self.blend != BlendMode::Source {
-                    p.push_with_context(raster_pipeline::Stage::Load8888Destination, self.dst_ctx);
-                    self.blend.push_stages(&mut p);
+                if self.blend_mode != BlendMode::Source {
+                    p.push_with_context(raster_pipeline::Stage::Load8888Destination, ctx_ptr);
+                    self.blend_mode.push_stages(&mut p);
                 }
 
-                p.push_with_context(raster_pipeline::Stage::Store8888, self.dst_ctx);
+                p.push_with_context(raster_pipeline::Stage::Store8888, ctx_ptr);
             }
 
             self.blit_rect_rp = Some(p.compile());
@@ -94,19 +141,12 @@ impl Blitter for RasterPipelineBlitter {
     }
 }
 
+#[inline]
+fn calc_pixel_offset(x: u32, y: u32, stride: u32) -> usize {
+    calc_pixel_offset_usize(x as usize, y as usize, stride as usize)
+}
 
-pub fn create_raster_pipeline_blitter(
-    paint: &Paint,
-    ctx_storage: &mut ContextStorage,
-    pixmap: &mut Pixmap,
-) -> RasterPipelineBlitter {
-    let mut shader_pipeline = RasterPipelineBuilder::new();
-
-    // Having no shader makes things nice and easy... just use the paint color.
-    let color_ctx = ctx_storage.create_uniform_color_context(paint.color.premultiply());
-    shader_pipeline.push_with_context(raster_pipeline::Stage::UniformColor, color_ctx);
-
-    let is_opaque = paint.color.alpha() == ALPHA_OPAQUE;
-    let is_constant = true;
-    RasterPipelineBlitter::new(paint, &shader_pipeline, is_opaque, is_constant, ctx_storage, pixmap)
+#[inline]
+fn calc_pixel_offset_usize(x: usize, y: usize, stride: usize) -> usize {
+    y * stride + x
 }

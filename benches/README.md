@@ -155,6 +155,22 @@ test xor_skia                   ... bench:     310,439 ns/iter (+/- 4,453)
 test xor_tiny_skia              ... bench:     292,862 ns/iter (+/- 4,722)
 ```
 
+### memset fill
+
+Shape filling by overwritting original pixels. No blending.
+
+```
+test opaque_fill_tiny_skia ... bench:      51,620 ns/iter (+/- 3,083)
+test opaque_fill_skia      ... bench:      47,662 ns/iter (+/- 1,119)
+test opaque_fill_cairo     ... bench:      45,804 ns/iter (+/- 263)
+test opaque_fill_raqote    ... bench:   2,432,875 ns/iter (+/- 51,948)
+
+test source_fill_tiny_skia ... bench:      51,448 ns/iter (+/- 2,672)
+test source_fill_skia      ... bench:      50,663 ns/iter (+/- 207)
+test source_fill_cairo     ... bench:      48,839 ns/iter (+/- 354)
+test source_fill_raqote    ... bench:     678,795 ns/iter (+/- 10,330)
+```
+
 ### PNG
 
 ```
