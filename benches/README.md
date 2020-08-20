@@ -21,9 +21,9 @@ test source_skia                ... bench:      50,949 ns/iter (+/- 2,114)
 test source_cairo               ... bench:      62,548 ns/iter (+/- 2,803)
 test source_raqote              ... bench:   1,114,946 ns/iter (+/- 57,617)
 
-test destination_tiny_skia      ... bench:     266,909 ns/iter (+/- 3,329)
+test destination_tiny_skia      ... bench:          44 ns/iter (+/- 1)
 test destination_skia           ... bench:       5,318 ns/iter (+/- 187)
-test destination_cairo          ... bench:           4 ns/iter (+/- 0)      (wut?!)
+test destination_cairo          ... bench:           4 ns/iter (+/- 0)
 test destination_raqote         ... bench:     980,993 ns/iter (+/- 47,829)
 
 test source_over_tiny_skia      ... bench:     249,321 ns/iter (+/- 620)

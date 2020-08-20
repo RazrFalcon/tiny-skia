@@ -15,7 +15,7 @@ pub fn create_raster_pipeline_blitter(
     paint: &Paint,
     ctx_storage: &mut ContextStorage,
     pixmap: &mut Pixmap,
-) -> RasterPipelineBlitter {
+) -> Option<RasterPipelineBlitter> {
     let mut shader_pipeline = RasterPipelineBuilder::new();
 
     // Having no shader makes things nice and easy... just use the paint color.
@@ -44,7 +44,17 @@ impl RasterPipelineBlitter {
         paint: &Paint,
         shader_pipeline: &RasterPipelineBuilder,
         pixmap: &mut Pixmap,
-    ) -> Self {
+    ) -> Option<Self> {
+        // Fast-reject.
+        // This is basically SkInterpretXfermode().
+        match paint.blend_mode {
+            // `Destination` keep the pixmap unchanged. Nothing to do here.
+            BlendMode::Destination => return None,
+            // TODO: disabled by shader
+            BlendMode::DestinationIn if paint.color.is_opaque() => return None,
+            _ => {}
+        }
+
         // Our job in this factory is to fill out the blitter's color pipeline.
         // This is the common front of the full blit pipelines, each constructed lazily on first use.
         // The full blit pipelines handle reading and writing the dst, blending, coverage, dithering.
@@ -78,13 +88,13 @@ impl RasterPipelineBlitter {
             stride: pixmap.size().width().get() as i32,
         };
 
-        RasterPipelineBlitter {
+        Some(RasterPipelineBlitter {
             blend_mode,
             color_pipeline,
             img_ctx: dst_ctx,
             memset2d_color,
             blit_rect_rp: None,
-        }
+        })
     }
 }
 

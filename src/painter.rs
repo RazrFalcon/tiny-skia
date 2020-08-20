@@ -97,7 +97,7 @@ impl Painter for Pixmap {
         let clip = self.size().to_screen_int_rect(0, 0);
 
         let mut ctx_storage = ContextStorage::new();
-        let mut blitter = create_raster_pipeline_blitter(paint, &mut ctx_storage, self);
+        let mut blitter = create_raster_pipeline_blitter(paint, &mut ctx_storage, self)?;
 
         scan::path::fill_path(path, paint.fill_type, &clip, &mut blitter)
     }
