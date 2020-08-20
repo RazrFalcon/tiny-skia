@@ -27,11 +27,11 @@ pub fn fill_path(path: &Path, fill_type: FillType, clip: &ScreenIntRect, blitter
 // int-bounds, and thus we will only disable clipping if we're sure the edges will stay in-bounds.
 #[inline]
 fn conservative_round_to_int(src: &Bounds) -> Option<IntRect> {
-    IntRect::from_ltrb(
-        round_down_to_int(src.left()),
-        round_down_to_int(src.top()),
-        round_up_to_int(src.right()),
-        round_up_to_int(src.bottom()),
+    IntRect::from_xywh(
+        round_down_to_int(src.left().get()),
+        round_down_to_int(src.top().get()),
+        round_up_to_int(src.width().get()) as u32,
+        round_up_to_int(src.height().get()) as u32,
     )
 }
 

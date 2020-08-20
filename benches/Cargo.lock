@@ -84,7 +84,7 @@ checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 [[package]]
 name = "checked-geom"
 version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/checked-geom?rev=ad21f79#ad21f79b47959a92c24aba9c68e8741bae471c0b"
+source = "git+https://github.com/RazrFalcon/checked-geom?rev=6ed8c7f#6ed8c7f8400db6c7617f805c6d4eb438cb3e9ada"
 dependencies = [
  "num-ext",
 ]
@@ -174,7 +174,7 @@ dependencies = [
 [[package]]
 name = "num-ext"
 version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/num-ext?rev=32f46bd#32f46bd581932bfa5955c651ed11702ecc8306e7"
+source = "git+https://github.com/RazrFalcon/num-ext?rev=720051c#720051c0bb78f7612525fd7d9992531a90a8e8c0"
 
 [[package]]
 name = "num-traits"

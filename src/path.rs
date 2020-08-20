@@ -21,9 +21,16 @@ pub enum PathVerb {
 
 /// A Bezier path.
 ///
-/// Always valid. Contains precomputed bounds.
-///
 /// Can be created via `PathBuilder`.
+///
+/// # Guarantees
+///
+/// - Has a valid, precomputed bounds.
+/// - All points are finite.
+/// - Has at least two segments.
+/// - Each contour starts with a Move.
+/// - No duplicated Move.
+/// - No duplicated Close.
 #[derive(Clone, PartialEq)]
 pub struct Path {
     pub(crate) verbs: Vec<PathVerb>,
@@ -52,8 +59,6 @@ impl Path {
         self.bounds
     }
 
-    // TODO: transform
-
     /// Sometimes in the drawing pipeline, we have to perform math on path coordinates, even after
     /// the path is in device-coordinates. Tessellation and clipping are two examples. Usually this
     /// is pretty modest, but it can involve subtracting/adding coordinates, or multiplying by
@@ -69,7 +74,7 @@ impl Path {
         let b = self.bounds;
 
         // use ! expression so we return true if bounds contains NaN
-        !(b.left() >= -MAX && b.top() >= -MAX && b.right() <= MAX && b.bottom() <= MAX)
+        !(b.left().get() >= -MAX && b.top().get() >= -MAX && b.right().get() <= MAX && b.bottom().get() <= MAX)
     }
 
     /// Returns an iterator over path's segments.

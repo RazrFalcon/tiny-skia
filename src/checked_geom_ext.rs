@@ -6,27 +6,9 @@
 
 //! tiny-skia specific checked-geom extensions.
 
-use pathfinder_simd::default::{F32x2, F32x4};
+use pathfinder_simd::default::F32x4;
 
 use crate::{Point, Bounds};
-
-
-pub trait PointExt: Sized {
-    fn from_f32x2(r: F32x2) -> Self;
-    fn to_f32x2(&self) -> F32x2;
-}
-
-impl PointExt for Point {
-    #[inline]
-    fn from_f32x2(r: F32x2) -> Self {
-        Point::from_xy(r[0], r[1])
-    }
-
-    #[inline]
-    fn to_f32x2(&self) -> F32x2 {
-        F32x2::new(self.x, self.y)
-    }
-}
 
 
 pub trait BoundsExt: Sized {

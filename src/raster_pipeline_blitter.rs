@@ -102,9 +102,8 @@ impl Blitter for RasterPipelineBlitter {
     #[inline]
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32) {
         let one = unsafe { LengthU32::new_unchecked(1) };
-        if let Some(r) = ScreenIntRect::from_nonzero_xywh(x, y, width, one) {
-            self.blit_rect(r);
-        }
+        let r = ScreenIntRect::from_xywh_safe(x, y, width, one);
+        self.blit_rect(r);
     }
 
     fn blit_rect(&mut self, rect: ScreenIntRect) {

@@ -8,8 +8,6 @@ use pathfinder_simd::default::F32x2;
 
 use crate::Point;
 
-use crate::checked_geom_ext::PointExt;
-
 mod private {
     #[derive(Copy, Clone, PartialEq, Debug)]
     #[repr(transparent)]

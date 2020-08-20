@@ -70,10 +70,10 @@ impl PathBuilder {
         ];
 
         let points = vec![
-            Point::from_xy(bounds.left(), bounds.top()),
-            Point::from_xy(bounds.right(), bounds.top()),
-            Point::from_xy(bounds.right(), bounds.bottom()),
-            Point::from_xy(bounds.left(), bounds.bottom()),
+            Point::from_xy(bounds.left().get(), bounds.top().get()),
+            Point::from_xy(bounds.right().get(), bounds.top().get()),
+            Point::from_xy(bounds.right().get(), bounds.bottom().get()),
+            Point::from_xy(bounds.left().get(), bounds.bottom().get()),
         ];
 
         Path {
