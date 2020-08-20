@@ -31,13 +31,13 @@ Not to mention that it requires `clang` and no other compiler,
 uses an obscure build system (`gn`) which still uses Python2
 and doesn't really support 32bit targets.
 
-`tiny-skia` tries to be small, simply and easy to build.
+`tiny-skia` tries to be small, simple and easy to build.
 
 ## Build
 
 Sadly, `tiny-skia` still relies on C++ code, therefore you will need a C++ compiler.
 But not just any compiler. You **must** use `clang` (or `clang-cl` on Windows).
-Skia doesn't support any other compilers, so all optimizations will be simply disabled.
+Skia doesn't support any other compilers, so all optimizations will simply be disabled.
 
 You don't need to select the `clang` compiler manually.
 The build script will do this automatically (as long as you have it in the PATH).
@@ -120,6 +120,10 @@ As for the porting process itself, Skia uses goto, inheritance, virtual methods,
 const generics and templates specialization a lot, and all of this features are unavailable in Rust.
 There are also a lot of pointers magic, implicit mutations and caches.
 Therefore we have to compromise or even rewrite some parts from scratch.
+
+## Safety
+
+The project relies heavily on unsafe. Not much we can do about it at the moment.
 
 ## License
 

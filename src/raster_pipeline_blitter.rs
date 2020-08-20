@@ -72,16 +72,21 @@ impl Blitter for RasterPipelineBlitter {
 
     fn blit_rect(&mut self, rect: ScreenIntRect) {
         if self.blit_rect_rp.is_none() {
-            // TODO: srcover_rgba_8888
-
             let mut p = RasterPipelineBuilder::new();
             p.extend(&self.color_pipeline);
-            if self.blend != BlendMode::Source {
-                p.push_with_context(raster_pipeline::Stage::Load8888Destination, self.dst_ctx);
-                self.blend.push_stages(&mut p);
+
+            if self.blend == BlendMode::SourceOver {
+                // TODO: ignore when dither_rate is non-zero
+                p.push_with_context(raster_pipeline::Stage::SourceOverRgba8888, self.dst_ctx);
+            } else {
+                if self.blend != BlendMode::Source {
+                    p.push_with_context(raster_pipeline::Stage::Load8888Destination, self.dst_ctx);
+                    self.blend.push_stages(&mut p);
+                }
+
+                p.push_with_context(raster_pipeline::Stage::Store8888, self.dst_ctx);
             }
 
-            p.push_with_context(raster_pipeline::Stage::Store8888, self.dst_ctx);
             self.blit_rect_rp = Some(p.compile());
         }
 

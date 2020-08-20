@@ -142,7 +142,7 @@ test source_out_tiny_skia       ... bench:     278,840 ns/iter (+/- 4,703)
 test source_over_cairo          ... bench:     212,838 ns/iter (+/- 4,089)
 test source_over_raqote         ... bench:   2,645,207 ns/iter (+/- 254,594)
 test source_over_skia           ... bench:     261,943 ns/iter (+/- 1,591)
-test source_over_tiny_skia      ... bench:     287,692 ns/iter (+/- 2,287)
+test source_over_tiny_skia      ... bench:     249,321 ns/iter (+/- 620)
 
 test source_cairo               ... bench:      62,548 ns/iter (+/- 2,803)
 test source_raqote              ... bench:   1,114,946 ns/iter (+/- 57,617)

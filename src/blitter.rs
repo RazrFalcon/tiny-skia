@@ -6,15 +6,16 @@
 
 use crate::{LengthU32, ScreenIntRect};
 
-/// Blitter and its subclasses are responsible for actually writing pixels
-/// into memory. Besides efficiency, they handle clipping and antialiasing.
-/// A Blitter subclass contains all the context needed to generate pixels
+/// Blitter is responsible for actually writing pixels into memory.
+///
+/// Besides efficiency, they handle clipping and antialiasing.
+/// An object that implements Blitter contains all the context needed to generate pixels
 /// for the destination and how src/generated pixels map to the destination.
-/// The coordinates passed to the blitX calls are in destination pixel space.
+/// The coordinates passed to the `blit_*` calls are in destination pixel space.
 pub trait Blitter {
-    /// Blit a horizontal run of one or more pixels.
+    /// Blits a horizontal run of one or more pixels.
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32);
 
-    /// Blit a solid rectangle one or more pixels wide.
+    /// Blits a solid rectangle one or more pixels wide.
     fn blit_rect(&mut self, rect: ScreenIntRect);
 }
