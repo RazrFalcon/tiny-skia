@@ -1,4 +1,4 @@
-use crate::raster_pipeline::{self, RasterPipelineBuilder};
+use crate::raster_pipeline;
 
 /// A blending mode.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
@@ -72,37 +72,66 @@ impl Default for BlendMode {
 
 impl BlendMode {
     #[inline]
-    pub(crate) fn push_stages(self, p: &mut RasterPipelineBuilder) {
-        p.push(match self {
-            BlendMode::Clear            => raster_pipeline::Stage::Clear,
-            BlendMode::Source           => return, // This stage is a no-op.
-            BlendMode::Destination      => raster_pipeline::Stage::MoveDestinationToSource,
-            BlendMode::SourceOver       => raster_pipeline::Stage::SourceOver,
-            BlendMode::DestinationOver  => raster_pipeline::Stage::DestinationOver,
-            BlendMode::SourceIn         => raster_pipeline::Stage::SourceIn,
-            BlendMode::DestinationIn    => raster_pipeline::Stage::DestinationIn,
-            BlendMode::SourceOut        => raster_pipeline::Stage::SourceOut,
-            BlendMode::DestinationOut   => raster_pipeline::Stage::DestinationOut,
-            BlendMode::SourceATop       => raster_pipeline::Stage::SourceATop,
-            BlendMode::DestinationATop  => raster_pipeline::Stage::DestinationATop,
-            BlendMode::Xor              => raster_pipeline::Stage::Xor,
-            BlendMode::Plus             => raster_pipeline::Stage::Plus,
-            BlendMode::Modulate         => raster_pipeline::Stage::Modulate,
-            BlendMode::Screen           => raster_pipeline::Stage::Screen,
-            BlendMode::Overlay          => raster_pipeline::Stage::Overlay,
-            BlendMode::Darken           => raster_pipeline::Stage::Darken,
-            BlendMode::Lighten          => raster_pipeline::Stage::Lighten,
-            BlendMode::ColorDodge       => raster_pipeline::Stage::ColorDodge,
-            BlendMode::ColorBurn        => raster_pipeline::Stage::ColorBurn,
-            BlendMode::HardLight        => raster_pipeline::Stage::HardLight,
-            BlendMode::SoftLight        => raster_pipeline::Stage::SoftLight,
-            BlendMode::Difference       => raster_pipeline::Stage::Difference,
-            BlendMode::Exclusion        => raster_pipeline::Stage::Exclusion,
-            BlendMode::Multiply         => raster_pipeline::Stage::Multiply,
-            BlendMode::Hue              => raster_pipeline::Stage::Hue,
-            BlendMode::Saturation       => raster_pipeline::Stage::Saturation,
-            BlendMode::Color            => raster_pipeline::Stage::Color,
-            BlendMode::Luminosity       => raster_pipeline::Stage::Luminosity,
-        })
+    pub(crate) fn should_pre_scale_coverage(self, rgb_coverage: bool) -> bool {
+        // The most important things we do here are:
+        //   1) never pre-scale with rgb coverage if the blend mode involves a source-alpha term;
+        //   2) always pre-scale Plus.
+        //
+        // When we pre-scale with rgb coverage, we scale each of source r,g,b, with a distinct value,
+        // and source alpha with one of those three values.  This process destructively updates the
+        // source-alpha term, so we can't evaluate blend modes that need its original value.
+        //
+        // Plus always requires pre-scaling as a specific quirk of its implementation in
+        // SkRasterPipeline.  This lets us put the clamp inside the blend mode itself rather
+        // than as a separate stage that'd come after the lerp.
+        //
+        // This function is a finer-grained breakdown of SkBlendMode_SupportsCoverageAsAlpha().
+        match self {
+            BlendMode::Destination |            // d              --> no sa term, ok!
+            BlendMode::DestinationOver |        // d + s*inv(da)  --> no sa term, ok!
+            BlendMode::Plus => true,            // clamp(s+d)     --> no sa term, ok!
+
+            BlendMode::DestinationOut |         // d * inv(sa)
+            BlendMode::SourceATop |             // s*da + d*inv(sa)
+            BlendMode::SourceOver |             // s + d*inv(sa)
+            BlendMode::Xor => !rgb_coverage,    // s*inv(da) + d*inv(sa)
+
+            _ => false,
+        }
+    }
+
+    #[inline]
+    pub(crate) fn to_stage(self) -> Option<raster_pipeline::Stage> {
+        match self {
+            BlendMode::Clear            => Some(raster_pipeline::Stage::Clear),
+            BlendMode::Source           => None, // This stage is a no-op.
+            BlendMode::Destination      => Some(raster_pipeline::Stage::MoveDestinationToSource),
+            BlendMode::SourceOver       => Some(raster_pipeline::Stage::SourceOver),
+            BlendMode::DestinationOver  => Some(raster_pipeline::Stage::DestinationOver),
+            BlendMode::SourceIn         => Some(raster_pipeline::Stage::SourceIn),
+            BlendMode::DestinationIn    => Some(raster_pipeline::Stage::DestinationIn),
+            BlendMode::SourceOut        => Some(raster_pipeline::Stage::SourceOut),
+            BlendMode::DestinationOut   => Some(raster_pipeline::Stage::DestinationOut),
+            BlendMode::SourceATop       => Some(raster_pipeline::Stage::SourceATop),
+            BlendMode::DestinationATop  => Some(raster_pipeline::Stage::DestinationATop),
+            BlendMode::Xor              => Some(raster_pipeline::Stage::Xor),
+            BlendMode::Plus             => Some(raster_pipeline::Stage::Plus),
+            BlendMode::Modulate         => Some(raster_pipeline::Stage::Modulate),
+            BlendMode::Screen           => Some(raster_pipeline::Stage::Screen),
+            BlendMode::Overlay          => Some(raster_pipeline::Stage::Overlay),
+            BlendMode::Darken           => Some(raster_pipeline::Stage::Darken),
+            BlendMode::Lighten          => Some(raster_pipeline::Stage::Lighten),
+            BlendMode::ColorDodge       => Some(raster_pipeline::Stage::ColorDodge),
+            BlendMode::ColorBurn        => Some(raster_pipeline::Stage::ColorBurn),
+            BlendMode::HardLight        => Some(raster_pipeline::Stage::HardLight),
+            BlendMode::SoftLight        => Some(raster_pipeline::Stage::SoftLight),
+            BlendMode::Difference       => Some(raster_pipeline::Stage::Difference),
+            BlendMode::Exclusion        => Some(raster_pipeline::Stage::Exclusion),
+            BlendMode::Multiply         => Some(raster_pipeline::Stage::Multiply),
+            BlendMode::Hue              => Some(raster_pipeline::Stage::Hue),
+            BlendMode::Saturation       => Some(raster_pipeline::Stage::Saturation),
+            BlendMode::Color            => Some(raster_pipeline::Stage::Color),
+            BlendMode::Luminosity       => Some(raster_pipeline::Stage::Luminosity),
+        }
     }
 }

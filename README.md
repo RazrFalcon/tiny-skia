@@ -89,7 +89,7 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [x] PNG load/save
 - [x] Blending modes
 - [x] `Path` filling
-- [ ] Anti-aliased `Path` filling
+- [x] Anti-aliased `Path` filling
 - [ ] Analytical anti-aliased `Path` filling
 - [ ] `Path` stroking
 - [ ] `Path` hairline stroking

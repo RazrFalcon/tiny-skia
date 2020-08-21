@@ -13,10 +13,18 @@ use crate::fdot6;
 use crate::fixed::{self, Fixed};
 use crate::floating_point::SaturateCast;
 
-pub fn fill_path(path: &Path, fill_type: FillType, clip: &ScreenIntRect, blitter: &mut dyn Blitter) -> Option<()> {
+pub fn fill_path(
+    path: &Path,
+    fill_type: FillType,
+    clip: &ScreenIntRect,
+    blitter: &mut dyn Blitter,
+) -> Option<()> {
     let ir = conservative_round_to_int(&path.bounds())?.to_screen_int_rect()?;
-    let bottom = ir.bottom()?.get();
-    fill_path_impl(path, fill_type, clip, ir.y(), bottom, blitter)
+    let bottom = ir.bottom().get();
+
+    // TODO: SkScanClipper
+
+    fill_path_impl(path, fill_type, clip, ir.y(), bottom, 0, blitter)
 }
 
 // Conservative rounding function, which effectively nudges the int-rect to be slightly larger
@@ -66,17 +74,23 @@ fn round_up_to_int(x: f32) -> i32 {
     i32::saturate_from(xx.floor())
 }
 
-fn fill_path_impl(
+pub fn fill_path_impl(
     path: &Path,
     fill_type: FillType,
     clip_rect: &ScreenIntRect,
     mut start_y: u32,
     mut stop_y: u32,
+    shift_edges_up: i32,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
-    let shifted_clip = clip_rect.clone();
+    let shifted_clip = ScreenIntRect::from_xywh(
+        clip_rect.x() << shift_edges_up,
+        clip_rect.y() << shift_edges_up,
+        clip_rect.width().get() << shift_edges_up,
+        clip_rect.height().get() << shift_edges_up,
+    )?;
 
-    let mut edges = BasicEdgeBuilder::build_edges(path)?;
+    let mut edges = BasicEdgeBuilder::build_edges(path, shift_edges_up)?;
 
     edges.sort_by(|a, b| {
         let mut value_a = a.as_line().first_y;
@@ -114,18 +128,20 @@ fn fill_path_impl(
         ..LineEdge::default()
     }));
 
+    start_y = start_y << shift_edges_up;
+    stop_y = stop_y << shift_edges_up;
     if start_y < shifted_clip.y() {
         start_y = shifted_clip.y();
     }
 
-    let bottom = shifted_clip.bottom()?.get();
+    let bottom = shifted_clip.bottom().get();
     if stop_y > bottom {
         stop_y = bottom;
     }
 
     // TODO: walk_simple_edges
 
-    walk_edges(fill_type, start_y, stop_y, shifted_clip.right()?.get(), edges, blitter)
+    walk_edges(fill_type, start_y, stop_y, shifted_clip.right().get(), edges, blitter)
 }
 
 // TODO: simplify!

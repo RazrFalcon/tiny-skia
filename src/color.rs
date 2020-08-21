@@ -4,11 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use pathfinder_simd::default::F32x4;
-
 use crate::NormalizedF32;
-
-use crate::math::bound;
 
 /// 8-bit type for an alpha value. 255 is 100% opaque, zero is 100% transparent.
 pub type AlphaU8 = u8;
@@ -393,22 +389,11 @@ const fn pack_rgba(r: u8, g: u8, b: u8, a: u8) -> u32 {
 
 #[inline]
 fn color_f32_to_u8(r: NormalizedF32, g: NormalizedF32, b: NormalizedF32, a: NormalizedF32) -> [u8; 4] {
-    debug_assert!(r.get().is_finite());
-
-    let c = F32x4::new(
-        r.get(),
-        g.get(),
-        b.get(),
-        a.get(),
-    );
-
-    let c = c * F32x4::splat(255.0) + F32x4::splat(0.5);
-    let c = c.to_i32x4();
     [
-        bound(0, c[0], 255) as u8,
-        bound(0, c[1], 255) as u8,
-        bound(0, c[2], 255) as u8,
-        bound(0, c[3], 255) as u8,
+        (r.get() * 255.0 + 0.5) as u8,
+        (g.get() * 255.0 + 0.5) as u8,
+        (b.get() * 255.0 + 0.5) as u8,
+        (a.get() * 255.0 + 0.5) as u8,
     ]
 }
 
@@ -436,7 +421,7 @@ mod tests {
     fn demultiply_u8() {
         assert_eq!(
             PremultipliedColorU8::from_rgba_unchecked(2, 3, 5, 40).demultiply(),
-            ColorU8::from_rgba(13, 20, 32, 40)
+            ColorU8::from_rgba(13, 19, 32, 40)
         );
     }
 

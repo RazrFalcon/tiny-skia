@@ -75,8 +75,8 @@ pub struct LineEdge {
 }
 
 impl LineEdge {
-    pub fn new(p0: Point, p1: Point) -> Option<Self> {
-        let scale = (1 << 6) as f32;
+    pub fn new(p0: Point, p1: Point, shift: i32) -> Option<Self> {
+        let scale = (1 << (shift + 6)) as f32;
         let mut x0 = (p0.x * scale) as i32;
         let mut y0 = (p0.y * scale) as i32;
         let mut x1 = (p1.x * scale) as i32;
@@ -164,8 +164,8 @@ pub struct QuadraticEdge {
 }
 
 impl QuadraticEdge {
-    pub fn new(points: &[Point]) -> Option<Self> {
-        let mut quad = Self::new2(points)?;
+    pub fn new(points: &[Point], shift: i32) -> Option<Self> {
+        let mut quad = Self::new2(points, shift)?;
         if quad.update() {
             Some(quad)
         } else {
@@ -173,8 +173,8 @@ impl QuadraticEdge {
         }
     }
 
-    fn new2(points: &[Point]) -> Option<Self> {
-        let scale = (1 << 6) as f32;
+    fn new2(points: &[Point], mut shift: i32) -> Option<Self> {
+        let scale = (1 << (shift + 6)) as f32;
         let mut x0 = (points[0].x * scale) as i32;
         let mut y0 = (points[0].y * scale) as i32;
         let x1 = (points[1].x * scale) as i32;
@@ -199,7 +199,6 @@ impl QuadraticEdge {
         }
 
         // compute number of steps needed (1 << shift)
-        let mut shift = 0;
         {
             let dx = (left_shift(x1, 1) - x0 - x2) >> 2;
             let dy = (left_shift(y1, 1) - y0 - y2) >> 2;
@@ -341,8 +340,8 @@ pub struct CubicEdge {
 }
 
 impl CubicEdge {
-    pub fn new(points: &[Point]) -> Option<Self> {
-        let mut cubic = Self::new2(points, true)?;
+    pub fn new(points: &[Point], shift: i32) -> Option<Self> {
+        let mut cubic = Self::new2(points, shift, true)?;
         if cubic.update() {
             Some(cubic)
         } else {
@@ -350,8 +349,8 @@ impl CubicEdge {
         }
     }
 
-    fn new2(points: &[Point], sort_y: bool) -> Option<Self> {
-        let scale = (1 << 6) as f32;
+    fn new2(points: &[Point], mut shift: i32, sort_y: bool) -> Option<Self> {
+        let scale = (1 << (shift + 6)) as f32;
         let mut x0 = (points[0].x * scale) as i32;
         let mut y0 = (points[0].y * scale) as i32;
         let mut x1 = (points[1].x * scale) as i32;
@@ -379,7 +378,6 @@ impl CubicEdge {
         }
 
         // compute number of steps needed (1 << shift)
-        let mut shift;
         {
             // Can't use (center of curve - center of baseline), since center-of-curve
             // need not be the max delta from the baseline (it could even be coincident)

@@ -7,6 +7,7 @@
 #![warn(missing_copy_implementations)]
 #![warn(missing_debug_implementations)]
 
+mod alpha_runs;
 mod blend_mode;
 mod blitter;
 mod checked_geom_ext;

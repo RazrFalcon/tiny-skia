@@ -19,21 +19,23 @@ enum Combine {
 
 pub struct BasicEdgeBuilder {
     edges: Vec<Edge>,
+    clip_shift: i32,
 }
 
 impl BasicEdgeBuilder {
     #[inline]
-    pub fn new() -> Self {
+    pub fn new(clip_shift: i32) -> Self {
         BasicEdgeBuilder {
             edges: Vec::with_capacity(64), // TODO: stack array + fallback
+            clip_shift,
         }
     }
 
     // Skia returns a linked list here, but it's a nightmare to use in Rust,
     // so we're mimicking it with Vec.
     #[inline]
-    pub fn build_edges(path: &Path) -> Option<Vec<Edge>> {
-        let mut builder = BasicEdgeBuilder::new();
+    pub fn build_edges(path: &Path, clip_shift: i32) -> Option<Vec<Edge>> {
+        let mut builder = BasicEdgeBuilder::new(clip_shift);
         builder.build(path);
 
         if builder.edges.is_empty() {
@@ -72,7 +74,7 @@ impl BasicEdgeBuilder {
     }
 
     fn push_line(&mut self, points: &[Point; 2]) {
-        if let Some(edge) = LineEdge::new(points[0], points[1]) {
+        if let Some(edge) = LineEdge::new(points[0], points[1], self.clip_shift) {
             let combine = if edge.is_vertical() && !self.edges.is_empty() {
                 combine_vertical(&edge, self.edges.last_mut().unwrap().as_line_mut())
             } else {
@@ -89,14 +91,14 @@ impl BasicEdgeBuilder {
 
     #[inline]
     fn push_quad(&mut self, points: &[Point]) {
-        if let Some(edge) = QuadraticEdge::new(points) {
+        if let Some(edge) = QuadraticEdge::new(points, self.clip_shift) {
             self.edges.push(Edge::Quadratic(edge));
         }
     }
 
     #[inline]
     fn push_cubic(&mut self, points: &[Point]) {
-        if let Some(edge) = CubicEdge::new(points) {
+        if let Some(edge) = CubicEdge::new(points, self.clip_shift) {
             self.edges.push(Edge::Cubic(edge));
         }
     }

@@ -24,6 +24,11 @@ path = "memset_fill.rs"
 harness = false
 
 [[bench]]
+name = "fill_aa"
+path = "fill_aa.rs"
+harness = false
+
+[[bench]]
 name = "fill_all"
 path = "fill_all.rs"
 harness = false

@@ -239,3 +239,30 @@ fn fill_pixmap() {
     pixmap.fill(c);
     assert_eq!(pixmap.pixel(1, 1).unwrap(), c.premultiply().to_color_u8());
 }
+
+// Not sure how to properly test anti-aliasing,
+// so for now simply check that it actually applied.
+#[test]
+fn fill_aa() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint {
+        color: Color::from_rgba8(50, 127, 150, 200),
+        fill_type: FillType::EvenOdd,
+        anti_aliased: true,
+        ..Paint::default()
+    };
+
+    let mut pb = PathBuilder::new();
+    pb.move_to(50.0,  7.5);
+    pb.line_to(75.0, 87.5);
+    pb.line_to(10.0, 37.5);
+    pb.line_to(90.0, 37.5);
+    pb.line_to(25.0, 87.5);
+    let path = pb.finish().unwrap();
+
+    pixmap.fill_path(&path, &paint);
+    let expected = Pixmap::load_png("tests/images/fill/star-aa.png").unwrap();
+
+    assert_eq!(pixmap, expected);
+}

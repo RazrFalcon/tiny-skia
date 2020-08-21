@@ -6,7 +6,8 @@
 
 use std::ffi::c_void;
 
-use crate::{Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8};
+use crate::{Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8, AlphaU8};
+use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::blitter::Blitter;
 use crate::raster_pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
@@ -36,7 +37,12 @@ pub struct RasterPipelineBlitter {
     memset2d_color: Option<PremultipliedColorU8>,
 
     // Built lazily on first use.
+    blit_anti_h_rp: Option<RasterPipeline>,
     blit_rect_rp: Option<RasterPipeline>,
+
+    // These values are pointed to by the blit pipelines above,
+    // which allows us to adjust them from call to call.
+    current_coverage: f32,
 }
 
 impl RasterPipelineBlitter {
@@ -93,7 +99,9 @@ impl RasterPipelineBlitter {
             color_pipeline,
             img_ctx: dst_ctx,
             memset2d_color,
+            blit_anti_h_rp: None,
             blit_rect_rp: None,
+            current_coverage: 0.0,
         })
     }
 }
@@ -104,6 +112,61 @@ impl Blitter for RasterPipelineBlitter {
         let one = unsafe { LengthU32::new_unchecked(1) };
         let r = ScreenIntRect::from_xywh_safe(x, y, width, one);
         self.blit_rect(r);
+    }
+
+    fn blit_anti_h(&mut self, mut x: u32, y: u32, aa: &[AlphaU8], runs: &[u16]) {
+        if self.blit_anti_h_rp.is_none() {
+            let ctx_ptr = &self.img_ctx as *const _ as *const c_void;
+            let curr_cov_ptr = &self.current_coverage as *const _ as *const c_void;
+
+            let mut p = RasterPipelineBuilder::new();
+            p.extend(&self.color_pipeline);
+            if self.blend_mode.should_pre_scale_coverage(false) {
+                p.push_with_context(raster_pipeline::Stage::Scale1Float, curr_cov_ptr);
+                p.push_with_context(raster_pipeline::Stage::Load8888Destination, ctx_ptr);
+                if let Some(blend_stage) = self.blend_mode.to_stage() {
+                    p.push(blend_stage);
+                }
+            } else {
+                p.push_with_context(raster_pipeline::Stage::Load8888Destination, ctx_ptr);
+                if let Some(blend_stage) = self.blend_mode.to_stage() {
+                    p.push(blend_stage);
+                }
+
+                p.push_with_context(raster_pipeline::Stage::Lerp1Float, curr_cov_ptr);
+            }
+
+            p.push_with_context(raster_pipeline::Stage::Store8888, ctx_ptr);
+
+            self.blit_anti_h_rp = Some(p.compile());
+        }
+
+        let mut aa_offset = 0;
+        let mut run_offset = 0;
+        let mut run = runs[0];
+        while run > 0 {
+            match aa[aa_offset] {
+                ALPHA_U8_TRANSPARENT => {}
+                ALPHA_U8_OPAQUE => {
+                    let w = unsafe { LengthU32::new_unchecked(run as u32) };
+                    self.blit_h(x, y, w);
+                }
+                alpha => {
+                    self.current_coverage = alpha as f32 * (1.0 / 255.0);
+
+                    let rect = unsafe {
+                        ScreenIntRect::from_xywh_unchecked(x, y, u32::from(run), 1)
+                    };
+
+                    self.blit_anti_h_rp.as_ref().unwrap().run(rect);
+                }
+            }
+
+            x += u32::from(run);
+            run_offset += usize::from(run);
+            aa_offset += usize::from(run);
+            run = runs[run_offset];
+        }
     }
 
     fn blit_rect(&mut self, rect: ScreenIntRect) {
@@ -142,7 +205,9 @@ impl Blitter for RasterPipelineBlitter {
             } else {
                 if self.blend_mode != BlendMode::Source {
                     p.push_with_context(raster_pipeline::Stage::Load8888Destination, ctx_ptr);
-                    self.blend_mode.push_stages(&mut p);
+                    if let Some(blend_stage) = self.blend_mode.to_stage() {
+                        p.push(blend_stage);
+                    }
                 }
 
                 p.push_with_context(raster_pipeline::Stage::Store8888, ctx_ptr);

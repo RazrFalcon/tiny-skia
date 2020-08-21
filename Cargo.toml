@@ -12,7 +12,7 @@ keywords = ["2d", "rendering", "skia"]
 categories = ["rendering"]
 
 [dependencies]
-checked-geom = { git = "https://github.com/RazrFalcon/checked-geom", rev = "7d9d2c6" }
+checked-geom = { git = "https://github.com/RazrFalcon/checked-geom", rev = "aeff5fd" }
 memmap2 = { version = "0.1", optional = true }
 num-ext = { git = "https://github.com/RazrFalcon/num-ext", rev = "32f46bd" }
 pathfinder_simd = "0.5"

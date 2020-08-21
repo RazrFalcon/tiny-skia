@@ -155,6 +155,15 @@ test luminosity_cairo           ... bench:   6,124,294 ns/iter (+/- 46,113)
 test luminosity_raqote          ... bench:  10,488,916 ns/iter (+/- 129,615)
 ```
 
+### Anti-aliased fill
+
+```
+test fill_aa_tiny_skia ... bench:     412,768 ns/iter (+/- 1,321)
+test fill_aa_skia      ... bench:     348,326 ns/iter (+/- 3,157)
+test fill_aa_cairo     ... bench:     538,842 ns/iter (+/- 3,865)
+test fill_aa_raqote    ... bench:   1,520,830 ns/iter (+/- 15,718)
+```
+
 ### memset fill
 
 Shape filling by overwritting original pixels. No blending.
@@ -192,7 +201,7 @@ test decode_raw_rgba ... bench:      90,793 ns/iter (+/- 978)
 test decode_rgba     ... bench:     109,752 ns/iter (+/- 1,521)
 
 test encode_raw_rgba ... bench:     275,042 ns/iter (+/- 4,476)
-test encode_rgba     ... bench:     327,967 ns/iter (+/- 4,542)
+test encode_rgba     ... bench:     302,154 ns/iter (+/- 11,326)
 ```
 
 ## Running benchmarks

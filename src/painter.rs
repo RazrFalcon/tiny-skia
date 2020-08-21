@@ -49,6 +49,11 @@ pub struct Paint {
     ///
     /// Default: Winding
     pub fill_type: FillType,
+
+    /// Enables anti-aliased painting.
+    ///
+    /// Default: false
+    pub anti_aliased: bool,
 }
 
 impl Default for Paint {
@@ -58,6 +63,7 @@ impl Default for Paint {
             color: Color::BLACK,
             blend_mode: BlendMode::default(),
             fill_type: FillType::default(),
+            anti_aliased: false,
         }
     }
 }
@@ -111,6 +117,10 @@ impl Painter for Pixmap {
         let mut ctx_storage = ContextStorage::new();
         let mut blitter = create_raster_pipeline_blitter(paint, &mut ctx_storage, self)?;
 
-        scan::path::fill_path(path, paint.fill_type, &clip, &mut blitter)
+        if paint.anti_aliased {
+            scan::aa_path::fill_path(path, paint.fill_type, &clip, &mut blitter)
+        } else {
+            scan::path::fill_path(path, paint.fill_type, &clip, &mut blitter)
+        }
     }
 }

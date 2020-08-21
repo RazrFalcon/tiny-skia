@@ -84,7 +84,7 @@ checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 [[package]]
 name = "checked-geom"
 version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/checked-geom?rev=7d9d2c6#7d9d2c6566eb62cd52539caac97f3227ae99925e"
+source = "git+https://github.com/RazrFalcon/checked-geom?rev=aeff5fd#aeff5fdcb63666de36da151d8efc17d3dbee265b"
 dependencies = [
  "num-ext 0.1.0 (git+https://github.com/RazrFalcon/num-ext?rev=720051c)",
 ]
