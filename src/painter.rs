@@ -84,6 +84,8 @@ pub trait Painter {
 
 impl Painter for Pixmap {
     fn fill(&mut self, color: Color) {
+        // TODO: use memset for colors with even components, like 0 0 0 0
+
         let c = color.premultiply().to_color_u8();
         for p in self.pixels_mut() {
             *p = c;

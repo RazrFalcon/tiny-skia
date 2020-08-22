@@ -42,7 +42,7 @@ Skia doesn't support any other compilers, so all optimizations will simply be di
 You don't need to select the `clang` compiler manually.
 The build script will do this automatically (as long as you have it in the PATH).
 
-The are no other build dependencies.
+There are no other build dependencies.
 
 **Warning:** 32bit targets are not supported.
 

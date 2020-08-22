@@ -8,7 +8,7 @@ Benchmarking is hard... (c)
 
 ## Results
 
-### Blending modes
+### blending modes
 
 ```
 test clear_tiny_skia            ... bench:      43,649 ns/iter (+/- 429)
@@ -155,7 +155,7 @@ test luminosity_cairo           ... bench:   6,124,294 ns/iter (+/- 46,113)
 test luminosity_raqote          ... bench:  10,488,916 ns/iter (+/- 129,615)
 ```
 
-### Anti-aliased fill
+### anti-aliased fill
 
 ```
 test fill_aa_tiny_skia ... bench:     412,768 ns/iter (+/- 1,321)
@@ -191,7 +191,13 @@ test fill_all_cairo     ... bench:     285,316 ns/iter (+/- 2,293)
 test fill_all_raqote    ... bench:      46,560 ns/iter (+/- 235)
 ```
 
-### PNG
+### png
+
+*raw* - is just the `png` create part without premultiplying/demultiplying for `tiny-skia`.
+So we're checking how much overhead it has.
+
+RGB (without alpha) is slower, since we have to decode an image into a RGB buffer,
+then transform it into a RGBA buffer.
 
 ```
 test decode_raw_rgb  ... bench:      67,293 ns/iter (+/- 710)
@@ -206,7 +212,8 @@ test encode_rgba     ... bench:     302,154 ns/iter (+/- 11,326)
 
 ## Running benchmarks
 
-We support only Linux. Benchmark may work on other OS'es, but it will require a lot of preperation.
+We support only Linux. The benchmark may work on other OS'es, but it will require a lot of preperation
+(building Skia and cairo).
 
 You have to install cairo first and built Skia from sources (see below).
 
@@ -219,18 +226,18 @@ export LD_LIBRARY_PATH="/path/to/skia/out/Shared"
 cargo bench
 ```
 
-## Building Skia
-
-(we support only Linux)
+### Building Skia
 
 You will need `git`, `clang`, `ninja` and Python 2.
+
+On Windows, use `clang-cl` and `clang-cl++` for `cc` and `cxx` instead.
 
 ```sh
 git clone https://skia.googlesource.com/skia.git
 cd skia
 git fetch --all
 git checkout -b m85 origin/chrome/m85
-python2 tools/git-sync-deps
+python2 tools/git-sync-deps # this will download about 3 GiB of code
 bin/gn gen out/Shared --args='
     is_official_build=false
     is_component_build=true
