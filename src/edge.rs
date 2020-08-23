@@ -412,18 +412,18 @@ impl CubicEdge {
         let mut d = fdot6_up_shift(x3 + 3 * (x1 - x2) - x0, up_shift);
 
         let cx     = fdot6::to_fixed(x0);
-        let cdx    = b + (c >> shift) + (d >> 2*shift);    // biased by shift
-        let cddx   = 2 * c + (3 * d >> (shift - 1));       // biased by 2*shift
-        let cdddx  = 3 * d >> (shift - 1);                 // biased by 2*shift
+        let cdx    = b + (c >> shift) + (d >> (2*shift));    // biased by shift
+        let cddx   = 2 * c + ((3 * d) >> (shift - 1));       // biased by 2*shift
+        let cdddx  = (3 * d) >> (shift - 1);                 // biased by 2*shift
 
         b = fdot6_up_shift(3 * (y1 - y0), up_shift);
         c = fdot6_up_shift(3 * (y0 - y1 - y1 + y2), up_shift);
         d = fdot6_up_shift(y3 + 3 * (y1 - y2) - y0, up_shift);
 
         let cy     = fdot6::to_fixed(y0);
-        let cdy    = b + (c >> shift) + (d >> 2*shift);    // biased by shift
-        let cddy   = 2 * c + (3 * d >> (shift - 1));       // biased by 2*shift
-        let cdddy  = 3 * d >> (shift - 1);                 // biased by 2*shift
+        let cdy    = b + (c >> shift) + (d >> (2*shift));    // biased by shift
+        let cddy   = 2 * c + ((3 * d) >> (shift - 1));       // biased by 2*shift
+        let cdddy  = (3 * d) >> (shift - 1);                 // biased by 2*shift
 
         let c_last_x = fdot6::to_fixed(x3);
         let c_last_y = fdot6::to_fixed(y3);
@@ -573,8 +573,8 @@ fn fdot6_up_shift(x: FDot6, up_shift: i32) -> i32 {
 #[inline]
 fn cubic_delta_from_line(a: FDot6, b: FDot6, c: FDot6, d: FDot6) -> FDot6 {
     // since our parameters may be negative, we don't use <<
-    let one_third = (a*8 - b*15 + 6*c + d) * 19 >> 9;
-    let two_third = (a + 6*b - c*15 + d*8) * 19 >> 9;
+    let one_third = ((a*8 - b*15 + 6*c + d) * 19) >> 9;
+    let two_third = ((a + 6*b - c*15 + d*8) * 19) >> 9;
 
     one_third.abs().max(two_third.abs())
 }

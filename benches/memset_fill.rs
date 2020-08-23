@@ -11,6 +11,7 @@ fn source_fill_tiny_skia(bencher: &mut Bencher) {
         color: Color::from_rgba8(50, 127, 150, 200),
         blend_mode: BlendMode::Source,
         fill_type: FillType::Winding,
+        anti_alias: false,
     };
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(100.0, 100.0, 900.0, 900.0).unwrap());
@@ -94,6 +95,7 @@ fn opaque_fill_tiny_skia(bencher: &mut Bencher) {
         color: Color::from_rgba8(50, 127, 150, 255),
         blend_mode: BlendMode::SourceOver,
         fill_type: FillType::Winding,
+        anti_alias: false,
     };
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(100.0, 100.0, 900.0, 900.0).unwrap());

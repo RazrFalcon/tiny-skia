@@ -7,7 +7,7 @@ fn main() {
 
     let paint1 = Paint {
         color: Color::from_rgba8(50, 127, 150, 200),
-        anti_aliased: true,
+        anti_alias: true,
         ..Paint::default()
     };
 

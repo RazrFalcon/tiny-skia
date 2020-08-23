@@ -9,7 +9,7 @@ fn fill_aa_tiny_skia(bencher: &mut Bencher) {
         color: Color::from_rgba8(50, 127, 150, 200),
         blend_mode: BlendMode::SourceOver,
         fill_type: FillType::EvenOdd,
-        anti_aliased: true,
+        anti_alias: true,
     };
 
     let mut pb = PathBuilder::new();

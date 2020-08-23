@@ -91,7 +91,7 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [x] `Path` filling
 - [x] Anti-aliased `Path` filling
 - [ ] Analytical anti-aliased `Path` filling
-- [ ] `Path` stroking
+- [x] `Path` stroking
 - [ ] `Path` hairline stroking
 - [ ] Anti-aliased `Path` hairline stroking
 - [ ] Stroke dashing

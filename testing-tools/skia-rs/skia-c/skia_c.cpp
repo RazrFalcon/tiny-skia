@@ -361,6 +361,11 @@ void skiac_path_add_rect(skiac_path* c_path, float l, float t, float r, float b)
     PATH_CAST->addRect(l, t, r, b);
 }
 
+void skiac_path_add_circle(skiac_path* c_path, float x, float y, float r)
+{
+    PATH_CAST->addCircle(x, y, r);
+}
+
 // PathEffect
 
 skiac_path_effect* skiac_path_effect_make_dash_path(const float* intervals, int count, float phase)

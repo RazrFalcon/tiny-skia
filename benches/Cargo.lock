@@ -84,9 +84,9 @@ checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 [[package]]
 name = "checked-geom"
 version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/checked-geom?rev=aeff5fd#aeff5fdcb63666de36da151d8efc17d3dbee265b"
+source = "git+https://github.com/RazrFalcon/checked-geom?rev=34dc20b#34dc20b33d2839a5b0e5b6010e8acdadf426bec3"
 dependencies = [
- "num-ext 0.1.0 (git+https://github.com/RazrFalcon/num-ext?rev=720051c)",
+ "num-ext",
 ]
 
 [[package]]
@@ -174,12 +174,7 @@ dependencies = [
 [[package]]
 name = "num-ext"
 version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/num-ext?rev=32f46bd#32f46bd581932bfa5955c651ed11702ecc8306e7"
-
-[[package]]
-name = "num-ext"
-version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/num-ext?rev=720051c#720051c0bb78f7612525fd7d9992531a90a8e8c0"
+source = "git+https://github.com/RazrFalcon/num-ext?rev=109f01a#109f01a88755e5d7b1ab9276a85415aa7f426fba"
 
 [[package]]
 name = "num-traits"
@@ -287,7 +282,7 @@ dependencies = [
  "cc",
  "checked-geom",
  "memmap2",
- "num-ext 0.1.0 (git+https://github.com/RazrFalcon/num-ext?rev=32f46bd)",
+ "num-ext",
  "pathfinder_simd",
  "png 0.16.7",
 ]

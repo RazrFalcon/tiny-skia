@@ -7,6 +7,13 @@
 #![warn(missing_copy_implementations)]
 #![warn(missing_debug_implementations)]
 
+#![allow(clippy::approx_constant)]
+#![allow(clippy::excessive_precision)]
+#![allow(clippy::float_cmp)]
+#![allow(clippy::identity_op)]
+#![allow(clippy::many_single_char_names)]
+#![allow(clippy::too_many_arguments)]
+
 mod alpha_runs;
 mod blend_mode;
 mod blitter;
@@ -27,6 +34,8 @@ mod point;
 mod raster_pipeline;
 mod raster_pipeline_blitter;
 mod scan;
+mod scalar;
+mod stroker;
 
 pub use checked_geom::*;
 
@@ -40,3 +49,4 @@ pub use path::{Path, PathSegment, PathSegmentsIter};
 pub use path_builder::PathBuilder;
 pub use pixmap::Pixmap;
 pub use point::Point;
+pub use stroker::{LineCap, LineJoin, StrokeProps, PathStroker};

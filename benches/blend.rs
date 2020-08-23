@@ -9,12 +9,14 @@ fn fill_tiny_skia(blend_mode: tiny_skia::BlendMode, bencher: &mut Bencher) {
         color: Color::from_rgba8(50, 127, 150, 200),
         blend_mode: BlendMode::SourceOver,
         fill_type: FillType::Winding,
+        anti_alias: false,
     };
 
     let paint2 = Paint {
         color: Color::from_rgba8(220, 140, 75, 180),
         blend_mode, // <-- variable
         fill_type: FillType::Winding,
+        anti_alias: false,
     };
 
     let path1 = {

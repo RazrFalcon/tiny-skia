@@ -39,7 +39,7 @@ pub fn fill_path(
     // TODO: skia actually limits the clip to 32767
     {
         const MAX_CLIP_COORD: u32 = 32767;
-        if clip.right().get() > MAX_CLIP_COORD || clip.bottom().get() > MAX_CLIP_COORD {
+        if clip.right() > MAX_CLIP_COORD || clip.bottom() > MAX_CLIP_COORD {
             return None;
         }
     }
@@ -86,7 +86,7 @@ fn fill_path_impl(
         fill_type,
         clip_rect,
         bounds.top(),
-        bounds.bottom().get(),
+        bounds.bottom(),
         SHIFT as i32,
         &mut blitter,
     )
@@ -120,7 +120,7 @@ impl<'a> BaseSuperBlitter<'a> {
         Some(BaseSuperBlitter {
             real_blitter: blitter,
             curr_iy: sect_bounds.top() - 1, // TODO: no overflow?
-            width: sect_bounds.width(),
+            width: sect_bounds.width_safe(),
             left: sect_bounds.left(),
             super_left: sect_bounds.left() << SHIFT,
             curr_y: (sect_bounds.top() << SHIFT) - 1, // TODO: no overflow?

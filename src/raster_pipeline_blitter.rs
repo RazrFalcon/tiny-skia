@@ -91,7 +91,7 @@ impl RasterPipelineBlitter {
 
         let dst_ctx = raster_pipeline::ffi::sk_raster_pipeline_memory_ctx {
             pixels: pixmap.data().as_ptr() as _,
-            stride: pixmap.size().width().get() as i32,
+            stride: pixmap.size().width() as i32,
         };
 
         Some(RasterPipelineBlitter {
@@ -173,7 +173,7 @@ impl Blitter for RasterPipelineBlitter {
         // TODO: reject out of bounds access
 
         if let Some(c) = self.memset2d_color {
-            for y in 0..rect.height().get() {
+            for y in 0..rect.height() {
                 // Cast pixmap data to color.
                 let mut addr = self.img_ctx.pixels.cast::<PremultipliedColorU8>();
 
@@ -182,7 +182,7 @@ impl Blitter for RasterPipelineBlitter {
                 let offset = calc_pixel_offset(rect.x(), rect.y() + y, self.img_ctx.stride as u32);
                 addr = unsafe { addr.add(offset) };
 
-                for _ in 0..rect.width().get() as usize {
+                for _ in 0..rect.width() as usize {
                     unsafe {
                         *addr = c;
                         addr = addr.add(1);

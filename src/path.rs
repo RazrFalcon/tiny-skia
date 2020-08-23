@@ -4,11 +4,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, PathBuilder, Bounds, Transform};
+use crate::{Point, PathBuilder, Bounds, Transform, StrokeProps, PathStroker};
 
-use crate::checked_geom_ext::BoundsExt;
-
-const SCALAR_MAX: f32 = 3.402823466e+38;
+use crate::checked_geom_ext::{BoundsExt, TransformExt};
+use crate::scalar::SCALAR_MAX;
 
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
@@ -17,7 +16,7 @@ pub enum PathVerb {
     Line,
     Quad,
     Cubic,
-    Close, // TODO: remove?
+    Close,
 }
 
 
@@ -65,47 +64,32 @@ impl Path {
     ///
     /// Some points may become NaN/inf therefore this method can fail.
     pub fn transform(mut self, ts: &Transform) -> Option<Self> {
-        // TODO: use SIMD
-
-        if ts.is_identity() {
-            return Some(self);
-        }
-
-        if ts.is_translate() {
-            let tp = Point::from_xy(ts.get_translate_x().get(), ts.get_translate_y().get());
-            for p in &mut self.points {
-                *p += tp;
-            }
-        } else if ts.is_scale() {
-            let sp = Point::from_xy(ts.get_scale_x().get(), ts.get_scale_y().get());
-            for p in &mut self.points {
-                *p *= sp;
-            }
-        } else if ts.is_scale_translate() {
-            let tp = Point::from_xy(ts.get_translate_x().get(), ts.get_translate_y().get());
-            let sp = Point::from_xy(ts.get_scale_x().get(), ts.get_scale_y().get());
-            for p in &mut self.points {
-                *p = *p * sp + tp;
-            }
-        } else {
-            let sx = ts.get_scale_x().get();
-            let sy = ts.get_scale_y().get();
-            let kx = ts.get_skew_x().get();
-            let ky = ts.get_skew_y().get();
-            let tx = ts.get_translate_x().get();
-            let ty = ts.get_translate_y().get();
-
-            for p in &mut self.points {
-                let x = p.x * sx + p.y * kx + tx;
-                let y = p.y * ky + p.y * sy + ty;
-                *p = Point::from_xy(x, y);
-            }
-        }
+        ts.map_points(&mut self.points);
 
         // Update bounds.
         self.bounds = Bounds::from_points(&self.points)?;
 
         Some(self)
+    }
+
+    /// Produces a stroked path.
+    ///
+    /// This just a shorthand for:
+    ///
+    /// ```ignore
+    /// let mut stroker = PathStroker::new();
+    /// stroker.stroke(self, props);
+    /// ```
+    ///
+    /// Returns `None` when:
+    ///
+    /// - `width` <= 0 or Nan/inf
+    /// - `miter_limit` < 4 or Nan/inf
+    /// - produced stroke has invalid bounds
+    #[inline]
+    pub fn stroke(&self, props: StrokeProps) -> Option<Self> {
+        let mut stroker = PathStroker::new();
+        stroker.stroke(self, props)
     }
 
     /// Sometimes in the drawing pipeline, we have to perform math on path coordinates, even after
@@ -123,7 +107,7 @@ impl Path {
         let b = self.bounds;
 
         // use ! expression so we return true if bounds contains NaN
-        !(b.left().get() >= -MAX && b.top().get() >= -MAX && b.right().get() <= MAX && b.bottom().get() <= MAX)
+        !(b.left() >= -MAX && b.top() >= -MAX && b.right() <= MAX && b.bottom() <= MAX)
     }
 
     /// Returns an iterator over path's segments.
@@ -133,6 +117,9 @@ impl Path {
             path: self,
             verb_index: 0,
             points_index: 0,
+            is_auto_close: false,
+            last_move_to: Point::zero(),
+            last_point: Point::zero(),
         }
     }
 
@@ -162,24 +149,149 @@ impl Path {
     }
 }
 
+impl std::fmt::Debug for Path {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use std::fmt::Write;
+
+        let mut s = String::new();
+        for segment in self.segments() {
+            match segment {
+                PathSegment::MoveTo(p) =>
+                    s.write_fmt(format_args!("M {} {} ", p.x, p.y))?,
+                PathSegment::LineTo(p) =>
+                    s.write_fmt(format_args!("L {} {} ", p.x, p.y))?,
+                PathSegment::QuadTo(p0, p1) =>
+                    s.write_fmt(format_args!("Q {} {} {} {} ", p0.x, p0.y, p1.x, p1.y))?,
+                PathSegment::CubicTo(p0, p1, p2) =>
+                    s.write_fmt(format_args!("C {} {} {} {} {} {} ", p0.x, p0.y, p1.x, p1.y, p2.x, p2.y))?,
+                PathSegment::Close =>
+                    s.write_fmt(format_args!("Z "))?,
+            }
+        }
+
+        s.pop(); // ' '
+
+        f.debug_struct("Path")
+            .field("segments", &s)
+            .field("bounds", &self.bounds)
+            .finish()
+    }
+}
+
 
 /// A path segment.
 #[allow(missing_docs)]
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PathSegment {
-    Move(Point),
-    Line(Point),
-    Quad(Point, Point),
-    Cubic(Point, Point, Point),
+    MoveTo(Point),
+    LineTo(Point),
+    QuadTo(Point, Point),
+    CubicTo(Point, Point, Point),
     Close,
 }
 
+impl PathSegment {
+    /// Creates a new MoveTo segment from coordinates.
+    #[inline]
+    pub fn new_move_to(x: f32, y: f32) -> Self {
+        PathSegment::MoveTo(Point::from_xy(x, y))
+    }
+
+    /// Creates a new LineTo segment from coordinates.
+    #[inline]
+    pub fn new_line_to(x: f32, y: f32) -> Self {
+        PathSegment::LineTo(Point::from_xy(x, y))
+    }
+
+    /// Creates a new QuadTo segment from coordinates.
+    #[inline]
+    pub fn new_quad_to(x1: f32, y1: f32, x: f32, y: f32) -> Self {
+        PathSegment::QuadTo(Point::from_xy(x1, y1), Point::from_xy(x, y))
+    }
+
+    /// Creates a new CubicTo segment from coordinates.
+    #[inline]
+    pub fn new_cubic_to(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) -> Self {
+        PathSegment::CubicTo(Point::from_xy(x1, y1), Point::from_xy(x2, y2), Point::from_xy(x, y))
+    }
+
+    /// Creates a new Close segment from coordinates.
+    #[inline]
+    pub fn new_close() -> Self {
+        PathSegment::Close
+    }
+}
+
+
 /// A path segments iterator.
 #[allow(missing_debug_implementations)]
+#[derive(Clone)]
 pub struct PathSegmentsIter<'a> {
     path: &'a Path,
     verb_index: usize,
     points_index: usize,
+
+    is_auto_close: bool,
+    last_move_to: Point,
+    last_point: Point,
+}
+
+impl<'a> PathSegmentsIter<'a> {
+    /// Sets the auto closing mode. Off by default.
+    ///
+    /// When enabled, emits an additional `PathSegment::Line` from the current position
+    /// to the previous `PathSegment::Move`. And only then emits `PathSegment::Close`.
+    #[inline]
+    pub fn set_auto_close(&mut self, flag: bool) {
+        self.is_auto_close = flag;
+    }
+
+    #[inline]
+    pub(crate) fn auto_close(&mut self) -> PathSegment {
+        if self.is_auto_close && self.last_point != self.last_move_to {
+            self.verb_index -= 1;
+            PathSegment::LineTo(self.last_move_to)
+        } else {
+            PathSegment::Close
+        }
+    }
+
+    pub(crate) fn has_valid_tangent(&self) -> bool {
+        let mut iter = self.clone();
+        while let Some(segment) = iter.next() {
+            match segment {
+                PathSegment::MoveTo(_) => {
+                    return false;
+                }
+                PathSegment::LineTo(p) => {
+                    if iter.last_point == p {
+                        continue;
+                    }
+
+                    return true;
+                }
+                PathSegment::QuadTo(p1, p2) => {
+                    if iter.last_point == p1 && iter.last_point == p2 {
+                        continue;
+                    }
+
+                    return true;
+                }
+                PathSegment::CubicTo(p1, p2, p3) => {
+                    if iter.last_point == p1 && iter.last_point == p2 && iter.last_point == p3 {
+                        continue;
+                    }
+
+                    return true;
+                }
+                PathSegment::Close => {
+                    return false;
+                }
+            }
+        }
+
+        false
+    }
 }
 
 impl<'a> Iterator for PathSegmentsIter<'a> {
@@ -193,29 +305,36 @@ impl<'a> Iterator for PathSegmentsIter<'a> {
             match verb {
                 PathVerb::Move => {
                     self.points_index += 1;
-                    Some(PathSegment::Move(self.path.points[self.points_index - 1]))
+                    self.last_move_to = self.path.points[self.points_index - 1];
+                    self.last_point = self.last_move_to;
+                    Some(PathSegment::MoveTo(self.last_move_to))
                 }
                 PathVerb::Line => {
                     self.points_index += 1;
-                    Some(PathSegment::Line(self.path.points[self.points_index - 1]))
+                    self.last_point = self.path.points[self.points_index - 1];
+                    Some(PathSegment::LineTo(self.last_point))
                 }
                 PathVerb::Quad => {
                     self.points_index += 2;
-                    Some(PathSegment::Quad(
+                    self.last_point = self.path.points[self.points_index - 1];
+                    Some(PathSegment::QuadTo(
                         self.path.points[self.points_index - 2],
-                        self.path.points[self.points_index - 1],
+                        self.last_point,
                     ))
                 }
                 PathVerb::Cubic => {
                     self.points_index += 3;
-                    Some(PathSegment::Cubic(
+                    self.last_point = self.path.points[self.points_index - 1];
+                    Some(PathSegment::CubicTo(
                         self.path.points[self.points_index - 3],
                         self.path.points[self.points_index - 2],
-                        self.path.points[self.points_index - 1],
+                        self.last_point
                     ))
                 }
                 PathVerb::Close => {
-                    Some(PathSegment::Close)
+                    let seg = self.auto_close();
+                    self.last_point = self.last_move_to;
+                    Some(seg)
                 }
             }
         } else {
@@ -326,34 +445,5 @@ impl<'a> Iterator for PathEdgeIter<'a> {
         } else {
             None
         }
-    }
-}
-
-impl std::fmt::Debug for Path {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use std::fmt::Write;
-
-        let mut s = String::new();
-        for segment in self.segments() {
-            match segment {
-                PathSegment::Move(p) =>
-                    s.write_fmt(format_args!("M {} {} ", p.x, p.y))?,
-                PathSegment::Line(p) =>
-                    s.write_fmt(format_args!("L {} {} ", p.x, p.y))?,
-                PathSegment::Quad(p0, p1) =>
-                    s.write_fmt(format_args!("Q {} {} {} {} ", p0.x, p0.y, p1.x, p1.y))?,
-                PathSegment::Cubic(p0, p1, p2) =>
-                    s.write_fmt(format_args!("C {} {} {} {} {} {} ", p0.x, p0.y, p1.x, p1.y, p2.x, p2.y))?,
-                PathSegment::Close =>
-                    s.write_fmt(format_args!("Z "))?,
-            }
-        }
-
-        s.pop(); // ' '
-
-        f.debug_struct("Path")
-            .field("segments", &s)
-            .field("bounds", &self.bounds)
-            .finish()
     }
 }

@@ -48,7 +48,7 @@ fn encode_raw_rgba(bencher: &mut Bencher) {
     bencher.iter(|| {
         let mut data = Vec::new();
 
-        let mut encoder = png::Encoder::new(&mut data, pixmap.width().get(), pixmap.height().get());
+        let mut encoder = png::Encoder::new(&mut data, pixmap.width(), pixmap.height());
         encoder.set_color(png::ColorType::RGBA);
         encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header().unwrap();

@@ -4,6 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+pub const FLOAT_PI: f32 = 3.14159265;
+
 const MAX_I32_FITS_IN_F32: f32 = 2147483520.0;
 const MIN_I32_FITS_IN_F32: f32 = -MAX_I32_FITS_IN_F32;
 

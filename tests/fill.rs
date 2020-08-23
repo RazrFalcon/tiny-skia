@@ -249,7 +249,7 @@ fn fill_aa() {
     let paint = Paint {
         color: Color::from_rgba8(50, 127, 150, 200),
         fill_type: FillType::EvenOdd,
-        anti_aliased: true,
+        anti_alias: true,
         ..Paint::default()
     };
 

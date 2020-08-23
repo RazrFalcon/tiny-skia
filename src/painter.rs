@@ -53,7 +53,7 @@ pub struct Paint {
     /// Enables anti-aliased painting.
     ///
     /// Default: false
-    pub anti_aliased: bool,
+    pub anti_alias: bool,
 }
 
 impl Default for Paint {
@@ -63,8 +63,38 @@ impl Default for Paint {
             color: Color::BLACK,
             blend_mode: BlendMode::default(),
             fill_type: FillType::default(),
-            anti_aliased: false,
+            anti_alias: false,
         }
+    }
+}
+
+impl Paint {
+    /// Sets a paint color.
+    #[inline]
+    pub fn set_color(mut self, color: Color) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Sets a blending mode.
+    #[inline]
+    pub fn set_blend_mode(mut self, blend_mode: BlendMode) -> Self {
+        self.blend_mode = blend_mode;
+        self
+    }
+
+    /// Sets a fill type.
+    #[inline]
+    pub fn set_fill_type(mut self, fill_type: FillType) -> Self {
+        self.fill_type = fill_type;
+        self
+    }
+
+    /// Sets an anti-alias flag.
+    #[inline]
+    pub fn set_anti_alias(mut self, anti_alias: bool) -> Self {
+        self.anti_alias = anti_alias;
+        self
     }
 }
 
@@ -106,7 +136,7 @@ impl Painter for Pixmap {
         // TODO: ignore paths outside the pixmap
 
         // TODO: draw tiler
-        if path_int_bounds.width().get() > MAX_DIM || path_int_bounds.height().get() > MAX_DIM {
+        if path_int_bounds.width() > MAX_DIM || path_int_bounds.height() > MAX_DIM {
             return None;
         }
 
@@ -119,7 +149,7 @@ impl Painter for Pixmap {
         let mut ctx_storage = ContextStorage::new();
         let mut blitter = create_raster_pipeline_blitter(paint, &mut ctx_storage, self)?;
 
-        if paint.anti_aliased {
+        if paint.anti_alias {
             scan::aa_path::fill_path(path, paint.fill_type, &clip, &mut blitter)
         } else {
             scan::path::fill_path(path, paint.fill_type, &clip, &mut blitter)

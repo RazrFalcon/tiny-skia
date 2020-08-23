@@ -20,7 +20,7 @@ pub fn fill_path(
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
     let ir = conservative_round_to_int(&path.bounds())?.to_screen_int_rect()?;
-    let bottom = ir.bottom().get();
+    let bottom = ir.bottom();
 
     // TODO: SkScanClipper
 
@@ -36,10 +36,10 @@ pub fn fill_path(
 #[inline]
 fn conservative_round_to_int(src: &Bounds) -> Option<IntRect> {
     IntRect::from_xywh(
-        round_down_to_int(src.left().get()),
-        round_down_to_int(src.top().get()),
-        round_up_to_int(src.width().get()) as u32,
-        round_up_to_int(src.height().get()) as u32,
+        round_down_to_int(src.left()),
+        round_down_to_int(src.top()),
+        round_up_to_int(src.width()) as u32,
+        round_up_to_int(src.height()) as u32,
     )
 }
 
@@ -86,8 +86,8 @@ pub fn fill_path_impl(
     let shifted_clip = ScreenIntRect::from_xywh(
         clip_rect.x() << shift_edges_up,
         clip_rect.y() << shift_edges_up,
-        clip_rect.width().get() << shift_edges_up,
-        clip_rect.height().get() << shift_edges_up,
+        clip_rect.width() << shift_edges_up,
+        clip_rect.height() << shift_edges_up,
     )?;
 
     let mut edges = BasicEdgeBuilder::build_edges(path, shift_edges_up)?;
@@ -128,20 +128,20 @@ pub fn fill_path_impl(
         ..LineEdge::default()
     }));
 
-    start_y = start_y << shift_edges_up;
-    stop_y = stop_y << shift_edges_up;
+    start_y <<= shift_edges_up;
+    stop_y <<= shift_edges_up;
     if start_y < shifted_clip.y() {
         start_y = shifted_clip.y();
     }
 
-    let bottom = shifted_clip.bottom().get();
+    let bottom = shifted_clip.bottom();
     if stop_y > bottom {
         stop_y = bottom;
     }
 
     // TODO: walk_simple_edges
 
-    walk_edges(fill_type, start_y, stop_y, shifted_clip.right().get(), edges, blitter)
+    walk_edges(fill_type, start_y, stop_y, shifted_clip.right(), edges, blitter)
 }
 
 // TODO: simplify!

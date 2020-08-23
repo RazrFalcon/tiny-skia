@@ -337,10 +337,10 @@ impl RasterPipeline {
             ffi::skia_pipe_raster_run_pipeline(
                 self.program.as_ptr(),
                 self.is_highp,
-                rect.x() as u32,
-                rect.y() as u32,
-                rect.width().get() as u32,
-                rect.height().get() as u32,
+                rect.x(),
+                rect.y(),
+                rect.width(),
+                rect.height(),
             );
         }
     }

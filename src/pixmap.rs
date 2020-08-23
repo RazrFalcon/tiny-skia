@@ -7,7 +7,7 @@
 use std::convert::TryFrom;
 use std::num::NonZeroUsize;
 
-use crate::{IntSize, LengthU32};
+use crate::IntSize;
 
 use crate::color::PremultipliedColorU8;
 
@@ -60,13 +60,13 @@ impl Pixmap {
 
     /// Returns pixmap's width.
     #[inline]
-    pub fn width(&self) -> LengthU32 {
+    pub fn width(&self) -> u32 {
         self.size.width()
     }
 
     /// Returns pixmap's height.
     #[inline]
-    pub fn height(&self) -> LengthU32 {
+    pub fn height(&self) -> u32 {
         self.size.height()
     }
 
@@ -89,13 +89,14 @@ impl Pixmap {
     /// Returns `None` when position is out of bounds.
     #[inline]
     pub fn pixel(&self, x: u32, y: u32) -> Option<PremultipliedColorU8> {
-        let idx = self.width().get().checked_mul(y)?.checked_add(x)?;
+        let idx = self.width().checked_mul(y)?.checked_add(x)?;
         self.pixels().get(idx as usize).cloned()
     }
 
     /// Returns a slice of pixels.
     #[inline]
     pub fn pixels(&self) -> &[PremultipliedColorU8] {
+        #[allow(clippy::cast_ptr_alignment)]
         unsafe {
             std::slice::from_raw_parts(
                 self.data.as_ptr() as *const PremultipliedColorU8,
@@ -107,6 +108,7 @@ impl Pixmap {
     /// Returns a mutable slice of pixels.
     #[inline]
     pub(crate) fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
+        #[allow(clippy::cast_ptr_alignment)]
         unsafe {
             std::slice::from_raw_parts_mut(
                 self.data.as_ptr() as *mut PremultipliedColorU8,
@@ -233,7 +235,7 @@ impl Pixmap {
 
         let mut data = Vec::new();
         {
-            let mut encoder = png::Encoder::new(&mut data, self.width().get(), self.height().get());
+            let mut encoder = png::Encoder::new(&mut data, self.width(), self.height());
             encoder.set_color(png::ColorType::RGBA);
             encoder.set_depth(png::BitDepth::Eight);
             let mut writer = encoder.write_header()?;
@@ -268,17 +270,17 @@ impl std::fmt::Debug for Pixmap {
 /// Pixmap's maximum value for row bytes must fit in 31 bits.
 #[inline]
 fn min_row_bytes(size: IntSize) -> Option<NonZeroUsize> {
-    let w = i32::try_from(size.width().get()).ok()?;
+    let w = i32::try_from(size.width()).ok()?;
     let w = w.checked_mul(BYTES_PER_PIXEL as i32)?;
     NonZeroUsize::new(w as usize)
 }
 
 /// Returns storage required by pixel array.
 fn compute_data_len(size: IntSize, row_bytes: usize) -> Option<usize> {
-    let h = size.height().get().checked_sub(1)?;
+    let h = size.height().checked_sub(1)?;
     let h = (h as usize).checked_mul(row_bytes)?;
 
-    let w = (size.width().get() as usize).checked_mul(BYTES_PER_PIXEL)?;
+    let w = (size.width() as usize).checked_mul(BYTES_PER_PIXEL)?;
 
     h.checked_add(w)
 }

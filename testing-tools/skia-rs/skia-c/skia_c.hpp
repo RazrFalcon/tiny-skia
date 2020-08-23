@@ -105,6 +105,7 @@ void skiac_path_cubic_to(
     float x1, float y1, float x2, float y2, float x3, float y3);
 void skiac_path_close(skiac_path* c_path);
 void skiac_path_add_rect(skiac_path* c_path, float l, float t, float r, float b);
+void skiac_path_add_circle(skiac_path* c_path, float x, float y, float r);
 
 // PathEffect
 skiac_path_effect* skiac_path_effect_make_dash_path(const float* intervals, int count, float phase);

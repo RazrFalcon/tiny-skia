@@ -281,6 +281,11 @@ mod ffi {
             l: f32, t: f32, r: f32, b: f32,
         );
 
+        pub fn skiac_path_add_circle(
+            path: *mut skiac_path,
+            x: f32, y: f32, r: f32,
+        );
+
         pub fn skiac_path_effect_make_dash_path(
             intervals: *const f32,
             count: i32,
@@ -871,6 +876,11 @@ impl Path {
     #[inline]
     pub fn push_rect(&mut self, l: f32, t: f32, r: f32, b: f32) {
         unsafe { ffi::skiac_path_add_rect(self.0, l, t, r, b); }
+    }
+
+    #[inline]
+    pub fn push_circle(&mut self, x: f32, y: f32, r: f32) {
+        unsafe { ffi::skiac_path_add_circle(self.0, x, y, r); }
     }
 }
 

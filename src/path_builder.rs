@@ -6,14 +6,25 @@
 
 // NOTE: this is not SkPathBuilder, but rather a reimplementation of SkPath.
 
-use crate::{Point, Bounds, Path};
+use crate::{Point, Bounds, Path, Rect};
 
 use crate::checked_geom_ext::BoundsExt;
+use crate::geometry;
 use crate::path::PathVerb;
+use crate::scalar::{SCALAR_ROOT_2_OVER_2, ScalarExt};
+
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum PathDirection {
+    /// Clockwise direction for adding closed contours.
+    CW,
+    /// Counter-clockwise direction for adding closed contours.
+    CCW,
+}
 
 
 /// A path builder.
-#[allow(missing_debug_implementations)]
+#[derive(Debug)]
 pub struct PathBuilder {
     pub(crate) verbs: Vec<PathVerb>,
     pub(crate) points: Vec<Point>,
@@ -70,10 +81,10 @@ impl PathBuilder {
         ];
 
         let points = vec![
-            Point::from_xy(bounds.left().get(), bounds.top().get()),
-            Point::from_xy(bounds.right().get(), bounds.top().get()),
-            Point::from_xy(bounds.right().get(), bounds.bottom().get()),
-            Point::from_xy(bounds.left().get(), bounds.bottom().get()),
+            Point::from_xy(bounds.left(), bounds.top()),
+            Point::from_xy(bounds.right(), bounds.top()),
+            Point::from_xy(bounds.right(), bounds.bottom()),
+            Point::from_xy(bounds.left(), bounds.bottom()),
         ];
 
         Path {
@@ -81,6 +92,22 @@ impl PathBuilder {
             verbs,
             points,
         }
+    }
+
+    /// Returns the current number of segments in the builder.
+    pub fn reserve(&mut self, additional_verbs: usize, additional_points: usize) {
+        self.verbs.reserve(additional_verbs);
+        self.points.reserve(additional_points);
+    }
+
+    /// Returns the current number of segments in the builder.
+    pub fn len(&self) -> usize {
+        self.verbs.len()
+    }
+
+    /// Checks if the builder has any segments added.
+    pub fn is_empty(&self) -> bool {
+        self.verbs.is_empty()
     }
 
     /// Adds beginning of a contour.
@@ -133,6 +160,33 @@ impl PathBuilder {
         self.points.push(Point::from_xy(x, y));
     }
 
+    // We do not support conic segments, but Skia still relies on them from time to time.
+    // This method will simply convert the input data into quad segments.
+    pub(crate) fn conic_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, weight: f32) {
+        self.inject_move_to_if_needed();
+
+        // TODO: use SkAutoConicToQuads
+
+        let last = self.last_point().unwrap();
+        let conic = geometry::Conic::new(last, Point::from_xy(x1, y1), Point::from_xy(x2, y2), weight);
+        let mut points = [Point::zero(); 32]; // 1 + 2 * (1<<3) = 17, so 32 should be enough
+        let count = conic.chop_into_quads_pow2(3, &mut points);
+
+        // Points are ordered as: 0 - 1 2 - 3 4 - 5 6 - ..
+        // `count` is a number of pairs +1
+        let mut offset = 1;
+        for _ in 0..count {
+            let pt1 = points[offset + 0];
+            let pt2 = points[offset + 1];
+            self.quad_to(pt1.x, pt1.y, pt2.x, pt2.y);
+            offset += 2;
+        }
+    }
+
+    pub(crate) fn conic_points_to(&mut self, pt1: Point, pt2: Point, weight: f32) {
+        self.conic_to(pt1.x, pt1.y, pt2.x, pt2.y, weight);
+    }
+
     /// Adds a cubic curve from the last point to `x`, `y`.
     ///
     /// - If Path is empty - adds Move(0, 0) first.
@@ -167,6 +221,120 @@ impl PathBuilder {
         self.move_to_required = true;
     }
 
+    #[inline]
+    pub(crate) fn last_point(&self) -> Option<Point> {
+        self.points.last().cloned()
+    }
+
+    #[inline]
+    pub(crate) fn set_last_point(&mut self, pt: Point) {
+        match self.points.last_mut() {
+            Some(last) => *last = pt,
+            None => self.move_to(pt.x, pt.y),
+        }
+    }
+
+    pub(crate) fn is_zero_length_since_point(&self, start_pt_index: usize) -> bool {
+        let count = self.points.len() - start_pt_index;
+        if count < 2 {
+            return true;
+        }
+
+        let first = self.points[start_pt_index];
+        for i in 1..count {
+            if first != self.points[start_pt_index + i] {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    fn push_oval(&mut self, oval: &Rect) {
+        let cx = oval.left().half() + oval.right().half();
+        let cy = oval.top().half() + oval.bottom().half();
+
+        let oval_points = [
+            Point::from_xy(cx, oval.bottom()),
+            Point::from_xy(oval.left(), cy),
+            Point::from_xy(cx, oval.top()),
+            Point::from_xy(oval.right(), cy),
+        ];
+
+        let rect_points = [
+            Point::from_xy(oval.right(), oval.bottom()),
+            Point::from_xy(oval.left(), oval.bottom()),
+            Point::from_xy(oval.left(), oval.top()),
+            Point::from_xy(oval.right(), oval.top()),
+        ];
+
+        let weight = SCALAR_ROOT_2_OVER_2;
+        self.move_to(oval_points[3].x, oval_points[3].y);
+        for (p1, p2) in rect_points.iter().zip(oval_points.iter()) {
+            self.conic_points_to(*p1, *p2, weight);
+        }
+        self.close();
+    }
+
+    #[inline]
+    pub(crate) fn push_circle(&mut self, x: f32, y: f32, r: f32) {
+        if let Some(r) = Rect::from_xywh(x - r, y - r, r + r, r + r) {
+            self.push_oval(&r);
+        }
+    }
+
+    pub(crate) fn push_path(&mut self, other: &PathBuilder) {
+        if other.is_empty() {
+            return;
+        }
+
+        if self.last_move_to_index != 0 {
+            self.last_move_to_index = self.points.len() + other.last_move_to_index;
+        }
+
+        self.verbs.extend_from_slice(&other.verbs);
+        self.points.extend_from_slice(&other.points);
+    }
+
+    /// Appends, in a reverse order, the first contour of path ignoring path's last point.
+    pub(crate) fn reverse_path_to(&mut self, other: &PathBuilder) {
+        if other.is_empty() {
+            return;
+        }
+
+        debug_assert_eq!(other.verbs[0], PathVerb::Move);
+
+        let mut points_offset = other.points.len() - 1;
+        for verb in other.verbs.iter().rev() {
+            match verb {
+                PathVerb::Move => {
+                    // if the path has multiple contours, stop after reversing the last
+                    break;
+                }
+                PathVerb::Line => {
+                    // We're moving one point back manually, to prevent points_offset overflow.
+                    let pt = other.points[points_offset - 1];
+                    points_offset -= 1;
+                    self.line_to(pt.x, pt.y);
+                }
+                PathVerb::Quad => {
+                    let pt1 = other.points[points_offset - 1];
+                    let pt2 = other.points[points_offset - 2];
+                    points_offset -= 2;
+                    self.quad_to(pt1.x, pt1.y, pt2.x, pt2.y);
+                }
+                PathVerb::Cubic => {
+                    let pt1 = other.points[points_offset - 1];
+                    let pt2 = other.points[points_offset - 2];
+                    let pt3 = other.points[points_offset - 3];
+                    points_offset -= 3;
+                    self.cubic_to(pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y);
+                }
+                PathVerb::Close => {}
+            }
+        }
+    }
+
     /// Reset the builder.
     ///
     /// Memory is not deallocated.
@@ -181,6 +349,10 @@ impl PathBuilder {
     ///
     /// Returns `None` when `Path` is empty or has zero bounds.
     pub fn finish(self) -> Option<Path> {
+        if self.is_empty() {
+            return None;
+        }
+
         // Just a move to? Bail.
         if self.verbs.len() == 1 {
             return None;

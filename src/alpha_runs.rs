@@ -110,7 +110,7 @@ impl AlphaRuns {
                 runs_offset += n;
                 middle_count -= n;
 
-                if middle_count <= 0 {
+                if middle_count == 0 {
                     break;
                 }
             }
