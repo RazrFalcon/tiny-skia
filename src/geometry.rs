@@ -304,7 +304,7 @@ fn chop_cubic_at(src: &[Point; 4], t_values: &[TValue], dst: &mut [Point]) {
         dst[2] = src[2];
         dst[3] = src[3];
     } else {
-        let t = t_values[0];
+        let mut t = t_values[0];
         let mut tmp = [Point::zero(); 4];
 
         // Reduce the `src` lifetime, so we can use `src = &tmp` later.
@@ -312,7 +312,7 @@ fn chop_cubic_at(src: &[Point; 4], t_values: &[TValue], dst: &mut [Point]) {
 
         let mut dst_offset = 0;
         for i in 0..t_values.len() {
-            chop_cubic_at2(src, t, dst);
+            chop_cubic_at2(src, t, &mut dst[dst_offset..]);
             if i == t_values.len() - 1 {
                 break;
             }
@@ -330,12 +330,16 @@ fn chop_cubic_at(src: &[Point; 4], t_values: &[TValue], dst: &mut [Point]) {
                 t_values[i+1].get() - t_values[i].get(),
                 1.0 - t_values[i].get(),
             );
-            if n.is_none() {
-                // if we can't, just create a degenerate cubic
-                dst[4] = src[3];
-                dst[5] = src[3];
-                dst[6] = src[3];
-                break;
+
+            match n {
+                Some(n) => t = n,
+                None => {
+                    // if we can't, just create a degenerate cubic
+                    dst[dst_offset + 4] = src[3];
+                    dst[dst_offset + 5] = src[3];
+                    dst[dst_offset + 6] = src[3];
+                    break;
+                }
             }
         }
     }
@@ -989,4 +993,34 @@ fn subdivide<'a>(src: &Conic, mut points: &'a mut [Point], mut level: u8) -> &'a
 #[inline]
 fn between(a: f32, b: f32, c: f32) -> bool {
     (a - b) * (c - b) <= 0.0
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn chop_cubic_at_y_extrema_1() {
+        let src = [
+            Point::from_xy(10.0, 20.0),
+            Point::from_xy(67.0, 437.0),
+            Point::from_xy(298.0, 213.0),
+            Point::from_xy(401.0, 214.0),
+        ];
+
+        let mut dst = [Point::zero(); 10];
+        let n = chop_cubic_at_y_extrema(&src, &mut dst);
+        assert_eq!(n, 2);
+        assert_eq!(dst[0], Point::from_xy(10.0, 20.0));
+        assert_eq!(dst[1], Point::from_xy(37.508274, 221.24475));
+        assert_eq!(dst[2], Point::from_xy(105.541855, 273.19803));
+        assert_eq!(dst[3], Point::from_xy(180.15599, 273.19803));
+        assert_eq!(dst[4], Point::from_xy(259.80502, 273.19803));
+        assert_eq!(dst[5], Point::from_xy(346.9527, 213.99666));
+        assert_eq!(dst[6], Point::from_xy(400.30844, 213.99666));
+        assert_eq!(dst[7], Point::from_xy(400.53958, 213.99666));
+        assert_eq!(dst[8], Point::from_xy(400.7701, 213.99777));
+        assert_eq!(dst[9], Point::from_xy(401.0, 214.0));
+    }
 }
