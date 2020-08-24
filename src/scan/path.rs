@@ -177,6 +177,7 @@ fn walk_edges(
             if (w & winding_mask) == 0 {
                 // we finished an interval
                 let x = x.min(right_clip); // clip x
+                let left = left.min(right_clip); // clip x
                 if let Some(width) = LengthU32::new(x - left) {
                     blitter.blit_h(left, curr_y, width);
                 }

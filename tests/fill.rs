@@ -266,3 +266,23 @@ fn fill_aa() {
 
     assert_eq!(pixmap, expected);
 }
+
+#[test]
+fn overflow_in_walk_edges_1() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint {
+        color: Color::from_rgba8(50, 127, 150, 200),
+        blend_mode: BlendMode::default(),
+        fill_type: FillType::Winding,
+        anti_alias: false,
+    };
+
+    let mut pb = PathBuilder::new();
+    pb.move_to(10.0, 20.0);
+    pb.cubic_to(39.0, 163.0, 117.0, 61.0, 130.0, 70.0);
+    let path = pb.finish().unwrap();
+
+    // Must not panic.
+    pixmap.fill_path(&path, &paint);
+}
