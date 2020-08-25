@@ -33,8 +33,8 @@ mod pixmap;
 mod point;
 mod raster_pipeline;
 mod raster_pipeline_blitter;
-mod scan;
 mod scalar;
+mod scan;
 mod stroker;
 
 pub use checked_geom::*;

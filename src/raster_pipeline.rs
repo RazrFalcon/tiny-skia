@@ -185,10 +185,10 @@ impl ContextStorage {
 
     #[inline]
     pub fn create_uniform_color_context(&mut self, c: PremultipliedColor) -> *const c_void {
-        let r = c.red().get();
-        let g = c.green().get();
-        let b = c.blue().get();
-        let a = c.alpha().get();
+        let r = c.red();
+        let g = c.green();
+        let b = c.blue();
+        let a = c.alpha();
         let rgba = [
             (r * 255.0 + 0.5) as u16,
             (g * 255.0 + 0.5) as u16,

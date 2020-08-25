@@ -120,18 +120,24 @@ impl PremultipliedColorU8 {
     }
 
     /// Returns color's red component.
+    ///
+    /// The value is <= alpha.
     #[inline]
     pub const fn red(self) -> u8 {
         ((self.0 >> 0) & 0xFF) as u8
     }
 
     /// Returns color's green component.
+    ///
+    /// The value is <= alpha.
     #[inline]
     pub const fn green(self) -> u8 {
         ((self.0 >> 8) & 0xFF) as u8
     }
 
     /// Returns color's blue component.
+    ///
+    /// The value is <= alpha.
     #[inline]
     pub const fn blue(self) -> u8 {
         ((self.0 >> 16) & 0xFF) as u8
@@ -232,6 +238,12 @@ impl Color {
     }
 
     /// Creates a new color from 4 components.
+    #[inline]
+    pub const fn from_rgba_safe(r: NormalizedF32, g: NormalizedF32, b: NormalizedF32, a: NormalizedF32) -> Self {
+        Color { r, g, b, a }
+    }
+
+    /// Creates a new color from 4 components.
     ///
     /// u8 will be divided by 255 to get the float component.
     #[inline]
@@ -245,26 +257,58 @@ impl Color {
     }
 
     /// Returns color's red component.
+    ///
+    /// The value is guarantee to be in a 0..=1 range.
     #[inline]
-    pub fn red(&self) -> NormalizedF32 {
+    pub fn red(&self) -> f32 {
+        self.r.get()
+    }
+
+    /// Returns color's green component.
+    ///
+    /// The value is guarantee to be in a 0..=1 range.
+    #[inline]
+    pub fn green(&self) -> f32 {
+        self.g.get()
+    }
+
+    /// Returns color's blue component.
+    ///
+    /// The value is guarantee to be in a 0..=1 range.
+    #[inline]
+    pub fn blue(&self) -> f32 {
+        self.b.get()
+    }
+
+    /// Returns color's alpha component.
+    ///
+    /// The value is guarantee to be in a 0..=1 range.
+    #[inline]
+    pub fn alpha(&self) -> f32 {
+        self.a.get()
+    }
+
+    /// Returns color's red component.
+    #[inline]
+    pub fn red_safe(&self) -> NormalizedF32 {
         self.r
     }
 
     /// Returns color's green component.
     #[inline]
-    pub fn green(&self) -> NormalizedF32 {
+    pub fn green_safe(&self) -> NormalizedF32 {
         self.g
     }
 
     /// Returns color's blue component.
     #[inline]
-    pub fn blue(&self) -> NormalizedF32 {
+    pub fn blue_safe(&self) -> NormalizedF32 {
         self.b
     }
 
     /// Returns color's alpha component.
     #[inline]
-    pub fn alpha(&self) -> NormalizedF32 {
+    pub fn alpha_safe(&self) -> NormalizedF32 {
         self.a
     }
 
@@ -319,26 +363,61 @@ pub struct PremultipliedColor {
 
 impl PremultipliedColor {
     /// Returns color's red component.
+    ///
+    /// - The value is guarantee to be in a 0..=1 range.
+    /// - The value is <= alpha.
     #[inline]
-    pub fn red(&self) -> NormalizedF32 {
+    pub fn red(&self) -> f32 {
+        self.r.get()
+    }
+
+    /// Returns color's green component.
+    ///
+    /// - The value is guarantee to be in a 0..=1 range.
+    /// - The value is <= alpha.
+    #[inline]
+    pub fn green(&self) -> f32 {
+        self.g.get()
+    }
+
+    /// Returns color's blue component.
+    ///
+    /// - The value is guarantee to be in a 0..=1 range.
+    /// - The value is <= alpha.
+    #[inline]
+    pub fn blue(&self) -> f32 {
+        self.b.get()
+    }
+
+    /// Returns color's alpha component.
+    ///
+    /// - The value is guarantee to be in a 0..=1 range.
+    #[inline]
+    pub fn alpha(&self) -> f32 {
+        self.a.get()
+    }
+
+    /// Returns color's red component.
+    #[inline]
+    pub fn red_safe(&self) -> NormalizedF32 {
         self.r
     }
 
     /// Returns color's green component.
     #[inline]
-    pub fn green(&self) -> NormalizedF32 {
+    pub fn green_safe(&self) -> NormalizedF32 {
         self.g
     }
 
     /// Returns color's blue component.
     #[inline]
-    pub fn blue(&self) -> NormalizedF32 {
+    pub fn blue_safe(&self) -> NormalizedF32 {
         self.b
     }
 
     /// Returns color's alpha component.
     #[inline]
-    pub fn alpha(&self) -> NormalizedF32 {
+    pub fn alpha_safe(&self) -> NormalizedF32 {
         self.a
     }
 
