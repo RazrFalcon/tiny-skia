@@ -4,13 +4,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use pathfinder_simd::default::F32x2;
-
 use crate::{Point, NormalizedF32, Transform};
 
 use crate::checked_geom_ext::TransformExt;
 use crate::floating_point::FLOAT_PI;
 use crate::scalar::{ScalarExt, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
+use crate::simd::F32x2;
 
 mod private {
     use crate::scalar::ScalarExt;
@@ -755,7 +754,7 @@ fn calc_cubic_precision(src: &[Point; 4]) -> f32 {
 }
 
 
-#[derive(Clone, Copy, Default)]
+#[derive(Copy, Clone, Default)]
 pub struct Conic {
     pub points: [Point; 3],
     pub weight: f32,

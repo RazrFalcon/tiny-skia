@@ -6,9 +6,9 @@
 
 //! tiny-skia specific checked-geom extensions.
 
-use pathfinder_simd::default::F32x4;
-
 use crate::{Point, Bounds, Transform};
+
+use crate::simd::F32x4;
 
 
 pub trait BoundsExt: Sized {
@@ -53,13 +53,13 @@ impl BoundsExt for Bounds {
         }
 
         // TODO: pathfinder's implementation of all_true is slightly different from the Skia. Test it.
-        let all_finite = (accum * F32x4::default()).packed_eq(F32x4::default()).all_true();
+        let all_finite = accum * F32x4::default() == F32x4::default();
         if all_finite {
             Bounds::from_ltrb(
-                min[0].min(min[2]),
-                min[1].min(min[3]),
-                max[0].max(max[2]),
-                max[1].max(max[3]),
+                min.x().min(min.z()),
+                min.y().min(min.w()),
+                max.x().max(max.z()),
+                max.y().max(max.w()),
             )
         } else {
             None

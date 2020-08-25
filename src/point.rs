@@ -4,9 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use pathfinder_simd::default::F32x2;
-
 use crate::scalar::ScalarExt;
+use crate::simd::F32x2;
 
 /// A point.
 #[allow(missing_docs)]
@@ -26,7 +25,7 @@ impl Point {
 
     #[inline]
     pub(crate) fn from_f32x2(r: F32x2) -> Self {
-        Point::from_xy(r[0], r[1])
+        Point::from_xy(r.x(), r.y())
     }
 
     #[inline]

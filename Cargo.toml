@@ -15,7 +15,6 @@ categories = ["rendering"]
 checked-geom = { git = "https://github.com/RazrFalcon/checked-geom", rev = "34dc20b" }
 memmap2 = { version = "0.1", optional = true }
 num-ext = { git = "https://github.com/RazrFalcon/num-ext", rev = "109f01a" }
-pathfinder_simd = "0.5"
 png = { version = "0.16.6", optional = true }
 
 [build-dependencies]
