@@ -286,3 +286,122 @@ fn overflow_in_walk_edges_1() {
     // Must not panic.
     pixmap.fill_path(&path, &paint);
 }
+
+#[test]
+fn clip_line_1() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint {
+        color: Color::from_rgba8(50, 127, 150, 200),
+        blend_mode: BlendMode::default(),
+        fill_type: FillType::Winding,
+        anti_alias: false,
+    };
+
+    let mut pb = PathBuilder::new();
+    pb.move_to(50.0, -15.0);
+    pb.line_to(-15.0, 50.0);
+    pb.line_to(50.0, 115.0);
+    pb.line_to(115.0, 50.0);
+    pb.close();
+    let path = pb.finish().unwrap();
+
+    pixmap.fill_path(&path, &paint);
+    let expected = Pixmap::load_png("tests/images/fill/clip-line-1.png").unwrap();
+
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn clip_line_2() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint {
+        color: Color::from_rgba8(50, 127, 150, 200),
+        blend_mode: BlendMode::default(),
+        fill_type: FillType::Winding,
+        anti_alias: false,
+    };
+
+    // This strange path forces `line_clipper::clip` to return an empty array.
+    // And we're checking that this case is handled correctly.
+    let mut pb = PathBuilder::new();
+    pb.move_to(0.0, -1.0);
+    pb.line_to(50.0, 0.0);
+    pb.line_to(0.0, 50.0);
+    pb.close();
+    let path = pb.finish().unwrap();
+
+    pixmap.fill_path(&path, &paint);
+    let expected = Pixmap::load_png("tests/images/fill/clip-line-2.png").unwrap();
+
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn clip_quad() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint {
+        color: Color::from_rgba8(50, 127, 150, 200),
+        blend_mode: BlendMode::default(),
+        fill_type: FillType::Winding,
+        anti_alias: false,
+    };
+
+    let mut pb = PathBuilder::new();
+    pb.move_to(10.0, 85.0);
+    pb.quad_to(150.0, 150.0, 85.0, 15.0);
+    let path = pb.finish().unwrap();
+
+    pixmap.fill_path(&path, &paint);
+    let expected = Pixmap::load_png("tests/images/fill/clip-quad.png").unwrap();
+
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn clip_cubic_1() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint {
+        color: Color::from_rgba8(50, 127, 150, 200),
+        blend_mode: BlendMode::default(),
+        fill_type: FillType::Winding,
+        anti_alias: false,
+    };
+
+    // `line_clipper::clip` produces 2 points for this path.
+    let mut pb = PathBuilder::new();
+    pb.move_to(10.0, 50.0);
+    pb.cubic_to(0.0, 175.0, 195.0, 70.0, 75.0, 20.0);
+    let path = pb.finish().unwrap();
+
+    pixmap.fill_path(&path, &paint);
+    let expected = Pixmap::load_png("tests/images/fill/clip-cubic-1.png").unwrap();
+
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn clip_cubic_2() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint {
+        color: Color::from_rgba8(50, 127, 150, 200),
+        blend_mode: BlendMode::default(),
+        fill_type: FillType::Winding,
+        anti_alias: false,
+    };
+
+    // `line_clipper::clip` produces 3 points for this path.
+    let mut pb = PathBuilder::new();
+    pb.move_to(10.0, 50.0);
+    pb.cubic_to(10.0, 40.0, 90.0, 120.0, 125.0, 20.0);
+    let path = pb.finish().unwrap();
+
+    pixmap.fill_path(&path, &paint);
+    let expected = Pixmap::load_png("tests/images/fill/clip-cubic-2.png").unwrap();
+
+    assert_eq!(pixmap, expected);
+}

@@ -2,7 +2,7 @@ use crate::{Path, Point, PathBuilder, Transform, PathSegment, PathSegmentsIter, 
 
 use crate::geometry;
 use crate::path_builder::PathDirection;
-use crate::scalar::{ScalarExt, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
+use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 
 
 struct SwappableBuilders<'a, > {
@@ -702,9 +702,9 @@ impl PathStroker {
         let mut chopped = [Point::zero(); 7];
         if dxy.x == 0.0 && dxy.y == 0.0 {
             let mut c_points: &[Point] = cubic;
-            if t.get().is_nearly_zero(SCALAR_NEARLY_ZERO) {
+            if t.get().is_nearly_zero() {
                 dxy = cubic[2] - cubic[0];
-            } else if (1.0 - t.get()).is_nearly_zero(SCALAR_NEARLY_ZERO) {
+            } else if (1.0 - t.get()).is_nearly_zero() {
                 dxy = cubic[3] - cubic[1];
             } else {
                 // If the cubic inflection falls on the cusp, subdivide the cubic
@@ -882,6 +882,7 @@ impl PathStroker {
         true
     }
 
+    #[inline]
     fn post_join_to(&mut self, p: Point, normal: Point, unit_normal: Point) {
         self.join_completed = true;
         self.prev_pt = p;
@@ -890,6 +891,7 @@ impl PathStroker {
         self.segment_count += 1;
     }
 
+    #[inline]
     fn init_quad(&mut self, stroke_type: StrokeType, start: NormalizedF32, end: NormalizedF32, quad_points: &mut QuadConstruct) {
         self.stroke_type = stroke_type;
         self.found_tangents = false;
@@ -992,6 +994,7 @@ impl PathStroker {
         self.set_ray_points(*tp, &mut dxy, on_p, tangent);
     }
 
+    #[inline]
     fn add_degenerate_line(&mut self, quad_points: &QuadConstruct) {
         if self.stroke_type == StrokeType::Outer {
             self.outer.line_to(quad_points.quad[2].x, quad_points.quad[2].y);
@@ -1042,6 +1045,7 @@ impl PathStroker {
         ResultType::Split
     }
 
+    #[inline]
     fn set_quad_end_normal(&self, quad: &[Point; 3], normal_ab: Point, unit_normal_ab: Point,
                            normal_bc: &mut Point, unit_normal_bc: &mut Point) {
         if !set_normal_unit_normal(quad[1], quad[2], self.res_scale, self.radius, normal_bc, unit_normal_bc) {
@@ -1110,11 +1114,13 @@ impl PathStroker {
     }
 
     // Given a cubic and a t-range, determine if the stroke can be described by a quadratic.
+    #[inline]
     fn tangents_meet(&self, cubic: &[Point; 4], quad_points: &mut QuadConstruct) -> ResultType {
         self.cubic_quad_ends(cubic, quad_points);
         self.intersect_ray(IntersectRayType::ResultType, quad_points)
     }
 
+    #[inline]
     fn finish(&mut self, is_line: bool) -> Option<Path> {
         self.finish_contour(false, is_line);
 
@@ -1184,6 +1190,7 @@ fn join_factory(join: LineJoin) -> JoinProc {
     }
 }
 
+#[inline]
 fn is_clockwise(before: Point, after: Point) -> bool {
     before.x * after.y > before.y * after.x
 }
@@ -1196,17 +1203,18 @@ enum AngleType {
     NearlyLine,
 }
 
+#[inline]
 fn dot_to_angle_type(dot: f32) -> AngleType {
     if dot >= 0.0 {
         // shallow or line
-        if (1.0 - dot).is_nearly_zero(SCALAR_NEARLY_ZERO) {
+        if (1.0 - dot).is_nearly_zero() {
             AngleType::NearlyLine
         } else {
             AngleType::Shallow
         }
     } else {
         // sharp or 180
-        if (1.0 + dot).is_nearly_zero(SCALAR_NEARLY_ZERO) {
+        if (1.0 + dot).is_nearly_zero() {
             AngleType::Nearly180
         } else {
             AngleType::Sharp

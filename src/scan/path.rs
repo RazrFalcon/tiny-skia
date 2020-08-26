@@ -4,11 +4,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use std::convert::TryFrom;
+
 use crate::{Path, IntRect, FillType, LengthU32, Bounds, ScreenIntRect};
 
 use crate::blitter::Blitter;
 use crate::edge::{Edge, LineEdge};
-use crate::edge_builder::BasicEdgeBuilder;
+use crate::edge_builder::{BasicEdgeBuilder, ShiftedIntRect};
 use crate::fdot6;
 use crate::fixed::{self, Fixed};
 use crate::floating_point::SaturateCast;
@@ -19,12 +21,19 @@ pub fn fill_path(
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
-    let ir = conservative_round_to_int(&path.bounds())?.to_screen_int_rect()?;
-    let bottom = ir.bottom();
+    let ir = conservative_round_to_int(&path.bounds())?;
+
+    let path_contained_in_clip = if let Some(bounds) = ir.to_screen_int_rect() {
+        clip.contains(&bounds)
+    } else {
+        // If bounds cannot be converted into ScreenIntRect,
+        // the path is out of clip.
+        false
+    };
 
     // TODO: SkScanClipper
 
-    fill_path_impl(path, fill_type, clip, ir.y(), bottom, 0, blitter)
+    fill_path_impl(path, fill_type, clip, ir.y(), ir.bottom(), 0, path_contained_in_clip, blitter)
 }
 
 // Conservative rounding function, which effectively nudges the int-rect to be slightly larger
@@ -78,19 +87,15 @@ pub fn fill_path_impl(
     path: &Path,
     fill_type: FillType,
     clip_rect: &ScreenIntRect,
-    mut start_y: u32,
-    mut stop_y: u32,
+    mut start_y: i32,
+    mut stop_y: i32,
     shift_edges_up: i32,
+    path_contained_in_clip: bool,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
-    let shifted_clip = ScreenIntRect::from_xywh(
-        clip_rect.x() << shift_edges_up,
-        clip_rect.y() << shift_edges_up,
-        clip_rect.width() << shift_edges_up,
-        clip_rect.height() << shift_edges_up,
-    )?;
-
-    let mut edges = BasicEdgeBuilder::build_edges(path, shift_edges_up)?;
+    let shifted_clip = ShiftedIntRect::new(clip_rect, shift_edges_up)?;
+    let clip = if path_contained_in_clip { None } else { Some(&shifted_clip) };
+    let mut edges = BasicEdgeBuilder::build_edges(path, clip, shift_edges_up)?;
 
     edges.sort_by(|a, b| {
         let mut value_a = a.as_line().first_y;
@@ -130,18 +135,23 @@ pub fn fill_path_impl(
 
     start_y <<= shift_edges_up;
     stop_y <<= shift_edges_up;
-    if start_y < shifted_clip.y() {
-        start_y = shifted_clip.y();
+
+    let top = shifted_clip.shifted().y() as i32;
+    if !path_contained_in_clip && start_y < top {
+        start_y = top;
     }
 
-    let bottom = shifted_clip.bottom();
-    if stop_y > bottom {
-        stop_y = bottom;
+    let bottom = shifted_clip.shifted().bottom() as i32;
+    if !path_contained_in_clip && stop_y > bottom as i32 {
+        stop_y = bottom as i32;
     }
+
+    let start_y = u32::try_from(start_y).unwrap();
+    let stop_y = u32::try_from(stop_y).unwrap();
 
     // TODO: walk_simple_edges
 
-    walk_edges(fill_type, start_y, stop_y, shifted_clip.right(), edges, blitter)
+    walk_edges(fill_type, start_y, stop_y, shifted_clip.shifted().right(), edges, blitter)
 }
 
 // TODO: simplify!
@@ -176,8 +186,6 @@ fn walk_edges(
 
             if (w & winding_mask) == 0 {
                 // we finished an interval
-                let x = x.min(right_clip); // clip x
-                let left = left.min(right_clip); // clip x
                 if let Some(width) = LengthU32::new(x - left) {
                     blitter.blit_h(left, curr_y, width);
                 }

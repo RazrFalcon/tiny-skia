@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::scalar::ScalarExt;
+use crate::scalar::Scalar;
 use crate::simd::F32x2;
 
 /// A point.
@@ -50,14 +50,7 @@ impl Point {
     /// Both values are other than infinities and NaN.
     #[inline]
     pub(crate) fn is_finite(&self) -> bool {
-        let mut accum = 0.0;
-        accum *= self.x;
-        accum *= self.y;
-
-        // accum is either NaN or it is finite (zero).
-        debug_assert!(accum == 0.0 || accum.is_nan());
-
-        !accum.is_nan()
+        (self.x * self.y).is_finite()
     }
 
     #[inline]
@@ -67,8 +60,8 @@ impl Point {
 
     #[inline]
     pub(crate) fn equals_within_tolerance(&self, other: Point, tolerance: f32) -> bool {
-        (self.x - other.x).is_nearly_zero(tolerance) &&
-        (self.y - other.y).is_nearly_zero(tolerance)
+        (self.x - other.x).is_nearly_zero_within_tolerance(tolerance) &&
+        (self.y - other.y).is_nearly_zero_within_tolerance(tolerance)
     }
 
     /// Sets vector to (x, y) scaled so length() returns one, and so that (x, y)
@@ -144,15 +137,18 @@ impl Point {
         Point::from_xy(self.x * scale, self.y * scale)
     }
 
+    #[inline]
     pub(crate) fn swap_coords(&mut self) {
         std::mem::swap(&mut self.x, &mut self.y);
     }
 
+    #[inline]
     pub(crate) fn rotate_cw(&mut self) {
         self.swap_coords();
         self.x = -self.x;
     }
 
+    #[inline]
     pub(crate) fn rotate_ccw(&mut self) {
         self.swap_coords();
         self.y = -self.y;

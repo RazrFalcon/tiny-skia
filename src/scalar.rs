@@ -4,22 +4,32 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use float_cmp::ApproxEqUlps;
+
 pub const SCALAR_MAX: f32           = 3.402823466e+38;
 pub const SCALAR_NEARLY_ZERO: f32   = 1.0 / (1 << 12) as f32;
 pub const SCALAR_ROOT_2_OVER_2: f32 = 0.707106781;
 
-pub trait ScalarExt {
+pub trait Scalar {
     fn half(self) -> Self;
+    fn ave(self, other: Self) -> Self;
     fn sqr(self) -> Self;
     fn invert(self) -> Self;
     fn bound(self, min: Self, max: Self) -> Self;
-    fn is_nearly_zero(self, tolerance: Self) -> bool;
+    fn is_nearly_zero(self) -> bool;
+    fn is_nearly_zero_within_tolerance(self, tolerance: Self) -> bool;
+    fn almost_dequal_ulps(self, other: Self) -> bool;
 }
 
-impl ScalarExt for f32 {
+impl Scalar for f32 {
     #[inline]
     fn half(self) -> f32 {
         self * 0.5
+    }
+
+    #[inline]
+    fn ave(self, other: Self) -> f32 {
+        (self + other) * 0.5
     }
 
     #[inline]
@@ -39,9 +49,20 @@ impl ScalarExt for f32 {
     }
 
     #[inline]
-    fn is_nearly_zero(self, tolerance: Self) -> bool {
+    fn is_nearly_zero(self) -> bool {
+        self.is_nearly_zero_within_tolerance(SCALAR_NEARLY_ZERO)
+    }
+
+    #[inline]
+    fn is_nearly_zero_within_tolerance(self, tolerance: Self) -> bool {
         debug_assert!(tolerance >= 0.0);
         self.abs() <= tolerance
+    }
+
+    // From SkPathOpsTypes.
+    #[inline]
+    fn almost_dequal_ulps(self, other: Self) -> bool {
+        self.approx_eq_ulps(&other, 16)
     }
 }
 

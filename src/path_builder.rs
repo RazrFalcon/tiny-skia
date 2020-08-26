@@ -11,7 +11,7 @@ use crate::{Point, Bounds, Path, Rect};
 use crate::checked_geom_ext::BoundsExt;
 use crate::geometry;
 use crate::path::PathVerb;
-use crate::scalar::{SCALAR_ROOT_2_OVER_2, ScalarExt};
+use crate::scalar::{Scalar, SCALAR_ROOT_2_OVER_2};
 
 
 #[derive(Copy, Clone, PartialEq, Debug)]

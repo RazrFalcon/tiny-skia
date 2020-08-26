@@ -47,7 +47,7 @@ pub fn fill_path(
     // TODO: SkScanClipper
     // TODO: AAA
 
-    fill_path_impl(path, fill_type, &ir.to_screen_int_rect()?, clip, blitter)
+    fill_path_impl(path, fill_type, &ir, clip, blitter)
 }
 
 // Would any of the coordinates of this rectangle not fit in a short,
@@ -75,19 +75,29 @@ fn overflows_short_shift(value: i32, shift: i32) -> i32 {
 fn fill_path_impl(
     path: &Path,
     fill_type: FillType,
-    bounds: &ScreenIntRect,
-    clip_rect: &ScreenIntRect,
+    bounds: &IntRect,
+    clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
     // TODO: 15% slower than skia, find out why
-    let mut blitter = SuperBlitter::new(bounds, clip_rect, blitter)?;
+    let mut blitter = SuperBlitter::new(bounds, clip, blitter)?;
+
+    let path_contained_in_clip = if let Some(bounds) = bounds.to_screen_int_rect() {
+        clip.contains(&bounds)
+    } else {
+        // If bounds cannot be converted into ScreenIntRect,
+        // the path is out of clip.
+        false
+    };
+
     super::path::fill_path_impl(
         path,
         fill_type,
-        clip_rect,
+        clip,
         bounds.top(),
         bounds.bottom(),
         SHIFT as i32,
+        path_contained_in_clip,
         &mut blitter,
     )
 }
@@ -96,7 +106,7 @@ struct BaseSuperBlitter<'a> {
     real_blitter: &'a mut dyn Blitter,
 
     /// Current y coordinate, in destination coordinates.
-    curr_iy: u32,
+    curr_iy: i32,
     /// Widest row of region to be blitted, in destination coordinates.
     width: LengthU32,
     /// Leftmost x coordinate in any row, in destination coordinates.
@@ -105,26 +115,26 @@ struct BaseSuperBlitter<'a> {
     super_left: u32,
 
     /// Current y coordinate in supersampled coordinates.
-    curr_y: u32,
+    curr_y: i32,
     /// Initial y coordinate (top of bounds).
-    top: u32,
+    top: i32,
 }
 
 impl<'a> BaseSuperBlitter<'a> {
     fn new(
-        bounds: &ScreenIntRect,
+        bounds: &IntRect,
         clip_rect: &ScreenIntRect,
         blitter: &'a mut dyn Blitter,
     ) -> Option<Self> {
-        let sect_bounds = bounds.intersect(clip_rect)?;
+        let sect_bounds = bounds.intersect(&clip_rect.to_int_rect())?.to_screen_int_rect()?;
         Some(BaseSuperBlitter {
             real_blitter: blitter,
-            curr_iy: sect_bounds.top() - 1, // TODO: no overflow?
+            curr_iy: sect_bounds.top() as i32 - 1,
             width: sect_bounds.width_safe(),
             left: sect_bounds.left(),
             super_left: sect_bounds.left() << SHIFT,
-            curr_y: (sect_bounds.top() << SHIFT) - 1, // TODO: no overflow?
-            top: sect_bounds.top(),
+            curr_y: (sect_bounds.top() << SHIFT) as i32 - 1,
+            top: sect_bounds.top() as i32,
         })
     }
 }
@@ -138,7 +148,7 @@ struct SuperBlitter<'a> {
 
 impl<'a> SuperBlitter<'a> {
     fn new(
-        bounds: &ScreenIntRect,
+        bounds: &IntRect,
         clip_rect: &ScreenIntRect,
         blitter: &'a mut dyn Blitter,
     ) -> Option<Self> {
@@ -158,7 +168,7 @@ impl<'a> SuperBlitter<'a> {
             if !self.runs.is_empty() {
                 self.base.real_blitter.blit_anti_h(
                     self.base.left,
-                    self.base.curr_iy,
+                    u32::try_from(self.base.curr_iy).unwrap(),
                     &self.runs.alpha,
                     &self.runs.runs,
                 );
@@ -182,7 +192,7 @@ impl Blitter for SuperBlitter<'_> {
     /// Blits a row of pixels, with location and width specified
     /// in supersampled coordinates.
     fn blit_h(&mut self, mut x: u32, y: u32, mut width: LengthU32) {
-        let iy = y >> SHIFT;
+        let iy = (y >> SHIFT) as i32;
         debug_assert!(iy >= self.base.curr_iy);
 
         // hack, until I figure out why my cubics (I think) go beyond the bounds
@@ -194,10 +204,10 @@ impl Blitter for SuperBlitter<'_> {
             }
         }
 
-        debug_assert!(y >= self.base.curr_y);
-        if self.base.curr_y != y {
+        debug_assert!(y as i32 >= self.base.curr_y);
+        if self.base.curr_y != y as i32 {
             self.offset_x = 0;
-            self.base.curr_y = y;
+            self.base.curr_y = y as i32;
         }
 
         if iy != self.base.curr_iy {

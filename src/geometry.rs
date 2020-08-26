@@ -8,11 +8,11 @@ use crate::{Point, NormalizedF32, Transform};
 
 use crate::checked_geom_ext::TransformExt;
 use crate::floating_point::FLOAT_PI;
-use crate::scalar::{ScalarExt, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
+use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 use crate::simd::F32x2;
 
 mod private {
-    use crate::scalar::ScalarExt;
+    use crate::scalar::Scalar;
     use crate::{FiniteF32, NormalizedF32};
 
     /// A finite f32 in (0,1) range.
@@ -118,9 +118,41 @@ impl CubicCoeff {
 }
 
 
+// TODO: to a custom type?
 #[inline]
 pub fn new_t_values() -> [TValue; 3] {
     [TValue::ANY, TValue::ANY, TValue::ANY]
+}
+
+// TODO: return custom type
+/// Returns 0 for 1 quad, and 1 for two quads, either way the answer is stored in dst[].
+///
+/// Guarantees that the 1/2 quads will be monotonic.
+pub fn chop_quad_at_x_extrema(src: &[Point; 3], dst: &mut [Point; 5]) -> usize {
+    let a = src[0].x;
+    let mut b = src[1].x;
+    let c = src[2].x;
+
+    if is_not_monotonic(a, b, c) {
+        if let Some(t_value) = valid_unit_divide(a - b, a - b - b + c) {
+            chop_quad_at(src, t_value, dst);
+
+            // flatten double quad extrema
+            dst[1].x = dst[2].x;
+            dst[3].x = dst[2].x;
+
+            return 1;
+        }
+
+        // if we get here, we need to force dst to be monotonic, even though
+        // we couldn't compute a unit_divide value (probably underflow).
+        b = if (a - b).abs() < (b - c).abs() { a } else { c };
+    }
+
+    dst[0] = Point::from_xy(a, src[0].y);
+    dst[1] = Point::from_xy(b, src[1].y);
+    dst[2] = Point::from_xy(c, src[2].y);
+    0
 }
 
 /// Returns 0 for 1 quad, and 1 for two quads, either way the answer is stored in dst[].
@@ -133,8 +165,12 @@ pub fn chop_quad_at_y_extrema(src: &[Point; 3], dst: &mut [Point; 5]) -> usize {
 
     if is_not_monotonic(a, b, c) {
         if let Some(t_value) = valid_unit_divide(a - b, a - b - b + c) {
-            chop_quad_at(src, dst, t_value);
-            flatten_double_quad_extrema(dst);
+            chop_quad_at(src, t_value, dst);
+
+            // flatten double quad extrema
+            dst[1].y = dst[2].y;
+            dst[3].y = dst[2].y;
+
             return 1;
         }
 
@@ -160,7 +196,7 @@ fn is_not_monotonic(a: f32, b: f32, c: f32) -> bool {
     ab == 0.0 || bc < 0.0
 }
 
-fn chop_quad_at(src: &[Point], dst: &mut [Point; 5], t: TValue) {
+pub fn chop_quad_at(src: &[Point], t: TValue, dst: &mut [Point; 5]) {
     let p0 = src[0].to_f32x2();
     let p1 = src[1].to_f32x2();
     let p2 = src[2].to_f32x2();
@@ -176,12 +212,23 @@ fn chop_quad_at(src: &[Point], dst: &mut [Point; 5], t: TValue) {
     dst[4] = Point::from_f32x2(p2);
 }
 
-#[inline]
-fn flatten_double_quad_extrema(coords: &mut [Point; 5]) {
-    coords[1].y = coords[2].y;
-    coords[3].y = coords[2].y;
-}
+pub fn chop_cubic_at_x_extrema(src: &[Point; 4], dst: &mut [Point; 10]) -> usize {
+    let mut t_values = new_t_values();
+    let t_values = find_cubic_extrema(src[0].x, src[1].x, src[2].x, src[3].x, &mut t_values);
 
+    chop_cubic_at(src, &t_values, dst);
+    if !t_values.is_empty() {
+        // we do some cleanup to ensure our X extrema are flat
+        dst[2].x = dst[3].x;
+        dst[4].x = dst[3].x;
+        if t_values.len() == 2 {
+            dst[5].x = dst[6].x;
+            dst[7].x = dst[6].x;
+        }
+    }
+
+    t_values.len()
+}
 
 /// Given 4 points on a cubic bezier, chop it into 1, 2, 3 beziers such that
 /// the resulting beziers are monotonic in Y.
@@ -200,9 +247,11 @@ pub fn chop_cubic_at_y_extrema(src: &[Point; 4], dst: &mut [Point; 10]) -> usize
     chop_cubic_at(src, &t_values, dst);
     if !t_values.is_empty() {
         // we do some cleanup to ensure our Y extrema are flat
-        flatten_double_cubic_extrema(dst);
+        dst[2].y = dst[3].y;
+        dst[4].y = dst[3].y;
         if t_values.len() == 2 {
-            flatten_double_cubic_extrema(&mut dst[3..]);
+            dst[5].y = dst[6].y;
+            dst[7].y = dst[6].y;
         }
     }
 
@@ -368,12 +417,6 @@ pub fn chop_cubic_at2(src: &[Point; 4], t: TValue, dst: &mut [Point]) {
 }
 
 #[inline]
-fn flatten_double_cubic_extrema(coords: &mut [Point]) {
-    coords[2].y = coords[3].y;
-    coords[4].y = coords[3].y;
-}
-
-#[inline]
 fn valid_unit_divide(mut numer: f32, mut denom: f32) -> Option<TValue> {
     if numer < 0.0 {
         numer = -numer;
@@ -517,7 +560,7 @@ fn formulate_f1_dot_f2(src: &[f32]) -> [f32; 4] {
 /// Eliminates repeated roots (so that all t_values are distinct, and are always
 /// in increasing order.
 fn solve_cubic_poly(coeff: &[f32; 4], t_values: &mut [TValue; 3]) -> usize {
-    if coeff[0].is_nearly_zero(SCALAR_NEARLY_ZERO) {
+    if coeff[0].is_nearly_zero() {
         // we're just a quadratic
         return find_unit_quad_roots(coeff[1], coeff[2], coeff[3], t_values);
     }
@@ -994,6 +1037,45 @@ fn between(a: f32, b: f32, c: f32) -> bool {
     (a - b) * (c - b) <= 0.0
 }
 
+#[inline]
+pub fn chop_mono_cubic_at_x(src: &[Point; 4], x: f32, dst: &mut [Point; 7]) -> bool {
+    cubic_dchop_at_intercept(src, x, true, dst)
+}
+
+#[inline]
+pub fn chop_mono_cubic_at_y(src: &[Point; 4], y: f32, dst: &mut [Point; 7]) -> bool {
+    cubic_dchop_at_intercept(src, y, false, dst)
+}
+
+fn cubic_dchop_at_intercept(src: &[Point; 4], intercept: f32, is_vertical: bool, dst: &mut [Point; 7]) -> bool {
+    use crate::path_ops::{cubic64::Cubic64, point64::Point64, line_cubic_intersections};
+
+    let src = [
+        Point64::from_point(src[0]),
+        Point64::from_point(src[1]),
+        Point64::from_point(src[2]),
+        Point64::from_point(src[3]),
+    ];
+
+    let cubic = Cubic64::new(src);
+    let mut roots = [0.0; 3];
+    let count = if is_vertical {
+        line_cubic_intersections::vertical_intersect(&cubic, f64::from(intercept), &mut roots)
+    } else {
+        line_cubic_intersections::horizontal_intersect(&cubic, f64::from(intercept), &mut roots)
+    };
+
+    if count > 0 {
+        let pair = cubic.chop_at(roots[0]);
+        for i in 0..7 {
+            dst[i] = pair.points[i].to_point();
+        }
+
+        true
+    } else {
+        false
+    }
+}
 
 #[cfg(test)]
 mod tests {

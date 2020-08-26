@@ -84,7 +84,7 @@ checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 [[package]]
 name = "checked-geom"
 version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/checked-geom?rev=34dc20b#34dc20b33d2839a5b0e5b6010e8acdadf426bec3"
+source = "git+https://github.com/RazrFalcon/checked-geom?rev=cc73447#cc734479f7241daf65204e201d4c13da8b86cc3b"
 dependencies = [
  "num-ext",
 ]
@@ -126,6 +126,12 @@ checksum = "2bb7ef65b3777a325d1eeefefab5b6d4959da54747e33bd6258e789640f307ad"
 dependencies = [
  "num-traits",
 ]
+
+[[package]]
+name = "float-cmp"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1267f4ac4f343772758f7b1bdcbe767c218bbab93bb432acbf5162bbf85a6c4"
 
 [[package]]
 name = "inflate"
@@ -246,8 +252,10 @@ checksum = "a042aba3c316feb8b9624ba0369240b84ecdf1b2eff58b2c8987ba2dfa22ac4d"
 name = "tiny-skia"
 version = "0.2.0"
 dependencies = [
+ "arrayvec",
  "cc",
  "checked-geom",
+ "float-cmp",
  "memmap2",
  "num-ext",
  "png 0.16.7",

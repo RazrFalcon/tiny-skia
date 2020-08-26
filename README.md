@@ -95,14 +95,18 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [ ] `Path` hairline stroking
 - [ ] Anti-aliased `Path` hairline stroking
 - [ ] Stroke dashing
-- [ ] Clipping
-- [ ] Anti-aliased clipping
 - [ ] Gradients (linear and two point conical)
 - [ ] `Pixmap`s blending (image on image rendering)
 - [ ] Patterns
 
+### v0.2
+
+- [ ] Clipping
+- [ ] Anti-aliased clipping
+
 ### v0.N
 
+- Port `SkRasterPipeline` to Rust.
 - Move `Path` and most of Bézier math into separate crates. Preferably into existing one
 
 PS: we start from 0.2, because 0.1 was just a bindings.

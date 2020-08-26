@@ -4,9 +4,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, Path};
+use crate::{Point, Path, ScreenIntRect};
 
 use crate::edge::{Edge, LineEdge, QuadraticEdge, CubicEdge};
+use crate::edge_clipper::EdgeClipperIter;
 use crate::geometry;
 use crate::path::PathEdge;
 
@@ -16,6 +17,44 @@ enum Combine {
     Partial,
     Total,
 }
+
+
+#[derive(Copy, Clone, Debug)]
+pub struct ShiftedIntRect {
+    shifted: ScreenIntRect,
+    shift: i32,
+}
+
+impl ShiftedIntRect {
+    #[inline]
+    pub fn new(rect: &ScreenIntRect, shift: i32) -> Option<Self> {
+        Some(ShiftedIntRect {
+            shifted: ScreenIntRect::from_xywh(
+                rect.x() << shift,
+                rect.y() << shift,
+                rect.width() << shift,
+                rect.height() << shift,
+            )?,
+            shift,
+        })
+    }
+
+    #[inline]
+    pub fn shifted(&self) -> &ScreenIntRect {
+        &self.shifted
+    }
+
+    #[inline]
+    pub fn recover(&self) -> ScreenIntRect {
+        ScreenIntRect::from_xywh(
+            self.shifted.x() >> self.shift,
+            self.shifted.y() >> self.shift,
+            self.shifted.width() >> self.shift,
+            self.shifted.height() >> self.shift,
+        ).unwrap()
+    }
+}
+
 
 pub struct BasicEdgeBuilder {
     edges: Vec<Edge>,
@@ -34,9 +73,13 @@ impl BasicEdgeBuilder {
     // Skia returns a linked list here, but it's a nightmare to use in Rust,
     // so we're mimicking it with Vec.
     #[inline]
-    pub fn build_edges(path: &Path, clip_shift: i32) -> Option<Vec<Edge>> {
+    pub fn build_edges(path: &Path, clip: Option<&ShiftedIntRect>, clip_shift: i32) -> Option<Vec<Edge>> {
+        // If we're convex, then we need both edges, even if the right edge is past the clip.
+        // let can_cull_to_the_right = !path.isConvex();
+        let can_cull_to_the_right = false; // TODO: this
+
         let mut builder = BasicEdgeBuilder::new(clip_shift);
-        builder.build(path);
+        builder.build(path, clip, can_cull_to_the_right)?;
 
         if builder.edges.is_empty() {
             return None;
@@ -47,30 +90,64 @@ impl BasicEdgeBuilder {
         Some(builder.edges)
     }
 
-    pub fn build(&mut self, path: &Path) {
-        for (edge, _) in path.edge_iter() {
-            match edge {
-                PathEdge::Line(p0, p1) => {
-                    self.push_line(&[p0, p1]);
-                }
-                PathEdge::Quad(p0, p1, p2) => {
-                    let points = [p0, p1, p2];
-                    let mut mono_x = [Point::zero(); 5];
-                    let n = geometry::chop_quad_at_y_extrema(&points, &mut mono_x);
-                    for i in 0..=n {
-                        self.push_quad(&mono_x[i * 2..]);
+    // TODO: build_poly
+    pub fn build(&mut self, path: &Path, clip: Option<&ShiftedIntRect>, can_cull_to_the_right: bool) -> Option<()> {
+        if let Some(ref clip) = clip {
+            let clip = clip.recover().to_rect();
+            for edges in EdgeClipperIter::new(path, clip, can_cull_to_the_right) {
+                for edge in edges {
+                    match edge {
+                        PathEdge::LineTo(p0, p1) => {
+                            if !p0.is_finite() || !p1.is_finite() {
+                                return None;
+                            }
+
+                            self.push_line(&[p0, p1])
+                        }
+                        PathEdge::QuadTo(p0, p1, p2) => {
+                            if !p0.is_finite() || !p1.is_finite() || !p2.is_finite() {
+                                return None;
+                            }
+
+                            self.push_quad(&[p0, p1, p2])
+                        }
+                        PathEdge::CubicTo(p0, p1, p2, p3) => {
+                            if !p0.is_finite() || !p1.is_finite() || !p2.is_finite() || !p3.is_finite() {
+                                return None;
+                            }
+
+                            self.push_cubic(&[p0, p1, p2, p3])
+                        }
                     }
                 }
-                PathEdge::Cubic(p0, p1, p2, p3) => {
-                    let points = [p0, p1, p2, p3];
-                    let mut mono_y = [Point::zero(); 10];
-                    let n = geometry::chop_cubic_at_y_extrema(&points, &mut mono_y);
-                    for i in 0..=n {
-                        self.push_cubic(&mono_y[i * 3..]);
+            }
+        } else {
+            for edge in path.edge_iter() {
+                match edge {
+                    PathEdge::LineTo(p0, p1) => {
+                        self.push_line(&[p0, p1]);
+                    }
+                    PathEdge::QuadTo(p0, p1, p2) => {
+                        let points = [p0, p1, p2];
+                        let mut mono_x = [Point::zero(); 5];
+                        let n = geometry::chop_quad_at_y_extrema(&points, &mut mono_x);
+                        for i in 0..=n {
+                            self.push_quad(&mono_x[i * 2..]);
+                        }
+                    }
+                    PathEdge::CubicTo(p0, p1, p2, p3) => {
+                        let points = [p0, p1, p2, p3];
+                        let mut mono_y = [Point::zero(); 10];
+                        let n = geometry::chop_cubic_at_y_extrema(&points, &mut mono_y);
+                        for i in 0..=n {
+                            self.push_cubic(&mono_y[i * 3..]);
+                        }
                     }
                 }
             }
         }
+
+        Some(())
     }
 
     fn push_line(&mut self, points: &[Point; 2]) {

@@ -131,7 +131,6 @@ impl Path {
             points_index: 0,
             move_to: Point::zero(),
             needs_close_line: false,
-            next_is_new_contour: false,
         }
     }
 
@@ -346,9 +345,9 @@ impl<'a> Iterator for PathSegmentsIter<'a> {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PathEdge {
-    Line(Point, Point),
-    Quad(Point, Point, Point),
-    Cubic(Point, Point, Point, Point),
+    LineTo(Point, Point),
+    QuadTo(Point, Point, Point),
+    CubicTo(Point, Point, Point, Point),
 }
 
 /// Lightweight variant of PathIter that only returns segments (e.g. lines/quads).
@@ -360,21 +359,19 @@ pub struct PathEdgeIter<'a> {
     points_index: usize,
     move_to: Point,
     needs_close_line: bool,
-    next_is_new_contour: bool,
 }
 
 impl<'a, 'b> PathEdgeIter<'a> {
-    fn close_line(&mut self) -> Option<(PathEdge, bool)> {
+    fn close_line(&mut self) -> Option<PathEdge> {
         self.needs_close_line = false;
-        self.next_is_new_contour = true;
 
-        let edge = PathEdge::Line(self.path.points[self.points_index - 1], self.move_to);
-        Some((edge, false))
+        let edge = PathEdge::LineTo(self.path.points[self.points_index - 1], self.move_to);
+        Some(edge)
     }
 }
 
 impl<'a> Iterator for PathEdgeIter<'a> {
-    type Item = (PathEdge, bool);
+    type Item = PathEdge;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.verb_index < self.path.verbs.len() {
@@ -405,20 +402,17 @@ impl<'a> Iterator for PathEdgeIter<'a> {
                     // Actual edge.
                     self.needs_close_line = true;
 
-                    let is_new_contour = self.next_is_new_contour;
-                    self.next_is_new_contour = false;
-
                     let edge;
                     match verb {
                         PathVerb::Line => {
-                            edge = PathEdge::Line(
+                            edge = PathEdge::LineTo(
                                 self.path.points[self.points_index - 1],
                                 self.path.points[self.points_index + 0],
                             );
                             self.points_index += 1;
                         }
                         PathVerb::Quad => {
-                            edge = PathEdge::Quad(
+                            edge = PathEdge::QuadTo(
                                 self.path.points[self.points_index - 1],
                                 self.path.points[self.points_index + 0],
                                 self.path.points[self.points_index + 1],
@@ -426,7 +420,7 @@ impl<'a> Iterator for PathEdgeIter<'a> {
                             self.points_index += 2;
                         }
                         PathVerb::Cubic => {
-                            edge = PathEdge::Cubic(
+                            edge = PathEdge::CubicTo(
                                 self.path.points[self.points_index - 1],
                                 self.path.points[self.points_index + 0],
                                 self.path.points[self.points_index + 1],
@@ -437,7 +431,7 @@ impl<'a> Iterator for PathEdgeIter<'a> {
                         _ => unreachable!(),
                     };
 
-                    Some((edge, is_new_contour))
+                    Some(edge)
                 }
             }
         } else if self.needs_close_line {
