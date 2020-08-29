@@ -123,12 +123,12 @@ impl Blitter for RasterPipelineBlitter {
             p.extend(&self.color_pipeline);
             if self.blend_mode.should_pre_scale_coverage(false) {
                 p.push_with_context(raster_pipeline::Stage::Scale1Float, curr_cov_ptr);
-                p.push_with_context(raster_pipeline::Stage::Load8888Destination, ctx_ptr);
+                p.push_with_context(raster_pipeline::Stage::LoadDestination, ctx_ptr);
                 if let Some(blend_stage) = self.blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
             } else {
-                p.push_with_context(raster_pipeline::Stage::Load8888Destination, ctx_ptr);
+                p.push_with_context(raster_pipeline::Stage::LoadDestination, ctx_ptr);
                 if let Some(blend_stage) = self.blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
@@ -136,7 +136,7 @@ impl Blitter for RasterPipelineBlitter {
                 p.push_with_context(raster_pipeline::Stage::Lerp1Float, curr_cov_ptr);
             }
 
-            p.push_with_context(raster_pipeline::Stage::Store8888, ctx_ptr);
+            p.push_with_context(raster_pipeline::Stage::Store, ctx_ptr);
 
             self.blit_anti_h_rp = Some(p.compile());
         }
@@ -201,16 +201,16 @@ impl Blitter for RasterPipelineBlitter {
 
             if self.blend_mode == BlendMode::SourceOver {
                 // TODO: ignore when dither_rate is non-zero
-                p.push_with_context(raster_pipeline::Stage::SourceOverRgba8888, ctx_ptr);
+                p.push_with_context(raster_pipeline::Stage::SourceOverRgba, ctx_ptr);
             } else {
                 if self.blend_mode != BlendMode::Source {
-                    p.push_with_context(raster_pipeline::Stage::Load8888Destination, ctx_ptr);
+                    p.push_with_context(raster_pipeline::Stage::LoadDestination, ctx_ptr);
                     if let Some(blend_stage) = self.blend_mode.to_stage() {
                         p.push(blend_stage);
                     }
                 }
 
-                p.push_with_context(raster_pipeline::Stage::Store8888, ctx_ptr);
+                p.push_with_context(raster_pipeline::Stage::Store, ctx_ptr);
             }
 
             self.blit_rect_rp = Some(p.compile());

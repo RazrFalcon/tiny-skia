@@ -205,7 +205,7 @@ diff --recursive --unified skia-pipeline-orig/SkOpts.h skia-pipeline/SkOpts.h
 +#endif //SkOpts_DEFINED
 diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.cpp skia-pipeline/SkRasterPipeline.cpp
 --- skia-pipeline-orig/SkRasterPipeline.cpp	2020-08-10 18:42:25.000000000 +0300
-+++ skia-pipeline/SkRasterPipeline.cpp	2020-08-15 12:58:15.987918133 +0300
++++ skia-pipeline/SkRasterPipeline.cpp	2020-08-19 22:04:52.782364474 +0300
 @@ -5,341 +5,15 @@
   * found in the LICENSE file.
   */
@@ -583,7 +583,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.cpp skia-pipeline
 -std::function<void(size_t, size_t, size_t, size_t)> SkRasterPipeline::compile() const {
 -    if (this->empty()) {
 -        return [](size_t, size_t, size_t, size_t) {};
-+void skia_pipe_raster_run_pipeline(void** program, bool is_highp, size_t x, size_t y, size_t w, size_t h)
++void skia_pipe_raster_run_pipeline(void** program, bool is_highp, unsigned int x, unsigned int y, unsigned int w, unsigned int h)
 +{
 +    if (is_highp) {
 +        SkOpts::start_pipeline_highp(x, y, x+w, y+h, program);
@@ -600,7 +600,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.cpp skia-pipeline
  }
 diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.h skia-pipeline/SkRasterPipeline.h
 --- skia-pipeline-orig/SkRasterPipeline.h	2020-08-13 17:16:23.000000000 +0300
-+++ skia-pipeline/SkRasterPipeline.h	2020-08-15 12:58:15.987918133 +0300
++++ skia-pipeline/SkRasterPipeline.h	2020-08-29 15:45:27.951710948 +0300
 @@ -8,18 +8,7 @@
  #ifndef SkRasterPipeline_DEFINED
  #define SkRasterPipeline_DEFINED
@@ -621,7 +621,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.h skia-pipeline/S
  
  /**
   * SkRasterPipeline provides a cheap way to chain together a pixel processing pipeline.
-@@ -37,35 +26,17 @@
+@@ -37,35 +26,16 @@
   */
  
  #define SK_RASTER_PIPELINE_STAGES(M)                               \
@@ -651,7 +651,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.h skia-pipeline/S
 -    M(alpha_to_gray) M(alpha_to_gray_dst) M(bt709_luminance_or_luma_to_alpha)         \
      M(bilerp_clamp_8888) M(bicubic_clamp_8888)                     \
 -    M(store_u16_be)                                                \
-     M(load_src) M(store_src) M(store_src_a) M(load_dst) M(store_dst) \
+-    M(load_src) M(store_src) M(store_src_a) M(load_dst) M(store_dst) \
 -    M(scale_u8) M(scale_565) M(scale_1_float) M(scale_native)      \
 -    M( lerp_u8) M( lerp_565) M( lerp_1_float) M(lerp_native)       \
 +    M(scale_u8) M(scale_1_float) M(scale_native)      \
@@ -659,7 +659,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.h skia-pipeline/S
      M(dstatop) M(dstin) M(dstout) M(dstover)                       \
      M(srcatop) M(srcin) M(srcout) M(srcover)                       \
      M(clear) M(modulate) M(multiply) M(plus_) M(screen) M(xor_)    \
-@@ -75,12 +46,8 @@
+@@ -75,12 +45,8 @@
      M(srcover_rgba_8888)                                           \
      M(matrix_translate) M(matrix_scale_translate)                  \
      M(matrix_2x3) M(matrix_3x3) M(matrix_3x4) M(matrix_4x5) M(matrix_4x3) \
@@ -672,7 +672,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.h skia-pipeline/S
      M(negate_x)                                                    \
      M(bilinear) M(bicubic)                                         \
      M(bilinear_nx) M(bilinear_px) M(bilinear_ny) M(bilinear_py)    \
-@@ -101,12 +68,8 @@
+@@ -101,12 +67,8 @@
      M(alter_2pt_conical_compensate_focal)                          \
      M(alter_2pt_conical_unswap)                                    \
      M(mask_2pt_conical_nan)                                        \
@@ -687,7 +687,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.h skia-pipeline/S
  
  // The largest number of pixels we handle at a time.
  static const int SkRasterPipeline_kMaxStride = 16;
-@@ -140,54 +103,42 @@
+@@ -140,54 +102,42 @@
      float invScale; // cache of 1/scale
  };
  
@@ -761,7 +761,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.h skia-pipeline/S
  };
  
  struct SkRasterPipeline_2PtConicalCtx {
-@@ -201,100 +152,25 @@
+@@ -201,100 +151,25 @@
      uint16_t rgba[4];  // [0,255] in a 16-bit lane.
  };
  
@@ -872,14 +872,14 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline.h skia-pipeline/S
  
 +extern "C" {
 +bool skia_pipe_raster_build_pipeline(StageList *stages, void** ip);
-+void skia_pipe_raster_run_pipeline(void** program, bool is_highp, size_t x, size_t y, size_t w, size_t h);
++void skia_pipe_raster_run_pipeline(void** program, bool is_highp, unsigned int x, unsigned int y, unsigned int w, unsigned int h);
 +}
  
 -#endif//SkRasterPipeline_DEFINED
 +#endif //SkRasterPipeline_DEFINED
 diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipeline/SkRasterPipeline_opts.h
 --- skia-pipeline-orig/SkRasterPipeline_opts.h	2020-07-25 19:26:48.000000000 +0300
-+++ skia-pipeline/SkRasterPipeline_opts.h	2020-08-18 19:32:16.337433252 +0300
++++ skia-pipeline/SkRasterPipeline_opts.h	2020-08-29 15:46:01.693708292 +0300
 @@ -8,10 +8,10 @@
  #ifndef SkRasterPipeline_opts_DEFINED
  #define SkRasterPipeline_opts_DEFINED
@@ -975,7 +975,49 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  
  // Used by load_ and store_ stages to get to the right (dx,dy) starting point of contiguous memory.
  template <typename T>
-@@ -1619,28 +1605,6 @@
+@@ -1346,41 +1332,6 @@
+     r = g = b = a = 1.0f;
+ }
+ 
+-// load registers r,g,b,a from context (mirrors store_rgba)
+-STAGE(load_src, const float* ptr) {
+-    r = sk_unaligned_load<F>(ptr + 0*N);
+-    g = sk_unaligned_load<F>(ptr + 1*N);
+-    b = sk_unaligned_load<F>(ptr + 2*N);
+-    a = sk_unaligned_load<F>(ptr + 3*N);
+-}
+-
+-// store registers r,g,b,a into context (mirrors load_rgba)
+-STAGE(store_src, float* ptr) {
+-    sk_unaligned_store(ptr + 0*N, r);
+-    sk_unaligned_store(ptr + 1*N, g);
+-    sk_unaligned_store(ptr + 2*N, b);
+-    sk_unaligned_store(ptr + 3*N, a);
+-}
+-STAGE(store_src_a, float* ptr) {
+-    sk_unaligned_store(ptr, a);
+-}
+-
+-// load registers dr,dg,db,da from context (mirrors store_dst)
+-STAGE(load_dst, const float* ptr) {
+-    dr = sk_unaligned_load<F>(ptr + 0*N);
+-    dg = sk_unaligned_load<F>(ptr + 1*N);
+-    db = sk_unaligned_load<F>(ptr + 2*N);
+-    da = sk_unaligned_load<F>(ptr + 3*N);
+-}
+-
+-// store registers dr,dg,db,da into context (mirrors load_dst)
+-STAGE(store_dst, float* ptr) {
+-    sk_unaligned_store(ptr + 0*N, dr);
+-    sk_unaligned_store(ptr + 1*N, dg);
+-    sk_unaligned_store(ptr + 2*N, db);
+-    sk_unaligned_store(ptr + 3*N, da);
+-}
+-
+ // Most blend modes apply the same logic to each channel.
+ #define BLEND_MODE(name)                       \
+     SI F name##_channel(F s, F d, F sa, F da); \
+@@ -1619,28 +1570,6 @@
      b = min(max(b, 0), a);
  }
  
@@ -1004,7 +1046,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  STAGE(move_src_dst, Ctx::None) {
      dr = r;
      dg = g;
-@@ -1672,57 +1636,10 @@
+@@ -1672,57 +1601,10 @@
      b *= scale;
  }
  
@@ -1062,7 +1104,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  STAGE(scale_1_float, const float* c) {
      r = r * *c;
      g = g * *c;
-@@ -1740,19 +1657,6 @@
+@@ -1740,19 +1622,6 @@
      b = b * c;
      a = a * c;
  }
@@ -1082,7 +1124,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  
  SI F lerp(F from, F to, F t) {
      return mad(to-from, t, from);
-@@ -1789,41 +1693,6 @@
+@@ -1789,202 +1658,6 @@
      b = lerp(db, b, c);
      a = lerp(da, a, c);
  }
@@ -1121,13 +1163,17 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
 -    b = from_byte(gather(tables->b, to_unorm(b, 255)));
 -    a = from_byte(gather(tables->a, to_unorm(a, 255)));
 -}
- 
- SI F strip_sign(F x, U32* sign) {
-     U32 bits = bit_cast<U32>(x);
-@@ -1835,157 +1704,6 @@
-     return bit_cast<F>(sign | bit_cast<U32>(x));
- }
- 
+-
+-SI F strip_sign(F x, U32* sign) {
+-    U32 bits = bit_cast<U32>(x);
+-    *sign = bits & 0x80000000;
+-    return bit_cast<F>(bits ^ *sign);
+-}
+-
+-SI F apply_sign(F x, U32 sign) {
+-    return bit_cast<F>(sign | bit_cast<U32>(x));
+-}
+-
 -STAGE(parametric, const skcms_TransferFunction* ctx) {
 -    auto fn = [&](F v) {
 -        U32 sign;
@@ -1278,11 +1324,10 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
 -                 | to_unorm(a, 15)      );
 -    store(ptr, px, tail);
 -}
--
+ 
  STAGE(load_8888, const SkRasterPipeline_MemoryCtx* ctx) {
      auto ptr = ptr_at_xy<const uint32_t>(ctx, dx,dy);
-     from_8888(load<U32>(ptr, tail), &r,&g,&b,&a);
-@@ -2009,276 +1727,6 @@
+@@ -2009,276 +1682,6 @@
      store(ptr, px, tail);
  }
  
@@ -1559,7 +1604,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  SI F exclusive_repeat(F v, const SkRasterPipeline_TileCtx* ctx) {
      return v - floor_(v*ctx->invScale)*ctx->scale;
  }
-@@ -2299,47 +1747,6 @@
+@@ -2299,47 +1702,6 @@
  STAGE(repeat_x_1, Ctx::None) { r = clamp_01(r - floor_(r)); }
  STAGE(mirror_x_1, Ctx::None) { r = clamp_01(abs_( (r-1.0f) - two(floor_((r-1.0f)*0.5f)) - 1.0f )); }
  
@@ -1607,7 +1652,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  STAGE(matrix_translate, const float* m) {
      r += m[0];
      g += m[1];
-@@ -2389,14 +1796,6 @@
+@@ -2389,14 +1751,6 @@
      b = mad(X, m[2], mad(Y, m[6], m[10]));
      a = mad(X, m[3], mad(Y, m[7], m[11]));
  }
@@ -1622,7 +1667,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  
  SI void gradient_lookup(const SkRasterPipeline_GradientCtx* c, U32 idx, F t,
                          F* r, F* g, F* b, F* a) {
-@@ -2660,70 +2059,9 @@
+@@ -2660,70 +2014,9 @@
  STAGE(bicubic_p1y, SkRasterPipeline_SamplerCtx* ctx) { bicubic_y<+1>(ctx, &g); }
  STAGE(bicubic_p3y, SkRasterPipeline_SamplerCtx* ctx) { bicubic_y<+3>(ctx, &g); }
  
@@ -1693,7 +1738,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
          case SkTileMode::kClamp:  return v;
          case SkTileMode::kRepeat: return v - floor_(v*invLimit)*limit;
          case SkTileMode::kMirror:
-@@ -2737,20 +2075,9 @@
+@@ -2737,20 +2030,9 @@
      x = tile(x, ctx->tileX, ctx->width , ctx->invWidth );
      y = tile(y, ctx->tileY, ctx->height, ctx->invHeight);
  
@@ -1717,7 +1762,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  }
  
  template <int D>
-@@ -2883,27 +2210,6 @@
+@@ -2883,27 +2165,6 @@
      }
  }
  
@@ -1745,7 +1790,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  namespace lowp {
  #if defined(JUMPER_IS_SCALAR) || defined(SK_DISABLE_LOWP_RASTER_PIPELINE)
      // If we're not compiled by Clang, or otherwise switched into scalar mode (old Clang, manually),
-@@ -3239,14 +2545,6 @@
+@@ -3239,14 +2500,6 @@
      x = X;
      y = Y;
  }
@@ -1760,7 +1805,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  
  STAGE_PP(uniform_color, const SkRasterPipeline_UniformColorCtx* c) {
      r = c->rgba[0];
-@@ -3263,12 +2561,6 @@
+@@ -3263,12 +2516,6 @@
  STAGE_PP(black_color, Ctx::None) { r = g = b =   0; a = 255; }
  STAGE_PP(white_color, Ctx::None) { r = g = b = 255; a = 255; }
  
@@ -1773,7 +1818,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  STAGE_PP(clamp_0, Ctx::None) { /*definitely a noop*/ }
  STAGE_PP(clamp_1, Ctx::None) { /*_should_ be a noop*/ }
  
-@@ -3294,20 +2586,6 @@
+@@ -3294,20 +2541,6 @@
      db = div255(db * da);
  }
  
@@ -1794,7 +1839,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  STAGE_PP(move_src_dst, Ctx::None) {
      dr = r;
      dg = g;
-@@ -3570,95 +2848,6 @@
+@@ -3570,95 +2803,6 @@
  
  // ~~~~~~ 16-bit memory loads and stores ~~~~~~ //
  
@@ -1890,7 +1935,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  SI void from_88(U16 rg, U16* r, U16* g) {
      *r = (rg & 0xFF);
      *g = (rg >> 8);
-@@ -3705,27 +2894,6 @@
+@@ -3705,27 +2849,6 @@
  #endif
  }
  
@@ -1918,7 +1963,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  // ~~~~~~ 8-bit memory loads and stores ~~~~~~ //
  
  SI U16 load_8(const uint8_t* ptr, size_t tail) {
-@@ -3735,37 +2903,6 @@
+@@ -3735,67 +2858,6 @@
      store(ptr, tail, cast<U8>(v));
  }
  
@@ -1953,10 +1998,40 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
 -    r = g = b = 0;
 -}
 -
+-// ~~~~~~ Coverage scales / lerps ~~~~~~ //
+-
+-STAGE_PP(load_src, const uint16_t* ptr) {
+-    r = sk_unaligned_load<U16>(ptr + 0*N);
+-    g = sk_unaligned_load<U16>(ptr + 1*N);
+-    b = sk_unaligned_load<U16>(ptr + 2*N);
+-    a = sk_unaligned_load<U16>(ptr + 3*N);
+-}
+-STAGE_PP(store_src, uint16_t* ptr) {
+-    sk_unaligned_store(ptr + 0*N, r);
+-    sk_unaligned_store(ptr + 1*N, g);
+-    sk_unaligned_store(ptr + 2*N, b);
+-    sk_unaligned_store(ptr + 3*N, a);
+-}
+-STAGE_PP(store_src_a, uint16_t* ptr) {
+-    sk_unaligned_store(ptr, a);
+-}
+-STAGE_PP(load_dst, const uint16_t* ptr) {
+-    dr = sk_unaligned_load<U16>(ptr + 0*N);
+-    dg = sk_unaligned_load<U16>(ptr + 1*N);
+-    db = sk_unaligned_load<U16>(ptr + 2*N);
+-    da = sk_unaligned_load<U16>(ptr + 3*N);
+-}
+-STAGE_PP(store_dst, uint16_t* ptr) {
+-    sk_unaligned_store(ptr + 0*N, dr);
+-    sk_unaligned_store(ptr + 1*N, dg);
+-    sk_unaligned_store(ptr + 2*N, db);
+-    sk_unaligned_store(ptr + 3*N, da);
+-}
+-
  // ~~~~~~ Coverage scales / lerps ~~~~~~ //
  
- STAGE_PP(load_src, const uint16_t* ptr) {
-@@ -3843,42 +2980,6 @@
+ STAGE_PP(scale_1_float, const float* f) {
+@@ -3843,42 +2905,6 @@
      a = lerp(da, a, c);
  }
  
@@ -1999,7 +2074,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  // ~~~~~~ Gradient stages ~~~~~~ //
  
  // Clamp x to [0,1], both sides inclusive (think, gradients).
-@@ -3894,33 +2995,11 @@
+@@ -3894,33 +2920,11 @@
  
  SI I16 cond_to_mask_16(I32 cond) { return cast<I16>(cond); }
  
@@ -2035,7 +2110,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
      *r = round(min(max(0,R), limit));
      *g = round(min(max(0,G), limit));
      *b = round(min(max(0,B), limit));
-@@ -3968,7 +3047,6 @@
+@@ -3968,7 +2972,6 @@
                     mad(t, fg, bg),
                     mad(t, fb, bb),
                     mad(t, fa, ba),
@@ -2043,7 +2118,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
                     r,g,b,a);
  }
  
-@@ -3996,7 +3074,6 @@
+@@ -3996,7 +2999,6 @@
                     mad(t, c->f[1], c->b[1]),
                     mad(t, c->f[2], c->b[2]),
                     mad(t, c->f[3], c->b[3]),
@@ -2051,7 +2126,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
                     &r,&g,&b,&a);
  }
  
-@@ -4091,7 +3168,7 @@
+@@ -4091,7 +3093,7 @@
          U16 area = (dy == 0.5f && dx == 0.5f) ? remaining
                                                : cast<U16>(sx * sy * bias);
          for (size_t i = 0; i < N; i++) {
@@ -2060,7 +2135,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
          }
          remaining -= area;
  
-@@ -4111,7 +3188,6 @@
+@@ -4111,7 +3113,6 @@
  SI F tile(F v, SkTileMode mode, float limit, float invLimit) {
      // After ix_and_ptr() will clamp the output of tile(), so we need not clamp here.
      switch (mode) {
@@ -2068,7 +2143,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
          case SkTileMode::kClamp:  return v;
          case SkTileMode::kRepeat: return v - floor_(v*invLimit)*limit;
          case SkTileMode::kMirror:
-@@ -4125,20 +3201,9 @@
+@@ -4125,20 +3126,9 @@
      x = tile(x, ctx->tileX, ctx->width , ctx->invWidth );
      y = tile(y, ctx->tileY, ctx->height, ctx->invHeight);
  
@@ -2092,7 +2167,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
  }
  
  template <int D>
-@@ -4184,72 +3249,12 @@
+@@ -4184,72 +3174,12 @@
  }
  #endif
  
@@ -2165,7 +2240,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
      NOT_IMPLEMENTED(colorburn)
      NOT_IMPLEMENTED(colordodge)
      NOT_IMPLEMENTED(softlight)
-@@ -4261,14 +3266,6 @@
+@@ -4261,14 +3191,6 @@
      NOT_IMPLEMENTED(matrix_3x4)
      NOT_IMPLEMENTED(matrix_4x5)  // TODO
      NOT_IMPLEMENTED(matrix_4x3)  // TODO
@@ -2182,7 +2257,7 @@ diff --recursive --unified skia-pipeline-orig/SkRasterPipeline_opts.h skia-pipel
      NOT_IMPLEMENTED(mirror_y)         // TODO
 diff --recursive --unified skia-pipeline-orig/SkTypes.h skia-pipeline/SkTypes.h
 --- skia-pipeline-orig/SkTypes.h	2020-07-25 19:20:53.000000000 +0300
-+++ skia-pipeline/SkTypes.h	2020-08-18 19:30:26.323434959 +0300
++++ skia-pipeline/SkTypes.h	2020-08-28 13:37:38.938877990 +0300
 @@ -11,7 +11,9 @@
  /** \file SkTypes.h
  */

@@ -1332,41 +1332,6 @@ STAGE(white_color, Ctx::None) {
     r = g = b = a = 1.0f;
 }
 
-// load registers r,g,b,a from context (mirrors store_rgba)
-STAGE(load_src, const float* ptr) {
-    r = sk_unaligned_load<F>(ptr + 0*N);
-    g = sk_unaligned_load<F>(ptr + 1*N);
-    b = sk_unaligned_load<F>(ptr + 2*N);
-    a = sk_unaligned_load<F>(ptr + 3*N);
-}
-
-// store registers r,g,b,a into context (mirrors load_rgba)
-STAGE(store_src, float* ptr) {
-    sk_unaligned_store(ptr + 0*N, r);
-    sk_unaligned_store(ptr + 1*N, g);
-    sk_unaligned_store(ptr + 2*N, b);
-    sk_unaligned_store(ptr + 3*N, a);
-}
-STAGE(store_src_a, float* ptr) {
-    sk_unaligned_store(ptr, a);
-}
-
-// load registers dr,dg,db,da from context (mirrors store_dst)
-STAGE(load_dst, const float* ptr) {
-    dr = sk_unaligned_load<F>(ptr + 0*N);
-    dg = sk_unaligned_load<F>(ptr + 1*N);
-    db = sk_unaligned_load<F>(ptr + 2*N);
-    da = sk_unaligned_load<F>(ptr + 3*N);
-}
-
-// store registers dr,dg,db,da into context (mirrors load_dst)
-STAGE(store_dst, float* ptr) {
-    sk_unaligned_store(ptr + 0*N, dr);
-    sk_unaligned_store(ptr + 1*N, dg);
-    sk_unaligned_store(ptr + 2*N, db);
-    sk_unaligned_store(ptr + 3*N, da);
-}
-
 // Most blend modes apply the same logic to each channel.
 #define BLEND_MODE(name)                       \
     SI F name##_channel(F s, F d, F sa, F da); \
@@ -1692,16 +1657,6 @@ STAGE(lerp_u8, const SkRasterPipeline_MemoryCtx* ctx) {
     g = lerp(dg, g, c);
     b = lerp(db, b, c);
     a = lerp(da, a, c);
-}
-
-SI F strip_sign(F x, U32* sign) {
-    U32 bits = bit_cast<U32>(x);
-    *sign = bits & 0x80000000;
-    return bit_cast<F>(bits ^ *sign);
-}
-
-SI F apply_sign(F x, U32 sign) {
-    return bit_cast<F>(sign | bit_cast<U32>(x));
 }
 
 STAGE(load_8888, const SkRasterPipeline_MemoryCtx* ctx) {
@@ -2901,36 +2856,6 @@ SI U16 load_8(const uint8_t* ptr, size_t tail) {
 }
 SI void store_8(uint8_t* ptr, size_t tail, U16 v) {
     store(ptr, tail, cast<U8>(v));
-}
-
-// ~~~~~~ Coverage scales / lerps ~~~~~~ //
-
-STAGE_PP(load_src, const uint16_t* ptr) {
-    r = sk_unaligned_load<U16>(ptr + 0*N);
-    g = sk_unaligned_load<U16>(ptr + 1*N);
-    b = sk_unaligned_load<U16>(ptr + 2*N);
-    a = sk_unaligned_load<U16>(ptr + 3*N);
-}
-STAGE_PP(store_src, uint16_t* ptr) {
-    sk_unaligned_store(ptr + 0*N, r);
-    sk_unaligned_store(ptr + 1*N, g);
-    sk_unaligned_store(ptr + 2*N, b);
-    sk_unaligned_store(ptr + 3*N, a);
-}
-STAGE_PP(store_src_a, uint16_t* ptr) {
-    sk_unaligned_store(ptr, a);
-}
-STAGE_PP(load_dst, const uint16_t* ptr) {
-    dr = sk_unaligned_load<U16>(ptr + 0*N);
-    dg = sk_unaligned_load<U16>(ptr + 1*N);
-    db = sk_unaligned_load<U16>(ptr + 2*N);
-    da = sk_unaligned_load<U16>(ptr + 3*N);
-}
-STAGE_PP(store_dst, uint16_t* ptr) {
-    sk_unaligned_store(ptr + 0*N, dr);
-    sk_unaligned_store(ptr + 1*N, dg);
-    sk_unaligned_store(ptr + 2*N, db);
-    sk_unaligned_store(ptr + 3*N, da);
 }
 
 // ~~~~~~ Coverage scales / lerps ~~~~~~ //

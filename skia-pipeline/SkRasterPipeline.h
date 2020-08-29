@@ -34,7 +34,6 @@
     M(seed_shader) M(dither)                                       \
     M(load_8888)   M(load_8888_dst) M(store_8888)  M(gather_8888)  \
     M(bilerp_clamp_8888) M(bicubic_clamp_8888)                     \
-    M(load_src) M(store_src) M(store_src_a) M(load_dst) M(store_dst) \
     M(scale_u8) M(scale_1_float) M(scale_native)      \
     M( lerp_u8) M( lerp_1_float) M(lerp_native)       \
     M(dstatop) M(dstin) M(dstout) M(dstover)                       \

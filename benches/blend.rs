@@ -55,8 +55,8 @@ fn source_in_tiny_skia(bencher: &mut Bencher)           { fill_tiny_skia(tiny_sk
 fn destination_in_tiny_skia(bencher: &mut Bencher)      { fill_tiny_skia(tiny_skia::BlendMode::DestinationIn, bencher); }
 fn source_out_tiny_skia(bencher: &mut Bencher)          { fill_tiny_skia(tiny_skia::BlendMode::SourceOut, bencher); }
 fn destination_out_tiny_skia(bencher: &mut Bencher)     { fill_tiny_skia(tiny_skia::BlendMode::DestinationOut, bencher); }
-fn source_atop_tiny_skia(bencher: &mut Bencher)         { fill_tiny_skia(tiny_skia::BlendMode::SourceATop, bencher); }
-fn destination_atop_tiny_skia(bencher: &mut Bencher)    { fill_tiny_skia(tiny_skia::BlendMode::DestinationATop, bencher); }
+fn source_atop_tiny_skia(bencher: &mut Bencher)         { fill_tiny_skia(tiny_skia::BlendMode::SourceAtop, bencher); }
+fn destination_atop_tiny_skia(bencher: &mut Bencher)    { fill_tiny_skia(tiny_skia::BlendMode::DestinationAtop, bencher); }
 fn xor_tiny_skia(bencher: &mut Bencher)                 { fill_tiny_skia(tiny_skia::BlendMode::Xor, bencher); }
 fn plus_tiny_skia(bencher: &mut Bencher)                { fill_tiny_skia(tiny_skia::BlendMode::Plus, bencher); }
 fn modulate_tiny_skia(bencher: &mut Bencher)            { fill_tiny_skia(tiny_skia::BlendMode::Modulate, bencher); }

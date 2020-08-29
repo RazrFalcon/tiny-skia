@@ -22,9 +22,9 @@ pub enum BlendMode {
     /// Destination trimmed outside source.
     DestinationOut,
     /// Source inside destination blended with destination.
-    SourceATop,
+    SourceAtop,
     /// Destination inside source blended with source.
-    DestinationATop,
+    DestinationAtop,
     /// Each of source and destination trimmed outside the other.
     Xor,
     /// Sum of colors.
@@ -92,7 +92,7 @@ impl BlendMode {
             BlendMode::Plus => true,            // clamp(s+d)     --> no sa term, ok!
 
             BlendMode::DestinationOut |         // d * inv(sa)
-            BlendMode::SourceATop |             // s*da + d*inv(sa)
+            BlendMode::SourceAtop |             // s*da + d*inv(sa)
             BlendMode::SourceOver |             // s + d*inv(sa)
             BlendMode::Xor => !rgb_coverage,    // s*inv(da) + d*inv(sa)
 
@@ -112,8 +112,8 @@ impl BlendMode {
             BlendMode::DestinationIn    => Some(raster_pipeline::Stage::DestinationIn),
             BlendMode::SourceOut        => Some(raster_pipeline::Stage::SourceOut),
             BlendMode::DestinationOut   => Some(raster_pipeline::Stage::DestinationOut),
-            BlendMode::SourceATop       => Some(raster_pipeline::Stage::SourceATop),
-            BlendMode::DestinationATop  => Some(raster_pipeline::Stage::DestinationATop),
+            BlendMode::SourceAtop       => Some(raster_pipeline::Stage::SourceAtop),
+            BlendMode::DestinationAtop  => Some(raster_pipeline::Stage::DestinationAtop),
             BlendMode::Xor              => Some(raster_pipeline::Stage::Xor),
             BlendMode::Plus             => Some(raster_pipeline::Stage::Plus),
             BlendMode::Modulate         => Some(raster_pipeline::Stage::Modulate),
