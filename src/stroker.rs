@@ -269,6 +269,13 @@ pub struct PathStroker {
     join_completed: bool, // previous join was not degenerate
 }
 
+impl Default for PathStroker {
+    #[inline]
+    fn default() -> Self {
+        PathStroker::new()
+    }
+}
+
 impl PathStroker {
     /// Creates a new PathStroker.
     pub fn new() -> Self {

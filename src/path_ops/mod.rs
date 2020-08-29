@@ -6,9 +6,11 @@
 
 use crate::scalar::{SCALAR_MAX, Scalar};
 
+// Must be first, because of macro scope rules.
+#[macro_use] pub mod point64;
+
 pub mod cubic64;
 pub mod line_cubic_intersections;
-pub mod point64;
 mod quad64;
 
 
@@ -141,8 +143,8 @@ fn halley_cbrt3d(d: f64) -> f64 {
 fn cbrt_5d(d: f64) -> f64 {
     let b1 = 715094163;
     let mut t: f64 = 0.0;
-    let pt: &mut [u32; 2] = unsafe { std::mem::transmute(&mut t) };
-    let px: &[u32; 2] = unsafe { std::mem::transmute(&d) };
+    let pt: &mut [u32; 2] = unsafe { &mut *(&mut t as *mut f64 as *mut [u32; 2]) };
+    let px: &[u32; 2] = unsafe { &*(&d as *const f64 as *const [u32; 2]) };
     pt[1] = px[1] / 3 + b1;
     t
 }
@@ -151,8 +153,7 @@ fn cbrt_5d(d: f64) -> f64 {
 #[inline]
 fn cbrta_halleyd(a: f64, r: f64) -> f64 {
     let a3 = a * a * a;
-    let b = a * (a3 + r + r) / (a3 + a3 + r);
-    b
+    a * (a3 + r + r) / (a3 + a3 + r)
 }
 
 #[inline]

@@ -7,6 +7,15 @@
 use crate::scalar::Scalar;
 use crate::simd::F32x2;
 
+
+/// Converts `&[Point; N]` into `&[f32; N*2]`.
+macro_rules! points_to_f32s {
+    ($pts:expr, $n:expr) => {
+        unsafe { &*($pts as *const [Point; $n] as *const [f32; $n * 2]) }
+    };
+}
+
+
 /// A point.
 #[allow(missing_docs)]
 #[derive(Copy, Clone, PartialEq, Default, Debug)]

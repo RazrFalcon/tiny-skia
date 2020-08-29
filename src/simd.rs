@@ -68,24 +68,14 @@ mod x86 {
         }
 
         #[inline(always)]
-        pub fn x(&self) -> f32 {
-            unsafe { std::mem::transmute::<&__m128, &[f32; 4]>(&self.0)[0] }
+        pub fn as_slice(&self) -> &[f32; 4] {
+            unsafe { &*(&self.0 as *const __m128 as *const [f32; 4]) }
         }
 
-        #[inline(always)]
-        pub fn y(&self) -> f32 {
-            unsafe { std::mem::transmute::<&__m128, &[f32; 4]>(&self.0)[1] }
-        }
-
-        #[inline(always)]
-        pub fn z(&self) -> f32 {
-            unsafe { std::mem::transmute::<&__m128, &[f32; 4]>(&self.0)[2] }
-        }
-
-        #[inline(always)]
-        pub fn w(&self) -> f32 {
-            unsafe { std::mem::transmute::<&__m128, &[f32; 4]>(&self.0)[3] }
-        }
+        #[inline(always)] pub fn x(&self) -> f32 { self.as_slice()[0] }
+        #[inline(always)] pub fn y(&self) -> f32 { self.as_slice()[1] }
+        #[inline(always)] pub fn z(&self) -> f32 { self.as_slice()[2] }
+        #[inline(always)] pub fn w(&self) -> f32 { self.as_slice()[3] }
     }
 
     impl Default for F32x4 {
@@ -98,7 +88,7 @@ mod x86 {
     impl std::fmt::Debug for F32x4 {
         #[inline(always)]
         fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-            write!(f, "F32x4([{}, {}, {}, {}])", self.x(), self.y(), self.z(), self.w())
+            write!(f, "F32x4({:?})", self.as_slice())
         }
     }
 
@@ -152,7 +142,7 @@ mod x86 {
 #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
 mod scalar {
     #[derive(Copy, Clone, Default, PartialEq, Debug)]
-    pub struct F32x4(pub [f32; 4]);
+    pub struct F32x4([f32; 4]);
 
     impl F32x4 {
         #[inline(always)]
@@ -186,24 +176,12 @@ mod scalar {
         }
 
         #[inline(always)]
-        pub fn x(&self) -> f32 {
-            self.0[0]
-        }
+        pub fn as_slice(&self) -> &[f32; 4] { &self.0 }
 
-        #[inline(always)]
-        pub fn y(&self) -> f32 {
-            self.0[1]
-        }
-
-        #[inline(always)]
-        pub fn z(&self) -> f32 {
-            self.0[2]
-        }
-
-        #[inline(always)]
-        pub fn w(&self) -> f32 {
-            self.0[3]
-        }
+        #[inline(always)] pub fn x(&self) -> f32 { self.0[0] }
+        #[inline(always)] pub fn y(&self) -> f32 { self.0[1] }
+        #[inline(always)] pub fn z(&self) -> f32 { self.0[2] }
+        #[inline(always)] pub fn w(&self) -> f32 { self.0[3] }
     }
 
     impl std::ops::Add<F32x4> for F32x4 {

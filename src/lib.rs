@@ -8,11 +8,17 @@
 #![warn(missing_debug_implementations)]
 
 #![allow(clippy::approx_constant)]
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::comparison_chain)]
 #![allow(clippy::excessive_precision)]
 #![allow(clippy::float_cmp)]
 #![allow(clippy::identity_op)]
 #![allow(clippy::many_single_char_names)]
+#![allow(clippy::needless_range_loop)]
 #![allow(clippy::too_many_arguments)]
+
+// Must be first, because of macro scope rules.
+#[macro_use] mod point;
 
 mod alpha_runs;
 mod blend_mode;
@@ -33,7 +39,6 @@ mod path;
 mod path_builder;
 mod path_ops;
 mod pixmap;
-mod point;
 mod raster_pipeline;
 mod raster_pipeline_blitter;
 mod scalar;

@@ -389,9 +389,9 @@ fn chop_quad_in_y(clip: &Rect, pts: &mut [Point; 3]) {
         } else {
             // if chop_mono_quad_at_y failed, then we may have hit inexact numerics
             // so we just clamp against the top
-            for i in 0..3 {
-                if pts[i].y < clip.top() {
-                    pts[i].y = clip.top();
+            for p in pts.iter_mut() {
+                if p.y < clip.top() {
+                    p.y = clip.top();
                 }
             }
         }
@@ -410,9 +410,9 @@ fn chop_quad_in_y(clip: &Rect, pts: &mut [Point; 3]) {
         } else {
             // if chop_mono_quad_at_y failed, then we may have hit inexact numerics
             // so we just clamp against the bottom
-            for i in 0..3 {
-                if pts[i].y > clip.bottom() {
-                    pts[i].y = clip.bottom();
+            for p in pts.iter_mut() {
+                if p.y > clip.bottom() {
+                    p.y = clip.bottom();
                 }
             }
         }
@@ -507,7 +507,7 @@ fn chop_mono_cubic_at_x(src: &[Point; 4], x: f32, dst: &mut [Point; 7]) {
         return;
     }
 
-    let src_values: &[f32; 8] = unsafe { std::mem::transmute(src) };
+    let src_values = points_to_f32s!(src, 4);
     geometry::chop_cubic_at2(src, mono_cubic_closest_t(src_values, x), dst);
 }
 
@@ -516,7 +516,7 @@ fn chop_mono_cubic_at_y(src: &[Point; 4], y: f32, dst: &mut [Point; 7]) {
         return;
     }
 
-    let src_values: &[f32; 8] = unsafe { std::mem::transmute(src) };
+    let src_values = points_to_f32s!(src, 4);
     geometry::chop_cubic_at2(src, mono_cubic_closest_t(&src_values[1..], y), dst);
 }
 

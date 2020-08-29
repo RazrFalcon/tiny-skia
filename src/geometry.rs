@@ -518,7 +518,7 @@ fn eval_quad_tangent_at(src: &[Point; 3], tol: NormalizedF32) -> Point {
 //
 // F' dot F'' -> CCt^3 + 3BCt^2 + (2BB + CA)t + AB
 pub fn find_cubic_max_curvature<'a>(src: &[Point; 4], t_values: &'a mut [TValue; 3]) -> &'a [TValue] {
-    let raw_src: &[f32; 8] = unsafe { &*(src as *const [Point; 4] as *const [f32; 8]) };
+    let raw_src = points_to_f32s!(src, 4);
 
     let mut coeff_x = formulate_f1_dot_f2(raw_src);
     let coeff_y = formulate_f1_dot_f2(&raw_src[1..]);

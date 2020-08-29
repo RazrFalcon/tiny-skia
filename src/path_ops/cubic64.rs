@@ -29,7 +29,7 @@ impl Cubic64 {
 
     #[inline]
     pub fn as_f64_slice(&self) -> &[f64; POINT_COUNT*2] {
-        unsafe { std::mem::transmute(&self.points) }
+        points64_to_f64s!(&self.points, POINT_COUNT)
     }
 
     pub fn point_at_t(&self, t: f64) -> Point64 {
@@ -178,7 +178,7 @@ impl Cubic64 {
 
             Cubic64Pair { points: dst }
         } else {
-            let dst_f64: &mut [f64; 7*2] =unsafe { std::mem::transmute(&mut dst) };
+            let dst_f64 = points64_to_f64s_mut!(dst, 7);
             interp_cubic_coords(self.as_f64_slice(), t, dst_f64);
             interp_cubic_coords(&self.as_f64_slice()[1..], t, &mut dst_f64[1..]);
             Cubic64Pair { points: dst }
