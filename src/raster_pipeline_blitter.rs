@@ -89,7 +89,7 @@ impl RasterPipelineBlitter {
             memset2d_color = Some(PremultipliedColorU8::TRANSPARENT);
         }
 
-        let dst_ctx = raster_pipeline::ffi::sk_raster_pipeline_memory_ctx {
+        let img_ctx = raster_pipeline::ffi::sk_raster_pipeline_memory_ctx {
             pixels: pixmap.data().as_ptr() as _,
             stride: pixmap.size().width() as i32,
         };
@@ -97,7 +97,7 @@ impl RasterPipelineBlitter {
         Some(RasterPipelineBlitter {
             blend_mode,
             color_pipeline,
-            img_ctx: dst_ctx,
+            img_ctx,
             memset2d_color,
             blit_anti_h_rp: None,
             blit_rect_rp: None,

@@ -340,3 +340,133 @@ impl RasterPipeline {
         }
     }
 }
+
+
+#[cfg(test)]
+mod blend_tests {
+    // Test blending modes.
+    //
+    // Skia has two kinds of a raster pipeline: high and low precision.
+    // "High" uses f32 and "low" uses u16.
+    // And for basic operations we don't need f32 and u16 simply faster.
+    // But those modes are not identical. They can produce slightly different results
+    // due rounding.
+
+    use super::*;
+    use crate::{Pixmap, Painter, Color, PremultipliedColorU8, BlendMode};
+
+    macro_rules! test_blend {
+        ($name:ident, $mode:expr, $is_highp:expr, $r:expr, $g:expr, $b:expr, $a:expr) => {
+            #[test]
+            fn $name() {
+                let mut pixmap = Pixmap::new(1, 1).unwrap();
+                pixmap.fill(Color::from_rgba8(50, 127, 150, 200));
+
+                let img_ctx = ffi::sk_raster_pipeline_memory_ctx {
+                    pixels: pixmap.data().as_ptr() as _,
+                    stride: pixmap.size().width() as i32,
+                };
+                let img_ctx = &img_ctx as *const _ as *const c_void;
+
+                let mut ctx_storage = ContextStorage::new();
+                let color_ctx = ctx_storage.create_uniform_color_context(
+                    Color::from_rgba8(220, 140, 75, 180).premultiply(),
+                );
+
+                let mut p = RasterPipelineBuilder::new();
+                if $is_highp {
+                    // Lowp doesn't implement `UnboundedUniformColor`, so by using it
+                    // we are forcing the highp mode.
+                    p.push_with_context(Stage::UnboundedUniformColor, color_ctx);
+                } else {
+                    p.push_with_context(Stage::UniformColor, color_ctx);
+                }
+
+                p.push_with_context(Stage::LoadDestination, img_ctx);
+                p.push($mode.to_stage().unwrap());
+                p.push_with_context(Stage::Store, img_ctx);
+                let p = p.compile();
+                p.run(pixmap.size().to_screen_int_rect(0, 0));
+
+                assert_eq!(p.is_highp, $is_highp);
+
+                assert_eq!(
+                    pixmap.pixel(0, 0).unwrap(),
+                    PremultipliedColorU8::from_rgba($r, $g, $b, $a).unwrap()
+                );
+            }
+        };
+    }
+
+    macro_rules! test_blend_lowp {
+        ($name:ident, $mode:expr, $r:expr, $g:expr, $b:expr, $a:expr) => (
+            test_blend!{$name, $mode, false, $r, $g, $b, $a}
+        )
+    }
+
+    macro_rules! test_blend_highp {
+        ($name:ident, $mode:expr, $r:expr, $g:expr, $b:expr, $a:expr) => (
+            test_blend!{$name, $mode, true, $r, $g, $b, $a}
+        )
+    }
+
+    test_blend_lowp!(clear_lowp,              BlendMode::Clear,                 0,   0,   0,   0);
+    // Source is a no-op
+    test_blend_lowp!(destination_lowp,        BlendMode::Destination,          39, 100, 118, 200);
+    test_blend_lowp!(source_over_lowp,        BlendMode::SourceOver,          167, 129,  88, 239);
+    test_blend_lowp!(destination_over_lowp,   BlendMode::DestinationOver,      73, 122, 130, 239);
+    test_blend_lowp!(source_in_lowp,          BlendMode::SourceIn,            122,  78,  42, 141);
+    test_blend_lowp!(destination_in_lowp,     BlendMode::DestinationIn,        28,  71,  83, 141);
+    test_blend_lowp!(source_out_lowp,         BlendMode::SourceOut,            34,  22,  12,  39);
+    test_blend_lowp!(destination_out_lowp,    BlendMode::DestinationOut,       12,  30,  35,  59);
+    test_blend_lowp!(source_atop_lowp,        BlendMode::SourceAtop,          133, 107,  76, 200);
+    test_blend_lowp!(destination_atop_lowp,   BlendMode::DestinationAtop,      61,  92,  95, 180);
+    test_blend_lowp!(xor_lowp,                BlendMode::Xor,                  45,  51,  46,  98);
+    test_blend_lowp!(plus_lowp,               BlendMode::Plus,                194, 199, 171, 255);
+    test_blend_lowp!(modulate_lowp,           BlendMode::Modulate,             24,  39,  25, 141);
+    test_blend_lowp!(screen_lowp,             BlendMode::Screen,              170, 160, 146, 239);
+    test_blend_lowp!(overlay_lowp,            BlendMode::Overlay,              92, 128, 106, 239);
+    test_blend_lowp!(darken_lowp,             BlendMode::Darken,               72, 121,  88, 239);
+    test_blend_lowp!(lighten_lowp,            BlendMode::Lighten,             166, 128, 129, 239);
+    // ColorDodge in not available for lowp.
+    // ColorBurn in not available for lowp.
+    test_blend_lowp!(hard_light_lowp,         BlendMode::HardLight,           154, 128,  95, 239);
+    // SoftLight in not available for lowp.
+    test_blend_lowp!(difference_lowp,         BlendMode::Difference,          138,  57,  87, 239);
+    test_blend_lowp!(exclusion_lowp,          BlendMode::Exclusion,           146, 121, 121, 239);
+    test_blend_lowp!(multiply_lowp,           BlendMode::Multiply,             69,  90,  71, 238);
+    // Hue in not available for lowp.
+    // Saturation in not available for lowp.
+    // Color in not available for lowp.
+    // Luminosity in not available for lowp.
+
+    test_blend_highp!(clear_highp,            BlendMode::Clear,                 0,   0,   0,   0);
+    // Source is a no-op
+    test_blend_highp!(destination_highp,      BlendMode::Destination,          39, 100, 118, 200);
+    test_blend_highp!(source_over_highp,      BlendMode::SourceOver,          167, 128,  88, 239);
+    test_blend_highp!(destination_over_highp, BlendMode::DestinationOver,      72, 121, 129, 239);
+    test_blend_highp!(source_in_highp,        BlendMode::SourceIn,            122,  78,  42, 141);
+    test_blend_highp!(destination_in_highp,   BlendMode::DestinationIn,        28,  71,  83, 141);
+    test_blend_highp!(source_out_highp,       BlendMode::SourceOut,            33,  21,  11,  39);
+    test_blend_highp!(destination_out_highp,  BlendMode::DestinationOut,       11,  29,  35,  59);
+    test_blend_highp!(source_atop_highp,      BlendMode::SourceAtop,          133, 107,  76, 200);
+    test_blend_highp!(destination_atop_highp, BlendMode::DestinationAtop,      61,  92,  95, 180);
+    test_blend_highp!(xor_highp,              BlendMode::Xor,                  45,  51,  46,  98);
+    test_blend_highp!(plus_highp,             BlendMode::Plus,                194, 199, 171, 255);
+    test_blend_highp!(modulate_highp,         BlendMode::Modulate,             24,  39,  24, 141);
+    test_blend_highp!(screen_highp,           BlendMode::Screen,              171, 160, 146, 239);
+    test_blend_highp!(overlay_highp,          BlendMode::Overlay,              92, 128, 106, 239);
+    test_blend_highp!(darken_highp,           BlendMode::Darken,               72, 121,  88, 239);
+    test_blend_highp!(lighten_highp,          BlendMode::Lighten,             167, 128, 129, 239);
+    test_blend_highp!(color_dodge_highp,      BlendMode::ColorDodge,          186, 192, 164, 239);
+    test_blend_highp!(color_burn_highp,       BlendMode::ColorBurn,            54,  63,  46, 239);
+    test_blend_highp!(hard_light_highp,       BlendMode::HardLight,           155, 128,  95, 239);
+    test_blend_highp!(soft_light_highp,       BlendMode::SoftLight,            98, 124, 115, 239);
+    test_blend_highp!(difference_highp,       BlendMode::Difference,          139,  58,  88, 239);
+    test_blend_highp!(exclusion_highp,        BlendMode::Exclusion,           147, 121, 122, 239);
+    test_blend_highp!(multiply_highp,         BlendMode::Multiply,             69,  89,  71, 239);
+    test_blend_highp!(hue_highp,              BlendMode::Hue,                 128, 103,  74, 239);
+    test_blend_highp!(saturation_highp,       BlendMode::Saturation,           59, 126, 140, 239);
+    test_blend_highp!(color_highp,            BlendMode::Color,               139, 100,  60, 239);
+    test_blend_highp!(luminosity_highp,       BlendMode::Luminosity,          100, 149, 157, 239);
+}

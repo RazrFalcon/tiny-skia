@@ -113,6 +113,18 @@ impl PremultipliedColorU8 {
     /// A transparent color.
     pub const TRANSPARENT: Self = PremultipliedColorU8::from_rgba_unchecked(0, 0, 0, 0);
 
+    /// Creates a new premultiplied color.
+    ///
+    /// RGB components must be <= Alpha.
+    #[inline]
+    pub fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Option<Self> {
+        if r <= a && g <= a && b <= a {
+            Some(PremultipliedColorU8(pack_rgba(r, g, b, a)))
+        } else {
+            None
+        }
+    }
+
     /// Creates a new color.
     #[inline]
     pub(crate) const fn from_rgba_unchecked(r: u8, g: u8, b: u8, a: u8) -> Self {
