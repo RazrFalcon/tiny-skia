@@ -191,6 +191,18 @@ test fill_all_cairo     ... bench:     285,316 ns/iter (+/- 2,293)
 test fill_all_raqote    ... bench:      46,560 ns/iter (+/- 235)
 ```
 
+### spiral stroke
+
+A spiral has a lot of short horizontal strides which are not CPU-friendly
+when a rendering backend is designed for long horizontal strides.
+
+```
+test spiral_tiny_skia ... bench:   1,348,806 ns/iter (+/- 16,196)
+test spiral_skia      ... bench:   1,205,407 ns/iter (+/- 10,483)
+test spiral_cairo     ... bench:   3,161,763 ns/iter (+/- 30,568)
+test spiral_raqote    ... bench:   5,707,383 ns/iter (+/- 38,570)
+```
+
 ### png
 
 *raw* - is just the `png` create part without premultiplying/demultiplying for `tiny-skia`.

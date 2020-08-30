@@ -34,6 +34,11 @@ path = "fill_all.rs"
 harness = false
 
 [[bench]]
+name = "spiral"
+path = "spiral.rs"
+harness = false
+
+[[bench]]
 name = "png_io"
 path = "png_io.rs"
 harness = false
