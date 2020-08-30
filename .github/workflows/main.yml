@@ -7,12 +7,9 @@ env:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-18.04
     strategy:
       matrix:
-        os:
-          - ubuntu-18.04
-          - macos-10.15
         rust:
           - 1.36.0
           - stable
@@ -23,8 +20,11 @@ jobs:
     - name: Build without default features
       run: cargo build --verbose --no-default-features
 
-    - name: Run tests
-      run: cargo test --verbose
+    - name: Run tests without SIMD
+      run: cargo test --verbose --no-default-features --features png-format
+
+    - name: Run tests with SIMD
+      run: cargo test --verbose --no-default-features --features png-format,sse2
   sanitize:
     runs-on: ubuntu-18.04
     steps:
@@ -42,13 +42,3 @@ jobs:
         env:
           RUSTFLAGS: -Z sanitizer=address
         run: cargo +nightly test
-  win-build:
-    runs-on: windows-2019
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Run tests
-        run: |
-          $env:Path += ";C:\msys64\mingw64\bin\"
-          cargo test

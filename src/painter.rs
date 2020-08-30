@@ -7,8 +7,7 @@
 use crate::{Pixmap, Path, Color, BlendMode};
 
 use crate::scan;
-use crate::raster_pipeline::ContextStorage;
-use crate::raster_pipeline_blitter::create_raster_pipeline_blitter;
+use crate::raster_pipeline::{ContextStorage, RasterPipelineBlitter};
 
 // 8K is 1 too big, since 8K << supersample == 32768 which is too big for Fixed.
 const MAX_DIM: u32 = 8192 - 1;
@@ -147,7 +146,7 @@ impl Painter for Pixmap {
         let clip = self.size().to_screen_int_rect(0, 0);
 
         let mut ctx_storage = ContextStorage::new();
-        let mut blitter = create_raster_pipeline_blitter(paint, &mut ctx_storage, self)?;
+        let mut blitter = RasterPipelineBlitter::new(paint, &mut ctx_storage, self)?;
 
         if paint.anti_alias {
             scan::aa_path::fill_path(path, paint.fill_type, &clip, &mut blitter)

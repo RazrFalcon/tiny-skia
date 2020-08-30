@@ -12,27 +12,13 @@ use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 use crate::blitter::Blitter;
 use crate::raster_pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
 
-pub fn create_raster_pipeline_blitter(
-    paint: &Paint,
-    ctx_storage: &mut ContextStorage,
-    pixmap: &mut Pixmap,
-) -> Option<RasterPipelineBlitter> {
-    let mut shader_pipeline = RasterPipelineBuilder::new();
-
-    // Having no shader makes things nice and easy... just use the paint color.
-    let color_ctx = ctx_storage.create_uniform_color_context(paint.color.premultiply());
-    shader_pipeline.push_with_context(raster_pipeline::Stage::UniformColor, color_ctx);
-
-    RasterPipelineBlitter::new(paint, &shader_pipeline, pixmap)
-}
-
 
 pub struct RasterPipelineBlitter {
     blend_mode: BlendMode,
     color_pipeline: RasterPipelineBuilder,
 
     // Always points to the top-left of `pixmap`.
-    img_ctx: raster_pipeline::ffi::sk_raster_pipeline_memory_ctx,
+    img_ctx: raster_pipeline::MemoryCtx,
 
     memset2d_color: Option<PremultipliedColorU8>,
 
@@ -46,7 +32,21 @@ pub struct RasterPipelineBlitter {
 }
 
 impl RasterPipelineBlitter {
-    fn new(
+    pub fn new(
+        paint: &Paint,
+        ctx_storage: &mut ContextStorage,
+        pixmap: &mut Pixmap,
+    ) -> Option<RasterPipelineBlitter> {
+        let mut shader_pipeline = RasterPipelineBuilder::new();
+
+        // Having no shader makes things nice and easy... just use the paint color.
+        let color_ctx = ctx_storage.create_uniform_color_context(paint.color.premultiply());
+        shader_pipeline.push_with_context(raster_pipeline::Stage::UniformColor, color_ctx);
+
+        RasterPipelineBlitter::new_inner(paint, &shader_pipeline, pixmap)
+    }
+
+    fn new_inner(
         paint: &Paint,
         shader_pipeline: &RasterPipelineBuilder,
         pixmap: &mut Pixmap,
@@ -89,9 +89,9 @@ impl RasterPipelineBlitter {
             memset2d_color = Some(PremultipliedColorU8::TRANSPARENT);
         }
 
-        let img_ctx = raster_pipeline::ffi::sk_raster_pipeline_memory_ctx {
+        let img_ctx = raster_pipeline::MemoryCtx {
             pixels: pixmap.data().as_ptr() as _,
-            stride: pixmap.size().width() as i32,
+            stride: pixmap.size().width_safe(),
         };
 
         Some(RasterPipelineBlitter {
@@ -178,8 +178,7 @@ impl Blitter for RasterPipelineBlitter {
                 let mut addr = self.img_ctx.pixels.cast::<PremultipliedColorU8>();
 
                 // Calculate pixel offset in bytes.
-                debug_assert!(self.img_ctx.stride > 0);
-                let offset = calc_pixel_offset(rect.x(), rect.y() + y, self.img_ctx.stride as u32);
+                let offset = calc_pixel_offset(rect.x(), rect.y() + y, self.img_ctx.stride.get());
                 addr = unsafe { addr.add(offset) };
 
                 for _ in 0..rect.width() as usize {

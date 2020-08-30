@@ -40,7 +40,6 @@ mod path_builder;
 mod path_ops;
 mod pixmap;
 mod raster_pipeline;
-mod raster_pipeline_blitter;
 mod scalar;
 mod scan;
 mod simd;

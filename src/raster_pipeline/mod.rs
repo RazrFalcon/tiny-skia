@@ -6,54 +6,15 @@
 
 use std::ffi::c_void;
 
-use crate::ScreenIntRect;
+use crate::{ScreenIntRect, LengthU32};
 
 use crate::color::PremultipliedColor;
 
-pub mod ffi {
-    #![allow(non_camel_case_types)]
+pub use blitter::RasterPipelineBlitter;
 
-    use std::ffi::c_void;
-
-    #[repr(C)]
-    #[derive(Copy, Clone)]
-    pub struct skia_pipe_stage_list {
-        _unused: [u8; 0],
-    }
-
-    #[repr(C)]
-    #[derive(Copy, Clone)]
-    pub struct sk_raster_pipeline_memory_ctx {
-        pub pixels: *mut c_void,
-        pub stride: i32,
-    }
-
-    #[repr(C)]
-    #[derive(Copy, Clone)]
-    pub struct sk_raster_pipeline_uniform_color_ctx {
-        pub r: f32,
-        pub g: f32,
-        pub b: f32,
-        pub a: f32,
-        pub rgba: [u16; 4], // [0,255] in a 16-bit lane.
-    }
-
-    extern "C" {
-        pub fn skia_pipe_raster_build_pipeline(
-            stages: *mut skia_pipe_stage_list,
-            ip: *mut *mut c_void,
-        ) -> bool;
-
-        pub fn skia_pipe_raster_run_pipeline(
-            program: *const *mut c_void,
-            is_highp: bool,
-            x: u32,
-            y: u32,
-            w: u32,
-            h: u32,
-        );
-    }
-}
+mod blitter;
+mod lowp;
+mod highp;
 
 
 #[allow(dead_code)]
@@ -163,6 +124,31 @@ pub enum Stage {
     ApplyVectorMask,
 }
 
+pub const STAGES_COUNT: usize = Stage::ApplyVectorMask as usize + 1;
+
+
+#[derive(Copy, Clone, Debug)]
+pub struct MemoryCtx {
+    pub pixels: *mut c_void,
+    pub stride: LengthU32,
+}
+
+impl MemoryCtx {
+    #[inline(always)]
+    pub unsafe fn ptr_at_xy<T>(&self, dx: usize, dy: usize) -> *mut T {
+        self.pixels.cast::<T>().add(self.stride.get() as usize * dy + dx)
+    }
+}
+
+
+#[derive(Copy, Clone)]
+pub struct UniformColorCtx {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+    pub rgba: [u16; 4], // [0,255] in a 16-bit lane.
+}
 
 pub struct ContextStorage {
     // TODO: stack array + fallback
@@ -191,7 +177,7 @@ impl ContextStorage {
             (a * 255.0 + 0.5) as u16,
         ];
 
-        let ctx = ffi::sk_raster_pipeline_uniform_color_ctx {
+        let ctx = UniformColorCtx {
             r, g, b, a,
             rgba,
         };
@@ -220,8 +206,7 @@ impl Drop for ContextStorage {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 struct StageList {
-    prev: *mut StageList,
-    stage: i32,
+    stage: Stage,
     ctx: *const c_void,
 }
 
@@ -252,24 +237,17 @@ impl RasterPipelineBuilder {
 
     #[inline]
     pub fn push(&mut self, stage: Stage) {
-        self.unchecked_push(stage as i32, std::ptr::null_mut());
+        self.unchecked_push(stage, std::ptr::null_mut());
     }
 
     #[inline]
     pub fn push_with_context(&mut self, stage: Stage, ctx: *const c_void) {
-        self.unchecked_push(stage as i32, ctx);
+        self.unchecked_push(stage, ctx);
     }
 
     #[inline]
-    fn unchecked_push(&mut self, stage: i32, ctx: *const c_void) {
-        let prev = if self.stages.is_empty() {
-            std::ptr::null_mut()
-        } else {
-            unsafe { self.stages.as_mut_ptr().add(self.stages.len() - 1) }
-        };
-
+    fn unchecked_push(&mut self, stage: Stage, ctx: *const c_void) {
         self.stages.push(StageList {
-            prev,
             stage,
             ctx,
         });
@@ -284,7 +262,7 @@ impl RasterPipelineBuilder {
         }
 
         self.stages.extend_from_slice(&other.stages);
-        self.slots_needed += other.slots_needed - 1; // Don't double count just_returns().
+        self.slots_needed += other.slots_needed - 1; // Don't double count just_return().
     }
 
     #[inline]
@@ -292,23 +270,89 @@ impl RasterPipelineBuilder {
         if self.stages.is_empty() {
             return RasterPipeline {
                 program: Vec::new(),
+                tail_program: Vec::new(),
                 is_highp: false,
             };
         }
 
-        let mut program: Vec<*mut c_void> = vec![std::ptr::null_mut(); self.slots_needed];
+        let mut program: Vec<*const c_void> = Vec::with_capacity(self.slots_needed);
 
-        let is_highp = unsafe {
-            // Skia builds a pipeline from the end.
-            let last_stage = self.stages.as_ptr().add(self.stages.len() - 1);
-            ffi::skia_pipe_raster_build_pipeline(
-                last_stage as _,
-                program.as_mut_ptr().add(self.slots_needed)
-            )
-        };
+        let mut is_highp = false;
+        for stage in &self.stages {
+            let stage_fn = lowp::STAGES[stage.stage as usize];
+            if !lowp::fn_ptr_eq(stage_fn, lowp::null_fn) {
+                program.push(lowp::fn_ptr(stage_fn));
+
+                if !stage.ctx.is_null() {
+                    program.push(stage.ctx);
+                }
+            } else {
+                is_highp = true;
+                break;
+            }
+        }
+
+        if is_highp {
+            program.clear();
+
+            for stage in &self.stages {
+                let stage_fn = highp::STAGES[stage.stage as usize];
+
+                if highp::fn_ptr_eq(stage_fn, highp::null_fn) {
+                    panic!("{:?} not implemented", stage.stage);
+                }
+
+                program.push(highp::fn_ptr(stage_fn));
+
+                if !stage.ctx.is_null() {
+                    program.push(stage.ctx);
+                }
+            }
+
+            program.push(highp::just_return as *const () as *const c_void);
+        } else {
+            program.push(lowp::just_return as *const () as *const c_void);
+        }
+
+        // I wasn't able to reproduce Skia's load_8888_/store_8888_ performance.
+        // Skia uses fallthrough switch, which is probably the reason.
+        // In Rust, any branching in load/store code drastically affects the performance.
+        // So instead, we're using two "programs": one for "full stages" and one for "tail stages".
+        // While the only difference is the load/store methods.
+        let mut tail_program = program.clone();
+        if is_highp {
+            if let Some(idx) = tail_program.iter().position(|fun| *fun == highp::fn_ptr(highp::load_dst)) {
+                tail_program[idx] = highp::fn_ptr(highp::load_dst_tail);
+            }
+
+            if let Some(idx) = tail_program.iter().position(|fun| *fun == highp::fn_ptr(highp::store)) {
+                tail_program[idx] = highp::fn_ptr(highp::store_tail);
+            }
+
+            // SourceOverRgba calls load/store manually, without the pipeline,
+            // therefore we have to switch it too.
+            if let Some(idx) = tail_program.iter().position(|fun| *fun == highp::fn_ptr(highp::source_over_rgba)) {
+                tail_program[idx] = highp::fn_ptr(highp::source_over_rgba_tail);
+            }
+        } else {
+            if let Some(idx) = tail_program.iter().position(|fun| *fun == lowp::fn_ptr(lowp::load_dst)) {
+                tail_program[idx] = lowp::fn_ptr(lowp::load_dst_tail);
+            }
+
+            if let Some(idx) = tail_program.iter().position(|fun| *fun == lowp::fn_ptr(lowp::store)) {
+                tail_program[idx] = lowp::fn_ptr(lowp::store_tail);
+            }
+
+            // SourceOverRgba calls load/store manually, without the pipeline,
+            // therefore we have to switch it too.
+            if let Some(idx) = tail_program.iter().position(|fun| *fun == lowp::fn_ptr(lowp::source_over_rgba)) {
+                tail_program[idx] = lowp::fn_ptr(lowp::source_over_rgba_tail);
+            }
+        }
 
         RasterPipeline {
             program,
+            tail_program,
             is_highp,
         }
     }
@@ -316,7 +360,8 @@ impl RasterPipelineBuilder {
 
 pub struct RasterPipeline {
     // TODO: stack array + fallback
-    program: Vec<*mut c_void>,
+    program: Vec<*const c_void>,
+    tail_program: Vec<*const c_void>,
     is_highp: bool,
 }
 
@@ -328,15 +373,10 @@ impl RasterPipeline {
             return;
         }
 
-        unsafe {
-            ffi::skia_pipe_raster_run_pipeline(
-                self.program.as_ptr(),
-                self.is_highp,
-                rect.x(),
-                rect.y(),
-                rect.width(),
-                rect.height(),
-            );
+        if self.is_highp {
+            highp::start(self.program.as_ptr(), self.tail_program.as_ptr(), rect);
+        } else {
+            lowp::start(self.program.as_ptr(), self.tail_program.as_ptr(), rect);
         }
     }
 }
@@ -362,9 +402,9 @@ mod blend_tests {
                 let mut pixmap = Pixmap::new(1, 1).unwrap();
                 pixmap.fill(Color::from_rgba8(50, 127, 150, 200));
 
-                let img_ctx = ffi::sk_raster_pipeline_memory_ctx {
+                let img_ctx = MemoryCtx {
                     pixels: pixmap.data().as_ptr() as _,
-                    stride: pixmap.size().width() as i32,
+                    stride: pixmap.size().width_safe(),
                 };
                 let img_ctx = &img_ctx as *const _ as *const c_void;
 

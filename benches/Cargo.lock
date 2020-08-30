@@ -253,7 +253,6 @@ name = "tiny-skia"
 version = "0.2.0"
 dependencies = [
  "arrayvec",
- "cc",
  "checked-geom",
  "float-cmp",
  "memmap2",

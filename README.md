@@ -4,7 +4,7 @@
 [![Documentation](https://docs.rs/tiny-skia/badge.svg)](https://docs.rs/tiny-skia)
 [![Rust 1.36+](https://img.shields.io/badge/rust-1.36+-orange.svg)](https://www.rust-lang.org)
 
-`tiny-skia` is a tiny [Skia] subset mostly ported to Rust.
+`tiny-skia` is a tiny [Skia] subset ported to Rust.
 
 The goal is to provide an absolute minimal, CPU only, 2D rendering library for the Rust ecosystem,
 with a focus on a rendering quality, speed and binary size.
@@ -33,29 +33,36 @@ and doesn't really support 32bit targets.
 
 `tiny-skia` tries to be small, simple and easy to build.
 
-## Build
-
-Sadly, `tiny-skia` still relies on C++ code, therefore you will need a C++ compiler.
-But not just any compiler. You **must** use `clang` (or `clang-cl` on Windows).
-Skia doesn't support any other compilers, so all optimizations will simply be disabled.
-
-You don't need to select the `clang` compiler manually.
-The build script will do this automatically (as long as you have it in the PATH).
-
-There are no other build dependencies.
-
-**Warning:** 32bit targets are not supported.
-
 ## Performance
 
-Unless there is a bug, the performance must be identical to Skia.
-Mainly because we are using Skia's `SkRasterPipeline` fork instead of Rust alternative.
+Does `tiny-skia` as fast as [Skia]? The short answer is no. The longer one is: it depends.
 
-Can we port `SkRasterPipeline` to Rust? Probably not.
-Rust doesn't support clang's vector extensions and ARM NEON instructions.
-After multiple failed attempts, the best performance I've able to reach is 4-6x slower than Skia,
-which is simply unacceptable. If someone is interested in porting it, let me know.
-It's "only" 3 KLOC.
+The heart of Skia's CPU rendering is
+[SkRasterPipeline](https://github.com/google/skia/blob/master/src/opts/SkRasterPipeline_opts.h).
+And this is an extremely optimized piece of code.
+But to be a bit pedantic, it's not really a C++ code. It relies on clang's
+non-standard vector extensions, which means that you must build it with clang.
+You can actually build it with gcc/msvc, but it will simply ignore all the optimizations
+and become 15-30 *times* slower! Which makes it kinda useless. And `tiny-skia`
+is way closer to a clang version.
+
+Also, `SkRasterPipeline` supports AVX2 instructions, which provide 256-bits wide types.
+This makes common operations almost 2x faster, compared to a generic SSE2/128-bits one.
+Which is no surprise.<br>
+The problem is that Skia doesn't support dynamic CPU detection.
+So by enabling AVX2 you're making the resulting binary non-portable,
+since you need a Haswell processor or newer.<br>
+Right now, `tiny-skia` supports only SSE2 instructions and relies on autovectorization.
+
+Skia also supports ARM NEON instructions, which are unavailable in a stable Rust at the moment.
+Therefore a default scalar implementation will be used instead on ARM and other non-x86 targets.
+
+Accounting all above, `tiny-skia` is 20-100% slower than "a Skia built for a generic x86_64 CPU".
+
+We can technically use the `SkRasterPipeline` directly, to achive the same performance as Skia has.
+But it means that we have to complicate our build process quite a lot.
+Mainly because we have to use only clang.
+So having a pure Rust library, even a bit slower one, is still a good trade off.
 
 You can find more information in [benches/README.md](./benches/README.md).
 
@@ -85,7 +92,7 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 ### v0.2
 
 - [x] Foundation: `Pixmap`, `Painter`, `Path`, geometry primitives, etc.
-- [x] Adapt a minimal `SkRasterPipeline` fork
+- [x] Port `SkRasterPipeline` to Rust.
 - [x] PNG load/save
 - [x] Blending modes
 - [x] `Path` filling
@@ -106,7 +113,6 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 
 ### v0.N
 
-- Port `SkRasterPipeline` to Rust.
 - Move `Path` and most of Bézier math into separate crates. Preferably into existing one
 
 PS: we start from 0.2, because 0.1 was just a bindings.

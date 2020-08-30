@@ -5,7 +5,7 @@ edition = "2018"
 
 [dependencies]
 bencher = "0.1.5"
-tiny-skia = { path = "../", features = ["target-cpu"] }
+tiny-skia = { path = "../" }
 skia-rs = { path = "../testing-tools/skia-rs" }
 raqote = { version = "0.8", default-features = false }
 # Do not upgrade, because 0.9 uses proc-macros now and it's too slow to compile.

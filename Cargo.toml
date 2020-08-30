@@ -3,7 +3,7 @@ name = "tiny-skia"
 version = "0.2.0"
 authors = ["Evgeniy Reizner <razrfalcon@gmail.com>"]
 edition = "2018"
-description = "A stripped down Skia fork that supports only 2D shapes rendering on a CPU."
+description = "A tiny Skia subset ported to Rust."
 documentation = "https://docs.rs/tiny-skia/"
 readme = "README.md"
 repository = "https://github.com/RazrFalcon/tiny-skia"
@@ -19,17 +19,11 @@ memmap2 = { version = "0.1", optional = true }
 num-ext = { git = "https://github.com/RazrFalcon/num-ext", rev = "109f01a" }
 png = { version = "0.16.6", optional = true }
 
-[build-dependencies]
-cc = "1.0"
-
 [features]
-default = ["png-format"]
+default = ["sse2", "png-format"]
+
+# Enables SSE2 SIMD on x86 targets.
+sse2 = []
 
 # Allows loading and saving `Pixmap` as PNG.
 png-format = ["png", "memmap2"]
-
-# Passes `-march=native` to clang.
-# Depending on a CPU, can increase the rendering performance up to 2x.
-# Makes the binary non-portable.
-# This is the prefered way of building the library.
-target-cpu = []
