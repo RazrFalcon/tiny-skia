@@ -151,7 +151,7 @@ pub fn fill_path_impl(
 
     // TODO: walk_simple_edges
 
-    walk_edges(fill_type, start_y, stop_y, shifted_clip.shifted().right(), edges, blitter)
+    walk_edges(fill_type, start_y, stop_y, shifted_clip.shifted().right(), &mut edges, blitter)
 }
 
 // TODO: simplify!
@@ -160,7 +160,7 @@ fn walk_edges(
     start_y: u32,
     stop_y: u32,
     right_clip: u32,
-    mut edges: Vec<Edge>,
+    edges: &mut [Edge],
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
     let mut curr_y = start_y;
@@ -198,7 +198,7 @@ fn walk_edges(
                 // are we done with this edge?
                 match &mut edges[curr_idx] {
                     Edge::Line(_) => {
-                        remove_edge(curr_idx, &mut edges);
+                        remove_edge(curr_idx, edges);
                     }
                     Edge::Quadratic(ref mut quad) => {
                         if quad.curve_count > 0 && quad.update() {
@@ -206,12 +206,12 @@ fn walk_edges(
 
                             if new_x < prev_x {
                                 // ripple current edge backwards until it is x-sorted
-                                backward_insert_edge_based_on_x(curr_idx, &mut edges);
+                                backward_insert_edge_based_on_x(curr_idx, edges);
                             } else {
                                 prev_x = new_x;
                             }
                         } else {
-                            remove_edge(curr_idx, &mut edges);
+                            remove_edge(curr_idx, edges);
                         }
                     }
                     Edge::Cubic(ref mut cubic) => {
@@ -222,12 +222,12 @@ fn walk_edges(
 
                             if new_x < prev_x {
                                 // ripple current edge backwards until it is x-sorted
-                                backward_insert_edge_based_on_x(curr_idx, &mut edges);
+                                backward_insert_edge_based_on_x(curr_idx, edges);
                             } else {
                                 prev_x = new_x;
                             }
                         } else {
-                            remove_edge(curr_idx, &mut edges);
+                            remove_edge(curr_idx, edges);
                         }
                     }
                 }
@@ -238,7 +238,7 @@ fn walk_edges(
 
                 if new_x < prev_x {
                     // ripple current edge backwards until it is x-sorted
-                    backward_insert_edge_based_on_x(curr_idx, &mut edges);
+                    backward_insert_edge_based_on_x(curr_idx, edges);
                 } else {
                     prev_x = new_x;
                 }
@@ -260,13 +260,13 @@ fn walk_edges(
         }
 
         // now current edge points to the first edge with a Yint larger than curr_y
-        insert_new_edges(curr_idx, curr_y as i32, &mut edges);
+        insert_new_edges(curr_idx, curr_y as i32, edges);
     }
 
     Some(())
 }
 
-fn remove_edge(curr_idx: usize, edges: &mut Vec<Edge>) {
+fn remove_edge(curr_idx: usize, edges: &mut [Edge]) {
     let prev = edges[curr_idx].prev.unwrap();
     let next = edges[curr_idx].next.unwrap();
 
@@ -274,7 +274,7 @@ fn remove_edge(curr_idx: usize, edges: &mut Vec<Edge>) {
     edges[next as usize].prev = Some(prev);
 }
 
-fn backward_insert_edge_based_on_x(curr_idx: usize, edges: &mut Vec<Edge>) {
+fn backward_insert_edge_based_on_x(curr_idx: usize, edges: &mut [Edge]) {
     let x = edges[curr_idx].x;
     let mut prev_idx = edges[curr_idx].prev.unwrap() as usize;
     while prev_idx != 0 {
@@ -292,7 +292,7 @@ fn backward_insert_edge_based_on_x(curr_idx: usize, edges: &mut Vec<Edge>) {
     }
 }
 
-fn insert_edge_after(curr_idx: usize, after_idx: usize, edges: &mut Vec<Edge>) {
+fn insert_edge_after(curr_idx: usize, after_idx: usize, edges: &mut [Edge]) {
     edges[curr_idx].prev = Some(after_idx as u32);
     edges[curr_idx].next = edges[after_idx].next;
 
@@ -305,7 +305,7 @@ fn insert_edge_after(curr_idx: usize, after_idx: usize, edges: &mut Vec<Edge>) {
 // insertion, marching forwards from here. The implementation could have started from the left
 // of the prior insertion, and search to the right, or with some additional caching, binary
 // search the starting point. More work could be done to determine optimal new edge insertion.
-fn backward_insert_start(mut prev_idx: usize, x: Fixed, edges: &mut Vec<Edge>) -> usize {
+fn backward_insert_start(mut prev_idx: usize, x: Fixed, edges: &mut [Edge]) -> usize {
     while let Some(prev) = edges[prev_idx].prev {
         prev_idx = prev as usize;
         if edges[prev_idx].x <= x {
@@ -316,7 +316,7 @@ fn backward_insert_start(mut prev_idx: usize, x: Fixed, edges: &mut Vec<Edge>) -
     prev_idx
 }
 
-fn insert_new_edges(mut new_idx: usize, curr_y: i32, edges: &mut Vec<Edge>) {
+fn insert_new_edges(mut new_idx: usize, curr_y: i32, edges: &mut [Edge]) {
     if edges[new_idx].first_y != curr_y {
         return;
     }
