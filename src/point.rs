@@ -5,7 +5,7 @@
 // found in the LICENSE file.
 
 use crate::scalar::Scalar;
-use crate::simd::F32x2;
+use crate::wide::F32x2;
 
 
 /// Converts `&[Point; N]` into `&[f32; N*2]`.

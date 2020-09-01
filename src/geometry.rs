@@ -9,7 +9,7 @@ use crate::{Point, NormalizedF32, Transform};
 use crate::checked_geom_ext::TransformExt;
 use crate::floating_point::FLOAT_PI;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
-use crate::simd::F32x2;
+use crate::wide::F32x2;
 
 mod private {
     use crate::scalar::Scalar;

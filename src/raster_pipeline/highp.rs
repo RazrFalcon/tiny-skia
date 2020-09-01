@@ -21,7 +21,7 @@ use std::ffi::c_void;
 use crate::{ScreenIntRect, PremultipliedColorU8};
 
 use crate::raster_pipeline::{self, STAGES_COUNT};
-use crate::simd::{I32x4, F32x4};
+use crate::wide::{I32x4, F32x4};
 
 const STAGE_WIDTH: usize = 4;
 

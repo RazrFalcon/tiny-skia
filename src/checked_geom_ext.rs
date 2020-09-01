@@ -8,7 +8,7 @@
 
 use crate::{Point, Bounds, Transform};
 
-use crate::simd::F32x4;
+use crate::wide::F32x4;
 
 
 pub trait BoundsExt: Sized {

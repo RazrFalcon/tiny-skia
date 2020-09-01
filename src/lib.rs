@@ -42,8 +42,8 @@ mod pixmap;
 mod raster_pipeline;
 mod scalar;
 mod scan;
-mod simd;
 mod stroker;
+mod wide;
 
 pub use checked_geom::*;
 
