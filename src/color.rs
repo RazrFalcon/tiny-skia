@@ -178,26 +178,17 @@ impl PremultipliedColorU8 {
     /// Returns a demultiplied color.
     #[inline]
     pub fn demultiply(&self) -> ColorU8 {
-        let a = self.alpha();
-        if a == ALPHA_U8_OPAQUE {
-            ColorU8::from_rgba(
-                self.red(),
-                self.green(),
-                self.blue(),
-                self.alpha(),
-            )
+        let alpha = self.alpha();
+        if alpha == ALPHA_U8_OPAQUE {
+            ColorU8(self.0)
         } else {
-            self.to_color().demultiply().to_color_u8()
-        }
-    }
-
-    #[inline]
-    pub(crate) fn to_color(&self) -> PremultipliedColor {
-        PremultipliedColor {
-            r: normalize_u8(self.red()),
-            g: normalize_u8(self.green()),
-            b: normalize_u8(self.blue()),
-            a: normalize_u8(self.alpha()),
+            let a = alpha as f64 / 255.0;
+            ColorU8::from_rgba(
+                (self.red() as f64 / a + 0.5) as u8,
+                (self.green() as f64 / a + 0.5) as u8,
+                (self.blue() as f64 / a + 0.5) as u8,
+                alpha,
+            )
         }
     }
 }
@@ -509,7 +500,7 @@ mod tests {
     }
 
     #[test]
-    fn demultiply_u8() {
+    fn demultiply_u8_1() {
         assert_eq!(
             PremultipliedColorU8::from_rgba_unchecked(2, 3, 5, 40).demultiply(),
             ColorU8::from_rgba(13, 19, 32, 40)
@@ -517,10 +508,18 @@ mod tests {
     }
 
     #[test]
-    fn demultiply_u8_opaque() {
+    fn demultiply_u8_2() {
         assert_eq!(
             PremultipliedColorU8::from_rgba_unchecked(10, 20, 30, 255).demultiply(),
             ColorU8::from_rgba(10, 20, 30, 255)
+        );
+    }
+
+    #[test]
+    fn demultiply_u8_3() {
+        assert_eq!(
+            PremultipliedColorU8::from_rgba_unchecked(153, 99, 54, 180).demultiply(),
+            ColorU8::from_rgba(217, 140, 77, 180)
         );
     }
 }

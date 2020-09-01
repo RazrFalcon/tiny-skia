@@ -18,10 +18,6 @@ Benchmarking is hard... (c)
 
 All measurement are in nanoseconds. Lower is better.
 
-- `tiny-skia` built with `skia-pipeline` will produce the same results as Skia SSE2.
-- `tiny-skia` built with `skia-pipeline-native` will produce the same results as Skia AVX2
-  (assuming you're using a modern CPU).
-
 ### blending modes
 
 `blend.rs`
@@ -58,7 +54,7 @@ All measurement are in nanoseconds. Lower is better.
 | color                |      3,015,127 |      2,657,101 |  1,431,804 |  1,115,800 |  6,070,058 | 10,537,391 |
 | luminosity           |      2,990,071 |      2,539,697 |  1,351,584 |  1,090,402 |  6,124,294 | 10,488,916 |
 
-*Destination* is faster in `tiny-skia`, because we exiting immediately,
+*Destination* is faster in `tiny-skia`, because we're exiting immediately,
 while Skia uses null blitter, so edges processing is still in place.
 
 ### anti-aliased fill
