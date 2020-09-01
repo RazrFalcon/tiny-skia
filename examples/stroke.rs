@@ -20,11 +20,9 @@ fn main() {
 // Instead, to stroke a path you should convert it into a stroke outline first
 // and then fill the outline as usual.
 fn stroke_simple(pixmap: &mut Pixmap) {
-    let paint = Paint {
-        color: Color::from_rgba8(0xDD, 0, 0, 0xAA),
-        anti_alias: true,
-        ..Paint::default()
-    };
+    let paint = Paint::default()
+        .set_color_rgba8(0xDD, 0, 0, 0xAA)
+        .set_anti_alias(true);
 
     let path = {
         let mut pb = PathBuilder::new();
@@ -45,11 +43,9 @@ fn stroke_simple(pixmap: &mut Pixmap) {
 // The stroking algorithm will use multiple temporary Path buffers.
 // To reuse the allocated memory, you can use the PathStroker directly.
 fn stroke_preserve(pixmap: &mut Pixmap) {
-    let mut paint = Paint {
-        color: Color::from_rgba8(0, 0xDD, 0, 0xAA),
-        anti_alias: true,
-        ..Paint::default()
-    };
+    let mut paint = Paint::default()
+        .set_color_rgba8(0, 0xDD, 0, 0xAA)
+        .set_anti_alias(true);
 
     let props = StrokeProps::default().set_width(4.0);
 
@@ -84,6 +80,6 @@ fn stroke_preserve(pixmap: &mut Pixmap) {
     // Reuse allocated stroker buffers and stroked path.
     let stroked_path = stroker.stroke_to(&path, props, stroked_path).unwrap();
 
-    paint.color = Color::from_rgba8(0, 0, 0xDD, 0xAA);
+    paint = paint.set_color_rgba8(0, 0, 0xDD, 0xAA);
     pixmap.fill_path(&stroked_path, &paint);
 }

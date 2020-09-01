@@ -75,6 +75,14 @@ impl Paint {
         self
     }
 
+    /// Sets a paint color.
+    ///
+    /// `paint.set_color(Color::from_rgba8(50, 127, 150, 200))` shorthand.
+    #[inline]
+    pub fn set_color_rgba8(self, r: u8, g: u8, b: u8, a: u8) -> Self {
+        self.set_color(Color::from_rgba8(r, g, b, a))
+    }
+
     /// Sets a blending mode.
     #[inline]
     pub fn set_blend_mode(mut self, blend_mode: BlendMode) -> Self {
