@@ -53,6 +53,25 @@ pub struct Paint {
     ///
     /// Default: false
     pub anti_alias: bool,
+
+    /// Forces the high quality/precision rendering pipeline.
+    ///
+    /// `tiny-skia`, just like Skia, has two rendering pipelines:
+    /// one uses `f32` and another one uses `u16`. `u16` one is usually way faster,
+    /// but less precise. Which can lead to slight differences.
+    ///
+    /// By default, `tiny-skia` will choose the pipeline automatically,
+    /// depending on a blending mode and other parameters.
+    /// But you can force the high quality one using this flag.
+    ///
+    /// This feature is especially useful during testing.
+    ///
+    /// Unlike high quality pipeline, the low quality one doesn't support all
+    /// rendering stages, therefore we cannot force it like hq one.
+    ///
+    /// Default: false
+    pub force_hq_pipeline: bool,
+
 }
 
 impl Default for Paint {
@@ -63,6 +82,7 @@ impl Default for Paint {
             blend_mode: BlendMode::default(),
             fill_type: FillType::default(),
             anti_alias: false,
+            force_hq_pipeline: false,
         }
     }
 }
@@ -101,6 +121,15 @@ impl Paint {
     #[inline]
     pub fn set_anti_alias(mut self, anti_alias: bool) -> Self {
         self.anti_alias = anti_alias;
+        self
+    }
+
+    /// Forces the high quality pipeline.
+    ///
+    /// See the `force_hq_pipeline` field documentation for details.
+    #[inline]
+    pub fn set_force_hq_pipeline(mut self, hq: bool) -> Self {
+        self.force_hq_pipeline = hq;
         self
     }
 }

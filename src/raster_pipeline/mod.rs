@@ -210,6 +210,7 @@ pub struct RasterPipelineBuilder {
     // TODO: stack array + fallback
     stages: Vec<StageList>,
     slots_needed: usize,
+    force_hq_pipeline: bool,
 }
 
 impl RasterPipelineBuilder {
@@ -218,7 +219,18 @@ impl RasterPipelineBuilder {
         RasterPipelineBuilder {
             stages: Vec::with_capacity(32),
             slots_needed: 1, // We always need one extra slot for just_return().
+            force_hq_pipeline: false,
         }
+    }
+
+    #[inline]
+    pub fn is_force_hq_pipeline(&self) -> bool {
+        self.force_hq_pipeline
+    }
+
+    #[inline]
+    pub fn set_force_hq_pipeline(&mut self, hq: bool) {
+        self.force_hq_pipeline = hq;
     }
 
     #[inline]
@@ -273,18 +285,20 @@ impl RasterPipelineBuilder {
 
         let mut program: Vec<*const c_void> = Vec::with_capacity(self.slots_needed);
 
-        let mut is_highp = false;
-        for stage in &self.stages {
-            let stage_fn = lowp::STAGES[stage.stage as usize];
-            if !lowp::fn_ptr_eq(stage_fn, lowp::null_fn) {
-                program.push(lowp::fn_ptr(stage_fn));
+        let mut is_highp = self.force_hq_pipeline;
+        if !self.force_hq_pipeline {
+            for stage in &self.stages {
+                let stage_fn = lowp::STAGES[stage.stage as usize];
+                if !lowp::fn_ptr_eq(stage_fn, lowp::null_fn) {
+                    program.push(lowp::fn_ptr(stage_fn));
 
-                if !stage.ctx.is_null() {
-                    program.push(stage.ctx);
+                    if !stage.ctx.is_null() {
+                        program.push(stage.ctx);
+                    }
+                } else {
+                    is_highp = true;
+                    break;
                 }
-            } else {
-                is_highp = true;
-                break;
             }
         }
 
@@ -410,14 +424,8 @@ mod blend_tests {
                 );
 
                 let mut p = RasterPipelineBuilder::new();
-                if $is_highp {
-                    // Lowp doesn't implement `UnboundedUniformColor`, so by using it
-                    // we are forcing the highp mode.
-                    p.push_with_context(Stage::UnboundedUniformColor, color_ctx);
-                } else {
-                    p.push_with_context(Stage::UniformColor, color_ctx);
-                }
-
+                p.set_force_hq_pipeline($is_highp);
+                p.push_with_context(Stage::UniformColor, color_ctx);
                 p.push_with_context(Stage::LoadDestination, img_ctx);
                 p.push($mode.to_stage().unwrap());
                 p.push_with_context(Stage::Store, img_ctx);

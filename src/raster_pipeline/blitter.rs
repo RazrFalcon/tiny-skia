@@ -65,6 +65,7 @@ impl RasterPipelineBlitter {
         // This is the common front of the full blit pipelines, each constructed lazily on first use.
         // The full blit pipelines handle reading and writing the dst, blending, coverage, dithering.
         let mut color_pipeline = RasterPipelineBuilder::new();
+        color_pipeline.set_force_hq_pipeline(paint.force_hq_pipeline);
 
         // Let's get the shader in first.
         color_pipeline.extend(shader_pipeline);
@@ -120,6 +121,7 @@ impl Blitter for RasterPipelineBlitter {
             let curr_cov_ptr = &self.current_coverage as *const _ as *const c_void;
 
             let mut p = RasterPipelineBuilder::new();
+            p.set_force_hq_pipeline(self.color_pipeline.is_force_hq_pipeline());
             p.extend(&self.color_pipeline);
             if self.blend_mode.should_pre_scale_coverage(false) {
                 p.push_with_context(raster_pipeline::Stage::Scale1Float, curr_cov_ptr);
@@ -194,6 +196,7 @@ impl Blitter for RasterPipelineBlitter {
 
         if self.blit_rect_rp.is_none() {
             let mut p = RasterPipelineBuilder::new();
+            p.set_force_hq_pipeline(self.color_pipeline.is_force_hq_pipeline());
             p.extend(&self.color_pipeline);
 
             let ctx_ptr = &self.img_ctx as *const _ as *const c_void;
