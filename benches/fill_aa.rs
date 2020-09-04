@@ -5,12 +5,10 @@ fn fill_aa_tiny_skia(bencher: &mut Bencher) {
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
 
-    let paint = Paint {
-        color: Color::from_rgba8(50, 127, 150, 200),
-        blend_mode: BlendMode::SourceOver,
-        fill_type: FillType::EvenOdd,
-        anti_alias: true,
-    };
+    let paint = Paint::default()
+        .set_color_rgba8(50, 127, 150, 200)
+        .set_fill_type(FillType::EvenOdd)
+        .set_anti_alias(true);
 
     let mut pb = PathBuilder::new();
     pb.move_to(500.0, 20.0);
