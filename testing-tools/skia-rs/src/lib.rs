@@ -74,6 +74,11 @@ mod ffi {
             x: u32, y: u32, width: u32, height: u32,
         ) -> *mut skiac_surface;
 
+        pub fn skiac_surface_save(
+            c_surface: *mut skiac_surface,
+            path: *const ::std::os::raw::c_char,
+        ) -> bool;
+
         pub fn skiac_surface_get_canvas(
             surface: *mut skiac_surface,
         ) -> *mut skiac_canvas;
@@ -500,26 +505,9 @@ impl Surface {
         unsafe { Self::from_ptr(ffi::skiac_surface_copy_rgba(self.ptr, 0, 0, self.width(), self.height())) }
     }
 
-    #[cfg(feature = "png-encoding")]
-    pub fn save_png<P: AsRef<std::path::Path>>(&self, path: P) -> Result<(), png::EncodingError> {
-        let file = std::fs::File::create(path)?;
-        let ref mut w = std::io::BufWriter::new(file);
-
-        let mut encoder = png::Encoder::new(w, self.width(), self.height());
-        encoder.set_color(png::ColorType::RGBA);
-        encoder.set_depth(png::BitDepth::Eight);
-        let mut writer = encoder.write_header()?;
-
-        if self.alpha_type() == AlphaType::Premultiplied {
-            // TODO: remove allocation
-            let mut data = self.data_u8().to_vec();
-            demultiply_alpha(&mut data);
-            writer.write_image_data(&data)
-        } else if self.alpha_type() == AlphaType::Unpremultiplied {
-            writer.write_image_data(&self.data())
-        } else {
-            panic!("unsupported alpha type")
-        }
+    pub fn save_png(&self, path: &str) -> bool {
+        let c_path = std::ffi::CString::new(path).unwrap();
+        unsafe { ffi::skiac_surface_save(self.ptr, c_path.as_ptr()) }
     }
 
     #[inline]
@@ -647,7 +635,7 @@ pub struct Color(pub u32);
 
 impl Color {
     #[inline]
-    pub fn new(a: u8, r: u8, g: u8, b: u8) -> Color {
+    pub fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
         Color((a as u32) << 24 | (r as u32) << 16 | (g as u32) << 8 | (b as u32))
     }
 }
@@ -1049,21 +1037,5 @@ impl From<Transform> for ffi::skiac_transform {
             e: ts.e,
             f: ts.f,
         }
-    }
-}
-
-
-fn demultiply_alpha(data: &mut [u8]) {
-    struct RGBA { r: u8, g: u8, b: u8, a: u8 }
-
-    let data: &mut [RGBA] = unsafe {
-        slice::from_raw_parts_mut(data.as_ptr() as *mut _, data.len() / 4)
-    };
-
-    for p in data {
-        let a = p.a as f64 / 255.0;
-        p.b = (p.b as f64 / a + 0.5) as u8;
-        p.g = (p.g as f64 / a + 0.5) as u8;
-        p.r = (p.r as f64 / a + 0.5) as u8;
     }
 }

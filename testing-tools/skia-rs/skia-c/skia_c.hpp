@@ -46,6 +46,7 @@ int skiac_surface_get_width(skiac_surface *c_surface);
 int skiac_surface_get_height(skiac_surface *c_surface);
 void skiac_surface_read_pixels(skiac_surface* c_surface, skiac_surface_data* data);
 int skiac_surface_get_alpha_type(skiac_surface* c_surface);
+bool skiac_surface_save(skiac_surface* c_surface, const char *path);
 
 // Canvas
 void skiac_canvas_clear(skiac_canvas* c_canvas, uint32_t color);

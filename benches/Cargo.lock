@@ -239,7 +239,6 @@ name = "skia-rs"
 version = "0.1.0"
 dependencies = [
  "cc",
- "png 0.16.7",
 ]
 
 [[package]]

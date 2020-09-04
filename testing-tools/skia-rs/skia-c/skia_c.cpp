@@ -69,6 +69,21 @@ skiac_surface* skiac_surface_create_rgba(int width, int height)
         skiac_surface_create(width, height, kUnpremul_SkAlphaType));
 }
 
+bool skiac_surface_save(skiac_surface* c_surface, const char *path)
+{
+    sk_sp<SkImage> image = SURFACE_CAST->makeImageSnapshot();
+    sk_sp<SkData> data = image->encodeToData(SkEncodedImageFormat::kPNG, 0);
+    if (data) {
+        SkFILEWStream stream(path);
+        if (stream.write(data->data(), data->size())) {
+            stream.flush();
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void skiac_surface_destroy(skiac_surface* c_surface)
 {
     // SkSurface is ref counted.
