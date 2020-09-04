@@ -30,31 +30,26 @@ pub struct ColorU8(u32);
 
 impl ColorU8 {
     /// Creates a new color.
-    #[inline]
     pub const fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
         ColorU8(pack_rgba(r, g, b, a))
     }
 
     /// Returns color's red component.
-    #[inline]
     pub const fn red(self) -> u8 {
         ((self.0 >> 0) & 0xFF) as u8
     }
 
     /// Returns color's green component.
-    #[inline]
     pub const fn green(self) -> u8 {
         ((self.0 >> 8) & 0xFF) as u8
     }
 
     /// Returns color's blue component.
-    #[inline]
     pub const fn blue(self) -> u8 {
         ((self.0 >> 16) & 0xFF) as u8
     }
 
     /// Returns color's alpha component.
-    #[inline]
     pub const fn alpha(self) -> u8 {
         ((self.0 >> 24) & 0xFF) as u8
     }
@@ -62,19 +57,16 @@ impl ColorU8 {
     /// Check that color is opaque.
     ///
     /// Alpha == 255
-    #[inline]
     pub fn is_opaque(&self) -> bool {
         self.alpha() == ALPHA_U8_OPAQUE
     }
 
     /// Returns the value as a primitive type.
-    #[inline]
     pub const fn get(self) -> u32 {
         self.0
     }
 
     /// Converts into a premultiplied color.
-    #[inline]
     pub fn premultiply(&self) -> PremultipliedColorU8 {
         let a = self.alpha();
         if a != ALPHA_U8_OPAQUE {
@@ -116,7 +108,6 @@ impl PremultipliedColorU8 {
     /// Creates a new premultiplied color.
     ///
     /// RGB components must be <= Alpha.
-    #[inline]
     pub fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Option<Self> {
         if r <= a && g <= a && b <= a {
             Some(PremultipliedColorU8(pack_rgba(r, g, b, a)))
@@ -126,7 +117,6 @@ impl PremultipliedColorU8 {
     }
 
     /// Creates a new color.
-    #[inline]
     pub(crate) const fn from_rgba_unchecked(r: u8, g: u8, b: u8, a: u8) -> Self {
         PremultipliedColorU8(pack_rgba(r, g, b, a))
     }
@@ -134,7 +124,6 @@ impl PremultipliedColorU8 {
     /// Returns color's red component.
     ///
     /// The value is <= alpha.
-    #[inline]
     pub const fn red(self) -> u8 {
         ((self.0 >> 0) & 0xFF) as u8
     }
@@ -142,7 +131,6 @@ impl PremultipliedColorU8 {
     /// Returns color's green component.
     ///
     /// The value is <= alpha.
-    #[inline]
     pub const fn green(self) -> u8 {
         ((self.0 >> 8) & 0xFF) as u8
     }
@@ -150,13 +138,11 @@ impl PremultipliedColorU8 {
     /// Returns color's blue component.
     ///
     /// The value is <= alpha.
-    #[inline]
     pub const fn blue(self) -> u8 {
         ((self.0 >> 16) & 0xFF) as u8
     }
 
     /// Returns color's alpha component.
-    #[inline]
     pub const fn alpha(self) -> u8 {
         ((self.0 >> 24) & 0xFF) as u8
     }
@@ -164,19 +150,16 @@ impl PremultipliedColorU8 {
     /// Check that color is opaque.
     ///
     /// Alpha == 255
-    #[inline]
     pub fn is_opaque(&self) -> bool {
         self.alpha() == ALPHA_U8_OPAQUE
     }
 
     /// Returns the value as a primitive type.
-    #[inline]
     pub const fn get(self) -> u32 {
         self.0
     }
 
     /// Returns a demultiplied color.
-    #[inline]
     pub fn demultiply(&self) -> ColorU8 {
         let alpha = self.alpha();
         if alpha == ALPHA_U8_OPAQUE {
@@ -241,7 +224,6 @@ impl Color {
     }
 
     /// Creates a new color from 4 components.
-    #[inline]
     pub const fn from_rgba_safe(r: NormalizedF32, g: NormalizedF32, b: NormalizedF32, a: NormalizedF32) -> Self {
         Color { r, g, b, a }
     }
@@ -249,7 +231,6 @@ impl Color {
     /// Creates a new color from 4 components.
     ///
     /// u8 will be divided by 255 to get the float component.
-    #[inline]
     pub fn from_rgba8(r: u8, g: u8, b: u8, a: u8) -> Self {
         Color {
             r: normalize_u8(r),
@@ -262,7 +243,6 @@ impl Color {
     /// Returns color's red component.
     ///
     /// The value is guarantee to be in a 0..=1 range.
-    #[inline]
     pub fn red(&self) -> f32 {
         self.r.get()
     }
@@ -270,7 +250,6 @@ impl Color {
     /// Returns color's green component.
     ///
     /// The value is guarantee to be in a 0..=1 range.
-    #[inline]
     pub fn green(&self) -> f32 {
         self.g.get()
     }
@@ -278,7 +257,6 @@ impl Color {
     /// Returns color's blue component.
     ///
     /// The value is guarantee to be in a 0..=1 range.
-    #[inline]
     pub fn blue(&self) -> f32 {
         self.b.get()
     }
@@ -286,31 +264,26 @@ impl Color {
     /// Returns color's alpha component.
     ///
     /// The value is guarantee to be in a 0..=1 range.
-    #[inline]
     pub fn alpha(&self) -> f32 {
         self.a.get()
     }
 
     /// Returns color's red component.
-    #[inline]
     pub fn red_safe(&self) -> NormalizedF32 {
         self.r
     }
 
     /// Returns color's green component.
-    #[inline]
     pub fn green_safe(&self) -> NormalizedF32 {
         self.g
     }
 
     /// Returns color's blue component.
-    #[inline]
     pub fn blue_safe(&self) -> NormalizedF32 {
         self.b
     }
 
     /// Returns color's alpha component.
-    #[inline]
     pub fn alpha_safe(&self) -> NormalizedF32 {
         self.a
     }
@@ -318,13 +291,11 @@ impl Color {
     /// Check that color is opaque.
     ///
     /// Alpha == 1.0
-    #[inline]
     pub fn is_opaque(&self) -> bool {
         self.a == ALPHA_OPAQUE
     }
 
     /// Converts into a premultiplied color.
-    #[inline]
     pub fn premultiply(&self) -> PremultipliedColor {
         if self.is_opaque() {
             PremultipliedColor {
@@ -344,7 +315,6 @@ impl Color {
     }
 
     /// Converts into `ColorU8`.
-    #[inline]
     pub fn to_color_u8(&self) -> ColorU8 {
         let c = color_f32_to_u8(self.r, self.g, self.b, self.a);
         ColorU8::from_rgba(c[0], c[1], c[2], c[3])
@@ -369,7 +339,6 @@ impl PremultipliedColor {
     ///
     /// - The value is guarantee to be in a 0..=1 range.
     /// - The value is <= alpha.
-    #[inline]
     pub fn red(&self) -> f32 {
         self.r.get()
     }
@@ -378,7 +347,6 @@ impl PremultipliedColor {
     ///
     /// - The value is guarantee to be in a 0..=1 range.
     /// - The value is <= alpha.
-    #[inline]
     pub fn green(&self) -> f32 {
         self.g.get()
     }
@@ -387,7 +355,6 @@ impl PremultipliedColor {
     ///
     /// - The value is guarantee to be in a 0..=1 range.
     /// - The value is <= alpha.
-    #[inline]
     pub fn blue(&self) -> f32 {
         self.b.get()
     }
@@ -395,37 +362,31 @@ impl PremultipliedColor {
     /// Returns color's alpha component.
     ///
     /// - The value is guarantee to be in a 0..=1 range.
-    #[inline]
     pub fn alpha(&self) -> f32 {
         self.a.get()
     }
 
     /// Returns color's red component.
-    #[inline]
     pub fn red_safe(&self) -> NormalizedF32 {
         self.r
     }
 
     /// Returns color's green component.
-    #[inline]
     pub fn green_safe(&self) -> NormalizedF32 {
         self.g
     }
 
     /// Returns color's blue component.
-    #[inline]
     pub fn blue_safe(&self) -> NormalizedF32 {
         self.b
     }
 
     /// Returns color's alpha component.
-    #[inline]
     pub fn alpha_safe(&self) -> NormalizedF32 {
         self.a
     }
 
     /// Returns a demultiplied color.
-    #[inline]
     pub fn demultiply(&self) -> Color {
         unsafe {
             let a = self.a.get();
@@ -443,14 +404,12 @@ impl PremultipliedColor {
     }
 
     /// Converts into `PremultipliedColorU8`.
-    #[inline]
     pub fn to_color_u8(&self) -> PremultipliedColorU8 {
         let c = color_f32_to_u8(self.r, self.g, self.b, self.a);
         PremultipliedColorU8::from_rgba_unchecked(c[0], c[1], c[2], c[3])
     }
 }
 
-#[inline]
 fn normalize_u8(n: u8) -> NormalizedF32 {
     unsafe {
         NormalizedF32::new_unchecked(n as f32 / 255.0)
@@ -458,18 +417,15 @@ fn normalize_u8(n: u8) -> NormalizedF32 {
 }
 
 /// Return a*b/255, rounding any fractional bits.
-#[inline]
 pub fn premultiply_u8(c: u8, a: u8) -> u8 {
     let prod = u32::from(c) * u32::from(a) + 128;
     ((prod + (prod >> 8)) >> 8) as u8
 }
 
-#[inline]
 const fn pack_rgba(r: u8, g: u8, b: u8, a: u8) -> u32 {
     ((a as u32) << 24) | ((b as u32) << 16) | ((g as u32) << 8) | ((r as u32) << 0)
 }
 
-#[inline]
 fn color_f32_to_u8(r: NormalizedF32, g: NormalizedF32, b: NormalizedF32, a: NormalizedF32) -> [u8; 4] {
     [
         (r.get() * 255.0 + 0.5) as u8,

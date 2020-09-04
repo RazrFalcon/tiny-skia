@@ -28,7 +28,6 @@ pub struct EdgeClipper {
 }
 
 impl EdgeClipper {
-    #[inline]
     fn new(clip: Rect, can_cull_to_the_right: bool) -> Self {
         EdgeClipper {
             clip,
@@ -53,12 +52,10 @@ impl EdgeClipper {
         }
     }
 
-    #[inline]
     fn push_line(&mut self, p0: Point, p1: Point) {
         self.edges.push(PathEdge::LineTo(p0, p1));
     }
 
-    #[inline]
     fn push_vline(&mut self, x: f32, mut y0: f32, mut y1: f32, reverse: bool) {
         if reverse {
             std::mem::swap(&mut y0, &mut y1);
@@ -173,7 +170,6 @@ impl EdgeClipper {
         }
     }
 
-    #[inline]
     fn push_quad(&mut self, pts: &[Point; 3], reverse: bool) {
         if reverse {
             self.edges.push(PathEdge::QuadTo(pts[2], pts[1], pts[0]));
@@ -286,7 +282,6 @@ impl EdgeClipper {
         }
     }
 
-    #[inline]
     fn push_cubic(&mut self, pts: &[Point; 4], reverse: bool) {
         if reverse {
             self.edges.push(PathEdge::CubicTo(pts[3], pts[2], pts[1], pts[0]));
@@ -304,7 +299,6 @@ pub struct EdgeClipperIter<'a> {
 }
 
 impl<'a> EdgeClipperIter<'a> {
-    #[inline]
     pub fn new(path: &'a Path, clip: Rect, can_cull_to_the_right: bool) -> Self {
         EdgeClipperIter {
             edge_iter: path.edge_iter(),
@@ -348,7 +342,6 @@ impl Iterator for EdgeClipperIter<'_> {
     }
 }
 
-#[inline]
 fn quick_reject(bounds: &Bounds, clip: &Rect) -> bool {
     bounds.top() >= clip.bottom() || bounds.bottom() <= clip.top()
 }
@@ -419,12 +412,10 @@ fn chop_quad_in_y(clip: &Rect, pts: &mut [Point; 3]) {
     }
 }
 
-#[inline]
 fn chop_mono_quad_at_x(pts: &[Point; 3], x: f32, t: &mut geometry::TValue) -> bool {
     chop_mono_quad_at(pts[0].x, pts[1].x, pts[2].x, x, t)
 }
 
-#[inline]
 fn chop_mono_quad_at_y(pts: &[Point; 3], y: f32, t: &mut geometry::TValue) -> bool {
     chop_mono_quad_at(pts[0].y, pts[1].y, pts[2].y, y, t)
 }
@@ -447,7 +438,6 @@ fn chop_mono_quad_at(c0: f32, c1: f32, c2: f32, target: f32, t: &mut geometry::T
     }
 }
 
-#[inline]
 fn too_big_for_reliable_float_math(r: &Bounds) -> bool {
     // limit set as the largest float value for which we can still reliably compute things like
     // - chopping at XY extrema

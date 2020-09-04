@@ -146,7 +146,6 @@ fn sect_with_horizontal(src: &[Point; 2], y: f32) -> f32 {
 }
 
 /// Returns value between the two limits, where the limits are either ascending or descending.
-#[inline]
 fn is_between_unsorted(value: f32, limit0: f32, limit1: f32) -> bool {
     if limit0 < limit1 {
         limit0 <= value && value <= limit1
@@ -155,7 +154,6 @@ fn is_between_unsorted(value: f32, limit0: f32, limit1: f32) -> bool {
     }
 }
 
-#[inline]
 fn sect_clamp_with_vertical(src: [Point; 2], x: f32) -> f32 {
     let y = sect_with_vertical(src, x);
     // Our caller expects y to be between src[0].y and src[1].y (unsorted), but due to the
@@ -166,7 +164,6 @@ fn sect_clamp_with_vertical(src: [Point; 2], x: f32) -> f32 {
 }
 
 /// Returns Y coordinate of intersection with vertical line at X.
-#[inline]
 fn sect_with_vertical(src: [Point; 2], x: f32) -> f32 {
     let dx = src[1].x - src[0].x;
     if dx.is_nearly_zero() {
@@ -183,7 +180,6 @@ fn sect_with_vertical(src: [Point; 2], x: f32) -> f32 {
     }
 }
 
-#[inline]
 fn pin_unsorted_f32(value: f32, mut limit0: f32, mut limit1: f32) -> f32 {
     if limit1 < limit0 {
         std::mem::swap(&mut limit0, &mut limit1);
@@ -200,7 +196,6 @@ fn pin_unsorted_f32(value: f32, mut limit0: f32, mut limit1: f32) -> f32 {
     }
 }
 
-#[inline]
 fn pin_unsorted_f64(value: f64, mut limit0: f64, mut limit1: f64) -> f64 {
     if limit1 < limit0 {
         std::mem::swap(&mut limit0, &mut limit1);

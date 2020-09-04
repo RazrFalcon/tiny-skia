@@ -14,21 +14,17 @@ use crate::math::{left_shift64, bound};
 pub type Fixed = i32;
 
 pub const HALF: Fixed = (1 << 16) / 2;
-// pub const ONE: Fixed = 1 << 16;
 
-#[inline]
 pub fn round_to_i32(x: Fixed) -> i32 {
     (x + HALF) >> 16
 }
 
 // The divide may exceed 32 bits. Clamp to a signed 32 bit result.
-#[inline]
 pub fn mul(a: Fixed, b: Fixed) -> Fixed {
     ((i64::from(a) * i64::from(b)) >> 16) as Fixed
 }
 
 // The divide may exceed 32 bits. Clamp to a signed 32 bit result.
-#[inline]
 pub fn div(numer: FDot6, denom: FDot6) -> Fixed {
     let v = left_shift64(numer as i64, 16) / denom as i64;
     let n = bound(i32::MIN as i64, v, i32::MAX as i64);

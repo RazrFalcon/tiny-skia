@@ -11,7 +11,6 @@ struct SwappableBuilders<'a, > {
 }
 
 impl<'a> SwappableBuilders<'a> {
-    #[inline]
     fn swap(&mut self) {
         // Skia swaps pointers to inner and outer builders during joining,
         // but not builders itself. So a simple `std::mem::swap` will produce invalid results.
@@ -70,21 +69,18 @@ impl StrokeProps {
     }
 
     /// Sets a stroke miter limit.
-    #[inline]
     pub fn set_miter_limit(mut self, miter_limit: f32) -> Self {
         self.miter_limit = miter_limit;
         self
     }
 
     /// Sets a stroke line cap.
-    #[inline]
     pub fn set_line_cap(mut self, line_cap: LineCap) -> Self {
         self.line_cap = line_cap;
         self
     }
 
     /// Sets a stroke line join.
-    #[inline]
     pub fn set_line_join(mut self, line_join: LineJoin) -> Self {
         self.line_join = line_join;
         self
@@ -149,7 +145,6 @@ pub struct StrokeWidth(f32);
 
 impl StrokeWidth {
     /// Creates a new `StrokeWidth`.
-    #[inline]
     pub fn new(n: f32) -> Option<Self> {
         if n.is_finite() && n > 0.0 {
             Some(StrokeWidth(n))
@@ -159,7 +154,6 @@ impl StrokeWidth {
     }
 
     /// Returns the value as a primitive type.
-    #[inline]
     pub const fn get(self) -> f32 {
         self.0
     }
@@ -270,7 +264,6 @@ pub struct PathStroker {
 }
 
 impl Default for PathStroker {
-    #[inline]
     fn default() -> Self {
         PathStroker::new()
     }
@@ -320,7 +313,6 @@ impl PathStroker {
     /// Stokes the path.
     ///
     /// Can be called multiple times to reuse allocated buffers.
-    #[inline]
     pub fn stroke(
         &mut self,
         path: &Path,
@@ -334,7 +326,6 @@ impl PathStroker {
     /// Stokes the path into the `out_path`.
     ///
     /// Can be called multiple times to reuse allocated buffers.
-    #[inline]
     pub fn stroke_to(
         &mut self,
         path: &Path,
@@ -454,7 +445,6 @@ impl PathStroker {
         self.finish(last_segment_is_line)
     }
 
-    #[inline]
     fn builders(&mut self) -> SwappableBuilders {
         SwappableBuilders {
             inner: &mut self.inner,
@@ -462,12 +452,10 @@ impl PathStroker {
         }
     }
 
-    #[inline]
     fn move_to_pt(&self) -> Point {
         self.first_pt
     }
 
-    #[inline]
     fn move_to(&mut self, p: Point) {
         if self.segment_count > 0 {
             self.finish_contour(false, false);
@@ -806,7 +794,6 @@ impl PathStroker {
         }
     }
 
-    #[inline]
     fn close(&mut self, is_line: bool) {
         self.finish_contour(true, is_line);
     }
@@ -889,7 +876,6 @@ impl PathStroker {
         true
     }
 
-    #[inline]
     fn post_join_to(&mut self, p: Point, normal: Point, unit_normal: Point) {
         self.join_completed = true;
         self.prev_pt = p;
@@ -898,7 +884,6 @@ impl PathStroker {
         self.segment_count += 1;
     }
 
-    #[inline]
     fn init_quad(&mut self, stroke_type: StrokeType, start: NormalizedF32, end: NormalizedF32, quad_points: &mut QuadConstruct) {
         self.stroke_type = stroke_type;
         self.found_tangents = false;
@@ -1001,7 +986,6 @@ impl PathStroker {
         self.set_ray_points(*tp, &mut dxy, on_p, tangent);
     }
 
-    #[inline]
     fn add_degenerate_line(&mut self, quad_points: &QuadConstruct) {
         if self.stroke_type == StrokeType::Outer {
             self.outer.line_to(quad_points.quad[2].x, quad_points.quad[2].y);
@@ -1052,7 +1036,6 @@ impl PathStroker {
         ResultType::Split
     }
 
-    #[inline]
     fn set_quad_end_normal(&self, quad: &[Point; 3], normal_ab: Point, unit_normal_ab: Point,
                            normal_bc: &mut Point, unit_normal_bc: &mut Point) {
         if !set_normal_unit_normal(quad[1], quad[2], self.res_scale, self.radius, normal_bc, unit_normal_bc) {
@@ -1121,13 +1104,11 @@ impl PathStroker {
     }
 
     // Given a cubic and a t-range, determine if the stroke can be described by a quadratic.
-    #[inline]
     fn tangents_meet(&self, cubic: &[Point; 4], quad_points: &mut QuadConstruct) -> ResultType {
         self.cubic_quad_ends(cubic, quad_points);
         self.intersect_ray(IntersectRayType::ResultType, quad_points)
     }
 
-    #[inline]
     fn finish(&mut self, is_line: bool) -> Option<Path> {
         self.finish_contour(false, is_line);
 
@@ -1138,19 +1119,16 @@ impl PathStroker {
         buf.finish()
     }
 
-    #[inline]
     fn has_only_move_to(&self) -> bool {
         self.segment_count == 0
     }
 
-    #[inline]
     fn is_current_contour_empty(&self) -> bool {
         self.inner.is_zero_length_since_point(0) &&
         self.outer.is_zero_length_since_point(self.first_outer_pt_index_in_contour)
     }
 }
 
-#[inline]
 fn cap_factory(cap: LineCap) -> CapProc {
     match cap {
         LineCap::Butt => butt_capper,
@@ -1159,12 +1137,11 @@ fn cap_factory(cap: LineCap) -> CapProc {
     }
 }
 
-#[inline]
-fn butt_capper(path: &mut PathBuilder, _pivot: Point, _normal: Point, stop: Point, _other_path: Option<&PathBuilder>) {
+fn butt_capper(path: &mut PathBuilder, _: Point, _: Point, stop: Point, _: Option<&PathBuilder>) {
     path.line_to(stop.x, stop.y);
 }
 
-fn round_capper(path: &mut PathBuilder, pivot: Point, normal: Point, stop: Point, _other_path: Option<&PathBuilder>) {
+fn round_capper(path: &mut PathBuilder, pivot: Point, normal: Point, stop: Point, _: Option<&PathBuilder>) {
     let mut parallel = normal;
     parallel.rotate_cw();
 
@@ -1188,7 +1165,6 @@ fn square_capper(path: &mut PathBuilder, pivot: Point, normal: Point, stop: Poin
     }
 }
 
-#[inline]
 fn join_factory(join: LineJoin) -> JoinProc {
     match join {
         LineJoin::Miter => miter_joiner,
@@ -1197,7 +1173,6 @@ fn join_factory(join: LineJoin) -> JoinProc {
     }
 }
 
-#[inline]
 fn is_clockwise(before: Point, after: Point) -> bool {
     before.x * after.y > before.y * after.x
 }
@@ -1210,7 +1185,6 @@ enum AngleType {
     NearlyLine,
 }
 
-#[inline]
 fn dot_to_angle_type(dot: f32) -> AngleType {
     if dot >= 0.0 {
         // shallow or line
@@ -1245,9 +1219,9 @@ fn bevel_joiner(
     pivot: Point,
     after_unit_normal: Point,
     radius: f32,
-    _inv_miter_limit: f32,
-    _prev_is_line: bool,
-    _curr_is_line: bool,
+    _: f32,
+    _: bool,
+    _: bool,
     mut builders: SwappableBuilders,
 ) {
     let mut after = after_unit_normal.scaled(radius);
@@ -1266,9 +1240,9 @@ fn round_joiner(
     pivot: Point,
     after_unit_normal: Point,
     radius: f32,
-    _inv_miter_limit: f32,
-    _prev_is_line: bool,
-    _curr_is_line: bool,
+    _: f32,
+    _: bool,
+    _: bool,
     mut builders: SwappableBuilders,
 ) {
     let dot_prod = before_unit_normal.dot(after_unit_normal);
@@ -1416,7 +1390,6 @@ fn set_normal_unit_normal2(vec: Point, radius: f32, normal: &mut Point, unit_nor
     true
 }
 
-#[inline]
 fn fn_ptr_eq(f1: CapProc, f2: CapProc) -> bool {
     f1 as *const () == f2 as *const ()
 }
@@ -1491,7 +1464,6 @@ fn check_quad_linear(quad: &[Point; 3]) -> (Point, ReductionType) {
     (geometry::eval_quad_at(quad, t), ReductionType::Degenerate)
 }
 
-#[inline]
 fn degenerate_vector(v: Point) -> bool {
     !v.can_normalize()
 }
@@ -1563,7 +1535,6 @@ fn intersect_quad_ray<'a>(line: &[Point; 2], quad: &[Point; 3], roots: &'a mut [
     &roots[0..len]
 }
 
-#[inline]
 fn points_within_dist(near_pt: Point, far_pt: Point, limit: f32) -> bool {
     near_pt.distance_to_sqd(far_pt) <= limit * limit
 }

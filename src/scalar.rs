@@ -22,45 +22,37 @@ pub trait Scalar {
 }
 
 impl Scalar for f32 {
-    #[inline]
     fn half(self) -> f32 {
         self * 0.5
     }
 
-    #[inline]
     fn ave(self, other: Self) -> f32 {
         (self + other) * 0.5
     }
 
-    #[inline]
     fn sqr(self) -> f32 {
         self * self
     }
 
-    #[inline]
     fn invert(self) -> f32 {
         1.0 / self
     }
 
     // Works just like SkTPin, returning `max` for NaN/inf
-    #[inline]
     fn bound(self, min: Self, max: Self) -> Self {
         max.min(self).max(min)
     }
 
-    #[inline]
     fn is_nearly_zero(self) -> bool {
         self.is_nearly_zero_within_tolerance(SCALAR_NEARLY_ZERO)
     }
 
-    #[inline]
     fn is_nearly_zero_within_tolerance(self, tolerance: Self) -> bool {
         debug_assert!(tolerance >= 0.0);
         self.abs() <= tolerance
     }
 
     // From SkPathOpsTypes.
-    #[inline]
     fn almost_dequal_ulps(self, other: Self) -> bool {
         self.approx_eq_ulps(&other, 16)
     }

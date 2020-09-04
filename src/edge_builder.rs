@@ -26,7 +26,6 @@ pub struct ShiftedIntRect {
 }
 
 impl ShiftedIntRect {
-    #[inline]
     pub fn new(rect: &ScreenIntRect, shift: i32) -> Option<Self> {
         Some(ShiftedIntRect {
             shifted: ScreenIntRect::from_xywh(
@@ -39,12 +38,10 @@ impl ShiftedIntRect {
         })
     }
 
-    #[inline]
     pub fn shifted(&self) -> &ScreenIntRect {
         &self.shifted
     }
 
-    #[inline]
     pub fn recover(&self) -> ScreenIntRect {
         ScreenIntRect::from_xywh(
             self.shifted.x() >> self.shift,
@@ -62,7 +59,6 @@ pub struct BasicEdgeBuilder {
 }
 
 impl BasicEdgeBuilder {
-    #[inline]
     pub fn new(clip_shift: i32) -> Self {
         BasicEdgeBuilder {
             edges: Vec::with_capacity(64), // TODO: stack array + fallback
@@ -72,7 +68,6 @@ impl BasicEdgeBuilder {
 
     // Skia returns a linked list here, but it's a nightmare to use in Rust,
     // so we're mimicking it with Vec.
-    #[inline]
     pub fn build_edges(path: &Path, clip: Option<&ShiftedIntRect>, clip_shift: i32) -> Option<Vec<Edge>> {
         // If we're convex, then we need both edges, even if the right edge is past the clip.
         // let can_cull_to_the_right = !path.isConvex();
@@ -166,14 +161,12 @@ impl BasicEdgeBuilder {
         }
     }
 
-    #[inline]
     fn push_quad(&mut self, points: &[Point]) {
         if let Some(edge) = QuadraticEdge::new(points, self.clip_shift) {
             self.edges.push(Edge::Quadratic(edge));
         }
     }
 
-    #[inline]
     fn push_cubic(&mut self, points: &[Point]) {
         if let Some(edge) = CubicEdge::new(points, self.clip_shift) {
             self.edges.push(Edge::Cubic(edge));

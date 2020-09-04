@@ -59,19 +59,16 @@ impl Pixmap {
     }
 
     /// Returns pixmap's width.
-    #[inline]
     pub fn width(&self) -> u32 {
         self.size.width()
     }
 
     /// Returns pixmap's height.
-    #[inline]
     pub fn height(&self) -> u32 {
         self.size.height()
     }
 
     /// Returns pixmap's size.
-    #[inline]
     pub fn size(&self) -> IntSize {
         self.size
     }
@@ -79,7 +76,6 @@ impl Pixmap {
     /// Returns an internal data.
     ///
     /// Bytes are ordered as RGBA.
-    #[inline]
     pub fn data(&self) -> &[u8] {
         self.data.as_slice()
     }
@@ -87,14 +83,12 @@ impl Pixmap {
     /// Returns a pixel color.
     ///
     /// Returns `None` when position is out of bounds.
-    #[inline]
     pub fn pixel(&self, x: u32, y: u32) -> Option<PremultipliedColorU8> {
         let idx = self.width().checked_mul(y)?.checked_add(x)?;
         self.pixels().get(idx as usize).cloned()
     }
 
     /// Returns a slice of pixels.
-    #[inline]
     pub fn pixels(&self) -> &[PremultipliedColorU8] {
         #[allow(clippy::cast_ptr_alignment)]
         unsafe {
@@ -106,7 +100,6 @@ impl Pixmap {
     }
 
     /// Returns a mutable slice of pixels.
-    #[inline]
     pub(crate) fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
         #[allow(clippy::cast_ptr_alignment)]
         unsafe {
@@ -268,7 +261,6 @@ impl std::fmt::Debug for Pixmap {
 /// Returns minimum bytes per row as usize.
 ///
 /// Pixmap's maximum value for row bytes must fit in 31 bits.
-#[inline]
 fn min_row_bytes(size: IntSize) -> Option<NonZeroUsize> {
     let w = i32::try_from(size.width()).ok()?;
     let w = w.checked_mul(BYTES_PER_PIXEL as i32)?;
@@ -285,7 +277,6 @@ fn compute_data_len(size: IntSize, row_bytes: usize) -> Option<usize> {
     h.checked_add(w)
 }
 
-#[inline]
 fn data_len_for_size(size: IntSize) -> Option<usize> {
     let row_bytes = min_row_bytes(size)?;
     compute_data_len(size, row_bytes.get())

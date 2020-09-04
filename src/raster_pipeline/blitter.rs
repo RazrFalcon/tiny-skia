@@ -108,7 +108,6 @@ impl RasterPipelineBlitter {
 }
 
 impl Blitter for RasterPipelineBlitter {
-    #[inline]
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32) {
         let one = unsafe { LengthU32::new_unchecked(1) };
         let r = ScreenIntRect::from_xywh_safe(x, y, width, one);
@@ -222,12 +221,10 @@ impl Blitter for RasterPipelineBlitter {
     }
 }
 
-#[inline]
 fn calc_pixel_offset(x: u32, y: u32, stride: u32) -> usize {
     calc_pixel_offset_usize(x as usize, y as usize, stride as usize)
 }
 
-#[inline]
 fn calc_pixel_offset_usize(x: usize, y: usize, stride: usize) -> usize {
     y * stride + x
 }

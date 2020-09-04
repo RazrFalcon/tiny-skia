@@ -153,14 +153,12 @@ pub struct ContextStorage {
 }
 
 impl ContextStorage {
-    #[inline]
     pub fn new() -> Self {
         ContextStorage {
             items: Vec::new(),
         }
     }
 
-    #[inline]
     pub fn create_uniform_color_context(&mut self, c: PremultipliedColor) -> *const c_void {
         let r = c.red();
         let g = c.green();
@@ -181,7 +179,6 @@ impl ContextStorage {
         self.push_context(ctx)
     }
 
-    #[inline]
     pub fn push_context<T>(&mut self, t: T) -> *const c_void {
         let ptr = Box::into_raw(Box::new(t)) as *const c_void;
         self.items.push(ptr);
@@ -190,7 +187,6 @@ impl ContextStorage {
 }
 
 impl Drop for ContextStorage {
-    #[inline]
     fn drop(&mut self) {
         for item in &self.items {
             unsafe { Box::from_raw(*item as *mut c_void) };
@@ -214,7 +210,6 @@ pub struct RasterPipelineBuilder {
 }
 
 impl RasterPipelineBuilder {
-    #[inline]
     pub fn new() -> Self {
         RasterPipelineBuilder {
             stages: Vec::with_capacity(32),
@@ -223,37 +218,30 @@ impl RasterPipelineBuilder {
         }
     }
 
-    #[inline]
     pub fn is_force_hq_pipeline(&self) -> bool {
         self.force_hq_pipeline
     }
 
-    #[inline]
     pub fn set_force_hq_pipeline(&mut self, hq: bool) {
         self.force_hq_pipeline = hq;
     }
 
-    #[inline]
     pub fn len(&self) -> usize {
         self.stages.len()
     }
 
-    #[inline]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
-    #[inline]
     pub fn push(&mut self, stage: Stage) {
         self.unchecked_push(stage, std::ptr::null_mut());
     }
 
-    #[inline]
     pub fn push_with_context(&mut self, stage: Stage, ctx: *const c_void) {
         self.unchecked_push(stage, ctx);
     }
 
-    #[inline]
     fn unchecked_push(&mut self, stage: Stage, ctx: *const c_void) {
         self.stages.push(StageList {
             stage,
@@ -263,7 +251,6 @@ impl RasterPipelineBuilder {
         self.slots_needed += if ctx.is_null() { 1 } else { 2 };
     }
 
-    #[inline]
     pub fn extend(&mut self, other: &Self) {
         if other.is_empty() {
             return;
@@ -273,7 +260,6 @@ impl RasterPipelineBuilder {
         self.slots_needed += other.slots_needed - 1; // Don't double count just_return().
     }
 
-    #[inline]
     pub fn compile(&self) -> RasterPipeline {
         if self.stages.is_empty() {
             return RasterPipeline {
@@ -376,7 +362,6 @@ pub struct RasterPipeline {
 }
 
 impl RasterPipeline {
-    #[inline]
     pub fn run(&self, rect: ScreenIntRect) {
         // Pipeline can be empty.
         if self.program.is_empty() {

@@ -53,7 +53,6 @@ impl PathBuilder {
     /// - Quad - 2
     /// - Cubic - 3
     /// - Close - 0
-    #[inline]
     pub fn with_capacity(verbs_capacity: usize, points_capacity: usize) -> Self {
         PathBuilder {
             verbs: Vec::with_capacity(verbs_capacity),
@@ -70,7 +69,6 @@ impl PathBuilder {
     /// Segments are created clockwise: TopLeft -> TopRight -> BottomRight -> BottomLeft
     ///
     /// The contour is closed.
-    #[inline]
     pub fn from_bound(bounds: Bounds) -> Path {
         let verbs = vec![
             PathVerb::Move,
@@ -127,7 +125,6 @@ impl PathBuilder {
         }
     }
 
-    #[inline(never)]
     fn inject_move_to_if_needed(&mut self) {
         if self.move_to_required {
             match self.points.get(self.last_move_to_index).cloned() {
@@ -210,6 +207,7 @@ impl PathBuilder {
     /// Open and closed contour will be filled the same way.
     /// Stroking an open contour will add LineCap at contour's start and end.
     /// Stroking an closed contour will add LineJoin at contour's start and end.
+    #[inline]
     pub fn close(&mut self) {
         // don't add a close if it's the first verb or a repeat
         if !self.verbs.is_empty() {
@@ -221,12 +219,10 @@ impl PathBuilder {
         self.move_to_required = true;
     }
 
-    #[inline]
     pub(crate) fn last_point(&self) -> Option<Point> {
         self.points.last().cloned()
     }
 
-    #[inline]
     pub(crate) fn set_last_point(&mut self, pt: Point) {
         match self.points.last_mut() {
             Some(last) => *last = pt,
@@ -276,7 +272,6 @@ impl PathBuilder {
         self.close();
     }
 
-    #[inline]
     pub(crate) fn push_circle(&mut self, x: f32, y: f32, r: f32) {
         if let Some(r) = Rect::from_xywh(x - r, y - r, r + r, r + r) {
             self.push_oval(&r);

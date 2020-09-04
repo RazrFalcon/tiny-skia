@@ -13,18 +13,15 @@ pub type FDot6 = i32;
 
 pub const ONE: FDot6 = 64;
 
-#[inline]
 pub fn round(n: FDot6) -> FDot6 {
     (n + 32) >> 6
 }
 
-#[inline]
 pub fn to_fixed(n: FDot6) -> Fixed {
     debug_assert!((left_shift(n, 10) >> 10) == n);
     left_shift(n, 10)
 }
 
-#[inline]
 pub fn div(a: FDot6, b: FDot6) -> Fixed {
     debug_assert_ne!(b, 0);
 

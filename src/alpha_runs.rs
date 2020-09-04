@@ -20,7 +20,6 @@ pub struct AlphaRuns {
 }
 
 impl AlphaRuns {
-    #[inline]
     pub fn new(width: LengthU32) -> Self {
         let mut runs = AlphaRuns {
             runs: vec![0; (width.get() + 1) as usize],
@@ -31,21 +30,18 @@ impl AlphaRuns {
     }
 
     /// Returns 0-255 given 0-256.
-    #[inline]
     pub fn catch_overflow(alpha: u16) -> AlphaU8 {
         debug_assert!(alpha <= 256);
         (alpha - (alpha >> 8)) as u8
     }
 
     /// Returns true if the scanline contains only a single run, of alpha value 0.
-    #[inline]
     pub fn is_empty(&self) -> bool {
         debug_assert!(self.runs[0] > 0);
         self.alpha[0] == 0 && self.runs[usize::from(self.runs[0])] == 0
     }
 
     /// Reinitialize for a new scanline.
-    #[inline]
     pub fn reset(&mut self, width: LengthU32) {
         self.runs[0] = width.get() as u16;
         self.runs[width.get() as usize] = 0;

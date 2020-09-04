@@ -22,7 +22,6 @@ type Storage = [u32; 4];
 pub struct U32x4(pub Storage);
 
 impl U32x4 {
-    #[inline(always)]
     pub fn as_slice(&self) -> &[u32; 4] {
         #[cfg(all(feature = "sse2", target_feature = "sse2"))]
         unsafe {
@@ -40,12 +39,10 @@ impl U32x4 {
     /// The result is *undefined* if all four values in this vector are not booleans. A boolean is
     /// a value with all bits set or all bits clear (i.e. !0 or 0).
     #[cfg(all(feature = "sse2", target_feature = "sse2"))]
-    #[inline(always)]
     pub fn all_true(self) -> bool {
         unsafe { x86::_mm_movemask_ps(x86::_mm_castsi128_ps(self.0)) == 0x0f }
     }
 
-    #[inline(always)]
     pub fn if_then_else(&self, t: F32x4, e: F32x4) -> F32x4 {
         #[cfg(all(feature = "sse2", target_feature = "sse2"))]
         unsafe {

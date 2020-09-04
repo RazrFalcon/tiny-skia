@@ -19,7 +19,6 @@ impl SaturateCast<f32> for i32 {
     /// Return the closest int for the given float.
     ///
     /// Returns MAX_I32_FITS_IN_F32 for NaN.
-    #[inline]
     fn saturate_from(mut x: f32) -> Self {
         x = if x < MAX_I32_FITS_IN_F32 { x } else { MAX_I32_FITS_IN_F32 };
         x = if x > MIN_I32_FITS_IN_F32 { x } else { MIN_I32_FITS_IN_F32 };
@@ -31,7 +30,6 @@ impl SaturateCast<f64> for i32 {
     /// Return the closest int for the given double.
     ///
     /// Returns i32::MAX for NaN.
-    #[inline]
     fn saturate_from(mut x: f64) -> Self {
         x = if x < i32::MAX as f64 { x } else { i32::MAX as f64 };
         x = if x > i32::MIN as f64 { x } else { i32::MIN as f64 };

@@ -25,7 +25,6 @@ pub enum Edge {
 }
 
 impl Edge {
-    #[inline]
     pub fn as_line(&self) -> &LineEdge {
         match self {
             Edge::Line(line) => line,
@@ -34,7 +33,6 @@ impl Edge {
         }
     }
 
-    #[inline]
     pub fn as_line_mut(&mut self) -> &mut LineEdge {
         match self {
             Edge::Line(line) => line,
@@ -47,14 +45,12 @@ impl Edge {
 impl std::ops::Deref for Edge {
     type Target = LineEdge;
 
-    #[inline]
     fn deref(&self) -> &Self::Target {
         self.as_line()
     }
 }
 
 impl std::ops::DerefMut for Edge {
-    #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.as_line_mut()
     }
@@ -507,12 +503,10 @@ impl CubicEdge {
 
 
 // This correctly favors the lower-pixel when y0 is on a 1/2 pixel boundary
-#[inline]
 fn compute_dy(top: FDot6, y0: FDot6) -> FDot6 {
     left_shift(top, 6) + 32 - y0
 }
 
-#[inline]
 fn diff_to_shift(dx: FDot6, dy: FDot6, shift_aa: i32) -> i32 {
     // cheap calc of distance from center of p0-p2 to the center of the curve
     let mut dist = cheap_distance(dx, dy);
@@ -529,7 +523,6 @@ fn diff_to_shift(dx: FDot6, dy: FDot6, shift_aa: i32) -> i32 {
     (32 - dist.leading_zeros() as i32) >> 1
 }
 
-#[inline]
 fn cheap_distance(mut dx: FDot6, mut dy: FDot6) -> FDot6 {
     dx = dx.abs();
     dy = dy.abs();
@@ -550,14 +543,12 @@ fn cheap_distance(mut dx: FDot6, mut dy: FDot6) -> FDot6 {
 //
 // In the fixed case, we want to turn the fixed into .6 by saying pt >> 10,
 // or pt >> 8 for antialiasing. This is implemented as pt >> (10 - shift).
-#[inline]
 fn fdot6_to_fixed_div2(value: FDot6) -> Fixed {
     // we want to return SkFDot6ToFixed(value >> 1), but we don't want to throw
     // away data in value, so just perform a modify up-shift
     left_shift(value, 16 - 6 - 1)
 }
 
-#[inline]
 fn fdot6_up_shift(x: FDot6, up_shift: i32) -> i32 {
     debug_assert!((left_shift(x, up_shift) >> up_shift) == x);
     left_shift(x, up_shift)
@@ -570,7 +561,6 @@ fn fdot6_up_shift(x: FDot6, up_shift: i32) -> i32 {
 // f(2/3)-c = (a + 6b - 15c + 8d) / 27
 //
 // use 16/512 to approximate 1/27
-#[inline]
 fn cubic_delta_from_line(a: FDot6, b: FDot6, c: FDot6, d: FDot6) -> FDot6 {
     // since our parameters may be negative, we don't use <<
     let one_third = ((a*8 - b*15 + 6*c + d) * 19) >> 9;

@@ -76,12 +76,10 @@ pub trait TransformExt: Sized {
 }
 
 impl TransformExt for Transform {
-    #[inline]
     fn from_sin_cos(sin: f32, cos: f32) -> Option<Self> {
         Transform::from_row(cos, -sin, sin, cos, 0.0, 0.0)
     }
 
-    #[inline]
     fn pre_scale(&mut self, sx: f32, sy: f32) {
         if sx == 1.0 && sy == 1.0 {
             return;
@@ -98,7 +96,6 @@ impl TransformExt for Transform {
         ).unwrap();
     }
 
-    #[inline]
     fn post_concat(&mut self, other: &Self) {
         *self = concat(other, self);
     }
@@ -166,7 +163,6 @@ fn concat(a: &Transform, b: &Transform) -> Transform {
     }
 }
 
-#[inline]
 fn mul_add_mul(a: f32, b: f32, c: f32, d: f32) -> f32 {
     (f64::from(a) * f64::from(b) + f64::from(c) * f64::from(d)) as f32
 }

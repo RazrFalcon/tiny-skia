@@ -20,7 +20,6 @@ type Storage = [i32; 4];
 pub struct I32x4(pub Storage);
 
 impl I32x4 {
-    #[inline(always)]
     pub fn as_slice(&self) -> &[i32; 4] {
         #[cfg(all(feature = "sse2", target_feature = "sse2"))]
         unsafe {
@@ -33,10 +32,10 @@ impl I32x4 {
         }
     }
 
-    #[inline(always)] pub fn x(&self) -> i32 { self.as_slice()[0] }
-    #[inline(always)] pub fn y(&self) -> i32 { self.as_slice()[1] }
-    #[inline(always)] pub fn z(&self) -> i32 { self.as_slice()[2] }
-    #[inline(always)] pub fn w(&self) -> i32 { self.as_slice()[3] }
+    pub fn x(&self) -> i32 { self.as_slice()[0] }
+    pub fn y(&self) -> i32 { self.as_slice()[1] }
+    pub fn z(&self) -> i32 { self.as_slice()[2] }
+    pub fn w(&self) -> i32 { self.as_slice()[3] }
 }
 
 impl std::fmt::Debug for I32x4 {

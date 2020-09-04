@@ -71,7 +71,6 @@ impl Default for BlendMode {
 }
 
 impl BlendMode {
-    #[inline]
     pub(crate) fn should_pre_scale_coverage(self, rgb_coverage: bool) -> bool {
         // The most important things we do here are:
         //   1) never pre-scale with rgb coverage if the blend mode involves a source-alpha term;
@@ -100,7 +99,6 @@ impl BlendMode {
         }
     }
 
-    #[inline]
     pub(crate) fn to_stage(self) -> Option<raster_pipeline::Stage> {
         match self {
             BlendMode::Clear            => Some(raster_pipeline::Stage::Clear),

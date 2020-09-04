@@ -22,12 +22,10 @@ pub struct Cubic64 {
 }
 
 impl Cubic64 {
-    #[inline]
     pub fn new(points: [Point64; POINT_COUNT]) -> Self {
         Cubic64 { points }
     }
 
-    #[inline]
     pub fn as_f64_slice(&self) -> &[f64; POINT_COUNT*2] {
         points64_to_f64s!(&self.points, POINT_COUNT)
     }
@@ -187,7 +185,6 @@ impl Cubic64 {
 }
 
 
-#[inline]
 pub fn coefficients(src: &[f64]) -> (f64, f64, f64, f64) {
     let mut a = src[6];         // d
     let mut b = src[4] * 3.0;   // 3*c
@@ -359,7 +356,6 @@ pub fn find_extrema(src: &[f64], t_values: &mut [f64]) -> usize {
 }
 
 // Skia doesn't seems to care about NaN/inf during sorting, so we don't too.
-#[inline]
 fn cmp_f64(a: &f64, b: &f64) -> std::cmp::Ordering {
     if a < b {
         std::cmp::Ordering::Less

@@ -32,7 +32,6 @@ pub fn push_valid_ts(s: &[f64], real_roots: usize, t: &mut [f64]) -> usize {
 //  analysis of the quadratic equation, suggesting why the following looks at
 //  the sign of B -- and further suggesting that the greatest loss of precision
 //  is in b squared less two a c
-#[inline]
 pub fn roots_valid_t(a: f64, b: f64, c: f64, t: &mut [f64]) -> usize {
     let mut s = [0.0; 3];
     let real_roots = roots_real(a, b, c, &mut s);
@@ -73,7 +72,6 @@ pub fn roots_real(a: f64, b: f64, c: f64, s: &mut [f64; 3]) -> usize {
     1 + usize::from(!s[0].almost_dequal_ulps(s[1]))
 }
 
-#[inline]
 fn handle_zero(b: f64, c: f64, s: &mut [f64; 3]) -> usize {
     if b.approximately_zero() {
         s[0] = 0.0;

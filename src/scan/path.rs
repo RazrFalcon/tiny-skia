@@ -42,7 +42,6 @@ pub fn fill_path(
 // edges will fit inside the clip's bounds. The scan-converter introduces slight numeric errors
 // due to accumulated += of the slope, so this function is used to return a conservatively large
 // int-bounds, and thus we will only disable clipping if we're sure the edges will stay in-bounds.
-#[inline]
 fn conservative_round_to_int(src: &Bounds) -> Option<IntRect> {
     IntRect::from_xywh(
         round_down_to_int(src.left()),
@@ -66,7 +65,6 @@ const CONSERVATIVE_ROUND_BIAS: f64 = 0.5 + 1.5 / fdot6::ONE as f64;
 // and corresponds to the way the scan converter treats the top and left edges.
 // It has a slight bias to make the "rounded" int smaller than a normal round, to create a more
 // conservative int-bounds (larger) from a float rect.
-#[inline]
 fn round_down_to_int(x: f32) -> i32 {
     let mut xx = x as f64;
     xx -= CONSERVATIVE_ROUND_BIAS;
@@ -76,7 +74,6 @@ fn round_down_to_int(x: f32) -> i32 {
 // Round the value up. This is used to round the right and bottom of a rectangle.
 // It has a slight bias to make the "rounded" int smaller than a normal round, to create a more
 // conservative int-bounds (larger) from a float rect.
-#[inline]
 fn round_up_to_int(x: f32) -> i32 {
     let mut xx = x as f64;
     xx += CONSERVATIVE_ROUND_BIAS;

@@ -25,7 +25,6 @@ mod private {
         // Will be overwritten anyway.
         pub const ANY: Self = unsafe { TValue(FiniteF32::new_unchecked(0.5)) };
 
-        #[inline]
         pub fn new(n: f32) -> Option<Self> {
             if n > 0.0 && n < 1.0 {
                 // `n` is guarantee to be finite after the bounds check
@@ -35,7 +34,6 @@ mod private {
             }
         }
 
-        #[inline]
         pub fn new_bounded(n: f32) -> Self {
             let n = n.bound(std::f32::EPSILON, 1.0 - std::f32::EPSILON);
             // `n` is guarantee to be finite after clamping
@@ -43,12 +41,10 @@ mod private {
             unsafe { TValue(FiniteF32::new_unchecked(n)) }
         }
 
-        #[inline]
         pub fn get(self) -> f32 {
             self.0.get()
         }
 
-        #[inline]
         pub fn to_normalized(self) -> NormalizedF32 {
             // TValue is (0,1), while NormalizedF32 is [0,1], so it will always fit.
             unsafe { NormalizedF32::new_unchecked(self.0.get()) }
@@ -68,7 +64,6 @@ pub struct QuadCoeff {
 }
 
 impl QuadCoeff {
-    #[inline]
     pub fn from_points(points: &[Point; 3]) -> Self {
         let c = points[0].to_f32x2();
         let p1 = points[1].to_f32x2();
@@ -79,7 +74,6 @@ impl QuadCoeff {
         QuadCoeff { a, b, c }
     }
 
-    #[inline]
     pub fn eval(&self, t: F32x2) -> F32x2 {
         (self.a * t + self.b) * t + self.c
     }
@@ -95,7 +89,6 @@ pub struct CubicCoeff {
 }
 
 impl CubicCoeff {
-    #[inline]
     pub fn from_points(points: &[Point; 4]) -> Self {
         let p0 = points[0].to_f32x2();
         let p1 = points[1].to_f32x2();
@@ -111,7 +104,6 @@ impl CubicCoeff {
         }
     }
 
-    #[inline]
     pub fn eval(&self, t: F32x2) -> F32x2 {
         ((self.a * t + self.b) * t + self.c) * t + self.d
     }
@@ -119,7 +111,6 @@ impl CubicCoeff {
 
 
 // TODO: to a custom type?
-#[inline]
 pub fn new_t_values() -> [TValue; 3] {
     [TValue::ANY, TValue::ANY, TValue::ANY]
 }
@@ -185,7 +176,6 @@ pub fn chop_quad_at_y_extrema(src: &[Point; 3], dst: &mut [Point; 5]) -> usize {
     0
 }
 
-#[inline]
 fn is_not_monotonic(a: f32, b: f32, c: f32) -> bool {
     let ab = a - b;
     let mut bc = b - c;
@@ -416,7 +406,6 @@ pub fn chop_cubic_at2(src: &[Point; 4], t: TValue, dst: &mut [Point]) {
     dst[6] = Point::from_f32x2(p3);
 }
 
-#[inline]
 fn valid_unit_divide(mut numer: f32, mut denom: f32) -> Option<TValue> {
     if numer < 0.0 {
         numer = -numer;
@@ -431,12 +420,10 @@ fn valid_unit_divide(mut numer: f32, mut denom: f32) -> Option<TValue> {
     TValue::new(r)
 }
 
-#[inline]
 fn interp(v0: F32x2, v1: F32x2, t: F32x2) -> F32x2 {
     v0 + (v1 - v0) * t
 }
 
-#[inline]
 fn times_2(value: F32x2) -> F32x2 {
     value + value
 }
@@ -621,7 +608,6 @@ fn sort_array3(array: &mut [TValue; 3]) {
     }
 }
 
-#[inline]
 fn collapse_duplicates3(array: &mut [TValue; 3]) -> usize {
     let mut len = 3;
 
@@ -636,7 +622,6 @@ fn collapse_duplicates3(array: &mut [TValue; 3]) -> usize {
     len
 }
 
-#[inline]
 fn scalar_cube_root(x: f32) -> f32 {
     x.powf(0.3333333)
 }
@@ -789,7 +774,6 @@ fn on_same_side(src: &[Point; 4], test_index: usize, line_index: usize) -> bool 
 
 // Returns a constant proportional to the dimensions of the cubic.
 // Constant found through experimentation -- maybe there's a better way....
-#[inline]
 fn calc_cubic_precision(src: &[Point; 4]) -> f32 {
     (  src[1].distance_to_sqd(src[0])
      + src[2].distance_to_sqd(src[1])
@@ -804,7 +788,6 @@ pub struct Conic {
 }
 
 impl Conic {
-    #[inline]
     pub fn new(pt0: Point, pt1: Point, pt2: Point, weight: f32) -> Self {
         Conic {
             points: [pt0, pt1, pt2],
@@ -812,7 +795,6 @@ impl Conic {
         }
     }
 
-    #[inline]
     pub fn from_points(points: &[Point], weight: f32) -> Self {
         Conic {
             points: [points[0], points[1], points[2]],
@@ -980,7 +962,6 @@ impl Conic {
     }
 }
 
-#[inline]
 fn subdivide_weight_value(w: f32) -> f32 {
     (0.5 + w * 0.5).sqrt()
 }
@@ -1032,17 +1013,14 @@ fn subdivide<'a>(src: &Conic, mut points: &'a mut [Point], mut level: u8) -> &'a
 
 // This was originally developed and tested for pathops: see SkOpTypes.h
 // returns true if (a <= b <= c) || (a >= b >= c)
-#[inline]
 fn between(a: f32, b: f32, c: f32) -> bool {
     (a - b) * (c - b) <= 0.0
 }
 
-#[inline]
 pub fn chop_mono_cubic_at_x(src: &[Point; 4], x: f32, dst: &mut [Point; 7]) -> bool {
     cubic_dchop_at_intercept(src, x, true, dst)
 }
 
-#[inline]
 pub fn chop_mono_cubic_at_y(src: &[Point; 4], y: f32, dst: &mut [Point; 7]) -> bool {
     cubic_dchop_at_intercept(src, y, false, dst)
 }

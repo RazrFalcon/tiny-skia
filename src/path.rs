@@ -41,13 +41,11 @@ pub struct Path {
 
 impl Path {
     /// Returns the number of segments in the path.
-    #[inline]
     pub fn len(&self) -> usize {
         self.verbs.len()
     }
 
     /// Checks if path is empty.
-    #[inline]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -55,7 +53,6 @@ impl Path {
     /// Returns the bounds of the path's points.
     ///
     /// The value is already calculated.
-    #[inline]
     pub fn bounds(&self) -> Bounds {
         self.bounds
     }
@@ -86,7 +83,6 @@ impl Path {
     /// - `width` <= 0 or Nan/inf
     /// - `miter_limit` < 4 or Nan/inf
     /// - produced stroke has invalid bounds
-    #[inline]
     pub fn stroke(&self, props: StrokeProps) -> Option<Self> {
         let mut stroker = PathStroker::new();
         stroker.stroke(self, props)
@@ -111,7 +107,6 @@ impl Path {
     }
 
     /// Returns an iterator over path's segments.
-    #[inline]
     pub fn segments(&self) -> PathSegmentsIter {
         PathSegmentsIter {
             path: self,
@@ -123,7 +118,6 @@ impl Path {
         }
     }
 
-    #[inline]
     pub(crate) fn edge_iter(&self) -> PathEdgeIter {
         PathEdgeIter {
             path: self,
@@ -135,6 +129,7 @@ impl Path {
     }
 
     /// Clears the path and returns a `PathBuilder` that will reuse an allocated memory.
+    #[inline]
     pub fn clear(mut self) -> PathBuilder {
         self.verbs.clear();
         self.points.clear();
@@ -191,31 +186,26 @@ pub enum PathSegment {
 
 impl PathSegment {
     /// Creates a new MoveTo segment from coordinates.
-    #[inline]
     pub fn new_move_to(x: f32, y: f32) -> Self {
         PathSegment::MoveTo(Point::from_xy(x, y))
     }
 
     /// Creates a new LineTo segment from coordinates.
-    #[inline]
     pub fn new_line_to(x: f32, y: f32) -> Self {
         PathSegment::LineTo(Point::from_xy(x, y))
     }
 
     /// Creates a new QuadTo segment from coordinates.
-    #[inline]
     pub fn new_quad_to(x1: f32, y1: f32, x: f32, y: f32) -> Self {
         PathSegment::QuadTo(Point::from_xy(x1, y1), Point::from_xy(x, y))
     }
 
     /// Creates a new CubicTo segment from coordinates.
-    #[inline]
     pub fn new_cubic_to(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) -> Self {
         PathSegment::CubicTo(Point::from_xy(x1, y1), Point::from_xy(x2, y2), Point::from_xy(x, y))
     }
 
     /// Creates a new Close segment from coordinates.
-    #[inline]
     pub fn new_close() -> Self {
         PathSegment::Close
     }
@@ -240,12 +230,10 @@ impl<'a> PathSegmentsIter<'a> {
     ///
     /// When enabled, emits an additional `PathSegment::Line` from the current position
     /// to the previous `PathSegment::Move`. And only then emits `PathSegment::Close`.
-    #[inline]
     pub fn set_auto_close(&mut self, flag: bool) {
         self.is_auto_close = flag;
     }
 
-    #[inline]
     pub(crate) fn auto_close(&mut self) -> PathSegment {
         if self.is_auto_close && self.last_point != self.last_move_to {
             self.verb_index -= 1;
