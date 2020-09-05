@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Pixmap, Path, Color, BlendMode};
+use crate::{Pixmap, Path, Color, BlendMode, Shader};
 
 use crate::scan;
 use crate::raster_pipeline::{ContextStorage, RasterPipelineBlitter};
@@ -30,14 +30,40 @@ impl Default for FillType {
 }
 
 
+/// A gradient spreading mode.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum SpreadMode {
+    /// Replicate the edge color if the shader draws outside of its
+    /// original bounds.
+    Pad,
+
+    /// Repeat the shader's image horizontally and vertically, alternating
+    /// mirror images so that adjacent images always seam.
+    Reflect,
+
+    /// Repeat the shader's image horizontally and vertically.
+    Repeat,
+}
+
+
+/// A paint source.
+#[derive(Debug)]
+pub enum PaintSource {
+    /// Uses a solid color.
+    SolidColor(Color),
+    /// Uses a shader. Like gradient or image.
+    Shader(Box<dyn Shader>),
+}
+
+
 /// A paint used by a `Painter`.
 #[allow(missing_copy_implementations)] // will became Clone-only later
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Paint {
-    /// Paint color.
+    /// A painter color source.
     ///
-    /// Default: black
-    pub color: Color,
+    /// Default: black color
+    pub source: PaintSource,
 
     /// Paint blending mode.
     ///
@@ -71,14 +97,13 @@ pub struct Paint {
     ///
     /// Default: false
     pub force_hq_pipeline: bool,
-
 }
 
 impl Default for Paint {
     #[inline]
     fn default() -> Self {
         Paint {
-            color: Color::BLACK,
+            source: PaintSource::SolidColor(Color::BLACK),
             blend_mode: BlendMode::default(),
             fill_type: FillType::default(),
             anti_alias: false,
@@ -88,19 +113,44 @@ impl Default for Paint {
 }
 
 impl Paint {
-    /// Sets a paint color.
+    /// Sets a paint source to a solid color.
     #[inline]
     pub fn set_color(mut self, color: Color) -> Self {
-        self.color = color;
+        self.source = PaintSource::SolidColor(color);
         self
     }
 
-    /// Sets a paint color.
+    /// Sets a paint source to a solid color.
     ///
     /// `paint.set_color(Color::from_rgba8(50, 127, 150, 200))` shorthand.
     #[inline]
     pub fn set_color_rgba8(self, r: u8, g: u8, b: u8, a: u8) -> Self {
         self.set_color(Color::from_rgba8(r, g, b, a))
+    }
+
+    /// Checks that the paint source is a solid color.
+    #[inline]
+    pub fn is_solid_color(&self) -> bool {
+        match self.source {
+            PaintSource::SolidColor(_) => true,
+            PaintSource::Shader(_) => false,
+        }
+    }
+
+    /// Sets a paint source to a shader.
+    #[inline]
+    pub fn set_shader(mut self, color: Box<dyn Shader>) -> Self {
+        self.source = PaintSource::Shader(color);
+        self
+    }
+
+    /// Checks that the paint source is a shader.
+    #[inline]
+    pub fn is_shader(&self) -> bool {
+        match self.source {
+            PaintSource::SolidColor(_) => false,
+            PaintSource::Shader(_) => true,
+        }
     }
 
     /// Sets a blending mode.

@@ -231,6 +231,7 @@ impl Pixmap {
             let mut encoder = png::Encoder::new(&mut data, self.width(), self.height());
             encoder.set_color(png::ColorType::RGBA);
             encoder.set_depth(png::BitDepth::Eight);
+            encoder.set_compression(png::Compression::Best);
             let mut writer = encoder.write_header()?;
             writer.write_image_data(tmp_pixmap.data())?;
         }

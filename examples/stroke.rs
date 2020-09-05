@@ -44,7 +44,7 @@ fn stroke_simple(pixmap: &mut Pixmap) {
 // To reuse the allocated memory, you can use the PathStroker directly.
 fn stroke_preserve(pixmap: &mut Pixmap) {
     let mut paint = Paint::default()
-        .set_color_rgba8(0, 0xDD, 0, 0xAA)
+        .set_color(Color::from_rgba8(0, 0xDD, 0, 0xAA))
         .set_anti_alias(true);
 
     let props = StrokeProps::default().set_width(4.0);

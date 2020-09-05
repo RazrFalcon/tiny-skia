@@ -69,18 +69,21 @@ impl StrokeProps {
     }
 
     /// Sets a stroke miter limit.
+    #[inline]
     pub fn set_miter_limit(mut self, miter_limit: f32) -> Self {
         self.miter_limit = miter_limit;
         self
     }
 
     /// Sets a stroke line cap.
+    #[inline]
     pub fn set_line_cap(mut self, line_cap: LineCap) -> Self {
         self.line_cap = line_cap;
         self
     }
 
     /// Sets a stroke line join.
+    #[inline]
     pub fn set_line_join(mut self, line_join: LineJoin) -> Self {
         self.line_join = line_join;
         self

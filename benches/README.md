@@ -95,6 +95,21 @@ when a rendering backend is designed for long horizontal strides.
 | -------------------- | -------------: | -------------: | ---------: | ---------: | ---------: | ---------: |
 | stroke               |      2,053,756 |      1,939,394 |  1,205,407 |  1,174,229 |  3,161,763 |  5,707,383 |
 
+### gradients
+
+<!-- this bench contains only the low quality tiny-skia/Skia pipeline results -->
+<!-- find a way to force high quality pipeline in Skia -->
+
+| Test/Library                         | tiny-skia SSE2 | tiny-skia AVX2 | Skia SSE2  | Skia AVX2  | cairo      | raqote     |
+| ------------------------------------ | -------------: | -------------: | ---------: | ---------: | ---------: | ---------: |
+| linear, two stops, pad               |      1,430,807 |      1,265,540 |    993,781 |    571,583 |  2,458,368 |  3,379,723 |
+| linear, two stops, reflect           |      1,847,322 |      1,693,896 |  1,248,226 |    684,310 |  2,449,727 |  3,301,529 |
+| linear, two stops, repeat            |      1,653,065 |      1,559,043 |  1,043,289 |    599,061 |  2,445,711 |  3,115,416 |
+| linear, three stops, evenly spread   |      2,113,378 |      2,154,395 |  1,806,614 |    781,344 |  2,413,454 |  4,021,338 |
+| linear, three stops, unevenly spread |      2,160,242 |      2,156,258 |  1,805,379 |    687,479 |  2,423,142 |  3,412,176 |
+| simple radial                        |      2,373,564 |      2,355,357 |  2,050,437 |    805,376 |  4,704,141 |  5,531,178 |
+| two point radial                     |      4,180,379 |      4,483,205 |  1,943,448 |  1,083,230 |  4,709,760 | 13,454,676 |
+
 ### png
 
 `png_io.rs`

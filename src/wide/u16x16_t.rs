@@ -4,11 +4,14 @@
 // found in the LICENSE file.
 
 // No need to use explicit 256bit AVX2 SIMD.
-// With `-C target-cpu=native` it will autovectorize it better than us.
+// `-C target-cpu=native` will autovectorize it better than us.
 // Not even sure why explicit instructions are so slow...
+//
+// We also have to inline all the methods. They are pretty large,
+// but without the inlining the performance is plummeting.
 
 #[derive(Copy, Clone, Default, Debug)]
-pub struct U16x16([u16; 16]);
+pub struct U16x16(pub [u16; 16]);
 
 macro_rules! impl_u16x16_op {
     ($a:expr, $op:ident, $b:expr) => {
@@ -34,33 +37,33 @@ macro_rules! impl_u16x16_op {
 }
 
 impl U16x16 {
-    #[inline(always)]
-    pub fn new(n: [u16; 16]) -> Self {
-        U16x16(n)
-    }
-
-    #[inline(always)]
+    #[inline]
     pub fn splat(n: u16) -> Self {
         U16x16([n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n])
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn as_slice(&self) -> &[u16; 16] {
         &self.0
     }
 
-    #[inline(always)]
+    #[inline]
+    pub fn as_mut_slice(&mut self) -> &mut [u16; 16] {
+        &mut self.0
+    }
+
+    #[inline]
     pub fn min(&self, other: &Self) -> Self {
         impl_u16x16_op!(self, min, other)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn max(&self, other: &Self) -> Self {
         impl_u16x16_op!(self, max, other)
     }
 
-    #[inline(always)]
-    pub fn packed_le(self, other: Self) -> Self {
+    #[inline]
+    pub fn packed_le(&self, other: &Self) -> Self {
         U16x16([
             if self.0[ 0] <= other.0[ 0] { !0 } else { 0 },
             if self.0[ 1] <= other.0[ 1] { !0 } else { 0 },
@@ -81,7 +84,7 @@ impl U16x16 {
         ])
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn if_then_else(self, t: Self, e: Self) -> Self {
         (t & self) | (e & !self)
     }
@@ -90,7 +93,7 @@ impl U16x16 {
 impl std::ops::Add<U16x16> for U16x16 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn add(self, other: U16x16) -> Self::Output {
         impl_u16x16_op!(self, add, other)
     }
@@ -99,7 +102,7 @@ impl std::ops::Add<U16x16> for U16x16 {
 impl std::ops::Sub<U16x16> for U16x16 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn sub(self, other: U16x16) -> Self::Output {
         impl_u16x16_op!(self, sub, other)
     }
@@ -108,7 +111,7 @@ impl std::ops::Sub<U16x16> for U16x16 {
 impl std::ops::Mul<U16x16> for U16x16 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn mul(self, other: U16x16) -> Self::Output {
         impl_u16x16_op!(self, mul, other)
     }
@@ -117,7 +120,7 @@ impl std::ops::Mul<U16x16> for U16x16 {
 impl std::ops::Div<U16x16> for U16x16 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn div(self, other: U16x16) -> Self::Output {
         impl_u16x16_op!(self, div, other)
     }
@@ -126,7 +129,7 @@ impl std::ops::Div<U16x16> for U16x16 {
 impl std::ops::BitAnd<U16x16> for U16x16 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn bitand(self, other: U16x16) -> Self::Output {
         impl_u16x16_op!(self, bitand, other)
     }
@@ -135,7 +138,7 @@ impl std::ops::BitAnd<U16x16> for U16x16 {
 impl std::ops::BitOr<U16x16> for U16x16 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn bitor(self, other: U16x16) -> Self::Output {
         impl_u16x16_op!(self, bitor, other)
     }
@@ -144,7 +147,7 @@ impl std::ops::BitOr<U16x16> for U16x16 {
 impl std::ops::Not for U16x16 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn not(self) -> Self::Output {
         U16x16([
             !self.0[ 0],

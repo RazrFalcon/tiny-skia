@@ -6,7 +6,7 @@
 
 use std::ffi::c_void;
 
-use crate::{ScreenIntRect, LengthU32};
+use crate::{ScreenIntRect, LengthU32, Transform, Color, NormalizedF32};
 
 use crate::color::PremultipliedColor;
 
@@ -26,14 +26,10 @@ pub enum Stage {
     Clamp1,
     ClampA,
     ClampGamut,
-    Unpremultiply,
     Premultiply,
-    PremultiplyDestination,
     BlackColor,
     WhiteColor,
     UniformColor,
-    UnboundedUniformColor,
-    UniformColorDestination,
     SeedShader,
     Dither,
     Load,
@@ -76,14 +72,13 @@ pub enum Stage {
     Color,
     Luminosity,
     SourceOverRgba,
-    MatrixTranslate,
-    MatrixScaleTranslate,
-    Matrix2X3,
+    TransformTranslate, // TODO: remove?
+    TransformScaleTranslate, // TODO: remove?
+    Transform2X3,
     MirrorX,
     RepeatX,
     MirrorY,
     RepeatY,
-    NegateX,
     Bilinear,
     Bicubic,
     BilinearNX,
@@ -100,27 +95,23 @@ pub enum Stage {
     BicubicP3Y,
     SaveXY,
     Accumulate,
-    ClampX1,
-    MirrorX1,
+    PadX1,
+    ReflectX1,
     RepeatX1,
-    EvenlySpacedGradient,
     Gradient,
     EvenlySpaced2StopGradient,
-    XyToUnitAngle,
     XYToRadius,
-    XYTo2PtConicalStrip,
     XYTo2PtConicalFocalOnCircle,
     XYTo2PtConicalWellBehaved,
-    XYTo2PtConicalSmaller,
     XYTo2PtConicalGreater,
-    Alter2PtConicalCompensateFocal,
-    Alter2PtConicalUnswap,
-    Mask2PtConicalNan,
     Mask2PtConicalDegenerates,
     ApplyVectorMask,
 }
 
 pub const STAGES_COUNT: usize = Stage::ApplyVectorMask as usize + 1;
+
+
+pub trait Context: std::fmt::Debug {}
 
 
 #[derive(Copy, Clone, Debug)]
@@ -136,8 +127,10 @@ impl MemoryCtx {
     }
 }
 
+impl Context for MemoryCtx {}
 
-#[derive(Copy, Clone)]
+
+#[derive(Copy, Clone, Debug)]
 pub struct UniformColorCtx {
     pub r: f32,
     pub g: f32,
@@ -146,10 +139,88 @@ pub struct UniformColorCtx {
     pub rgba: [u16; 4], // [0,255] in a 16-bit lane.
 }
 
+impl Context for UniformColorCtx {}
+
+
+// A gradient color is an unpremultiplied RGBA not in a 0..1 range.
+// It basically can have any float value.
+#[derive(Copy, Clone, Default, Debug)]
+pub struct GradientColor {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub a: f32,
+}
+
+impl GradientColor {
+    pub fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
+        GradientColor { r, g, b, a }
+    }
+}
+
+impl From<Color> for GradientColor {
+    fn from(c: Color) -> Self {
+        GradientColor {
+            r: c.red(),
+            g: c.green(),
+            b: c.blue(),
+            a: c.alpha(),
+        }
+    }
+}
+
+
+#[derive(Copy, Clone, Debug)]
+pub struct EvenlySpaced2StopGradientCtx {
+    pub factor: GradientColor,
+    pub bias: GradientColor,
+}
+
+impl Context for EvenlySpaced2StopGradientCtx {}
+
+
+#[derive(Clone, Default, Debug)]
+pub struct GradientCtx {
+    /// This value stores the actual colors count.
+    /// `factors` and `biases` must store at least 16 values,
+    /// since this is the length of a lowp pipeline stage.
+    /// So any any value past `len` is just zeros.
+    pub len: usize,
+    pub factors: Vec<GradientColor>,
+    pub biases: Vec<GradientColor>,
+    pub t_values: Vec<NormalizedF32>,
+}
+
+impl GradientCtx {
+    pub fn push_const_color(&mut self, color: GradientColor) {
+        self.factors.push(GradientColor::new(0.0, 0.0, 0.0, 0.0));
+        self.biases.push(color);
+    }
+}
+
+impl Context for GradientCtx {}
+
+
+#[derive(Copy, Clone, Debug)]
+pub struct TwoPointConicalGradientCtx {
+    // This context is used only in highp, where we use Tx4.
+    pub mask: [u32; 4],
+    pub p0: f32,
+}
+
+impl Context for TwoPointConicalGradientCtx {}
+
+
+impl Context for Transform {}
+
+
+#[derive(Debug)]
 pub struct ContextStorage {
     // TODO: stack array + fallback
     // TODO: find a better way
-    items: Vec<*const c_void>,
+    // We cannot use just `c_void` here, like Skia,
+    // because it will work only for POD types.
+    items: Vec<*mut dyn Context>,
 }
 
 impl ContextStorage {
@@ -179,17 +250,17 @@ impl ContextStorage {
         self.push_context(ctx)
     }
 
-    pub fn push_context<T>(&mut self, t: T) -> *const c_void {
-        let ptr = Box::into_raw(Box::new(t)) as *const c_void;
+    pub fn push_context<T: Context + 'static>(&mut self, t: T) -> *const c_void {
+        let ptr = Box::into_raw(Box::new(t));
         self.items.push(ptr);
-        ptr
+        ptr as *const c_void
     }
 }
 
 impl Drop for ContextStorage {
     fn drop(&mut self) {
         for item in &self.items {
-            unsafe { Box::from_raw(*item as *mut c_void) };
+            unsafe { Box::from_raw(*item) };
         }
     }
 }
@@ -240,6 +311,22 @@ impl RasterPipelineBuilder {
 
     pub fn push_with_context(&mut self, stage: Stage, ctx: *const c_void) {
         self.unchecked_push(stage, ctx);
+    }
+
+    pub fn push_transform(&mut self, ts: Transform, ctx_storage: &mut ContextStorage) {
+        if ts.is_identity() {
+            return;
+        }
+
+        let ctx = ctx_storage.push_context(ts);
+
+        if ts.is_translate() {
+            self.push_with_context(Stage::TransformTranslate, ctx);
+        } else if ts.is_scale_translate() {
+            self.push_with_context(Stage::TransformScaleTranslate, ctx);
+        } else {
+            self.push_with_context(Stage::Transform2X3, ctx);
+        }
     }
 
     fn unchecked_push(&mut self, stage: Stage, ctx: *const c_void) {

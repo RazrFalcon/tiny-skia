@@ -66,7 +66,6 @@ fn rect_overflows_short_shift(rect: &IntRect, shift: i32) -> i32 {
     overflows_short_shift(rect.bottom(), shift)
 }
 
-#[inline]
 fn overflows_short_shift(value: i32, shift: i32) -> i32 {
     let s = 16 + shift;
     (left_shift(value, s) >> s) - value
@@ -182,7 +181,6 @@ impl<'a> SuperBlitter<'a> {
 }
 
 impl Drop for SuperBlitter<'_> {
-    #[inline]
     fn drop(&mut self) {
         self.flush();
     }
@@ -264,7 +262,6 @@ impl Blitter for SuperBlitter<'_> {
 // to produce a final value in [0, 255] and handles clamping 256->255
 // itself, with the same (alpha - (alpha >> 8)) correction as
 // coverage_to_exact_alpha().
-#[inline]
 fn coverage_to_partial_alpha(mut aa: u32) -> AlphaU8 {
     aa <<= 8 - 2*SHIFT;
     aa as AlphaU8

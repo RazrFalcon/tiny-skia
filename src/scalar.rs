@@ -16,6 +16,7 @@ pub trait Scalar {
     fn sqr(self) -> Self;
     fn invert(self) -> Self;
     fn bound(self, min: Self, max: Self) -> Self;
+    fn is_nearly_equal(self, other: Self) -> bool;
     fn is_nearly_zero(self) -> bool;
     fn is_nearly_zero_within_tolerance(self, tolerance: Self) -> bool;
     fn almost_dequal_ulps(self, other: Self) -> bool;
@@ -41,6 +42,10 @@ impl Scalar for f32 {
     // Works just like SkTPin, returning `max` for NaN/inf
     fn bound(self, min: Self, max: Self) -> Self {
         max.min(self).max(min)
+    }
+
+    fn is_nearly_equal(self, other: Self) -> bool {
+        (self - other).abs() <= SCALAR_NEARLY_ZERO
     }
 
     fn is_nearly_zero(self) -> bool {

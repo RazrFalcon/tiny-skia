@@ -231,6 +231,7 @@ impl Color {
     /// Creates a new color from 4 components.
     ///
     /// u8 will be divided by 255 to get the float component.
+    #[inline]
     pub fn from_rgba8(r: u8, g: u8, b: u8, a: u8) -> Self {
         Color {
             r: normalize_u8(r),
@@ -410,6 +411,7 @@ impl PremultipliedColor {
     }
 }
 
+#[inline]
 fn normalize_u8(n: u8) -> NormalizedF32 {
     unsafe {
         NormalizedF32::new_unchecked(n as f32 / 255.0)

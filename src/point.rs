@@ -27,6 +27,7 @@ pub struct Point {
 impl Point {
     // TODO: should be finite?
     /// Creates a new `Point`.
+    #[inline]
     pub fn from_xy(x: f32, y: f32) -> Self {
         Point { x, y }
     }
@@ -76,6 +77,18 @@ impl Point {
 
     pub(crate) fn can_normalize(&self) -> bool {
         self.x.is_finite() && self.y.is_finite() && (self.x != 0.0 || self.y != 0.0)
+    }
+
+    /// Returns the Euclidean distance from origin.
+    pub(crate) fn length(&self) -> f32 {
+        let mag2 = self.x * self.x + self.y * self.y;
+        if mag2.is_finite() {
+            mag2.sqrt()
+        } else {
+            let xx = f64::from(self.x);
+            let yy = f64::from(self.y);
+            (xx * xx + yy * yy).sqrt() as f32
+        }
     }
 
     /// Scales vector so that distanceToOrigin() returns length, if possible.

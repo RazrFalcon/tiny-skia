@@ -6,11 +6,15 @@
 
 use std::ffi::c_void;
 
-use crate::{Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8, AlphaU8};
+use crate::{
+    Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8,
+    AlphaU8, PaintSource,
+};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::blitter::Blitter;
 use crate::raster_pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
+use crate::shaders::StageRec;
 
 
 pub struct RasterPipelineBlitter {
@@ -38,17 +42,40 @@ impl RasterPipelineBlitter {
         pixmap: &mut Pixmap,
     ) -> Option<RasterPipelineBlitter> {
         let mut shader_pipeline = RasterPipelineBuilder::new();
+        match paint.source {
+            PaintSource::SolidColor(ref color) => {
+                // Having no shader makes things nice and easy... just use the paint color.
+                let color_ctx = ctx_storage.create_uniform_color_context(color.premultiply());
+                shader_pipeline.push_with_context(raster_pipeline::Stage::UniformColor, color_ctx);
 
-        // Having no shader makes things nice and easy... just use the paint color.
-        let color_ctx = ctx_storage.create_uniform_color_context(paint.color.premultiply());
-        shader_pipeline.push_with_context(raster_pipeline::Stage::UniformColor, color_ctx);
+                let is_constant = true;
+                RasterPipelineBlitter::new_inner(paint, &shader_pipeline, color.is_opaque(),
+                                                 is_constant, pixmap)
+            }
+            PaintSource::Shader(ref shader) => {
+                let is_opaque = shader.is_opaque();
+                let is_constant = false;
 
-        RasterPipelineBlitter::new_inner(paint, &shader_pipeline, pixmap)
+                let rec = StageRec {
+                    ctx_storage,
+                    pipeline: &mut shader_pipeline,
+                };
+
+                if shader.push_stages(rec) {
+                    RasterPipelineBlitter::new_inner(paint, &shader_pipeline, is_opaque,
+                                                     is_constant, pixmap)
+                } else {
+                    None
+                }
+            }
+        }
     }
 
     fn new_inner(
         paint: &Paint,
         shader_pipeline: &RasterPipelineBuilder,
+        is_opaque: bool,
+        is_constant: bool,
         pixmap: &mut Pixmap,
     ) -> Option<Self> {
         // Fast-reject.
@@ -56,8 +83,7 @@ impl RasterPipelineBlitter {
         match paint.blend_mode {
             // `Destination` keep the pixmap unchanged. Nothing to do here.
             BlendMode::Destination => return None,
-            // TODO: disabled by shader
-            BlendMode::DestinationIn if paint.color.is_opaque() => return None,
+            BlendMode::DestinationIn if is_opaque && !paint.is_shader() => return None,
             _ => {}
         }
 
@@ -71,7 +97,6 @@ impl RasterPipelineBlitter {
         color_pipeline.extend(shader_pipeline);
 
         // We can strength-reduce SrcOver into Src when opaque.
-        let is_opaque = paint.color.is_opaque(); // TODO: affected by shader
         let mut blend_mode = paint.blend_mode;
         if is_opaque && blend_mode == BlendMode::SourceOver {
             blend_mode = BlendMode::Source;
@@ -79,9 +104,12 @@ impl RasterPipelineBlitter {
 
         // When we're drawing a constant color in Source mode, we can sometimes just memset.
         let mut memset2d_color = None;
-        if blend_mode == BlendMode::Source {
-            // TODO: will be affected by a shader and dither later on
-            memset2d_color = Some(paint.color.premultiply().to_color_u8());
+        if is_constant && blend_mode == BlendMode::Source {
+            // Unlike Skia, our shader cannot be constant.
+            // Therefore there is no need to run a raster pipeline to get shader's color.
+            if let PaintSource::SolidColor(ref color) = paint.source {
+                memset2d_color = Some(color.premultiply().to_color_u8());
+            }
         };
 
         // Clear is just a transparent color memset.

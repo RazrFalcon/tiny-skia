@@ -102,7 +102,7 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [ ] `Path` hairline stroking
 - [ ] Anti-aliased `Path` hairline stroking
 - [ ] Stroke dashing
-- [ ] Gradients (linear and two point conical)
+- [x] Gradients (linear, radial and two point conical)
 - [ ] `Pixmap`s blending (image on image rendering)
 - [ ] Patterns
 - [ ] Dithering
