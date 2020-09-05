@@ -70,7 +70,7 @@ impl Shader for LinearGradient {
     fn is_opaque(&self) -> bool { self.base.colors_are_opaque }
 
     fn push_stages(&self, rec: StageRec) -> bool {
-        self.base.append_stages(rec, &|_, _| {}).is_some()
+        self.base.push_stages(rec, &|_, _| {}).is_some()
     }
 }
 

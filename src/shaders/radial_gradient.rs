@@ -146,7 +146,7 @@ impl RadialGradient {
 
 impl Shader for RadialGradient {
     fn push_stages(&self, rec: StageRec) -> bool {
-        self.base.append_stages(rec, &|rec, post_p| {
+        self.base.push_stages(rec, &|rec, post_p| {
             if let Some(focal_data) = self.focal_data {
                 // Unlike, we have only the Focal radial gradient type.
 

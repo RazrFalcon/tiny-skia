@@ -399,3 +399,29 @@ fn simple_radial_hq() {
     let expected = Pixmap::load_png("tests/images/gradients/simple-radial-hq.png").unwrap();
     assert_eq!(pixmap, expected);
 }
+
+#[test]
+fn simple_radial_with_ts_hq() {
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+
+    let paint = Paint::default()
+        .set_force_hq_pipeline(true)
+        .set_shader(RadialGradient::new(
+            Point::from_xy(100.0, 100.0),
+            Point::from_xy(100.0, 100.0),
+            100.0,
+            vec![
+                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+                GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
+            ],
+            SpreadMode::Pad,
+            Transform::from_row(2.0, -0.7, 0.3, 1.2, 10.5, -12.3).unwrap(),
+        ).unwrap());
+
+    let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+
+    pixmap.fill_path(&path, &paint);
+
+    let expected = Pixmap::load_png("tests/images/gradients/simple-radial-with-ts-hq.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
