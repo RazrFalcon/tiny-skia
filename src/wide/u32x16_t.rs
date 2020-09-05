@@ -21,7 +21,7 @@ impl U32x16 {
 
 impl std::fmt::Debug for U32x16 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        write!(f, "F32x16({} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {})",
+        write!(f, "U32x16({} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {})",
                self.0[0].x(), self.0[0].y(), self.0[0].z(), self.0[0].w(),
                self.0[1].x(), self.0[1].y(), self.0[1].z(), self.0[1].w(),
                self.0[2].x(), self.0[2].y(), self.0[2].z(), self.0[2].w(),

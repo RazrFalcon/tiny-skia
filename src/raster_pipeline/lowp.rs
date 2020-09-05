@@ -30,7 +30,6 @@ use std::ffi::c_void;
 
 use crate::{ScreenIntRect, PremultipliedColorU8, Transform};
 
-use crate::raster_pipeline::{self, STAGES_COUNT};
 use crate::wide::{F32x4, U16x16, F32x16};
 
 const STAGE_WIDTH: usize = 16;
@@ -42,31 +41,22 @@ type StageFn = unsafe fn(
 );
 
 // Must be in the same order as raster_pipeline::Stage
-pub const STAGES: &[StageFn; STAGES_COUNT] = &[
+pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     move_source_to_destination,
     move_destination_to_source,
-    null_fn, // Clamp0,
-    null_fn, // Clamp1,
-    null_fn, // ClampA,
-    null_fn, // ClampGamut,
+    null_fn, // Clamp0
+    null_fn, // ClampA
     premultiply,
-    null_fn, // BlackColor,
-    null_fn, // WhiteColor,
     uniform_color,
     seed_shader,
-    null_fn, // Dither,
-    null_fn, // Load,
+    null_fn, // Dither
     load_dst,
     store,
-    null_fn, // Gather,
-    null_fn, // BilerpClamp,
-    null_fn, // BicubicClamp,
-    null_fn, // ScaleU8,
-    scale_1_float, // Scale1Float,
-    null_fn, // ScaleNative,
-    null_fn, // LerpU8,
-    lerp_1_float, // Lerp1Float,
-    null_fn, // LerpNative,
+    null_fn, // Gather
+    null_fn, // ScaleU8
+    scale_1_float, // Scale1Float
+    null_fn, // LerpU8
+    lerp_1_float, // Lerp1Float
     destination_atop,
     destination_in,
     destination_out,
@@ -98,26 +88,10 @@ pub const STAGES: &[StageFn; STAGES_COUNT] = &[
     transform_translate,
     transform_scale_translate,
     transform_2x3,
-    null_fn, // MirrorX,
-    null_fn, // RepeatX,
-    null_fn, // MirrorY,
-    null_fn, // RepeatY,
-    null_fn, // Bilinear,
-    null_fn, // Bicubic,
-    null_fn, // BilinearNX,
-    null_fn, // BilinearPX,
-    null_fn, // BilinearNY,
-    null_fn, // BilinearPY,
-    null_fn, // BicubicN3X,
-    null_fn, // BicubicN1X,
-    null_fn, // BicubicP1X,
-    null_fn, // BicubicP3X,
-    null_fn, // BicubicN3Y,
-    null_fn, // BicubicN1Y,
-    null_fn, // BicubicP1Y,
-    null_fn, // BicubicP3Y,
-    null_fn, // SaveXY,
-    null_fn, // Accumulate,
+    null_fn, // RepeatX
+    null_fn, // RepeatY
+    null_fn, // Bilinear
+    null_fn, // Bicubic
     pad_x1,
     reflect_x1,
     repeat_x1,
@@ -233,7 +207,7 @@ unsafe fn uniform_color(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &raster_pipeline::UniformColorCtx = &*(*program.add(1)).cast();
+    let ctx: &super::UniformColorCtx = &*(*program.add(1)).cast();
     *r = U16x16::splat(ctx.rgba[0]);
     *g = U16x16::splat(ctx.rgba[1]);
     *b = U16x16::splat(ctx.rgba[2]);
@@ -269,7 +243,7 @@ pub unsafe fn load_dst(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &raster_pipeline::MemoryCtx = &*(*program.add(1)).cast();
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
     let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
     load_8888_(ptr, dr, dg, db, da);
 
@@ -282,7 +256,7 @@ pub unsafe fn load_dst_tail(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &raster_pipeline::MemoryCtx = &*(*program.add(1)).cast();
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
     let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
     load_8888_tail_(tail, ptr, dr, dg, db, da);
 
@@ -295,7 +269,7 @@ pub unsafe fn store(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &raster_pipeline::MemoryCtx = &*(*program.add(1)).cast();
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
     let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
     store_8888_(ptr, r, g, b, a);
 
@@ -308,7 +282,7 @@ pub unsafe fn store_tail(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &raster_pipeline::MemoryCtx = &*(*program.add(1)).cast();
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
     let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
     store_8888_tail_(tail, ptr, r, g, b, a);
 
@@ -433,7 +407,7 @@ pub unsafe fn source_over_rgba(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &raster_pipeline::MemoryCtx = &*(*program.add(1)).cast();
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
     let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
     load_8888_(ptr, dr, dg, db, da);
     *r = *r + div255(*dr * inv(*a));
@@ -451,7 +425,7 @@ pub unsafe fn source_over_rgba_tail(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &raster_pipeline::MemoryCtx = &*(*program.add(1)).cast();
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
     let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
     load_8888_tail_(tail, ptr, dr, dg, db, da);
     *r = *r + div255(*dr * inv(*a));
