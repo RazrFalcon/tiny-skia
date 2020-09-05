@@ -8,7 +8,7 @@ use crate::{Point, Path, ScreenIntRect};
 
 use crate::edge::{Edge, LineEdge, QuadraticEdge, CubicEdge};
 use crate::edge_clipper::EdgeClipperIter;
-use crate::geometry;
+use crate::path_geometry;
 use crate::path::PathEdge;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -125,7 +125,7 @@ impl BasicEdgeBuilder {
                     PathEdge::QuadTo(p0, p1, p2) => {
                         let points = [p0, p1, p2];
                         let mut mono_x = [Point::zero(); 5];
-                        let n = geometry::chop_quad_at_y_extrema(&points, &mut mono_x);
+                        let n = path_geometry::chop_quad_at_y_extrema(&points, &mut mono_x);
                         for i in 0..=n {
                             self.push_quad(&mono_x[i * 2..]);
                         }
@@ -133,7 +133,7 @@ impl BasicEdgeBuilder {
                     PathEdge::CubicTo(p0, p1, p2, p3) => {
                         let points = [p0, p1, p2, p3];
                         let mut mono_y = [Point::zero(); 10];
-                        let n = geometry::chop_cubic_at_y_extrema(&points, &mut mono_y);
+                        let n = path_geometry::chop_cubic_at_y_extrema(&points, &mut mono_y);
                         for i in 0..=n {
                             self.push_cubic(&mono_y[i * 3..]);
                         }

@@ -20,10 +20,7 @@ fn main() {
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 
-    #[cfg(feature = "png-format")]
-    {
-        pixmap.save_png("image.png").unwrap();
-    }
+    pixmap.save_png("image.png").unwrap();
 }
 
 fn crate_triangle() -> Pixmap {

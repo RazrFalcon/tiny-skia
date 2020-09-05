@@ -88,6 +88,8 @@ Filling the whole canvas with a color.
 
 ### spiral stroke
 
+`spiral.rs`
+
 A spiral has a lot of short horizontal strides which are not CPU-friendly
 when a rendering backend is designed for long horizontal strides.
 
@@ -96,6 +98,8 @@ when a rendering backend is designed for long horizontal strides.
 | stroke               |      2,053,756 |      1,939,394 |  1,205,407 |  1,174,229 |  3,161,763 |  5,707,383 |
 
 ### gradients
+
+`gradients.rs`
 
 <!-- this bench contains only the low quality tiny-skia/Skia pipeline results -->
 <!-- find a way to force high quality pipeline in Skia -->
@@ -111,6 +115,8 @@ when a rendering backend is designed for long horizontal strides.
 | two point radial                     |      4,180,379 |      4,483,205 |  1,943,448 |  1,083,230 |  4,709,760 | 13,454,676 |
 
 ### pattern
+
+`pattern.rs`
 
 | Test/Library                | tiny-skia SSE2 | tiny-skia AVX2 | Skia SSE2  | Skia AVX2  | cairo       | raqote     |
 | --------------------------- | -------------: | -------------: | ---------: | ---------: | ----------: | ---------: |

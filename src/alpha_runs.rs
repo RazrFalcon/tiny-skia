@@ -94,12 +94,21 @@ impl AlphaRuns {
         }
 
         if middle_count != 0 {
-            Self::break_run(&mut self.runs[runs_offset..], &mut self.alpha[alpha_offset..], x, middle_count);
+            Self::break_run(
+                &mut self.runs[runs_offset..],
+                &mut self.alpha[alpha_offset..],
+                x,
+                middle_count,
+            );
             alpha_offset += x;
             runs_offset += x;
             x = 0;
             loop {
-                self.alpha[alpha_offset] = (Self::catch_overflow(u16::from(self.alpha[alpha_offset]) + u16::from(max_value))) as u8;
+                let a = Self::catch_overflow(
+                    u16::from(self.alpha[alpha_offset]) + u16::from(max_value)
+                );
+                self.alpha[alpha_offset] = a;
+
                 let n = usize::from(self.runs[runs_offset]);
                 debug_assert!(n <= middle_count);
                 alpha_offset += n;
@@ -115,7 +124,12 @@ impl AlphaRuns {
         }
 
         if stop_alpha != 0 {
-            Self::break_run(&mut self.runs[runs_offset..], &mut self.alpha[alpha_offset..], x, 1);
+            Self::break_run(
+                &mut self.runs[runs_offset..],
+                &mut self.alpha[alpha_offset..],
+                x,
+                1,
+            );
             alpha_offset += x;
             self.alpha[alpha_offset] = (self.alpha[alpha_offset] + stop_alpha) as u8;
             last_alpha_offset = alpha_offset;

@@ -31,7 +31,7 @@ mod edge_clipper;
 mod fdot6;
 mod fixed;
 mod floating_point;
-mod geometry;
+mod path_geometry;
 mod line_clipper;
 mod math;
 mod painter;

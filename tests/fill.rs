@@ -12,8 +12,8 @@ fn horizontal_line() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -29,8 +29,8 @@ fn vertical_line() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -46,8 +46,8 @@ fn single_line() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -67,8 +67,8 @@ fn open_polygon() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/polygon.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/polygon.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -89,8 +89,8 @@ fn closed_polygon() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/polygon.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/polygon.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -111,8 +111,8 @@ fn winding_star() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/winding-star.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/winding-star.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -133,8 +133,8 @@ fn even_odd_star() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/even-odd-star.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/even-odd-star.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -152,8 +152,8 @@ fn quad_curve() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/quad.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/quad.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -171,8 +171,8 @@ fn cubic_curve() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/cubic.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/cubic.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -185,8 +185,8 @@ fn memset2d() {
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 90.0, 90.0).unwrap());
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/memset2d.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/memset2d.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -200,8 +200,8 @@ fn memset2d_out_of_bounds() {
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(50.0, 50.0, 120.0, 120.0).unwrap());
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/memset2d-2.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/memset2d-2.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -233,8 +233,8 @@ fn fill_aa() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/star-aa.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/star-aa.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -270,8 +270,8 @@ fn clip_line_1() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/clip-line-1.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/clip-line-1.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -292,8 +292,8 @@ fn clip_line_2() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/clip-line-2.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/clip-line-2.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -310,8 +310,8 @@ fn clip_quad() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/clip-quad.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/clip-quad.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -329,8 +329,8 @@ fn clip_cubic_1() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/clip-cubic-1.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/clip-cubic-1.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -348,7 +348,7 @@ fn clip_cubic_2() {
     let path = pb.finish().unwrap();
 
     pixmap.fill_path(&path, &paint);
-    let expected = Pixmap::load_png("tests/images/fill/clip-cubic-2.png").unwrap();
 
+    let expected = Pixmap::load_png("tests/images/fill/clip-cubic-2.png").unwrap();
     assert_eq!(pixmap, expected);
 }

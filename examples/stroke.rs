@@ -10,10 +10,7 @@ fn main() {
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 
-    #[cfg(feature = "png-format")]
-    {
-        pixmap.save_png("image.png").unwrap();
-    }
+   pixmap.save_png("image.png").unwrap();
 }
 
 // In tiny-skia, there is no draw_path method that can fill and/or stroke a path.

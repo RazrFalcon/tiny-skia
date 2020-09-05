@@ -1,6 +1,6 @@
 use crate::{Path, Point, PathBuilder, Transform, PathSegment, PathSegmentsIter, NormalizedF32};
 
-use crate::geometry;
+use crate::path_geometry;
 use crate::path_builder::PathDirection;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 
@@ -583,8 +583,8 @@ impl PathStroker {
             return;
         }
 
-        let mut t_values = geometry::new_t_values();
-        let t_values = geometry::find_cubic_inflections(&cubic, &mut t_values);
+        let mut t_values = path_geometry::new_t_values();
+        let t_values = path_geometry::find_cubic_inflections(&cubic, &mut t_values);
         let mut last_t = NormalizedF32::ZERO;
         for index in 0..=t_values.len() {
             let next_t = t_values.get(index).cloned().map(|n| n.to_normalized()).unwrap_or(NormalizedF32::ONE);
@@ -596,9 +596,9 @@ impl PathStroker {
             last_t = next_t;
         }
 
-        if let Some(cusp) = geometry::find_cubic_cusp(&cubic) {
+        if let Some(cusp) = path_geometry::find_cubic_cusp(&cubic) {
             let mut cusp_loc = Point::default();
-            geometry::eval_cubic_at(&cubic, cusp.to_normalized(), Some(&mut cusp_loc), None, None);
+            path_geometry::eval_cubic_at(&cubic, cusp.to_normalized(), Some(&mut cusp_loc), None, None);
             self.cusper.push_circle(cusp_loc.x, cusp_loc.y, self.radius);
         }
 
@@ -695,7 +695,7 @@ impl PathStroker {
     // Given a cubic and t, return the point on curve, its perpendicular, and the perpendicular tangent.
     fn cubic_perp_ray(&self, cubic: &[Point; 4], t: NormalizedF32, t_pt: &mut Point, on_pt: &mut Point, tangent: Option<&mut Point>) {
         let mut dxy = Point::zero();
-        geometry::eval_cubic_at(cubic, t, Some(t_pt), Some(&mut dxy), None);
+        path_geometry::eval_cubic_at(cubic, t, Some(t_pt), Some(&mut dxy), None);
 
         let mut chopped = [Point::zero(); 7];
         if dxy.x == 0.0 && dxy.y == 0.0 {
@@ -707,8 +707,8 @@ impl PathStroker {
             } else {
                 // If the cubic inflection falls on the cusp, subdivide the cubic
                 // to find the tangent at that point.
-                let t = geometry::TValue::new(t.get()).unwrap();
-                geometry::chop_cubic_at2(&cubic, t, &mut chopped);
+                let t = path_geometry::TValue::new(t.get()).unwrap();
+                path_geometry::chop_cubic_at2(&cubic, t, &mut chopped);
                 dxy = chopped[3] - chopped[2];
                 if dxy.x == 0.0 && dxy.y == 0.0 {
                     dxy = chopped[3] - chopped[1];
@@ -981,7 +981,7 @@ impl PathStroker {
     // Given a quad and t, return the point on curve, its perpendicular, and the perpendicular tangent.
     fn quad_perp_ray(&self, quad: &[Point; 3], t: NormalizedF32, tp: &mut Point, on_p: &mut Point, tangent: Option<&mut Point>) {
         let mut dxy = Point::zero();
-        geometry::eval_quad_at2(quad, t, tp, &mut dxy);
+        path_geometry::eval_quad_at2(quad, t, tp, &mut dxy);
         if dxy.is_zero() {
             dxy = quad[2] - quad[0];
         }
@@ -999,7 +999,7 @@ impl PathStroker {
 
     fn stroke_close_enough(&self, stroke: &[Point; 3], ray: &[Point; 2], quad_points: &mut QuadConstruct) -> ResultType {
         let half = NormalizedF32::new_bounded(0.5);
-        let stroke_mid = geometry::eval_quad_at(stroke, half);
+        let stroke_mid = path_geometry::eval_quad_at(stroke, half);
         // measure the distance from the curve to the quad-stroke midpoint, compare to radius
         if points_within_dist(ray[0], stroke_mid, self.inv_res_scale) {
             // if the difference is small
@@ -1018,13 +1018,13 @@ impl PathStroker {
         }
 
         // measure the curve ray distance to the quad-stroke
-        let mut roots = geometry::new_t_values();
+        let mut roots = path_geometry::new_t_values();
         let roots = intersect_quad_ray(&ray, stroke, &mut roots);
         if roots.len() != 1 {
             return ResultType::Split;
         }
 
-        let quad_pt = geometry::eval_quad_at(stroke, roots[0].to_normalized());
+        let quad_pt = path_geometry::eval_quad_at(stroke, roots[0].to_normalized());
         let error = self.inv_res_scale * (1.0 - (roots[0].get() - 0.5).abs() * 2.0);
         if points_within_dist(ray[0], quad_pt, error) {
             // if the difference is small, we're done
@@ -1267,8 +1267,8 @@ fn round_joiner(
     }
 
     let ts = Transform::from_row(radius, 0.0, 0.0, radius, pivot.x, pivot.y).unwrap();
-    let mut conics = [geometry::Conic::default(); 5];
-    let conics = geometry::Conic::build_unit_arc(before, after, dir, &ts, &mut conics);
+    let mut conics = [path_geometry::Conic::default(); 5];
+    let conics = path_geometry::Conic::build_unit_arc(before, after, dir, &ts, &mut conics);
     if !conics.is_empty() {
         for conic in conics {
             builders.outer.conic_points_to(conic.points[1], conic.points[2], conic.weight);
@@ -1459,12 +1459,12 @@ fn check_quad_linear(quad: &[Point; 3]) -> (Point, ReductionType) {
         return (Point::zero(), ReductionType::Quad);
     }
 
-    let t = geometry::find_quad_max_curvature(quad);
+    let t = path_geometry::find_quad_max_curvature(quad);
     if t == NormalizedF32::ZERO || t == NormalizedF32::ONE {
         return (Point::zero(), ReductionType::Line);
     }
 
-    (geometry::eval_quad_at(quad, t), ReductionType::Degenerate)
+    (path_geometry::eval_quad_at(quad, t), ReductionType::Degenerate)
 }
 
 fn degenerate_vector(v: Point) -> bool {
@@ -1522,7 +1522,7 @@ fn pt_to_line(pt: Point, line_start: Point, line_end: Point) -> f32 {
 }
 
 // Intersect the line with the quad and return the t values on the quad where the line crosses.
-fn intersect_quad_ray<'a>(line: &[Point; 2], quad: &[Point; 3], roots: &'a mut [geometry::TValue; 3]) -> &'a [geometry::TValue] {
+fn intersect_quad_ray<'a>(line: &[Point; 2], quad: &[Point; 3], roots: &'a mut [path_geometry::TValue; 3]) -> &'a [path_geometry::TValue] {
     let vec = line[1] - line[0];
     let mut r = [0.0; 3];
     for n in 0..3 {
@@ -1534,7 +1534,7 @@ fn intersect_quad_ray<'a>(line: &[Point; 2], quad: &[Point; 3], roots: &'a mut [
     a += c - 2.0 * b;  // A = a - 2*b + c
     b -= c;  // B = -(b - c)
 
-    let len = geometry::find_unit_quad_roots(a, 2.0 * b, c, roots);
+    let len = path_geometry::find_unit_quad_roots(a, 2.0 * b, c, roots);
     &roots[0..len]
 }
 
@@ -1605,8 +1605,8 @@ fn check_cubic_linear(cubic: &[Point; 4], reduction: &mut [Point; 3], tangent_pt
         return ReductionType::Quad;
     }
 
-    let mut t_values = geometry::new_t_values();
-    let t_values = geometry::find_cubic_max_curvature(cubic, &mut t_values);
+    let mut t_values = path_geometry::new_t_values();
+    let t_values = path_geometry::find_cubic_max_curvature(cubic, &mut t_values);
     let mut r_count = 0;
     // Now loop over the t-values, and reject any that evaluate to either end-point
     for t in t_values {
@@ -1614,7 +1614,7 @@ fn check_cubic_linear(cubic: &[Point; 4], reduction: &mut [Point; 3], tangent_pt
             continue;
         }
 
-        geometry::eval_cubic_at(cubic, t.to_normalized(), Some(&mut reduction[r_count]), None, None);
+        path_geometry::eval_cubic_at(cubic, t.to_normalized(), Some(&mut reduction[r_count]), None, None);
         if reduction[r_count] != cubic[0] && reduction[r_count] != cubic[3] {
             r_count += 1;
         }

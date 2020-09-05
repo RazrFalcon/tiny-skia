@@ -9,7 +9,7 @@
 use crate::{Point, Bounds, Path, Rect};
 
 use crate::checked_geom_ext::BoundsExt;
-use crate::geometry;
+use crate::path_geometry;
 use crate::path::PathVerb;
 use crate::scalar::{Scalar, SCALAR_ROOT_2_OVER_2};
 
@@ -165,7 +165,7 @@ impl PathBuilder {
         // TODO: use SkAutoConicToQuads
 
         let last = self.last_point().unwrap();
-        let conic = geometry::Conic::new(last, Point::from_xy(x1, y1), Point::from_xy(x2, y2), weight);
+        let conic = path_geometry::Conic::new(last, Point::from_xy(x1, y1), Point::from_xy(x2, y2), weight);
         let mut points = [Point::zero(); 32]; // 1 + 2 * (1<<3) = 17, so 32 should be enough
         let count = conic.chop_into_quads_pow2(3, &mut points);
 

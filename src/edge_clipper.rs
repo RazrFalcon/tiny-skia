@@ -11,7 +11,7 @@ use arrayvec::ArrayVec;
 use crate::{Path, Rect, Point, Bounds};
 
 use crate::checked_geom_ext::BoundsExt;
-use crate::geometry;
+use crate::path_geometry;
 use crate::line_clipper;
 use crate::path::{PathEdge, PathEdgeIter};
 use crate::scalar::SCALAR_MAX;
@@ -70,11 +70,11 @@ impl EdgeClipper {
 
         if !quick_reject(&bounds, &self.clip) {
             let mut mono_y = [Point::zero(); 5];
-            let count_y = geometry::chop_quad_at_y_extrema(&pts, &mut mono_y);
+            let count_y = path_geometry::chop_quad_at_y_extrema(&pts, &mut mono_y);
             for y in 0..=count_y {
                 let mut mono_x = [Point::zero(); 5];
                 let y_points: [Point; 3] = mono_y[y*2..y*2+3].try_into().unwrap();
-                let count_x = geometry::chop_quad_at_x_extrema(&y_points, &mut mono_x);
+                let count_x = path_geometry::chop_quad_at_x_extrema(&y_points, &mut mono_x);
                 for x in 0..=count_x {
                     let x_points: [Point; 3] = mono_x[x*2..x*2+3].try_into().unwrap();
                     self.clip_mono_quad(&x_points);
@@ -126,13 +126,13 @@ impl EdgeClipper {
             return;
         }
 
-        let mut t = geometry::TValue::ANY;
+        let mut t = path_geometry::TValue::ANY;
         let mut tmp = [Point::zero(); 5];
 
         // are we partially to the left
         if pts[0].x < self.clip.left() {
             if chop_mono_quad_at_x(&pts, self.clip.left(), &mut t) {
-                geometry::chop_quad_at(&pts, t, &mut tmp);
+                path_geometry::chop_quad_at(&pts, t, &mut tmp);
                 self.push_vline(self.clip.left(), tmp[0].y, tmp[2].y, reverse);
                 // clamp to clean up imprecise numerics in the chop
                 tmp[2].x = self.clip.left();
@@ -151,7 +151,7 @@ impl EdgeClipper {
         // are we partially to the right
         if pts[2].x > self.clip.right() {
             if chop_mono_quad_at_x(&pts, self.clip.right(), &mut t) {
-                geometry::chop_quad_at(&pts, t, &mut tmp);
+                path_geometry::chop_quad_at(&pts, t, &mut tmp);
                 // clamp to clean up imprecise numerics in the chop
                 tmp[1].x = tmp[1].x.min(self.clip.right());
                 tmp[2].x = self.clip.right();
@@ -194,11 +194,11 @@ impl EdgeClipper {
                 return self.clip_line(p0, p3);
             } else {
                 let mut mono_y = [Point::zero(); 10];
-                let count_y = geometry::chop_cubic_at_y_extrema(&pts, &mut mono_y);
+                let count_y = path_geometry::chop_cubic_at_y_extrema(&pts, &mut mono_y);
                 for y in 0..=count_y {
                     let mut mono_x = [Point::zero(); 10];
                     let y_points: [Point; 4] = mono_y[y*3..y*3+4].try_into().unwrap();
-                    let count_x = geometry::chop_cubic_at_x_extrema(&y_points, &mut mono_x);
+                    let count_x = path_geometry::chop_cubic_at_x_extrema(&y_points, &mut mono_x);
                     for x in 0..=count_x {
                         let x_points: [Point; 4] = mono_x[x*3..x*3+4].try_into().unwrap();
                         self.clip_mono_cubic(&x_points);
@@ -365,14 +365,14 @@ fn sort_increasing_y(src: &[Point], dst: &mut [Point]) -> bool {
 
 /// Modifies pts[] in place so that it is clipped in Y to the clip rect.
 fn chop_quad_in_y(clip: &Rect, pts: &mut [Point; 3]) {
-    let mut t = geometry::TValue::ANY;
+    let mut t = path_geometry::TValue::ANY;
     let mut tmp = [Point::zero(); 5];
 
     // are we partially above
     if pts[0].y < clip.top() {
         if chop_mono_quad_at_y(pts, clip.top(), &mut t) {
             // take the 2nd chopped quad
-            geometry::chop_quad_at(pts, t, &mut tmp);
+            path_geometry::chop_quad_at(pts, t, &mut tmp);
             // clamp to clean up imprecise numerics in the chop
             tmp[2].y = clip.top();
             tmp[3].y = tmp[3].y.max(clip.top());
@@ -393,7 +393,7 @@ fn chop_quad_in_y(clip: &Rect, pts: &mut [Point; 3]) {
     // are we partially below
     if pts[2].y > clip.bottom() {
         if chop_mono_quad_at_y(pts, clip.bottom(), &mut t) {
-            geometry::chop_quad_at(pts, t, &mut tmp);
+            path_geometry::chop_quad_at(pts, t, &mut tmp);
             // clamp to clean up imprecise numerics in the chop
             tmp[1].y = tmp[1].y.min(clip.bottom());
             tmp[2].y = clip.bottom();
@@ -412,15 +412,15 @@ fn chop_quad_in_y(clip: &Rect, pts: &mut [Point; 3]) {
     }
 }
 
-fn chop_mono_quad_at_x(pts: &[Point; 3], x: f32, t: &mut geometry::TValue) -> bool {
+fn chop_mono_quad_at_x(pts: &[Point; 3], x: f32, t: &mut path_geometry::TValue) -> bool {
     chop_mono_quad_at(pts[0].x, pts[1].x, pts[2].x, x, t)
 }
 
-fn chop_mono_quad_at_y(pts: &[Point; 3], y: f32, t: &mut geometry::TValue) -> bool {
+fn chop_mono_quad_at_y(pts: &[Point; 3], y: f32, t: &mut path_geometry::TValue) -> bool {
     chop_mono_quad_at(pts[0].y, pts[1].y, pts[2].y, y, t)
 }
 
-fn chop_mono_quad_at(c0: f32, c1: f32, c2: f32, target: f32, t: &mut geometry::TValue) -> bool {
+fn chop_mono_quad_at(c0: f32, c1: f32, c2: f32, target: f32, t: &mut path_geometry::TValue) -> bool {
     // Solve F(t) = y where F(t) := [0](1-t)^2 + 2[1]t(1-t) + [2]t^2
     // We solve for t, using quadratic equation, hence we have to rearrange
     // our coefficients to look like At^2 + Bt + C
@@ -428,8 +428,8 @@ fn chop_mono_quad_at(c0: f32, c1: f32, c2: f32, target: f32, t: &mut geometry::T
     let b = 2.0 * (c1 - c0);
     let c = c0 - target;
 
-    let mut roots = geometry::new_t_values();
-    let count = geometry::find_unit_quad_roots(a, b, c, &mut roots);
+    let mut roots = path_geometry::new_t_values();
+    let count = path_geometry::find_unit_quad_roots(a, b, c, &mut roots);
     if count != 0 {
         *t = roots[0];
         true
@@ -493,24 +493,24 @@ fn chop_cubic_in_y(clip: &Rect, pts: &mut [Point; 4]) {
 }
 
 fn chop_mono_cubic_at_x(src: &[Point; 4], x: f32, dst: &mut [Point; 7]) {
-    if geometry::chop_mono_cubic_at_x(src, x, dst) {
+    if path_geometry::chop_mono_cubic_at_x(src, x, dst) {
         return;
     }
 
     let src_values = points_to_f32s!(src, 4);
-    geometry::chop_cubic_at2(src, mono_cubic_closest_t(src_values, x), dst);
+    path_geometry::chop_cubic_at2(src, mono_cubic_closest_t(src_values, x), dst);
 }
 
 fn chop_mono_cubic_at_y(src: &[Point; 4], y: f32, dst: &mut [Point; 7]) {
-    if geometry::chop_mono_cubic_at_y(src, y, dst) {
+    if path_geometry::chop_mono_cubic_at_y(src, y, dst) {
         return;
     }
 
     let src_values = points_to_f32s!(src, 4);
-    geometry::chop_cubic_at2(src, mono_cubic_closest_t(&src_values[1..], y), dst);
+    path_geometry::chop_cubic_at2(src, mono_cubic_closest_t(&src_values[1..], y), dst);
 }
 
-fn mono_cubic_closest_t(src: &[f32], mut x: f32) -> geometry::TValue {
+fn mono_cubic_closest_t(src: &[f32], mut x: f32) -> path_geometry::TValue {
     let mut t = 0.5;
     let mut last_t;
     let mut best_t = t;
@@ -538,5 +538,5 @@ fn mono_cubic_closest_t(src: &[f32], mut x: f32) -> geometry::TValue {
         }
     }
 
-    geometry::TValue::new(best_t).unwrap()
+    path_geometry::TValue::new(best_t).unwrap()
 }
