@@ -35,7 +35,7 @@ impl LinearGradient {
         points: Vec<GradientStop>,
         mode: SpreadMode,
         transform: Transform,
-    ) -> Option<Shader> {
+    ) -> Option<Shader<'static>> {
         if points.len() < 2 {
             return None;
         }
@@ -65,7 +65,9 @@ impl LinearGradient {
         }))
     }
 
-    pub(crate) fn is_opaque(&self) -> bool { self.base.colors_are_opaque }
+    pub(crate) fn is_opaque(&self) -> bool {
+        self.base.colors_are_opaque
+    }
 
     pub(crate) fn push_stages(&self, rec: StageRec) -> bool {
         self.base.push_stages(rec, &|_, _| {}).is_some()

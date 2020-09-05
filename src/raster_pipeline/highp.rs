@@ -34,15 +34,15 @@ type StageFn = unsafe fn(
 pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     move_source_to_destination,
     move_destination_to_source,
-    null_fn, // Clamp0
-    null_fn, // ClampA
+    clamp_0,
+    clamp_a,
     premultiply,
     uniform_color,
     seed_shader,
     null_fn, // Dither
     load_dst,
     store,
-    null_fn, // Gather
+    gather,
     null_fn, // ScaleU8
     scale_1_float,
     null_fn, // LerpU8
@@ -78,10 +78,10 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     transform_translate,
     transform_scale_translate,
     transform_2x3,
-    null_fn, // RepeatX
-    null_fn, // RepeatY
-    null_fn, // Bilinear
-    null_fn, // Bicubic
+    repeat_x,
+    repeat_y,
+    bilinear,
+    bicubic,
     pad_x1,
     reflect_x1,
     repeat_x1,
@@ -189,6 +189,34 @@ unsafe fn move_destination_to_source(
     next(tail, program.add(1), dx,dy, r,g,b,a, dr,dg,db,da);
 }
 
+unsafe fn clamp_0(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    *r = r.max(F32x4::default());
+    *g = g.max(F32x4::default());
+    *b = b.max(F32x4::default());
+    *a = a.max(F32x4::default());
+
+    let next: StageFn = *program.add(1).cast();
+    next(tail, program.add(1), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+unsafe fn clamp_a(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    *r = r.min(F32x4::splat(1.0));
+    *g = g.min(F32x4::splat(1.0));
+    *b = b.min(F32x4::splat(1.0));
+    *a = a.min(F32x4::splat(1.0));
+
+    let next: StageFn = *program.add(1).cast();
+    next(tail, program.add(1), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
 unsafe fn uniform_color(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
@@ -262,6 +290,43 @@ pub unsafe fn store(
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+pub unsafe fn gather(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    let ctx: &super::GatherCtx = &*(*program.add(1)).cast();
+
+    let ix = gather_ix(ctx, *r, *g);
+    let data = [
+        *ctx.pixels.cast::<PremultipliedColorU8>().add(ix.x() as usize),
+        *ctx.pixels.cast::<PremultipliedColorU8>().add(ix.y() as usize),
+        *ctx.pixels.cast::<PremultipliedColorU8>().add(ix.z() as usize),
+        *ctx.pixels.cast::<PremultipliedColorU8>().add(ix.w() as usize),
+    ];
+    load_8888__(&data, r, g, b, a);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+#[inline(always)]
+unsafe fn gather_ix(ctx: &super::GatherCtx, mut x: F32x4, mut y: F32x4) -> U32x4 {
+    // Exclusive -> inclusive.
+    let w = ulp_sub(ctx.width.get() as f32);
+    let h = ulp_sub(ctx.height.get() as f32);
+    x = x.max(F32x4::default()).min(F32x4::splat(w));
+    y = y.max(F32x4::default()).min(F32x4::splat(h));
+
+    y.trunc().to_u32x4() * U32x4::splat(ctx.stride.get()) + x.trunc().to_u32x4()
+}
+
+#[inline(always)]
+unsafe fn ulp_sub(v: f32) -> f32 {
+    // Somewhat similar to v - f32::EPSILON
+    std::mem::transmute::<u32, f32>(std::mem::transmute::<f32, u32>(v) - 1)
 }
 
 pub unsafe fn store_tail(
@@ -670,6 +735,195 @@ unsafe fn transform_2x3(
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+// Tile x or y to [0,limit) == [0,limit - 1 ulp] (think, sampling from images).
+// The gather stages will hard clamp the output of these stages to [0,limit)...
+// we just need to do the basic repeat or mirroring.
+
+unsafe fn repeat_x(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    let ctx: &super::TileCtx = &*(*program.add(1)).cast();
+    *r = exclusive_repeat(ctx, *r);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+unsafe fn repeat_y(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    let ctx: &super::TileCtx = &*(*program.add(1)).cast();
+    *g = exclusive_repeat(ctx, *g);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+#[inline(always)]
+fn exclusive_repeat(ctx: &super::TileCtx, v: F32x4) -> F32x4 {
+    v - (v * F32x4::splat(ctx.inv_scale)).floor() * F32x4::splat(ctx.scale)
+}
+
+unsafe fn bilinear(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    let ctx: &super::SamplerCtx = &*(*program.add(1)).cast();
+
+    let x = *r;
+    let fx = (x + F32x4::splat(0.5)).fract();
+    let y = *g;
+    let fy = (y + F32x4::splat(0.5)).fract();
+    let one = F32x4::splat(1.0);
+    let wx = [one - fx, fx];
+    let wy = [one - fy, fy];
+
+    sampler_2x2(ctx, x, y, &wx, &wy, r, g, b, a);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+unsafe fn bicubic(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    let ctx: &super::SamplerCtx = &*(*program.add(1)).cast();
+
+    let x = *r;
+    let fx = (x + F32x4::splat(0.5)).fract();
+    let y = *g;
+    let fy = (y + F32x4::splat(0.5)).fract();
+    let one = F32x4::splat(1.0);
+    let wx = [bicubic_far(one - fx), bicubic_near(one - fx), bicubic_near(fx), bicubic_far(fx)];
+    let wy = [bicubic_far(one - fy), bicubic_near(one - fy), bicubic_near(fy), bicubic_far(fy)];
+
+    sampler_4x4(ctx, x, y, &wx, &wy, r, g, b, a);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+// In bicubic interpolation, the 16 pixels and +/- 0.5 and +/- 1.5 offsets from the sample
+// pixel center are combined with a non-uniform cubic filter, with higher values near the center.
+//
+// We break this function into two parts, one for near 0.5 offsets and one for far 1.5 offsets.
+
+#[inline(always)]
+fn bicubic_near(t: F32x4) -> F32x4 {
+    // 1/18 + 9/18t + 27/18t^2 - 21/18t^3 == t ( t ( -21/18t + 27/18) + 9/18) + 1/18
+    mad(t, mad(t, mad(F32x4::splat(-21.0/18.0), t, F32x4::splat(27.0/18.0)), F32x4::splat(9.0/18.0)), F32x4::splat(1.0/18.0))
+}
+
+#[inline(always)]
+fn bicubic_far(t: F32x4) -> F32x4 {
+    // 0/18 + 0/18*t - 6/18t^2 + 7/18t^3 == t^2 (7/18t - 6/18)
+    (t * t) * mad(F32x4::splat(7.0/18.0), t, F32x4::splat(-6.0/18.0))
+}
+
+#[inline(always)]
+unsafe fn sampler_2x2(
+    ctx: &super::SamplerCtx,
+    cx: F32x4, cy: F32x4,
+    wx: &[F32x4; 2], wy: &[F32x4; 2],
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+) {
+    *r = F32x4::default();
+    *g = F32x4::default();
+    *b = F32x4::default();
+    *a = F32x4::default();
+
+    let one = F32x4::splat(1.0);
+    let start = -0.5;
+    let mut y = cy + F32x4::splat(start);
+    for j in 0..2 {
+        let mut x = cx + F32x4::splat(start);
+        for i in 0..2 {
+            let mut rr = F32x4::default();
+            let mut gg = F32x4::default();
+            let mut bb = F32x4::default();
+            let mut aa = F32x4::default();
+            sample(ctx, x,y, &mut rr, &mut gg, &mut bb, &mut aa);
+
+            let w = wx[i] * wy[j];
+            *r = mad(w, rr, *r);
+            *g = mad(w, gg, *g);
+            *b = mad(w, bb, *b);
+            *a = mad(w, aa, *a);
+
+            x = x + one;
+        }
+
+        y = y + one;
+    }
+}
+
+#[inline(always)]
+unsafe fn sampler_4x4(
+    ctx: &super::SamplerCtx,
+    cx: F32x4, cy: F32x4,
+    wx: &[F32x4; 4], wy: &[F32x4; 4],
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+) {
+    *r = F32x4::default();
+    *g = F32x4::default();
+    *b = F32x4::default();
+    *a = F32x4::default();
+
+    let one = F32x4::splat(1.0);
+    let start = -1.5;
+    let mut y = cy + F32x4::splat(start);
+    for j in 0..4 {
+        let mut x = cx + F32x4::splat(start);
+        for i in 0..4 {
+            let mut rr = F32x4::default();
+            let mut gg = F32x4::default();
+            let mut bb = F32x4::default();
+            let mut aa = F32x4::default();
+            sample(ctx, x,y, &mut rr, &mut gg, &mut bb, &mut aa);
+
+            let w = wx[i] * wy[j];
+            *r = mad(w, rr, *r);
+            *g = mad(w, gg, *g);
+            *b = mad(w, bb, *b);
+            *a = mad(w, aa, *a);
+
+            x = x + one;
+        }
+
+        y = y + one;
+    }
+}
+
+#[inline(always)]
+unsafe fn sample(
+    ctx: &super::SamplerCtx, mut x: F32x4, mut y: F32x4,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+) {
+    x = tile(x, ctx.gather.width.get() as f32, ctx.inv_width);
+    y = tile(y, ctx.gather.height.get() as f32, ctx.inv_height);
+
+    let ix = gather_ix(&ctx.gather, x, y);
+    let data = [
+        *ctx.gather.pixels.cast::<PremultipliedColorU8>().add(ix.x() as usize),
+        *ctx.gather.pixels.cast::<PremultipliedColorU8>().add(ix.y() as usize),
+        *ctx.gather.pixels.cast::<PremultipliedColorU8>().add(ix.z() as usize),
+        *ctx.gather.pixels.cast::<PremultipliedColorU8>().add(ix.w() as usize),
+    ];
+    load_8888__(&data, r, g, b, a);
+}
+
+#[inline(always)]
+fn tile(v: F32x4, limit: f32, inv_limit: f32) -> F32x4 {
+    v - (v * F32x4::splat(inv_limit)).floor() * F32x4::splat(limit)
 }
 
 unsafe fn pad_x1(

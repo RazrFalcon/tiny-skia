@@ -50,7 +50,7 @@ impl F32x16 {
         }
     }
 
-    pub fn packed_gt(self, other: Self) -> U32x16 {
+    pub fn packed_gt(self, other: &Self) -> U32x16 {
         U32x16([
             self.0[0].packed_gt(other.0[0]),
             self.0[1].packed_gt(other.0[1]),
@@ -71,7 +71,7 @@ impl F32x16 {
     pub fn floor(&self) -> Self {
         // Yes, Skia does it in the same way.
         let roundtrip = self.to_i32x16_round().to_f32x16();
-        roundtrip - (roundtrip.packed_gt(*self))
+        roundtrip - (roundtrip.packed_gt(self))
             .if_then_else(F32x16::splat(1.0), F32x16::splat(0.0))
     }
 

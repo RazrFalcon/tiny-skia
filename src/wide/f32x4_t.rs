@@ -178,6 +178,10 @@ impl F32x4 {
         roundtrip - roundtrip.packed_gt(*self).if_then_else(F32x4::splat(1.0), F32x4::default())
     }
 
+    pub fn fract(&self) -> Self {
+        *self - self.floor()
+    }
+
     pub fn to_u32x4_bitcast(&self) -> U32x4 {
         #[cfg(all(feature = "sse2", target_feature = "sse2"))]
         unsafe {

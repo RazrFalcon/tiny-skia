@@ -54,9 +54,9 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     store,
     null_fn, // Gather
     null_fn, // ScaleU8
-    scale_1_float, // Scale1Float
+    scale_1_float,
     null_fn, // LerpU8
-    lerp_1_float, // Lerp1Float
+    lerp_1_float,
     destination_atop,
     destination_in,
     destination_out,

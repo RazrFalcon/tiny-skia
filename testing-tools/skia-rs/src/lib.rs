@@ -327,6 +327,7 @@ mod ffi {
         pub fn skiac_shader_make_from_surface_image(
             surface: *mut skiac_surface,
             ts: skiac_transform,
+            filter_quality: i32,
         ) -> *mut skiac_shader;
 
         pub fn skiac_shader_destroy(
@@ -944,9 +945,9 @@ impl Shader {
     }
 
     #[inline]
-    pub fn new_from_surface_image(surface: &Surface, ts: Transform) -> Option<Shader> {
+    pub fn new_from_surface_image(surface: &Surface, ts: Transform, q: FilterQuality) -> Option<Shader> {
         unsafe {
-            Self::from_ptr(ffi::skiac_shader_make_from_surface_image(surface.ptr, ts.into()))
+            Self::from_ptr(ffi::skiac_shader_make_from_surface_image(surface.ptr, ts.into(), q as i32))
         }
     }
 

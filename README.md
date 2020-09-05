@@ -104,7 +104,7 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [ ] Stroke dashing
 - [x] Gradients (linear, radial and two point conical)
 - [ ] `Pixmap`s blending (image on image rendering)
-- [ ] Patterns
+- [x] Patterns
 - [ ] Dithering
 
 ### v0.3

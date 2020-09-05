@@ -10,7 +10,7 @@ use std::arch::x86_64 as x86;
 #[cfg(all(feature = "sse2", target_feature = "sse2"))]
 use x86::__m128i;
 
-use super::F32x4;
+use super::{F32x4, U32x4};
 
 #[cfg(all(feature = "sse2", target_feature = "sse2"))]
 type Storage = __m128i;
@@ -61,6 +61,18 @@ impl I32x4 {
                 self.z() as f32,
                 self.w() as f32,
             ])
+        }
+    }
+
+    pub fn to_u32x4(&self) -> U32x4 {
+        #[cfg(all(feature = "sse2", target_feature = "sse2"))]
+        {
+            U32x4(self.0)
+        }
+
+        #[cfg(not(all(feature = "sse2", target_feature = "sse2")))]
+        unsafe {
+            U32x4(std::mem::transmute::<[i32; 4], [u32; 4]>(self.0))
         }
     }
 

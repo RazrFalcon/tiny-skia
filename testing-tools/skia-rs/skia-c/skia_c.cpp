@@ -466,14 +466,19 @@ skiac_shader* skiac_shader_make_two_point_conical_gradient(
     }
 }
 
-skiac_shader* skiac_shader_make_from_surface_image(skiac_surface* c_surface, skiac_transform c_ts)
+skiac_shader* skiac_shader_make_from_surface_image(
+    skiac_surface* c_surface,
+    skiac_transform c_ts,
+    int filter_quality)
 {
     const auto skia_tile_mode = SkTileMode::kRepeat;
+    const auto ts = conv_from_transform(c_ts);
     sk_sp<SkImage> image = SURFACE_CAST->makeImageSnapshot();
     auto shader = image->makeShader(
         skia_tile_mode,
         skia_tile_mode,
-        conv_from_transform(c_ts)
+        &ts,
+        (SkFilterQuality)filter_quality
     ).release();
 
     if (shader) {

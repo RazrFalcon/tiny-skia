@@ -19,6 +19,32 @@ impl U32x16 {
     }
 }
 
+impl std::ops::Add<U32x16> for U32x16 {
+    type Output = U32x16;
+
+    fn add(self, other: U32x16) -> U32x16 {
+        U32x16([
+            self.0[0] + other.0[0],
+            self.0[0] + other.0[0],
+            self.0[0] + other.0[0],
+            self.0[0] + other.0[0],
+        ])
+    }
+}
+
+impl std::ops::Mul<U32x16> for U32x16 {
+    type Output = U32x16;
+
+    fn mul(self, other: U32x16) -> U32x16 {
+        U32x16([
+            self.0[0] * other.0[0],
+            self.0[0] * other.0[0],
+            self.0[0] * other.0[0],
+            self.0[0] * other.0[0],
+        ])
+    }
+}
+
 impl std::fmt::Debug for U32x16 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         write!(f, "U32x16({} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {})",

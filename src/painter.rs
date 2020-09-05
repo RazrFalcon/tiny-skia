@@ -46,13 +46,24 @@ pub enum SpreadMode {
 }
 
 
+/// Controls how much filtering to be done when transforming images.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum FilterQuality {
+    /// Nearest-neighbor. Low quality, but fastest.
+    Nearest,
+    /// Bilinear.
+    Bilinear,
+    /// Bicubic. High quality, but slow.
+    Bicubic,
+}
+
 /// A paint used by a `Painter`.
 #[derive(Clone, Debug)]
-pub struct Paint {
+pub struct Paint<'a> {
     /// A paint shader.
     ///
     /// Default: black color
-    pub shader: Shader,
+    pub shader: Shader<'a>,
 
     /// Paint blending mode.
     ///
@@ -88,7 +99,7 @@ pub struct Paint {
     pub force_hq_pipeline: bool,
 }
 
-impl Default for Paint {
+impl Default for Paint<'_> {
     #[inline]
     fn default() -> Self {
         Paint {
@@ -101,7 +112,7 @@ impl Default for Paint {
     }
 }
 
-impl Paint {
+impl<'a> Paint<'a> {
     /// Sets a paint source to a solid color.
     #[inline]
     pub fn set_color(mut self, color: Color) -> Self {
@@ -128,7 +139,7 @@ impl Paint {
 
     /// Sets a paint source to a shader.
     #[inline]
-    pub fn set_shader(mut self, shader: Shader) -> Self {
+    pub fn set_shader(mut self, shader: Shader<'a>) -> Self {
         self.shader = shader;
         self
     }

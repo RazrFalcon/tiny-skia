@@ -149,6 +149,22 @@ impl std::ops::Add<U32x4> for U32x4 {
     }
 }
 
+impl std::ops::Mul<U32x4> for U32x4 {
+    type Output = U32x4;
+
+    #[inline]
+    fn mul(self, other: U32x4) -> U32x4 {
+        // U32x4 multiplication is available only since SSE 4.1
+        // TODO: use mullo32 from SkNx
+        U32x4::new(
+            self.x() * other.x(),
+            self.y() * other.y(),
+            self.z() * other.z(),
+            self.w() * other.w(),
+        )
+    }
+}
+
 impl std::ops::BitAnd<U32x4> for U32x4 {
     type Output = U32x4;
 

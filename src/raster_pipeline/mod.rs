@@ -106,6 +106,27 @@ impl Context for MemoryCtx {}
 
 
 #[derive(Copy, Clone, Debug)]
+pub struct GatherCtx {
+    pub pixels: *mut c_void,
+    pub stride: LengthU32,
+    pub width: LengthU32,
+    pub height: LengthU32,
+}
+
+impl Context for GatherCtx {}
+
+
+#[derive(Copy, Clone, Debug)]
+pub struct SamplerCtx {
+    pub gather: GatherCtx,
+    pub inv_width: f32,
+    pub inv_height: f32,
+}
+
+impl Context for SamplerCtx {}
+
+
+#[derive(Copy, Clone, Debug)]
 pub struct UniformColorCtx {
     pub r: f32,
     pub g: f32,
@@ -184,6 +205,15 @@ pub struct TwoPointConicalGradientCtx {
 }
 
 impl Context for TwoPointConicalGradientCtx {}
+
+
+#[derive(Copy, Clone, Debug)]
+pub struct TileCtx {
+    pub scale: f32,
+    pub inv_scale: f32, // cache of 1/scale
+}
+
+impl Context for TileCtx {}
 
 
 impl Context for Transform {}
@@ -356,6 +386,7 @@ impl RasterPipelineBuilder {
             for stage in &self.stages {
                 let stage_fn = highp::STAGES[stage.stage as usize];
 
+                // TODO: remove
                 if highp::fn_ptr_eq(stage_fn, highp::null_fn) {
                     panic!("{:?} not implemented", stage.stage);
                 }

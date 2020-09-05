@@ -86,7 +86,7 @@ impl RadialGradient {
         points: Vec<GradientStop>,
         mode: SpreadMode,
         transform: Transform,
-    ) -> Option<Shader> {
+    ) -> Option<Shader<'static>> {
         // From SkGradientShader::MakeTwoPointConical
 
         if radius < 0.0 || radius.is_nearly_zero() {

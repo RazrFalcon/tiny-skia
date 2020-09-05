@@ -134,7 +134,10 @@ skiac_shader* skiac_shader_make_two_point_conical_gradient(
     uint32_t flags,
     skiac_transform c_ts);
 
-skiac_shader* skiac_shader_make_from_surface_image(skiac_surface* c_surface, skiac_transform c_ts);
+skiac_shader* skiac_shader_make_from_surface_image(
+    skiac_surface* c_surface,
+    skiac_transform c_ts,
+    int filter_quality);
 
 void skiac_shader_destroy(skiac_shader* c_shader);
 }

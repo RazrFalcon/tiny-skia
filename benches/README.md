@@ -110,6 +110,18 @@ when a rendering backend is designed for long horizontal strides.
 | simple radial                        |      2,373,564 |      2,355,357 |  2,050,437 |    805,376 |  4,704,141 |  5,531,178 |
 | two point radial                     |      4,180,379 |      4,483,205 |  1,943,448 |  1,083,230 |  4,709,760 | 13,454,676 |
 
+### pattern
+
+| Test/Library                | tiny-skia SSE2 | tiny-skia AVX2 | Skia SSE2  | Skia AVX2  | cairo       | raqote     |
+| --------------------------- | -------------: | -------------: | ---------: | ---------: | ----------: | ---------: |
+| plain (nearest, no ts)      |      3,580,633 |      3,408,990 |  1,315,079 |  1,122,982 |     785,550 |  1,865,327 |
+| lq (bilinear, with ts)      |     11,061,091 |      6,680,624 |  4,484,023 |  2,646,523 |  17,612,685 | 24,906,379 |
+| hq (bicubic/gauss, with ts) |     29,916,383 |     16,362,411 | 12,386,848 |  9,364,356 | 162,771,632 |          - |
+
+Note that `raqote` doesn't support high quality filtering.
+
+And yes, cairo is really that slow. Not sure why.
+
 ### png
 
 `png_io.rs`

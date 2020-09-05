@@ -7,10 +7,12 @@
 mod gradient;
 mod linear_gradient;
 mod radial_gradient;
+mod pattern;
 
 pub use gradient::GradientStop;
 pub use linear_gradient::LinearGradient;
 pub use radial_gradient::RadialGradient;
+pub use pattern::Pattern;
 
 use crate::Color;
 
@@ -22,6 +24,7 @@ pub struct StageRec<'a> {
     pub(crate) pipeline: &'a mut RasterPipelineBuilder,
 }
 
+
 /// A shader specifies the source color(s) for what is being drawn.
 ///
 /// If a paint has no shader, then the paint's color is used. If the paint has a
@@ -31,16 +34,18 @@ pub struct StageRec<'a> {
 /// without having to modify the original shader. Only the paint's alpha needs
 /// to be modified.
 #[derive(Clone, Debug)]
-pub enum Shader {
+pub enum Shader<'a> {
     /// A solid color shader.
     SolidColor(Color),
     /// A linear gradient shader.
     LinearGradient(LinearGradient),
     /// A radial gradient shader.
     RadialGradient(RadialGradient),
+    /// A pattern shader.
+    Pattern(Pattern<'a>),
 }
 
-impl Shader {
+impl<'a> Shader<'a> {
     /// Checks if the shader is guaranteed to produce only opaque colors.
     #[inline]
     pub(crate) fn is_opaque(&self) -> bool {
@@ -48,6 +53,7 @@ impl Shader {
             Shader::SolidColor(ref c) => c.is_opaque(),
             Shader::LinearGradient(ref g) => g.is_opaque(),
             Shader::RadialGradient(_) => false,
+            Shader::Pattern(_) => false,
         }
     }
 
@@ -59,6 +65,7 @@ impl Shader {
             Shader::SolidColor(_) => true,
             Shader::LinearGradient(ref g) => g.push_stages(rec),
             Shader::RadialGradient(ref g) => g.push_stages(rec),
+            Shader::Pattern(ref p) => p.push_stages(rec).is_some(),
         }
     }
 }
