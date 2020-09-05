@@ -53,7 +53,7 @@ pub use num_ext::NormalizedF32;
 pub use blend_mode::BlendMode;
 pub use color::{ALPHA_U8_TRANSPARENT, ALPHA_U8_OPAQUE, ALPHA_TRANSPARENT, ALPHA_OPAQUE};
 pub use color::{Color, ColorU8, PremultipliedColor, PremultipliedColorU8, AlphaU8};
-pub use painter::{Paint, PaintSource, Painter, FillType, SpreadMode};
+pub use painter::{Paint, Painter, FillType, SpreadMode};
 pub use path::{Path, PathSegment, PathSegmentsIter};
 pub use path_builder::PathBuilder;
 pub use pixmap::Pixmap;

@@ -12,7 +12,7 @@ use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::shaders::StageRec;
 
 /// A linear gradient shader.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct LinearGradient {
     base: Gradient,
     start: Point,
@@ -35,7 +35,7 @@ impl LinearGradient {
         points: Vec<GradientStop>,
         mode: SpreadMode,
         transform: Transform,
-    ) -> Option<Box<dyn Shader>> {
+    ) -> Option<Shader> {
         if points.len() < 2 {
             return None;
         }
@@ -58,18 +58,16 @@ impl LinearGradient {
         transform.invert()?;
 
         let unit_ts = points_to_unit_ts(start, end)?;
-        Some(Box::new(LinearGradient {
+        Some(Shader::LinearGradient(LinearGradient {
             base: Gradient::new(points, mode, transform, unit_ts),
             start,
             end,
         }))
     }
-}
 
-impl Shader for LinearGradient {
-    fn is_opaque(&self) -> bool { self.base.colors_are_opaque }
+    pub(crate) fn is_opaque(&self) -> bool { self.base.colors_are_opaque }
 
-    fn push_stages(&self, rec: StageRec) -> bool {
+    pub(crate) fn push_stages(&self, rec: StageRec) -> bool {
         self.base.push_stages(rec, &|_, _| {}).is_some()
     }
 }

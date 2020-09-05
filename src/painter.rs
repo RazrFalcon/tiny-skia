@@ -46,24 +46,13 @@ pub enum SpreadMode {
 }
 
 
-/// A paint source.
-#[derive(Debug)]
-pub enum PaintSource {
-    /// Uses a solid color.
-    SolidColor(Color),
-    /// Uses a shader. Like gradient or image.
-    Shader(Box<dyn Shader>),
-}
-
-
 /// A paint used by a `Painter`.
-#[allow(missing_copy_implementations)] // will became Clone-only later
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Paint {
-    /// A painter color source.
+    /// A paint shader.
     ///
     /// Default: black color
-    pub source: PaintSource,
+    pub shader: Shader,
 
     /// Paint blending mode.
     ///
@@ -103,7 +92,7 @@ impl Default for Paint {
     #[inline]
     fn default() -> Self {
         Paint {
-            source: PaintSource::SolidColor(Color::BLACK),
+            shader: Shader::SolidColor(Color::BLACK),
             blend_mode: BlendMode::default(),
             fill_type: FillType::default(),
             anti_alias: false,
@@ -116,7 +105,7 @@ impl Paint {
     /// Sets a paint source to a solid color.
     #[inline]
     pub fn set_color(mut self, color: Color) -> Self {
-        self.source = PaintSource::SolidColor(color);
+        self.shader = Shader::SolidColor(color);
         self
     }
 
@@ -131,26 +120,17 @@ impl Paint {
     /// Checks that the paint source is a solid color.
     #[inline]
     pub fn is_solid_color(&self) -> bool {
-        match self.source {
-            PaintSource::SolidColor(_) => true,
-            PaintSource::Shader(_) => false,
+        match self.shader {
+            Shader::SolidColor(_) => true,
+            _ => false,
         }
     }
 
     /// Sets a paint source to a shader.
     #[inline]
-    pub fn set_shader(mut self, color: Box<dyn Shader>) -> Self {
-        self.source = PaintSource::Shader(color);
+    pub fn set_shader(mut self, shader: Shader) -> Self {
+        self.shader = shader;
         self
-    }
-
-    /// Checks that the paint source is a shader.
-    #[inline]
-    pub fn is_shader(&self) -> bool {
-        match self.source {
-            PaintSource::SolidColor(_) => false,
-            PaintSource::Shader(_) => true,
-        }
     }
 
     /// Sets a blending mode.

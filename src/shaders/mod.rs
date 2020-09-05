@@ -12,6 +12,8 @@ pub use gradient::GradientStop;
 pub use linear_gradient::LinearGradient;
 pub use radial_gradient::RadialGradient;
 
+use crate::Color;
+
 use crate::raster_pipeline::{RasterPipelineBuilder, ContextStorage};
 
 #[allow(missing_debug_implementations)]
@@ -28,13 +30,35 @@ pub struct StageRec<'a> {
 /// once (e.g. bitmap tiling or gradient) and then change its transparency
 /// without having to modify the original shader. Only the paint's alpha needs
 /// to be modified.
-pub trait Shader: std::fmt::Debug {
+#[derive(Clone, Debug)]
+pub enum Shader {
+    /// A solid color shader.
+    SolidColor(Color),
+    /// A linear gradient shader.
+    LinearGradient(LinearGradient),
+    /// A radial gradient shader.
+    RadialGradient(RadialGradient),
+}
+
+impl Shader {
     /// Checks if the shader is guaranteed to produce only opaque colors.
-    fn is_opaque(&self) -> bool { false }
+    #[inline]
+    pub(crate) fn is_opaque(&self) -> bool {
+        match self {
+            Shader::SolidColor(ref c) => c.is_opaque(),
+            Shader::LinearGradient(ref g) => g.is_opaque(),
+            Shader::RadialGradient(_) => false,
+        }
+    }
 
     // Unlike Skia, we do not have is_constant, because we don't have Color shaders.
 
-    #[doc(hide)]
     /// If this returns false, then we draw nothing (do not fall back to shader context)
-    fn push_stages(&self, rec: StageRec) -> bool;
+    pub(crate) fn push_stages(&self, rec: StageRec) -> bool {
+        match self {
+            Shader::SolidColor(_) => true,
+            Shader::LinearGradient(ref g) => g.push_stages(rec),
+            Shader::RadialGradient(ref g) => g.push_stages(rec),
+        }
+    }
 }

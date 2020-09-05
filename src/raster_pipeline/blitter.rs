@@ -6,10 +6,7 @@
 
 use std::ffi::c_void;
 
-use crate::{
-    Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8,
-    AlphaU8, PaintSource,
-};
+use crate::{Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8, AlphaU8, Shader};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::blitter::Blitter;
@@ -42,8 +39,8 @@ impl RasterPipelineBlitter {
         pixmap: &mut Pixmap,
     ) -> Option<RasterPipelineBlitter> {
         let mut shader_pipeline = RasterPipelineBuilder::new();
-        match paint.source {
-            PaintSource::SolidColor(ref color) => {
+        match &paint.shader {
+            Shader::SolidColor(ref color) => {
                 // Having no shader makes things nice and easy... just use the paint color.
                 let color_ctx = ctx_storage.create_uniform_color_context(color.premultiply());
                 shader_pipeline.push_with_context(raster_pipeline::Stage::UniformColor, color_ctx);
@@ -52,7 +49,7 @@ impl RasterPipelineBlitter {
                 RasterPipelineBlitter::new_inner(paint, &shader_pipeline, color.is_opaque(),
                                                  is_constant, pixmap)
             }
-            PaintSource::Shader(ref shader) => {
+            shader => {
                 let is_opaque = shader.is_opaque();
                 let is_constant = false;
 
@@ -83,7 +80,7 @@ impl RasterPipelineBlitter {
         match paint.blend_mode {
             // `Destination` keep the pixmap unchanged. Nothing to do here.
             BlendMode::Destination => return None,
-            BlendMode::DestinationIn if is_opaque && !paint.is_shader() => return None,
+            BlendMode::DestinationIn if is_opaque && paint.is_solid_color() => return None,
             _ => {}
         }
 
@@ -107,7 +104,7 @@ impl RasterPipelineBlitter {
         if is_constant && blend_mode == BlendMode::Source {
             // Unlike Skia, our shader cannot be constant.
             // Therefore there is no need to run a raster pipeline to get shader's color.
-            if let PaintSource::SolidColor(ref color) = paint.source {
+            if let Shader::SolidColor(ref color) = paint.shader {
                 memset2d_color = Some(color.premultiply().to_color_u8());
             }
         };

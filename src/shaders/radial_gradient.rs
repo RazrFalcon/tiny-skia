@@ -59,7 +59,7 @@ fn is_focal_on_circle(r1: f32) -> bool {
 ///
 /// This is not `SkRadialGradient` like in Skia, but rather `SkTwoPointConicalGradient`
 /// without the start radius.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct RadialGradient {
     base: Gradient,
     center1: Point,
@@ -86,7 +86,7 @@ impl RadialGradient {
         points: Vec<GradientStop>,
         mode: SpreadMode,
         transform: Transform,
-    ) -> Option<Box<dyn Shader>> {
+    ) -> Option<Shader> {
         // From SkGradientShader::MakeTwoPointConical
 
         if radius < 0.0 || radius.is_nearly_zero() {
@@ -116,7 +116,7 @@ impl RadialGradient {
 
             // We can treat this gradient as radial, which is faster. If we got here, we know
             // that endRadius is not equal to 0, so this produces a meaningful gradient
-            Some(Box::new(RadialGradient {
+            Some(Shader::RadialGradient(RadialGradient {
                 base: Gradient::new(points, mode, transform, ts),
                 center1: start,
                 center2: end,
@@ -133,7 +133,7 @@ impl RadialGradient {
             let d_center = (start - end).length();
             let focal_data = Some(FocalData::new(radius / d_center, &mut ts)?);
 
-            Some(Box::new(RadialGradient {
+            Some(Shader::RadialGradient(RadialGradient {
                 base: Gradient::new(points, mode, transform, ts),
                 center1: start,
                 center2: end,
@@ -142,10 +142,8 @@ impl RadialGradient {
             }))
         }
     }
-}
 
-impl Shader for RadialGradient {
-    fn push_stages(&self, rec: StageRec) -> bool {
+    pub(crate) fn push_stages(&self, rec: StageRec) -> bool {
         self.base.push_stages(rec, &|rec, post_p| {
             if let Some(focal_data) = self.focal_data {
                 // Unlike, we have only the Focal radial gradient type.
