@@ -27,13 +27,10 @@ pub enum Stage {
     Premultiply,
     UniformColor,
     SeedShader,
-    Dither,
     LoadDestination,
     Store,
     Gather,
-    ScaleU8,
     Scale1Float,
-    LerpU8,
     Lerp1Float,
     DestinationAtop,
     DestinationIn,
@@ -385,12 +382,6 @@ impl RasterPipelineBuilder {
 
             for stage in &self.stages {
                 let stage_fn = highp::STAGES[stage.stage as usize];
-
-                // TODO: remove
-                if highp::fn_ptr_eq(stage_fn, highp::null_fn) {
-                    panic!("{:?} not implemented", stage.stage);
-                }
-
                 program.push(highp::fn_ptr(stage_fn));
 
                 if !stage.ctx.is_null() {

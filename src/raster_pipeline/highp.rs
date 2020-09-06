@@ -39,13 +39,10 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     premultiply,
     uniform_color,
     seed_shader,
-    null_fn, // Dither
     load_dst,
     store,
     gather,
-    null_fn, // ScaleU8
     scale_1_float,
-    null_fn, // LerpU8
     lerp_1_float,
     destination_atop,
     destination_in,
@@ -97,10 +94,6 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
 
 pub fn fn_ptr(f: StageFn) -> *const c_void {
     f as *const () as *const c_void
-}
-
-pub fn fn_ptr_eq(f1: StageFn, f2: StageFn) -> bool {
-    f1 as *const () == f2 as *const ()
 }
 
 #[inline(never)]
@@ -1139,14 +1132,6 @@ pub unsafe fn just_return(
     _: &mut F32x4, _: &mut F32x4, _: &mut F32x4, _: &mut F32x4,
 ) {
     // Ends the loop.
-}
-
-pub unsafe fn null_fn(
-    _: usize, _: *const *const c_void, _: usize, _: usize,
-    _: &mut F32x4, _: &mut F32x4, _: &mut F32x4, _: &mut F32x4,
-    _: &mut F32x4, _: &mut F32x4, _: &mut F32x4, _: &mut F32x4,
-) {
-    // Just for unsupported functions in STAGES.
 }
 
 #[inline(always)]

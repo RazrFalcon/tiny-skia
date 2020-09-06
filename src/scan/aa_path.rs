@@ -85,6 +85,8 @@ fn fill_path_impl(
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
+    // TODO: MaskSuperBlitter
+
     // TODO: 15% slower than skia, find out why
     let mut blitter = SuperBlitter::new(bounds, clip, blitter)?;
 

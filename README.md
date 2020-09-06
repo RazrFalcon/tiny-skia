@@ -105,12 +105,12 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [x] Gradients (linear, radial and two point conical)
 - [ ] `Pixmap`s blending (image on image rendering)
 - [x] Patterns
-- [ ] Dithering
 
 ### v0.3
 
 - [ ] Clipping
 - [ ] Anti-aliased clipping
+- [ ] Dithering
 
 ### v0.N
 

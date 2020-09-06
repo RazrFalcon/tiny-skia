@@ -49,13 +49,10 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     premultiply,
     uniform_color,
     seed_shader,
-    null_fn, // Dither
     load_dst,
     store,
     null_fn, // Gather
-    null_fn, // ScaleU8
     scale_1_float,
-    null_fn, // LerpU8
     lerp_1_float,
     destination_atop,
     destination_in,
