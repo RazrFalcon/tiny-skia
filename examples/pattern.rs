@@ -8,13 +8,14 @@ fn main() {
     let now = std::time::Instant::now();
 
     let paint = Paint::default()
+        .set_anti_alias(true)
         .set_shader(Pattern::new(
             &triangle,
             FilterQuality::Bicubic,
             Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
         ));
 
-    let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 390.0, 390.0).unwrap());
+    let path = PathBuilder::from_circle(200.0, 200.0, 180.0).unwrap();
 
     pixmap.fill_path(&path, &paint);
 

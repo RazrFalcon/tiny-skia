@@ -6,7 +6,7 @@
 
 use std::convert::TryFrom;
 
-use crate::{Path, IntRect, FillType, LengthU32, ScreenIntRect, AlphaU8};
+use crate::{Path, IntRect, FillType, LengthU32, ScreenIntRect, AlphaU8, Bounds};
 
 use crate::alpha_runs::AlphaRuns;
 use crate::blitter::Blitter;
@@ -25,7 +25,14 @@ pub fn fill_path(
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
-    let ir = path.bounds.to_rect()?.round_out();
+    // Unlike `path.bounds.to_rect()?.round_out()`,
+    // this method rounds out first and then converts into a Rect.
+    let ir = Bounds::from_ltrb(
+        path.bounds.left().floor(),
+        path.bounds.top().floor(),
+        path.bounds.right().ceil(),
+        path.bounds.bottom().ceil(),
+    )?.to_rect()?.round_out();
 
     // If the intersection of the path bounds and the clip bounds
     // will overflow 32767 when << by SHIFT, we can't supersample,

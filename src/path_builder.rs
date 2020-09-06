@@ -92,6 +92,17 @@ impl PathBuilder {
         }
     }
 
+    /// Creates a new `Path` from a circle.
+    ///
+    /// Returns `None` when:
+    /// - `radius` == 0
+    /// - any value is not finite or really large
+    pub fn from_circle(cx: f32, cy: f32, radius: f32) -> Option<Path> {
+        let mut b = PathBuilder::new();
+        b.push_circle(cx, cy, radius);
+        b.finish()
+    }
+
     /// Returns the current number of segments in the builder.
     pub fn reserve(&mut self, additional_verbs: usize, additional_points: usize) {
         self.verbs.reserve(additional_verbs);

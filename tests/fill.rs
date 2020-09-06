@@ -352,3 +352,20 @@ fn clip_cubic_2() {
     let expected = Pixmap::load_png("tests/images/fill/clip-cubic-2.png").unwrap();
     assert_eq!(pixmap, expected);
 }
+
+#[test]
+fn aa_endless_loop() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let paint = Paint::default()
+        .set_anti_alias(true);
+
+    // This path was causing an endless loop before.
+    let mut pb = PathBuilder::new();
+    pb.move_to(2.1537175, 11.560721);
+    pb.quad_to(1.9999998, 10.787931, 2.0, 10.0);
+    let path = pb.finish().unwrap();
+
+    // Must not loop.
+    assert!(pixmap.fill_path(&path, &paint).is_some());
+}
