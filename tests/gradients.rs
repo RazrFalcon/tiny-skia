@@ -4,17 +4,17 @@ use tiny_skia::*;
 fn two_stops_linear_pad_lq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(190.0, 190.0),
-            vec![
-                GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(190.0, 190.0),
+        vec![
+            GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -28,17 +28,17 @@ fn two_stops_linear_pad_lq() {
 fn two_stops_linear_repeat_lq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(100.0, 100.0),
-            vec![
-                GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Repeat,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(100.0, 100.0),
+        vec![
+            GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Repeat,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -52,17 +52,17 @@ fn two_stops_linear_repeat_lq() {
 fn two_stops_linear_reflect_lq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(100.0, 100.0),
-            vec![
-                GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Reflect,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(100.0, 100.0),
+        vec![
+            GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Reflect,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -76,19 +76,19 @@ fn two_stops_linear_reflect_lq() {
 fn three_stops_evenly_spaced_lq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(190.0, 190.0),
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(0.50, Color::from_rgba8(220, 140, 75, 180)),
-                GradientStop::new(0.75, Color::from_rgba8(40, 180, 55, 160)),
-            ],
-            // No need to check other modes. "Two stops" tests will cover them.
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(190.0, 190.0),
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(0.50, Color::from_rgba8(220, 140, 75, 180)),
+            GradientStop::new(0.75, Color::from_rgba8(40, 180, 55, 160)),
+        ],
+        // No need to check other modes. "Two stops" tests will cover them.
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -102,18 +102,18 @@ fn three_stops_evenly_spaced_lq() {
 fn two_stops_unevenly_spaced_lq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(190.0, 190.0),
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            // No need to check other modes. "Two stops" tests will cover them.
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(190.0, 190.0),
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        // No need to check other modes. "Two stops" tests will cover them.
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -127,18 +127,18 @@ fn two_stops_unevenly_spaced_lq() {
 fn two_stops_linear_pad_hq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_force_hq_pipeline(true)
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(190.0, 190.0),
-            vec![
-                GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.force_hq_pipeline = true;
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(190.0, 190.0),
+        vec![
+            GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -162,18 +162,18 @@ fn two_stops_linear_pad_hq() {
 fn two_stops_linear_repeat_hq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_force_hq_pipeline(true)
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(100.0, 100.0),
-            vec![
-                GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Repeat,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.force_hq_pipeline = true;
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(100.0, 100.0),
+        vec![
+            GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Repeat,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -187,18 +187,18 @@ fn two_stops_linear_repeat_hq() {
 fn two_stops_linear_reflect_hq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_force_hq_pipeline(true)
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(100.0, 100.0),
-            vec![
-                GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Reflect,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.force_hq_pipeline = true;
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(100.0, 100.0),
+        vec![
+            GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Reflect,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -212,20 +212,20 @@ fn two_stops_linear_reflect_hq() {
 fn three_stops_evenly_spaced_hq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_force_hq_pipeline(true)
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(190.0, 190.0),
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(0.50, Color::from_rgba8(220, 140, 75, 180)),
-                GradientStop::new(0.75, Color::from_rgba8(40, 180, 55, 160)),
-            ],
-            // No need to check other modes. "Two stops" tests will cover them.
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.force_hq_pipeline = true;
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(190.0, 190.0),
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(0.50, Color::from_rgba8(220, 140, 75, 180)),
+            GradientStop::new(0.75, Color::from_rgba8(40, 180, 55, 160)),
+        ],
+        // No need to check other modes. "Two stops" tests will cover them.
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -239,19 +239,19 @@ fn three_stops_evenly_spaced_hq() {
 fn two_stops_unevenly_spaced_hq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_force_hq_pipeline(true)
-        .set_shader(LinearGradient::new(
-            Point::from_xy(10.0, 10.0),
-            Point::from_xy(190.0, 190.0),
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            // No need to check other modes. "Two stops" tests will cover them.
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.force_hq_pipeline = true;
+    paint.shader = LinearGradient::new(
+        Point::from_xy(10.0, 10.0),
+        Point::from_xy(190.0, 190.0),
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        // No need to check other modes. "Two stops" tests will cover them.
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -268,18 +268,18 @@ fn two_stops_unevenly_spaced_hq() {
 fn well_behaved_radial() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(RadialGradient::new(
-            Point::from_xy(100.0, 100.0),
-            Point::from_xy(120.0, 80.0),
-            100.0,
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = RadialGradient::new(
+        Point::from_xy(100.0, 100.0),
+        Point::from_xy(120.0, 80.0),
+        100.0,
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -293,18 +293,18 @@ fn well_behaved_radial() {
 fn focal_on_circle_radial() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(RadialGradient::new(
-            Point::from_xy(100.0, 100.0),
-            Point::from_xy(120.0, 80.0),
-            28.29, // This radius forces the required pipeline stage.
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = RadialGradient::new(
+        Point::from_xy(100.0, 100.0),
+        Point::from_xy(120.0, 80.0),
+        28.29, // This radius forces the required pipeline stage.
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -328,18 +328,18 @@ fn focal_on_circle_radial() {
 fn conical_greater_radial() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(RadialGradient::new(
-            Point::from_xy(100.0, 100.0),
-            Point::from_xy(120.0, 80.0),
-            10.0, // This radius forces the required pipeline stage.
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = RadialGradient::new(
+        Point::from_xy(100.0, 100.0),
+        Point::from_xy(120.0, 80.0),
+        10.0, // This radius forces the required pipeline stage.
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(0.75, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -353,18 +353,18 @@ fn conical_greater_radial() {
 fn simple_radial_lq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(RadialGradient::new(
-            Point::from_xy(100.0, 100.0),
-            Point::from_xy(100.0, 100.0),
-            100.0,
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = RadialGradient::new(
+        Point::from_xy(100.0, 100.0),
+        Point::from_xy(100.0, 100.0),
+        100.0,
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -378,19 +378,19 @@ fn simple_radial_lq() {
 fn simple_radial_hq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_force_hq_pipeline(true)
-        .set_shader(RadialGradient::new(
-            Point::from_xy(100.0, 100.0),
-            Point::from_xy(100.0, 100.0),
-            100.0,
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.force_hq_pipeline = true;
+    paint.shader = RadialGradient::new(
+        Point::from_xy(100.0, 100.0),
+        Point::from_xy(100.0, 100.0),
+        100.0,
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -404,19 +404,19 @@ fn simple_radial_hq() {
 fn simple_radial_with_ts_hq() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    let paint = Paint::default()
-        .set_force_hq_pipeline(true)
-        .set_shader(RadialGradient::new(
-            Point::from_xy(100.0, 100.0),
-            Point::from_xy(100.0, 100.0),
-            100.0,
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::from_row(2.0, -0.7, 0.3, 1.2, 10.5, -12.3).unwrap(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.force_hq_pipeline = true;
+    paint.shader = RadialGradient::new(
+        Point::from_xy(100.0, 100.0),
+        Point::from_xy(100.0, 100.0),
+        100.0,
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::from_row(2.0, -0.7, 0.3, 1.2, 10.5, -12.3).unwrap(),
+    ).unwrap();
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 

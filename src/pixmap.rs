@@ -73,11 +73,18 @@ impl Pixmap {
         self.size
     }
 
-    /// Returns an internal data.
+    /// Returns the internal data.
     ///
     /// Bytes are ordered as RGBA.
     pub fn data(&self) -> &[u8] {
         self.data.as_slice()
+    }
+
+    /// Consumes the internal data.
+    ///
+    /// Bytes are ordered as RGBA.
+    pub fn take(self) -> Vec<u8> {
+        self.data
     }
 
     /// Returns a pixel color.

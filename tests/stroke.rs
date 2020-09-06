@@ -7,9 +7,9 @@ fn zero_len_subpath_butt_cap() {
     pb.line_to(100.0, 100.0);
     let path = pb.finish().unwrap();
 
-    let props = StrokeProps::default()
-        .set_width(20.0)
-        .set_line_cap(LineCap::Butt);
+    let mut props = StrokeProps::default();
+    props.width = 20.0;
+    props.line_cap = LineCap::Butt;
 
     // A zero-len subpath with a butt line cap produces nothing.
     assert_eq!(path.stroke(props), None);
@@ -22,9 +22,9 @@ fn zero_len_subpath_round_cap() {
     pb.line_to(100.0, 100.0);
     let path = pb.finish().unwrap();
 
-    let props = StrokeProps::default()
-        .set_width(20.0)
-        .set_line_cap(LineCap::Round);
+    let mut props = StrokeProps::default();
+    props.width = 20.0;
+    props.line_cap = LineCap::Round;
 
     // A zero-len subpath with a round line cap produces a circle.
     let stroke_path = path.stroke(props).unwrap();
@@ -81,9 +81,9 @@ fn zero_len_subpath_square_cap() {
     pb.line_to(100.0, 100.0);
     let path = pb.finish().unwrap();
 
-    let props = StrokeProps::default()
-        .set_width(20.0)
-        .set_line_cap(LineCap::Square);
+    let mut props = StrokeProps::default();
+    props.width = 20.0;
+    props.line_cap = LineCap::Square;
 
     // A zero-len subpath with a round line cap produces a circle.
     let stroke_path = path.stroke(props).unwrap();

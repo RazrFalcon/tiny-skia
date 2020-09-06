@@ -189,8 +189,7 @@ impl EdgeClipper {
                 //
                 // If we rewrote chopcubicat*extrema and chopmonocubic using doubles, we could very
                 // likely always handle the cubic safely, but (it seems) at a big loss in speed, so
-                // we'd only want to take that alternate impl if needed. Perhaps a TODO to try it.
-
+                // we'd only want to take that alternate impl if needed.
                 return self.clip_line(p0, p3);
             } else {
                 let mut mono_y = [Point::zero(); 10];

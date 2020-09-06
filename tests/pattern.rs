@@ -3,9 +3,9 @@ use tiny_skia::*;
 fn crate_triangle() -> Pixmap {
     let mut pixmap = Pixmap::new(20, 20).unwrap();
 
-    let paint = Paint::default()
-        .set_color_rgba8(50, 127, 150, 200)
-        .set_anti_alias(true);
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
 
     let mut pb = PathBuilder::new();
     pb.move_to(0.0, 20.0);
@@ -24,12 +24,12 @@ fn filter_nearest_neighbor_no_ts() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
-    let paint = Paint::default()
-        .set_shader(Pattern::new(
-            &triangle,
-            FilterQuality::Nearest,
-            Transform::identity(),
-        ));
+    let mut paint = Paint::default();
+    paint.shader = Pattern::new(
+        &triangle,
+        FilterQuality::Nearest,
+        Transform::identity(),
+    );
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -44,12 +44,12 @@ fn filter_nearest_neighbor() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
-    let paint = Paint::default()
-        .set_shader(Pattern::new(
-            &triangle,
-            FilterQuality::Nearest,
-            Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
-        ));
+    let mut paint = Paint::default();
+    paint.shader = Pattern::new(
+        &triangle,
+        FilterQuality::Nearest,
+        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
+    );
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -64,12 +64,12 @@ fn filter_bilinear() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
-    let paint = Paint::default()
-        .set_shader(Pattern::new(
-            &triangle,
-            FilterQuality::Bilinear,
-            Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
-        ));
+    let mut paint = Paint::default();
+    paint.shader = Pattern::new(
+        &triangle,
+        FilterQuality::Bilinear,
+        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
+    );
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
@@ -94,12 +94,12 @@ fn filter_bicubic() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
-    let paint = Paint::default()
-        .set_shader(Pattern::new(
-            &triangle,
-            FilterQuality::Bicubic,
-            Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
-        ));
+    let mut paint = Paint::default();
+    paint.shader = Pattern::new(
+        &triangle,
+        FilterQuality::Bicubic,
+        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
+    );
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 

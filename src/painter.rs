@@ -57,7 +57,7 @@ pub enum FilterQuality {
     Bicubic,
 }
 
-/// A paint used by a `Painter`.
+/// Controls how a path should be filled.
 #[derive(Clone, Debug)]
 pub struct Paint<'a> {
     /// A paint shader.
@@ -115,16 +115,15 @@ impl Default for Paint<'_> {
 impl<'a> Paint<'a> {
     /// Sets a paint source to a solid color.
     #[inline]
-    pub fn set_color(mut self, color: Color) -> Self {
+    pub fn set_color(&mut self, color: Color) {
         self.shader = Shader::SolidColor(color);
-        self
     }
 
     /// Sets a paint source to a solid color.
     ///
-    /// `paint.set_color(Color::from_rgba8(50, 127, 150, 200))` shorthand.
+    /// `self.shader = Shader::SolidColor(Color::from_rgba8(50, 127, 150, 200));` shorthand.
     #[inline]
-    pub fn set_color_rgba8(self, r: u8, g: u8, b: u8, a: u8) -> Self {
+    pub fn set_color_rgba8(&mut self, r: u8, g: u8, b: u8, a: u8) {
         self.set_color(Color::from_rgba8(r, g, b, a))
     }
 
@@ -135,43 +134,6 @@ impl<'a> Paint<'a> {
             Shader::SolidColor(_) => true,
             _ => false,
         }
-    }
-
-    /// Sets a paint source to a shader.
-    #[inline]
-    pub fn set_shader(mut self, shader: Shader<'a>) -> Self {
-        self.shader = shader;
-        self
-    }
-
-    /// Sets a blending mode.
-    #[inline]
-    pub fn set_blend_mode(mut self, blend_mode: BlendMode) -> Self {
-        self.blend_mode = blend_mode;
-        self
-    }
-
-    /// Sets a fill type.
-    #[inline]
-    pub fn set_fill_type(mut self, fill_type: FillType) -> Self {
-        self.fill_type = fill_type;
-        self
-    }
-
-    /// Sets an anti-alias flag.
-    #[inline]
-    pub fn set_anti_alias(mut self, anti_alias: bool) -> Self {
-        self.anti_alias = anti_alias;
-        self
-    }
-
-    /// Forces the high quality pipeline.
-    ///
-    /// See the `force_hq_pipeline` field documentation for details.
-    #[inline]
-    pub fn set_force_hq_pipeline(mut self, hq: bool) -> Self {
-        self.force_hq_pipeline = hq;
-        self
     }
 }
 

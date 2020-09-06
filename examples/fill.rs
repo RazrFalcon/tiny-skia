@@ -5,12 +5,12 @@ fn main() {
 
     let now = std::time::Instant::now();
 
-    let paint1 = Paint::default()
-        .set_color_rgba8(50, 127, 150, 200)
-        .set_anti_alias(true);
+    let mut paint1 = Paint::default();
+    paint1.set_color_rgba8(50, 127, 150, 200);
+    paint1.anti_alias = true;
 
-    let paint2 = Paint::default()
-        .set_color_rgba8(220, 140, 75, 180);
+    let mut paint2 = Paint::default();
+    paint2.set_color_rgba8(220, 140, 75, 180);
 
     let path1 = {
         let mut pb = PathBuilder::new();

@@ -5,17 +5,17 @@ fn main() {
 
     let now = std::time::Instant::now();
 
-    let paint = Paint::default()
-        .set_shader(LinearGradient::new(
-            Point::from_xy(100.0, 100.0),
-            Point::from_xy(900.0, 900.0),
-            vec![
-                GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = LinearGradient::new(
+        Point::from_xy(100.0, 100.0),
+        Point::from_xy(900.0, 900.0),
+        vec![
+            GradientStop::new(0.0, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.0, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let mut pb = PathBuilder::new();
     pb.move_to(60.0, 60.0);

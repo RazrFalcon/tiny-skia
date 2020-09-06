@@ -60,36 +60,6 @@ impl Default for StrokeProps {
     }
 }
 
-impl StrokeProps {
-    /// Sets a stroke width.
-    #[inline]
-    pub fn set_width(mut self, width: f32) -> Self {
-        self.width = width;
-        self
-    }
-
-    /// Sets a stroke miter limit.
-    #[inline]
-    pub fn set_miter_limit(mut self, miter_limit: f32) -> Self {
-        self.miter_limit = miter_limit;
-        self
-    }
-
-    /// Sets a stroke line cap.
-    #[inline]
-    pub fn set_line_cap(mut self, line_cap: LineCap) -> Self {
-        self.line_cap = line_cap;
-        self
-    }
-
-    /// Sets a stroke line join.
-    #[inline]
-    pub fn set_line_join(mut self, line_join: LineJoin) -> Self {
-        self.line_join = line_join;
-        self
-    }
-}
-
 
 /// Cap draws at the beginning and end of an open path contour.
 #[derive(Copy, Clone, PartialEq, Debug)]
