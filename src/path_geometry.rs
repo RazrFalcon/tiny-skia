@@ -648,7 +648,7 @@ pub fn eval_cubic_at(
                 *tangent = src[3] - src[1];
             }
 
-            if tangent.x != 0.0 && tangent.y != 0.0 {
+            if tangent.x == 0.0 && tangent.y == 0.0 {
                 *tangent = src[3] - src[0];
             }
         } else {
@@ -1081,5 +1081,21 @@ mod tests {
         assert_eq!(dst[7], Point::from_xy(400.53958, 213.99666));
         assert_eq!(dst[8], Point::from_xy(400.7701, 213.99777));
         assert_eq!(dst[9], Point::from_xy(401.0, 214.0));
+    }
+
+    #[test]
+    fn eval_cubic_at_1() {
+        let src = [
+            Point::from_xy(30.0, 40.0),
+            Point::from_xy(30.0, 40.0),
+            Point::from_xy(171.0, 45.0),
+            Point::from_xy(180.0, 155.0),
+        ];
+
+        let mut loc = Point::zero();
+        let mut tangent = Point::zero();
+        eval_cubic_at(&src, NormalizedF32::ZERO, Some(&mut loc), Some(&mut tangent), None);
+        assert_eq!(loc, Point::from_xy(30.0, 40.0));
+        assert_eq!(tangent, Point::from_xy(141.0, 5.0));
     }
 }

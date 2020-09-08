@@ -1367,7 +1367,7 @@ fn fn_ptr_eq(f1: CapProc, f2: CapProc) -> bool {
     f1 as *const () == f2 as *const ()
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct QuadConstruct {       // The state of the quad stroke under construction.
     quad: [Point; 3],        // the stroked quad parallel to the original curve
     tangent_start: Point,    // a point tangent to quad[0]
