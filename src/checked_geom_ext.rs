@@ -76,6 +76,7 @@ pub(crate) trait TransformExt: Sized {
     fn pre_scale(&mut self, sx: f32, sy: f32);
     fn post_scale(&mut self, sx: f32, sy: f32);
     fn post_translate(&mut self, tx: f32, ty: f32);
+    fn pre_concat(&mut self, other: &Self);
     fn post_concat(&mut self, other: &Self);
     fn map_points(&self, points: &mut [Point]);
     fn invert(&self) -> Option<Self>;
@@ -133,6 +134,10 @@ impl TransformExt for Transform {
         *self = Transform::from_row(sx, kx, ky, sy, tx + dx, ty + dy).unwrap();
     }
 
+    fn pre_concat(&mut self, other: &Self) {
+        *self = concat(self, other).unwrap();
+    }
+
     fn post_concat(&mut self, other: &Self) {
         *self = concat(other, self).unwrap();
     }
@@ -162,8 +167,10 @@ impl TransformExt for Transform {
             let (sx, sy) = self.get_scale();
             let (kx, ky) = self.get_skew();
             for p in points {
-                p.x = p.x * sx + p.y * kx + tx;
-                p.y = p.x * ky + p.y * sy + ty;
+                let x = p.x * sx + p.y * ky + tx;
+                let y = p.x * kx + p.y * sy + ty;
+                p.x = x;
+                p.y = y;
             }
         }
     }
@@ -268,7 +275,7 @@ fn invert(ts: &Transform) -> Option<Transform> {
 
     if ts.is_scale_translate() {
         let (sx, _, _, sy, tx, ty) = ts.get_row();
-        if ts.is_scale() {
+        if ts.has_scale() {
             let inv_x = sx.invert();
             let inv_y = sy.invert();
             Transform::from_row(inv_x, 0.0, 0.0, inv_y, -tx * inv_x, -ty * inv_y)
