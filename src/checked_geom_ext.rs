@@ -108,15 +108,8 @@ impl TransformExt for Transform {
             return;
         }
 
-        let (a_sx, a_kx, a_ky, a_sy, a_tx, a_ty) = self.get_row();
-        *self = Transform::from_row(
-            a_sx * sx,
-            a_kx * sx,
-            a_ky * sy,
-            a_sy * sy,
-            a_tx,
-            a_ty,
-        ).unwrap();
+        // TODO: remove unwrap
+        self.pre_concat(&Transform::from_scale(sx, sy).unwrap())
     }
 
     fn post_scale(&mut self, sx: f32, sy: f32) {
@@ -247,7 +240,7 @@ fn concat(a: &Transform, b: &Transform) -> Option<Transform> {
             mul_add_mul(a_sx, b_sx, a_kx, b_ky),
             mul_add_mul(a_sx, b_kx, a_kx, b_sy),
             mul_add_mul(a_ky, b_sx, a_sy, b_ky),
-            mul_add_mul(a_ky, b_sx, a_sy, b_sy),
+            mul_add_mul(a_ky, b_kx, a_sy, b_sy),
             mul_add_mul(a_sx, b_tx, a_kx, b_ty) + a_tx,
             mul_add_mul(a_ky, b_tx, a_sy, b_ty) + a_ty,
         )
@@ -339,4 +332,17 @@ fn dcross_dscale(a: f32, b: f32, c: f32, d: f32, scale: f64) -> f32 {
 
 fn sdot(a: f32, b: f32, c: f32, d: f32) -> f32 {
     a * b + c * d
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ts_pre_scale() {
+        let mut ts = Transform::from_row(1.2, -3.4, 5.6, -7.8, 1.2, 3.4).unwrap();
+        ts.pre_scale(1.0, -1.0);
+        assert_eq!(ts, Transform::from_row(1.2, 3.4, 5.6, 7.8, 1.2, 3.4).unwrap());
+    }
 }

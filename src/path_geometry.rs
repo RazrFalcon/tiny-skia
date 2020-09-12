@@ -802,12 +802,46 @@ impl Conic {
         }
     }
 
+    fn compute_quad_pow2(&self, tolerance: f32) -> Option<u8> {
+        if tolerance < 0.0 || !tolerance.is_finite() {
+            return None;
+        }
+
+        if  !self.points[0].is_finite() ||
+            !self.points[1].is_finite() ||
+            !self.points[2].is_finite()
+        {
+            return None;
+        }
+
+        // Limit the number of suggested quads to approximate a conic
+        const MAX_CONIC_TO_QUAD_POW2: usize = 5;
+
+        // "High order approximation of conic sections by quadratic splines"
+        // by Michael Floater, 1993
+        let a = self.weight - 1.0;
+        let k = a / (4.0 * (2.0 + a));
+        let x = k * (self.points[0].x - 2.0 * self.points[1].x + self.points[2].x);
+        let y = k * (self.points[0].y - 2.0 * self.points[1].y + self.points[2].y);
+
+        let mut error = (x * x + y * y).sqrt();
+        let mut pow2 = 0;
+        for _ in 0..MAX_CONIC_TO_QUAD_POW2 {
+            if error <= tolerance {
+                break;
+            }
+
+            error *= 0.25;
+            pow2 += 1;
+        }
+
+        Some(pow2)
+    }
+
     // Chop this conic into N quads, stored continuously in pts[], where
     // N = 1 << pow2. The amount of storage needed is (1 + 2 * N)
-    pub fn chop_into_quads_pow2(&self, pow2: u8, points: &mut [Point]) -> usize {
-        // Skia allow 0..5, but we allow only 3.
-        // We can simply the code a lot by not supporting pow2==5
-        debug_assert!(pow2 == 3);
+    pub fn chop_into_quads_pow2(&self, pow2: u8, points: &mut [Point]) -> u8 {
+        debug_assert!(pow2 < 5);
 
         points[0] = self.points[0];
         subdivide(self, &mut points[1..], pow2);
@@ -1016,6 +1050,28 @@ fn subdivide<'a>(src: &Conic, mut points: &'a mut [Point], mut level: u8) -> &'a
 fn between(a: f32, b: f32, c: f32) -> bool {
     (a - b) * (c - b) <= 0.0
 }
+
+
+pub struct AutoConicToQuads {
+    pub points: [Point; 18],
+    pub len: u8, // the number of quads
+}
+
+impl AutoConicToQuads {
+    const TOLERANCE: f32 = 0.25;
+
+    pub fn compute(pt0: Point, pt1: Point, pt2: Point, weight: f32) -> Option<Self> {
+        let conic = Conic::new(pt0, pt1, pt2, weight);
+        let pow2 = conic.compute_quad_pow2(Self::TOLERANCE)?;
+        let mut points = [Point::zero(); 18];
+        let len = conic.chop_into_quads_pow2(pow2, &mut points);
+        Some(AutoConicToQuads {
+            points,
+            len,
+        })
+    }
+}
+
 
 pub fn chop_mono_cubic_at_x(src: &[Point; 4], x: f32, dst: &mut [Point; 7]) -> bool {
     cubic_dchop_at_intercept(src, x, true, dst)

@@ -170,24 +170,33 @@ impl PathBuilder {
 
     // We do not support conic segments, but Skia still relies on them from time to time.
     // This method will simply convert the input data into quad segments.
-    pub(crate) fn conic_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, weight: f32) {
-        self.inject_move_to_if_needed();
+    pub(crate) fn conic_to(&mut self, x1: f32, y1: f32, x: f32, y: f32, weight: f32) {
+        // check for <= 0 or NaN with this test
+        if !(weight > 0.0) {
+            self.line_to(x, y);
+        } else if !weight.is_finite() {
+            self.line_to(x1, y1);
+            self.line_to(x, y);
+        } else if weight == 1.0 {
+            self.quad_to(x1, y1, x, y);
+        } else {
+            self.inject_move_to_if_needed();
 
-        // TODO: use SkAutoConicToQuads
-
-        let last = self.last_point().unwrap();
-        let conic = path_geometry::Conic::new(last, Point::from_xy(x1, y1), Point::from_xy(x2, y2), weight);
-        let mut points = [Point::zero(); 32]; // 1 + 2 * (1<<3) = 17, so 32 should be enough
-        let count = conic.chop_into_quads_pow2(3, &mut points);
-
-        // Points are ordered as: 0 - 1 2 - 3 4 - 5 6 - ..
-        // `count` is a number of pairs +1
-        let mut offset = 1;
-        for _ in 0..count {
-            let pt1 = points[offset + 0];
-            let pt2 = points[offset + 1];
-            self.quad_to(pt1.x, pt1.y, pt2.x, pt2.y);
-            offset += 2;
+            let last = self.last_point().unwrap();
+            let quadder = path_geometry::AutoConicToQuads::compute(
+                last, Point::from_xy(x1, y1), Point::from_xy(x, y), weight,
+            );
+            if let Some(quadder) = quadder {
+                // Points are ordered as: 0 - 1 2 - 3 4 - 5 6 - ..
+                // `count` is a number of pairs +1
+                let mut offset = 1;
+                for _ in 0..quadder.len {
+                    let pt1 = quadder.points[offset + 0];
+                    let pt2 = quadder.points[offset + 1];
+                    self.quad_to(pt1.x, pt1.y, pt2.x, pt2.y);
+                    offset += 2;
+                }
+            }
         }
     }
 
