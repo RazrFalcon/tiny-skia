@@ -781,7 +781,7 @@ fn calc_cubic_precision(src: &[Point; 4]) -> f32 {
 }
 
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Conic {
     pub points: [Point; 3],
     pub weight: f32,

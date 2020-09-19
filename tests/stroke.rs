@@ -159,3 +159,41 @@ fn circle() {
     assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(149.5, 109.84631, 149.5, 100.0));
     assert_eq!(iter.next().unwrap(), PathSegment::Close);
 }
+
+#[test]
+fn round_cap_join() {
+    let mut pb = PathBuilder::new();
+    pb.move_to(170.0, 30.0);
+    pb.line_to(30.553378, 99.048418);
+    pb.cubic_to(30.563658, 99.066835, 30.546308, 99.280724, 30.557592, 99.305282);
+    let path = pb.finish().unwrap();
+
+    let mut props = StrokeProps::default();
+    props.width = 30.0;
+    props.line_cap = LineCap::Round;
+    props.line_join = LineJoin::Round;
+    let stroke_path = path.stroke(props).unwrap();
+
+    let mut iter = stroke_path.segments();
+    assert_eq!(iter.next().unwrap(), PathSegment::new_move_to(176.65611, 43.44233));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(37.209484, 112.490746));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(30.553377, 99.048416));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(43.650993, 91.7373));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(45.667908, 95.35053, 45.549374, 99.58929));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(45.64382, 96.21188, 44.187744, 93.04278));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(46.781757, 98.68856, 44.62382, 104.514984));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(42.465885, 110.34141, 36.820095, 112.93543));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(31.174297, 115.52944, 25.347874, 113.371506));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(19.52145, 111.21357, 16.927439, 105.56779));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(15.459791, 102.373505, 15.561099, 98.750694));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(15.448862, 102.76424, 17.455761, 106.359535));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(17.275322, 106.036285, 17.111046, 105.70452));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(14.353994, 100.13652, 16.341633, 94.24983));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(18.329273, 88.36313, 23.89727, 85.60609));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(163.34389, 16.55767));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(168.91187, 13.800619, 174.79857, 15.788258));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(180.68527, 17.775896, 183.44234, 23.343893));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(186.19939, 28.911888, 184.21175, 34.798584));
+    assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(182.2241, 40.685276, 176.65611, 43.44233));
+    assert_eq!(iter.next().unwrap(), PathSegment::Close);
+}

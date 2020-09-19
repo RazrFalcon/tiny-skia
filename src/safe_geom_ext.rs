@@ -79,7 +79,7 @@ pub(crate) trait TransformExt: Sized {
 
 impl TransformExt for Transform {
     fn from_sin_cos(sin: f32, cos: f32) -> Option<Self> {
-        Transform::from_row(cos, -sin, sin, cos, 0.0, 0.0)
+        Transform::from_row(cos, sin, -sin, cos, 0.0, 0.0)
     }
 
     fn from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Option<Self> {
