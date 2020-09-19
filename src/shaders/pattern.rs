@@ -6,7 +6,7 @@
 
 use crate::{Shader,  Transform, FilterQuality, Pixmap};
 
-use crate::checked_geom_ext::TransformExt;
+use crate::safe_geom_ext::TransformExt;
 use crate::shaders::StageRec;
 use crate::raster_pipeline;
 

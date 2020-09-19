@@ -73,11 +73,6 @@ pub(crate) trait TransformExt: Sized {
     fn from_sin_cos(sin: f32, cos: f32) -> Option<Self>;
     fn from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Option<Self>;
     fn from_poly_to_poly(src1: Point, src2: Point, dst1: Point, dst2: Point) -> Option<Self>;
-    fn pre_scale(&mut self, sx: f32, sy: f32);
-    fn post_scale(&mut self, sx: f32, sy: f32);
-    fn post_translate(&mut self, tx: f32, ty: f32);
-    fn pre_concat(&mut self, other: &Self);
-    fn post_concat(&mut self, other: &Self);
     fn map_points(&self, points: &mut [Point]);
     fn invert(&self) -> Option<Self>;
     fn to_unchecked(&self) -> TransformUnchecked;
@@ -91,7 +86,7 @@ impl TransformExt for Transform {
     fn from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Option<Self> {
         let cos_inv = 1.0 - cos;
         Transform::from_row(
-            cos, -sin, sin, cos, sdot(sin, py, cos_inv, px), sdot(-sin, px, cos_inv, py)
+            cos, sin, -sin, cos, sdot(sin, py, cos_inv, px), sdot(-sin, px, cos_inv, py)
         )
     }
 
@@ -101,38 +96,6 @@ impl TransformExt for Transform {
         let tmp = from_poly2(dst1, dst2);
         let ts = concat_unchecked(&tmp, &res);
         ts.to_safe()
-    }
-
-    fn pre_scale(&mut self, sx: f32, sy: f32) {
-        if sx == 1.0 && sy == 1.0 {
-            return;
-        }
-
-        // TODO: remove unwrap
-        self.pre_concat(&Transform::from_scale(sx, sy).unwrap())
-    }
-
-    fn post_scale(&mut self, sx: f32, sy: f32) {
-        if sx == 1.0 && sy == 1.0 {
-            return;
-        }
-
-        // TODO: remove unwrap
-        self.post_concat(&Transform::from_scale(sx, sy).unwrap())
-    }
-
-    fn post_translate(&mut self, dx: f32, dy: f32) {
-        // TODO: can be optimized to just a sum
-        let (sx, kx, ky, sy, tx, ty) = self.get_row();
-        *self = Transform::from_row(sx, kx, ky, sy, tx + dx, ty + dy).unwrap();
-    }
-
-    fn pre_concat(&mut self, other: &Self) {
-        *self = concat(self, other).unwrap();
-    }
-
-    fn post_concat(&mut self, other: &Self) {
-        *self = concat(other, self).unwrap();
     }
 
     fn map_points(&self, points: &mut [Point]) {
@@ -178,8 +141,8 @@ impl TransformExt for Transform {
     }
 
     fn to_unchecked(&self) -> TransformUnchecked {
-        let (sx, kx, ky, sy, tx, ty) = self.get_row();
-        TransformUnchecked { sx, kx, ky, sy, tx, ty }
+        let (sx, ky, kx, sy, tx, ty) = self.get_row();
+        TransformUnchecked { sx, ky, kx, sy, tx, ty }
     }
 }
 
@@ -188,70 +151,39 @@ impl TransformExt for Transform {
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct TransformUnchecked {
     sx: f32,
-    kx: f32,
     ky: f32,
+    kx: f32,
     sy: f32,
     tx: f32,
     ty: f32,
 }
 
 impl TransformUnchecked {
-    fn from_row(sx: f32, kx: f32, ky: f32, sy: f32, tx: f32, ty: f32) -> Self {
-        TransformUnchecked { sx, kx, ky, sy, tx, ty }
+    fn from_row(sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) -> Self {
+        TransformUnchecked { sx, ky, kx, sy, tx, ty }
     }
 
     fn to_safe(&self) -> Option<Transform> {
-        Transform::from_row(self.sx, self.kx, self.ky, self.sy, self.tx, self.ty)
+        Transform::from_row(self.sx, self.ky, self.kx, self.sy, self.tx, self.ty)
     }
 }
 
 fn from_poly2(p0: Point, p1: Point) -> TransformUnchecked {
     TransformUnchecked::from_row(
         p1.y - p0.y,
-        p1.x - p0.x,
         p0.x - p1.x,
+        p1.x - p0.x,
         p1.y - p0.y,
         p0.x,
         p0.y,
     )
 }
 
-fn concat(a: &Transform, b: &Transform) -> Option<Transform> {
-    if a.is_identity() {
-        Some(*b)
-    } else if b.is_identity() {
-        Some(*a)
-    } else if !a.has_skew() && !b.has_skew() {
-        // just scale and translate
-        let (a_sx, _, _, a_sy, a_tx, a_ty) = a.get_row();
-        let (b_sx, _, _, b_sy, b_tx, b_ty) = b.get_row();
-        Transform::from_row(
-            a_sx * b_sx,
-            0.0,
-            0.0,
-            a_sy * b_sy,
-            a_sx * b_tx + a_tx,
-            a_sy * b_ty + a_ty,
-        )
-    } else {
-        let (a_sx, a_kx, a_ky, a_sy, a_tx, a_ty) = a.get_row();
-        let (b_sx, b_kx, b_ky, b_sy, b_tx, b_ty) = b.get_row();
-        Transform::from_row(
-            mul_add_mul(a_sx, b_sx, a_kx, b_ky),
-            mul_add_mul(a_sx, b_kx, a_kx, b_sy),
-            mul_add_mul(a_ky, b_sx, a_sy, b_ky),
-            mul_add_mul(a_ky, b_kx, a_sy, b_sy),
-            mul_add_mul(a_sx, b_tx, a_kx, b_ty) + a_tx,
-            mul_add_mul(a_ky, b_tx, a_sy, b_ty) + a_ty,
-        )
-    }
-}
-
 fn concat_unchecked(a: &TransformUnchecked, b: &TransformUnchecked) -> TransformUnchecked {
     TransformUnchecked::from_row(
         mul_add_mul(a.sx, b.sx, a.kx, b.ky),
-        mul_add_mul(a.sx, b.kx, a.kx, b.sy),
         mul_add_mul(a.ky, b.sx, a.sy, b.ky),
+        mul_add_mul(a.sx, b.kx, a.kx, b.sy),
         mul_add_mul(a.ky, b.sx, a.sy, b.sy),
         mul_add_mul(a.sx, b.tx, a.kx, b.ty) + a.tx,
         mul_add_mul(a.ky, b.tx, a.sy, b.ty) + a.ty,
@@ -283,7 +215,7 @@ fn invert(ts: &Transform) -> Option<Transform> {
 }
 
 fn inv_determinant(ts: &Transform) -> Option<f64> {
-    let (sx, kx, ky, sy, _, _) = ts.get_row();
+    let (sx, ky, kx, sy, _, _) = ts.get_row();
     let det = dcross(sx as f64, sy as f64, kx as f64, ky as f64);
 
     // Since the determinant is on the order of the cube of the matrix members,
@@ -298,12 +230,12 @@ fn inv_determinant(ts: &Transform) -> Option<f64> {
 }
 
 fn compute_inv(ts: &Transform, inv_det: f64) -> Option<Transform> {
-    let (sx, kx, ky, sy, tx, ty) = ts.get_row();
+    let (sx, ky, kx, sy, tx, ty) = ts.get_row();
 
     Transform::from_row(
         (sy as f64 * inv_det) as f32,
-        (-kx as f64 * inv_det) as f32,
         (-ky as f64 * inv_det) as f32,
+        (-kx as f64 * inv_det) as f32,
         (sx as f64 * inv_det) as f32,
         dcross_dscale(
             kx,
@@ -332,17 +264,4 @@ fn dcross_dscale(a: f32, b: f32, c: f32, d: f32, scale: f64) -> f32 {
 
 fn sdot(a: f32, b: f32, c: f32, d: f32) -> f32 {
     a * b + c * d
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn ts_pre_scale() {
-        let mut ts = Transform::from_row(1.2, -3.4, 5.6, -7.8, 1.2, 3.4).unwrap();
-        ts.pre_scale(1.0, -1.0);
-        assert_eq!(ts, Transform::from_row(1.2, 3.4, 5.6, 7.8, 1.2, 3.4).unwrap());
-    }
 }

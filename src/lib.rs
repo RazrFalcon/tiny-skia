@@ -23,7 +23,7 @@
 mod alpha_runs;
 mod blend_mode;
 mod blitter;
-mod checked_geom_ext;
+mod safe_geom_ext;
 mod color;
 mod edge;
 mod edge_builder;
@@ -46,7 +46,7 @@ mod shaders;
 mod stroker;
 mod wide;
 
-pub use checked_geom::*;
+pub use safe_geom::*;
 
 pub use num_ext::NormalizedF32;
 

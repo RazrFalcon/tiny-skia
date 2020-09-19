@@ -8,7 +8,7 @@
 
 use crate::{Point, Bounds, Path, Rect};
 
-use crate::checked_geom_ext::BoundsExt;
+use crate::safe_geom_ext::BoundsExt;
 use crate::path_geometry;
 use crate::path::PathVerb;
 use crate::scalar::{Scalar, SCALAR_ROOT_2_OVER_2};

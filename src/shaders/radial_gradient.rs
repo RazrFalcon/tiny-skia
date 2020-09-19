@@ -6,7 +6,7 @@
 
 use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 
-use crate::checked_geom_ext::TransformExt;
+use crate::safe_geom_ext::TransformExt;
 use crate::scalar::Scalar;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::shaders::StageRec;
@@ -25,9 +25,9 @@ impl FocalData {
         // some arithmetic operations.
 
         if is_focal_on_circle(r1) {
-            ts.post_scale(0.5, 0.5);
+            *ts = ts.post_scale(0.5, 0.5)?;
         } else {
-            ts.post_scale(r1 / (r1 * r1 - 1.0), 1.0 / ((r1 * r1 - 1.0).abs()).sqrt());
+            *ts = ts.post_scale(r1 / (r1 * r1 - 1.0), 1.0 / ((r1 * r1 - 1.0).abs()).sqrt())?;
         }
 
         Some(FocalData {
@@ -112,7 +112,7 @@ impl RadialGradient {
 
             let inv = radius.invert();
             let mut ts = Transform::from_translate(-start.x, -start.y)?;
-            ts.post_scale(inv, inv);
+            ts = ts.post_scale(inv, inv)?;
 
             // We can treat this gradient as radial, which is faster. If we got here, we know
             // that endRadius is not equal to 0, so this produces a meaningful gradient

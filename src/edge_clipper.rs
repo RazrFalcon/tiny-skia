@@ -10,7 +10,7 @@ use arrayvec::ArrayVec;
 
 use crate::{Path, Rect, Point, Bounds};
 
-use crate::checked_geom_ext::BoundsExt;
+use crate::safe_geom_ext::BoundsExt;
 use crate::path_geometry;
 use crate::line_clipper;
 use crate::path::{PathEdge, PathEdgeIter};

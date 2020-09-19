@@ -48,7 +48,7 @@ fn filter_nearest_neighbor() {
     paint.shader = Pattern::new(
         &triangle,
         FilterQuality::Nearest,
-        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
@@ -68,7 +68,7 @@ fn filter_bilinear() {
     paint.shader = Pattern::new(
         &triangle,
         FilterQuality::Bilinear,
-        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
@@ -98,7 +98,7 @@ fn filter_bicubic() {
     paint.shader = Pattern::new(
         &triangle,
         FilterQuality::Bicubic,
-        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
     let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());

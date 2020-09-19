@@ -6,7 +6,7 @@
 
 use crate::{Point, PathBuilder, Bounds, Transform, StrokeProps, PathStroker};
 
-use crate::checked_geom_ext::{BoundsExt, TransformExt};
+use crate::safe_geom_ext::{BoundsExt, TransformExt};
 use crate::scalar::SCALAR_MAX;
 
 

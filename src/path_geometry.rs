@@ -6,7 +6,7 @@
 
 use crate::{Point, NormalizedF32, Transform};
 
-use crate::checked_geom_ext::TransformExt;
+use crate::safe_geom_ext::TransformExt;
 use crate::floating_point::FLOAT_PI;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 use crate::wide::F32x2;
@@ -897,7 +897,7 @@ impl Conic {
         dir: PathDirection,
         user_transform: &Transform,
         dst: &'a mut [Conic; 5],
-    ) -> &'a [Conic] {
+    ) -> Option<&'a [Conic]> {
         // rotate by x,y so that u_start is (1.0)
         let x = u_start.dot(u_stop);
         let mut y = u_start.cross(u_stop);
@@ -911,7 +911,7 @@ impl Conic {
             x > 0.0 &&
             ((y >= 0.0 && dir == PathDirection::CW) || (y <= 0.0 && dir == PathDirection::CCW))
         {
-            return &[];
+            return None;
         }
 
         if dir == PathDirection::CCW {
@@ -981,18 +981,22 @@ impl Conic {
         }
 
         // now handle counter-clockwise and the initial unitStart rotation
-        let mut transform = Transform::from_sin_cos(u_start.y, u_start.x).unwrap();
+        let mut transform = Transform::from_sin_cos(u_start.y, u_start.x)?;
         if dir == PathDirection::CCW {
-            transform.pre_scale(1.0, -1.0);
+            transform = transform.pre_scale(1.0, -1.0)?;
         }
 
-        transform.post_concat(user_transform);
+        transform = transform.post_concat(user_transform)?;
 
         for conic in dst.iter_mut().take(conic_count) {
             transform.map_points(&mut conic.points);
         }
 
-        &dst[0..conic_count]
+        if conic_count == 0 {
+            None
+        } else {
+            Some(&dst[0..conic_count])
+        }
     }
 }
 

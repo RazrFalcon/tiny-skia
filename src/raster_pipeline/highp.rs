@@ -719,7 +719,7 @@ unsafe fn transform_2x3(
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
     let ts: &Transform = &*(*program.add(1)).cast();
-    let (sx, kx, ky, sy, tx, ty) = ts.get_row();
+    let (sx, ky, kx, sy, tx, ty) = ts.get_row();
 
     let tr = mad(*r, F32x4::splat(sx), mad(*g, F32x4::splat(kx), F32x4::splat(tx)));
     let tg = mad(*r, F32x4::splat(ky), mad(*g, F32x4::splat(sy), F32x4::splat(ty)));

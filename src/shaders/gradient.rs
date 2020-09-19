@@ -6,7 +6,7 @@
 
 use crate::{Color, Transform, NormalizedF32};
 
-use crate::checked_geom_ext::TransformExt;
+use crate::safe_geom_ext::TransformExt;
 use crate::painter::SpreadMode;
 use crate::raster_pipeline::{EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
 use crate::raster_pipeline::{self, RasterPipelineBuilder};
@@ -113,7 +113,7 @@ impl Gradient {
         rec.pipeline.push(raster_pipeline::Stage::SeedShader);
 
         let mut ts = self.local_transform.invert()?;
-        ts.post_concat(&self.points_to_unit);
+        ts = ts.post_concat(&self.points_to_unit)?;
         rec.pipeline.push_transform(ts, rec.ctx_storage);
 
         push_stages(&mut rec, &mut post_pipeline);

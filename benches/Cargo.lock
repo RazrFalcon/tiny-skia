@@ -82,14 +82,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 
 [[package]]
-name = "checked-geom"
-version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/checked-geom?rev=cc73447#cc734479f7241daf65204e201d4c13da8b86cc3b"
-dependencies = [
- "num-ext",
-]
-
-[[package]]
 name = "crc32fast"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -235,6 +227,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "safe-geom"
+version = "0.1.0"
+source = "git+https://github.com/RazrFalcon/checked-geom?rev=4378e57#4378e578ca4f4b06b6ac20e0107312819b006d48"
+dependencies = [
+ "num-ext",
+]
+
+[[package]]
 name = "skia-rs"
 version = "0.1.0"
 dependencies = [
@@ -252,11 +252,11 @@ name = "tiny-skia"
 version = "0.2.0"
 dependencies = [
  "arrayvec",
- "checked-geom",
  "float-cmp",
  "memmap2",
  "num-ext",
  "png 0.16.7",
+ "safe-geom",
 ]
 
 [[package]]

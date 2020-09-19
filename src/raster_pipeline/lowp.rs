@@ -484,7 +484,7 @@ unsafe fn transform_2x3(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     let ts: &Transform = &*(*program.add(1)).cast();
-    let (sx, kx, ky, sy, tx, ty) = ts.get_row();
+    let (sx, ky, kx, sy, tx, ty) = ts.get_row();
 
     let x = join(r, g);
     let y = join(b, a);
