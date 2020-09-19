@@ -10,9 +10,9 @@ fn pattern_tiny_skia(
     fn crate_triangle() -> Pixmap {
         let mut pixmap = Pixmap::new(20, 20).unwrap();
 
-        let paint = Paint::default()
-            .set_color_rgba8(50, 127, 150, 200)
-            .set_anti_alias(true);
+        let mut paint = Paint::default();
+        paint.set_color_rgba8(50, 127, 150, 200);
+        paint.anti_alias = true;
 
         let mut pb = PathBuilder::new();
         pb.move_to(0.0, 20.0);
@@ -29,13 +29,13 @@ fn pattern_tiny_skia(
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
     let triangle = crate_triangle();
 
-    let paint = Paint::default()
-        .set_anti_alias(true)
-        .set_shader(Pattern::new(
-            &triangle,
-            quality,
-            ts,
-        ));
+    let mut paint = Paint::default();
+    paint.anti_alias = true;
+    paint.shader = Pattern::new(
+        &triangle,
+        quality,
+        ts,
+    );
 
     let mut pb = PathBuilder::new();
     pb.move_to(60.0, 60.0);
@@ -63,8 +63,7 @@ fn lq_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     pattern_tiny_skia(
         FilterQuality::Bilinear,
-        // We're using the kx, ky order, not inverted.
-        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
         bencher,
     )
 }
@@ -73,8 +72,7 @@ fn hq_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     pattern_tiny_skia(
         FilterQuality::Bicubic,
-        // We're using the kx, ky order, not inverted.
-        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
         bencher,
     )
 }

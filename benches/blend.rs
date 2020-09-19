@@ -5,13 +5,13 @@ fn fill_tiny_skia(blend_mode: tiny_skia::BlendMode, bencher: &mut Bencher) {
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
 
-    let paint1 = Paint::default()
-        .set_color_rgba8(50, 127, 150, 200)
-        .set_blend_mode(BlendMode::SourceOver);
+    let mut paint1 = Paint::default();
+    paint1.set_color_rgba8(50, 127, 150, 200);
+    paint1.blend_mode = BlendMode::SourceOver;
 
-    let paint2 = Paint::default()
-        .set_color_rgba8(220, 140, 75, 180)
-        .set_blend_mode(blend_mode); // <-- variable
+    let mut paint2 = Paint::default();
+    paint2.set_color_rgba8(220, 140, 75, 180);
+    paint2.blend_mode = blend_mode; // <-- variable
 
     let path1 = {
         let mut pb = PathBuilder::new();

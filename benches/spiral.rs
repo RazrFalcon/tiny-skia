@@ -208,8 +208,8 @@ fn spiral_tiny_skia(bencher: &mut Bencher) {
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
 
-    let paint = Paint::default()
-        .set_color_rgba8(50, 127, 150, 200);
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
 
     let mut pb = PathBuilder::new();
     pb.move_to(497.55261, 502.44739);

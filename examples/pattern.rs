@@ -12,7 +12,7 @@ fn main() {
     paint.shader = Pattern::new(
         &triangle,
         FilterQuality::Bicubic,
-        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
     );
 
     let path = PathBuilder::from_circle(200.0, 200.0, 180.0).unwrap();

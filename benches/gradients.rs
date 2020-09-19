@@ -10,15 +10,15 @@ fn two_stops_linear_tiny_skia(
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
 
-    let paint = Paint::default()
-        .set_force_hq_pipeline(hq)
-        .set_shader(LinearGradient::new(
-            Point::from_xy(100.0, 100.0),
-            Point::from_xy(900.0, 900.0),
-            points,
-            mode,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.force_hq_pipeline = hq;
+    paint.shader = LinearGradient::new(
+        Point::from_xy(100.0, 100.0),
+        Point::from_xy(900.0, 900.0),
+        points,
+        mode,
+        Transform::identity(),
+    ).unwrap();
 
     let mut pb = PathBuilder::new();
     pb.move_to(60.0, 60.0);
@@ -491,18 +491,18 @@ fn simple_radial_tiny_skia(bencher: &mut Bencher) {
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(RadialGradient::new(
-            Point::from_xy(500.0, 500.0),
-            Point::from_xy(500.0, 500.0),
-            500.0,
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = RadialGradient::new(
+        Point::from_xy(500.0, 500.0),
+        Point::from_xy(500.0, 500.0),
+        500.0,
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let mut pb = PathBuilder::new();
     pb.move_to(60.0, 60.0);
@@ -637,18 +637,18 @@ fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
 
-    let paint = Paint::default()
-        .set_shader(RadialGradient::new(
-            Point::from_xy(400.0, 400.0),
-            Point::from_xy(500.0, 500.0),
-            500.0,
-            vec![
-                GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
-                GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
-            ],
-            SpreadMode::Pad,
-            Transform::identity(),
-        ).unwrap());
+    let mut paint = Paint::default();
+    paint.shader = RadialGradient::new(
+        Point::from_xy(400.0, 400.0),
+        Point::from_xy(500.0, 500.0),
+        500.0,
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 200)),
+            GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
 
     let mut pb = PathBuilder::new();
     pb.move_to(60.0, 60.0);
