@@ -123,8 +123,8 @@ impl TransformExt for Transform {
             let (sx, sy) = self.get_scale();
             let (kx, ky) = self.get_skew();
             for p in points {
-                let x = p.x * sx + p.y * ky + tx;
-                let y = p.x * kx + p.y * sy + ty;
+                let x = p.x * sx + p.y * kx + tx;
+                let y = p.x * ky + p.y * sy + ty;
                 p.x = x;
                 p.y = y;
             }

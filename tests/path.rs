@@ -236,11 +236,11 @@ fn transform() {
     pb.line_to(30.0, 40.0);
     let mut path = pb.finish().unwrap();
 
-    path = path.transform(&Transform::from_row(2.0, 0.7, 0.3, 0.5, 10.0, 20.0).unwrap()).unwrap();
+    path = path.transform(&Transform::from_row(2.0, 0.7, -0.3, 0.5, 10.0, 20.0).unwrap()).unwrap();
 
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
-        PathSegment::MoveTo(Point::from_xy(44.0, 33.0)),
-        PathSegment::LineTo(Point::from_xy(98.0, 49.0)),
+        PathSegment::MoveTo(Point::from_xy(24.0, 37.0)),
+        PathSegment::LineTo(Point::from_xy(58.0, 61.0)),
     ]);
 }
 
