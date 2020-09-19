@@ -1463,7 +1463,7 @@ fn quad_in_line(quad: &[Point; 3]) -> bool {
         }
     }
 
-    debug_assert!(outer1 > 0 && outer1 <= 1);
+    debug_assert!(outer1 <= 1);
     debug_assert!(outer2 >= 1 && outer2 <= 2);
     debug_assert!(outer1 < outer2);
 
