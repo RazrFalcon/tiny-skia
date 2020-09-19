@@ -61,7 +61,7 @@ fn is_focal_on_circle(r1: f32) -> bool {
 /// without the start radius.
 #[derive(Clone, Debug)]
 pub struct RadialGradient {
-    base: Gradient,
+    pub(crate) base: Gradient,
     center1: Point,
     center2: Point,
     radius: f32,

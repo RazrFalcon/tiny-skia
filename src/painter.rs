@@ -138,7 +138,7 @@ impl<'a> Paint<'a> {
 }
 
 
-/// A shapes painter.
+/// Provides a low-level rendering API.
 pub trait Painter {
     /// Fills the entire pixmap with a specified color.
     ///

@@ -41,7 +41,7 @@ impl GradientStop {
 pub struct Gradient {
     points: Vec<GradientStop>,
     tile_mode: SpreadMode,
-    local_transform: Transform,
+    pub(crate) transform: Transform,
     points_to_unit: Transform,
     pub(crate) colors_are_opaque: bool,
     has_uniform_stops: bool,
@@ -51,7 +51,7 @@ impl Gradient {
     pub fn new(
         mut points: Vec<GradientStop>,
         tile_mode: SpreadMode,
-        local_transform: Transform,
+        transform: Transform,
         points_to_unit: Transform,
     ) -> Self {
         debug_assert!(points.len() > 1);
@@ -96,7 +96,7 @@ impl Gradient {
         Gradient {
             points,
             tile_mode,
-            local_transform,
+            transform,
             points_to_unit,
             colors_are_opaque,
             has_uniform_stops,
@@ -112,7 +112,7 @@ impl Gradient {
 
         rec.pipeline.push(raster_pipeline::Stage::SeedShader);
 
-        let mut ts = self.local_transform.invert()?;
+        let mut ts = self.transform.invert()?;
         ts = ts.post_concat(&self.points_to_unit)?;
         rec.pipeline.push_transform(ts, rec.ctx_storage);
 

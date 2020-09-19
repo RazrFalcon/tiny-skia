@@ -53,7 +53,6 @@ impl BoundsExt for Bounds {
             offset += 2;
         }
 
-        // TODO: pathfinder's implementation of all_true is slightly different from the Skia. Test it.
         let all_finite = accum * F32x4::default() == F32x4::default();
         if all_finite {
             Bounds::from_ltrb(

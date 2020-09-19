@@ -200,6 +200,7 @@ enum IntersectRayType {
 
 /// A path stroker.
 #[allow(missing_debug_implementations)]
+#[derive(Clone)]
 pub struct PathStroker {
     radius: f32,
     inv_miter_limit: f32,

@@ -24,7 +24,7 @@ pub enum PathDirection {
 
 
 /// A path builder.
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct PathBuilder {
     pub(crate) verbs: Vec<PathVerb>,
     pub(crate) points: Vec<Point>,

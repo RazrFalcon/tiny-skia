@@ -19,7 +19,7 @@ use crate::raster_pipeline;
 pub struct Pattern<'a> {
     pixmap: &'a Pixmap,
     quality: FilterQuality,
-    transform: Transform,
+    pub(crate) transform: Transform,
 }
 
 impl<'a> Pattern<'a> {

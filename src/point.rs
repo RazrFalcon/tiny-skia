@@ -24,6 +24,13 @@ pub struct Point {
     pub y: f32,
 }
 
+impl From<(f32, f32)> for Point {
+    #[inline]
+    fn from(v: (f32, f32)) -> Self {
+        Point { x: v.0, y: v.1 }
+    }
+}
+
 impl Point {
     // TODO: should be finite?
     /// Creates a new `Point`.

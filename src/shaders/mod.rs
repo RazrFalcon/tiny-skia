@@ -14,14 +14,13 @@ pub use linear_gradient::LinearGradient;
 pub use radial_gradient::RadialGradient;
 pub use pattern::Pattern;
 
-use crate::Color;
+use crate::{Color, Transform};
 
 use crate::raster_pipeline::{RasterPipelineBuilder, ContextStorage};
 
-#[allow(missing_debug_implementations)]
 pub struct StageRec<'a> {
-    pub(crate) ctx_storage: &'a mut ContextStorage,
-    pub(crate) pipeline: &'a mut RasterPipelineBuilder,
+    pub ctx_storage: &'a mut ContextStorage,
+    pub pipeline: &'a mut RasterPipelineBuilder,
 }
 
 
@@ -66,6 +65,27 @@ impl<'a> Shader<'a> {
             Shader::LinearGradient(ref g) => g.push_stages(rec),
             Shader::RadialGradient(ref g) => g.push_stages(rec),
             Shader::Pattern(ref p) => p.push_stages(rec).is_some(),
+        }
+    }
+
+    pub(crate) fn transform(&mut self, ts: &Transform) {
+        match self {
+            Shader::SolidColor(_) => {}
+            Shader::LinearGradient(g) => {
+                if let Some(ts) = g.base.transform.post_concat(ts) {
+                    g.base.transform = ts;
+                }
+            }
+            Shader::RadialGradient(g) => {
+                if let Some(ts) = g.base.transform.post_concat(ts) {
+                    g.base.transform = ts;
+                }
+            }
+            Shader::Pattern(p) => {
+                if let Some(ts) = p.transform.post_concat(ts) {
+                    p.transform = ts;
+                }
+            }
         }
     }
 }

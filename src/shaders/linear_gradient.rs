@@ -14,7 +14,7 @@ use crate::shaders::StageRec;
 /// A linear gradient shader.
 #[derive(Clone, Debug)]
 pub struct LinearGradient {
-    base: Gradient,
+    pub(crate) base: Gradient,
     start: Point,
     end: Point,
 }

@@ -70,21 +70,20 @@ You can find more information in [benches/README.md](./benches/README.md).
 
 The API is a bit unconventional. It doesn't look like cairo, QPainter (Qt) or even Skia.
 
-To start, it's completely stateless. There is no canvas-like object that stores a transform,
-clip, layers, etc. You only have a `Pixmap` and you can draw a `Path` on top of it. That's it.<br>
-If you want to draw a transformed `Path` you should transform it first, and then you can fill it.<br>
-If you want to stroke a `Path` you should create a stroked `Path` from an existing `Path`,
-and then you can fill it.<br>
-The main motivation behind this is that there is almost no hidden cost (like allocations).
-Everything is transparent to the caller.
+To start, there are two levels:
 
-Another difference is that everting is strongly typed and checked on creation.
-There are almost no methods that accept primive types (`i32`, `f32`, etc.).
-`Size`, `Rect`, `Color`, `Path` - everything is guarantee to be valid at all times.
+1. A low-level API called `Painter`, which supports only the basic operations like path filling.
+2. A high-level API called `Canvas`, which is built on top of `Painter`
+   and provides world transformation and stroking.
+
+The main idea is that `Canvas` relies only on a public API, so you can reimplement one yourself.
+
+Another difference is that everything is strongly typed and checked on creation.
+`Size`, `Rect`, `Color`, `Path`, `Transform` - everything is guarantee to be valid at all times.
 You cannot create a zero or negative `Size`. You cannot create an empty `Path`.
-You cannot create a transform with a zero scale. And so on.<br>
-Most of it is handled by externals crates like
-[checked-geom](https://github.com/RazrFalcon/checked-geom)
+You cannot create a `Transform` with a zero scale. And so on.<br>
+Most of it is handled by external crates like
+[safe-geom](https://github.com/RazrFalcon/safe-geom)
 and [num-ext](https://github.com/RazrFalcon/num-ext).
 
 ## Roadmap
