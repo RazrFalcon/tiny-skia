@@ -69,7 +69,7 @@ impl PathBuilder {
     /// Segments are created clockwise: TopLeft -> TopRight -> BottomRight -> BottomLeft
     ///
     /// The contour is closed.
-    pub fn from_bound(bounds: Bounds) -> Path {
+    pub fn from_bounds(bounds: Bounds) -> Path {
         let verbs = vec![
             PathVerb::Move,
             PathVerb::Line,

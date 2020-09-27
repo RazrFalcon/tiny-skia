@@ -188,7 +188,7 @@ fn memset2d() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
 
-    let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 90.0, 90.0).unwrap());
+    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 90.0, 90.0).unwrap());
     pixmap.fill_path(&path, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/memset2d.png").unwrap();
@@ -203,7 +203,7 @@ fn memset2d_out_of_bounds() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
 
-    let path = PathBuilder::from_bound(Bounds::from_ltrb(50.0, 50.0, 120.0, 120.0).unwrap());
+    let path = PathBuilder::from_bounds(Bounds::from_ltrb(50.0, 50.0, 120.0, 120.0).unwrap());
     pixmap.fill_path(&path, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/memset2d-2.png").unwrap();

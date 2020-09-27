@@ -31,7 +31,7 @@ fn filter_nearest_neighbor_no_ts() {
         Transform::identity(),
     );
 
-    let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     pixmap.fill_path(&path, &paint);
 
@@ -51,7 +51,7 @@ fn filter_nearest_neighbor() {
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
-    let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     pixmap.fill_path(&path, &paint);
 
@@ -71,7 +71,7 @@ fn filter_bilinear() {
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
-    let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     pixmap.fill_path(&path, &paint);
 
@@ -101,7 +101,7 @@ fn filter_bicubic() {
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
-    let path = PathBuilder::from_bound(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     pixmap.fill_path(&path, &paint);
 
