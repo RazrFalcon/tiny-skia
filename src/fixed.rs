@@ -5,6 +5,7 @@
 // found in the LICENSE file.
 
 use crate::fdot6::FDot6;
+use crate::floating_point::SaturateCast;
 use crate::math::{left_shift64, bound};
 
 /// A 16.16 fixed point.
@@ -14,6 +15,16 @@ use crate::math::{left_shift64, bound};
 pub type Fixed = i32;
 
 pub const HALF: Fixed = (1 << 16) / 2;
+pub const ONE: Fixed = 1 << 16;
+
+// `from_f32` seems to lack a rounding step. For all fixed-point
+// values, this version is as accurate as possible for (fixed -> float -> fixed). Rounding reduces
+// accuracy if the intermediate floats are in the range that only holds integers (adding 0.5 to an
+// odd integer then snaps to nearest even). Using double for the rounding math gives maximum
+// accuracy for (float -> fixed -> float), but that's usually overkill.
+pub fn from_f32(x: f32) -> Fixed {
+    i32::saturate_from(x * ONE as f32)
+}
 
 pub fn round_to_i32(x: Fixed) -> i32 {
     (x + HALF) >> 16

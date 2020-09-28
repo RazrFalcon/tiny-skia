@@ -52,6 +52,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     load_dst,
     store,
     null_fn, // Gather
+    scale_u8,
+    lerp_u8,
     scale_1_float,
     lerp_1_float,
     destination_atop,
@@ -116,7 +118,7 @@ pub fn fn_ptr_eq(f1: StageFn, f2: StageFn) -> bool {
 pub fn start(
     program: *const *const c_void,
     tail_program: *const *const c_void,
-    rect: ScreenIntRect,
+    rect: &ScreenIntRect,
 ) {
     let mut  r = U16x16::default();
     let mut  g = U16x16::default();
@@ -282,6 +284,84 @@ pub unsafe fn store_tail(
     let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
     let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
     store_8888_tail_(tail, ptr, r, g, b, a);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+unsafe fn scale_u8(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
+    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+) {
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
+    let ptr = ctx.ptr_at_xy::<u8>(dx, dy);
+
+    // Load u8xTail and cast it to U16x16.
+    let mut data = [0u8; STAGE_WIDTH];
+    std::ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), tail);
+    let c = U16x16([
+        u16::from(data[ 0]),
+        u16::from(data[ 1]),
+        u16::from(data[ 2]),
+        u16::from(data[ 3]),
+        u16::from(data[ 4]),
+        u16::from(data[ 5]),
+        u16::from(data[ 6]),
+        u16::from(data[ 7]),
+        u16::from(data[ 8]),
+        u16::from(data[ 9]),
+        u16::from(data[10]),
+        u16::from(data[11]),
+        u16::from(data[12]),
+        u16::from(data[13]),
+        u16::from(data[14]),
+        u16::from(data[15]),
+    ]);
+
+    *r = div255(*r * c);
+    *g = div255(*g * c);
+    *b = div255(*b * c);
+    *a = div255(*a * c);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+unsafe fn lerp_u8(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
+    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+) {
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
+    let ptr = ctx.ptr_at_xy::<u8>(dx, dy);
+
+    // Load u8xTail and cast it to U16x16.
+    let mut data = [0u8; STAGE_WIDTH];
+    std::ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), tail);
+    let c = U16x16([
+        u16::from(data[ 0]),
+        u16::from(data[ 1]),
+        u16::from(data[ 2]),
+        u16::from(data[ 3]),
+        u16::from(data[ 4]),
+        u16::from(data[ 5]),
+        u16::from(data[ 6]),
+        u16::from(data[ 7]),
+        u16::from(data[ 8]),
+        u16::from(data[ 9]),
+        u16::from(data[10]),
+        u16::from(data[11]),
+        u16::from(data[12]),
+        u16::from(data[13]),
+        u16::from(data[14]),
+        u16::from(data[15]),
+    ]);
+
+    *r = lerp(*dr, *r, c);
+    *g = lerp(*dg, *g, c);
+    *b = lerp(*db, *b, c);
+    *a = lerp(*da, *a, c);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);

@@ -76,6 +76,22 @@ Shape filling by overwritting original pixels. No blending.
 | opaque               |         53,548 |         41,973 |     45,392 |     47,662 |     45,804 |  2,432,875 |
 | source               |         54,013 |         47,622 |     50,433 |     50,663 |     48,839 |    678,795 |
 
+### rectangle fill
+
+`fill_rect.rs`
+
+Fills a rectangle with a solid solid color.
+
+| Mode/Library          | tiny-skia SSE2 | tiny-skia AVX2 | Skia SSE2  | Skia AVX2  | cairo      | raqote     |
+| --------------------- | -------------: | -------------: | ---------: | ---------: | ---------: | ---------: |
+| basic                 |        746,917 |        576,148 |    711,992 |    348,918 |    203,921 |  3,672,295 |
+| with AA               |        807,427 |        637,603 |    735,547 |    371,368 |    192,178 |  2,087,047 |
+| with AA and transform |        397,436 |        347,655 |    321,105 |    191,670 |    175,061 |    891,996 |
+
+The last test simply fallbacks to path filling in Skia/tiny-skia.
+
+Strangely, Skia is pretty slow in this task. Not sure why.
+
 ### canvas fill
 
 `fill_all.rs`

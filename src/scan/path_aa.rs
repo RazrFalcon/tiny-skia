@@ -9,7 +9,7 @@ use std::convert::TryFrom;
 use crate::{Path, IntRect, FillType, LengthU32, ScreenIntRect, AlphaU8, Bounds};
 
 use crate::alpha_runs::AlphaRuns;
-use crate::blitter::Blitter;
+use crate::blitter::{Blitter, Mask};
 use crate::math::left_shift;
 
 /// controls how much we super-sample (when we use that scan conversion)
@@ -259,9 +259,15 @@ impl Blitter for SuperBlitter<'_> {
         unreachable!()
     }
 
-    /// Blits a rectangle of pixels, with location and size specified
-    /// in supersampled coordinates.
-    fn blit_rect(&mut self, _: ScreenIntRect) {
+    fn blit_v(&mut self, _: u32, _: u32, _: LengthU32, _: AlphaU8) {
+        unreachable!()
+    }
+
+    fn blit_rect(&mut self, _: &ScreenIntRect) {
+        unreachable!()
+    }
+
+    fn blit_mask(&mut self, _: &Mask, _: &ScreenIntRect) {
         unreachable!()
     }
 }

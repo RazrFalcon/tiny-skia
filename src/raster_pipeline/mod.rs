@@ -30,6 +30,8 @@ pub enum Stage {
     LoadDestination,
     Store,
     Gather,
+    ScaleU8,
+    LerpU8,
     Scale1Float,
     Lerp1Float,
     DestinationAtop,
@@ -89,13 +91,13 @@ pub trait Context: std::fmt::Debug {}
 #[derive(Copy, Clone, Debug)]
 pub struct MemoryCtx {
     pub pixels: *mut c_void,
-    pub stride: LengthU32,
+    pub stride: u32, // can be zero
 }
 
 impl MemoryCtx {
     #[inline(always)]
     pub unsafe fn ptr_at_xy<T>(&self, dx: usize, dy: usize) -> *mut T {
-        self.pixels.cast::<T>().add(self.stride.get() as usize * dy + dx)
+        self.pixels.cast::<T>().add(self.stride as usize * dy + dx)
     }
 }
 
@@ -446,7 +448,7 @@ pub struct RasterPipeline {
 }
 
 impl RasterPipeline {
-    pub fn run(&self, rect: ScreenIntRect) {
+    pub fn run(&self, rect: &ScreenIntRect) {
         // Pipeline can be empty.
         if self.program.is_empty() {
             return;
@@ -483,7 +485,7 @@ mod blend_tests {
 
                 let img_ctx = MemoryCtx {
                     pixels: pixmap.data().as_ptr() as _,
-                    stride: pixmap.size().width_safe(),
+                    stride: pixmap.size().width(),
                 };
                 let img_ctx = &img_ctx as *const _ as *const c_void;
 
@@ -499,7 +501,7 @@ mod blend_tests {
                 p.push($mode.to_stage().unwrap());
                 p.push_with_context(Stage::Store, img_ctx);
                 let p = p.compile();
-                p.run(pixmap.size().to_screen_int_rect(0, 0));
+                p.run(&pixmap.size().to_screen_int_rect(0, 0));
 
                 assert_eq!(p.is_highp, $is_highp);
 

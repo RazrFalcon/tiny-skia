@@ -6,6 +6,14 @@
 
 use crate::{LengthU32, ScreenIntRect, AlphaU8};
 
+/// Mask is used to describe alpha bitmaps.
+pub struct Mask<'a> {
+    pub image: &'a [u8],
+    pub bounds: ScreenIntRect,
+    pub row_bytes: u32,
+}
+
+
 /// Blitter is responsible for actually writing pixels into memory.
 ///
 /// Besides efficiency, they handle clipping and antialiasing.
@@ -32,6 +40,12 @@ pub trait Blitter {
     /// This would mean to use an alpha value of 0x88 for the next 12 pixels starting at pixel 45.
     fn blit_anti_h(&mut self, x: u32, y: u32, antialias: &[AlphaU8], runs: &[u16]);
 
+    /// Blits a vertical run of pixels with a constant alpha value.
+    fn blit_v(&mut self, x: u32, y: u32, height: LengthU32, alpha: AlphaU8);
+
     /// Blits a solid rectangle one or more pixels wide.
-    fn blit_rect(&mut self, rect: ScreenIntRect);
+    fn blit_rect(&mut self, rect: &ScreenIntRect);
+
+    /// Blits a pattern of pixels defined by a rectangle-clipped mask.
+    fn blit_mask(&mut self, mask: &Mask, clip: &ScreenIntRect);
 }

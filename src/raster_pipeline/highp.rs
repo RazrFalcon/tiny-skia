@@ -42,6 +42,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     load_dst,
     store,
     gather,
+    scale_u8,
+    lerp_u8,
     scale_1_float,
     lerp_1_float,
     destination_atop,
@@ -100,7 +102,7 @@ pub fn fn_ptr(f: StageFn) -> *const c_void {
 pub fn start(
     program: *const *const c_void,
     tail_program: *const *const c_void,
-    rect: ScreenIntRect,
+    rect: &ScreenIntRect,
 ) {
     let mut  r = F32x4::default();
     let mut  g = F32x4::default();
@@ -330,6 +332,52 @@ pub unsafe fn store_tail(
     let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
     let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
     store_8888_tail_(tail, ptr, r, g, b, a);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+unsafe fn scale_u8(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
+    let ptr = ctx.ptr_at_xy::<u8>(dx, dy);
+
+    // Load u8xTail and cast it to F32x4.
+    let mut data = [0u8; STAGE_WIDTH];
+    std::ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), tail);
+    let c = F32x4::new(data[0] as f32, data[1] as f32, data[2] as f32, data[3] as f32);
+    let c = c / F32x4::splat(255.0);
+
+    *r = *r * c;
+    *g = *g * c;
+    *b = *b * c;
+    *a = *a * c;
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+unsafe fn lerp_u8(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
+    let ptr = ctx.ptr_at_xy::<u8>(dx, dy);
+
+    // Load u8xTail and cast it to F32x4.
+    let mut data = [0u8; STAGE_WIDTH];
+    std::ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), tail);
+    let c = F32x4::new(data[0] as f32, data[1] as f32, data[2] as f32, data[3] as f32);
+    let c = c / F32x4::splat(255.0);
+
+    *r = lerp(*dr, *r, c);
+    *g = lerp(*dg, *g, c);
+    *b = lerp(*db, *b, c);
+    *a = lerp(*da, *a, c);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);

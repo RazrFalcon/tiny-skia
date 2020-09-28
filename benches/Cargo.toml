@@ -34,6 +34,11 @@ path = "fill_all.rs"
 harness = false
 
 [[bench]]
+name = "fill_rect"
+path = "fill_rect.rs"
+harness = false
+
+[[bench]]
 name = "spiral"
 path = "spiral.rs"
 harness = false

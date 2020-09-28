@@ -3,7 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Pixmap, Transform, Path, Paint, StrokeProps, Painter, Point, PathStroker};
+use crate::{Pixmap, Transform, Path, Paint, StrokeProps, Painter, Point};
+use crate::{PathStroker, Rect, PathBuilder};
 
 /// Provides a high-level rendering API.
 #[allow(missing_debug_implementations)]
@@ -71,6 +72,21 @@ impl Canvas {
         let stroked_path = self.stroker.stroke(&path, stroke)?;
 
         self.pixmap.fill_path(&stroked_path, paint)
+    }
+
+    /// Fills a rectangle.
+    ///
+    /// If there is no transform - uses `Painter::fill_rect`.
+    /// Otherwise, it is just a `Canvas::fill_path` with a rectangular path.
+    pub fn fill_rect(&mut self, rect: &Rect, paint: &Paint) {
+        if self.transform.is_identity() {
+            let _ = self.pixmap.fill_rect(rect, paint);
+        } else {
+            if let Some(bounds) = rect.to_bounds() {
+                let path = PathBuilder::from_bounds(bounds);
+                self.fill_path(&path, paint);
+            }
+        }
     }
 }
 

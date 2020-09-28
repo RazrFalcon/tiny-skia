@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Pixmap, Path, Color, BlendMode, Shader};
+use crate::{Pixmap, Path, Color, BlendMode, Shader, Rect};
 
 use crate::scan;
 use crate::raster_pipeline::{ContextStorage, RasterPipelineBlitter};
@@ -145,6 +145,17 @@ pub trait Painter {
     /// This is essentially a memset, therefore it's very fast.
     fn fill(&mut self, color: Color);
 
+    /// Draws a filled rectangle onto the pixmap.
+    ///
+    /// This function is usually slower than filling a rectangular path,
+    /// but it produces better results. Mainly it doesn't suffer from weird
+    /// clipping of horizontal/vertical edges.
+    ///
+    /// Used mainly to render a pixmap onto a pixmap.
+    ///
+    /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
+    fn fill_rect(&mut self, rect: &Rect, paint: &Paint) -> Option<()>;
+
     /// Draws a filled path onto the pixmap.
     ///
     /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
@@ -161,6 +172,27 @@ impl Painter for Pixmap {
         }
     }
 
+    fn fill_rect(&mut self, rect: &Rect, paint: &Paint) -> Option<()> {
+        // TODO: ignore rects outside the pixmap
+
+        // TODO: draw tiler
+        let bbox = rect.round_out();
+        if bbox.width() > MAX_DIM || bbox.height() > MAX_DIM {
+            return None;
+        }
+
+        let clip = self.size().to_screen_int_rect(0, 0);
+
+        let mut ctx_storage = ContextStorage::new();
+        let mut blitter = RasterPipelineBlitter::new(paint, &mut ctx_storage, self)?;
+
+        if paint.anti_alias {
+            scan::fill_rect_aa(rect, &clip, &mut blitter)
+        } else {
+            scan::fill_rect(rect, &clip, &mut blitter)
+        }
+    }
+
     fn fill_path(&mut self, path: &Path, paint: &Paint) -> Option<()> {
         // This is sort of similar to SkDraw::drawPath
 
@@ -171,7 +203,6 @@ impl Painter for Pixmap {
         let path_bounds = path.bounds().to_rect()?;
         let path_int_bounds = path_bounds.round_out();
 
-        // TODO: ignore ML paths
         // TODO: ignore paths outside the pixmap
 
         // TODO: draw tiler
@@ -189,7 +220,7 @@ impl Painter for Pixmap {
         let mut blitter = RasterPipelineBlitter::new(paint, &mut ctx_storage, self)?;
 
         if paint.anti_alias {
-            scan::aa_path::fill_path(path, paint.fill_type, &clip, &mut blitter)
+            scan::path_aa::fill_path(path, paint.fill_type, &clip, &mut blitter)
         } else {
             scan::path::fill_path(path, paint.fill_type, &clip, &mut blitter)
         }

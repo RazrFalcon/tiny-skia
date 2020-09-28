@@ -54,6 +54,186 @@ fn single_line() {
     assert_eq!(pixmap, expected);
 }
 
+#[test]
+fn int_rect() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+
+    let rect = Rect::from_xywh(10.0, 15.0, 80.0, 70.0).unwrap();
+
+    pixmap.fill_rect(&rect, &paint);
+
+    let expected = Pixmap::load_png("tests/images/fill/int-rect.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn float_rect() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+
+    let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
+
+    pixmap.fill_rect(&rect, &paint);
+
+    let expected = Pixmap::load_png("tests/images/fill/float-rect.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn int_rect_aa() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+
+    let rect = Rect::from_xywh(10.0, 15.0, 80.0, 70.0).unwrap();
+
+    pixmap.fill_rect(&rect, &paint);
+
+    let expected = Pixmap::load_png("tests/images/fill/int-rect-aa.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn float_rect_aa() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+
+    let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
+
+    pixmap.fill_rect(&rect, &paint);
+
+    let expected = Pixmap::load_png("tests/images/fill/float-rect-aa.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn float_rect_aa_highp() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+    paint.force_hq_pipeline = true;
+
+    let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
+
+    pixmap.fill_rect(&rect, &paint);
+
+    let expected = Pixmap::load_png("tests/images/fill/float-rect-aa-highp.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn tiny_float_rect() {
+    let mut pixmap = Pixmap::new(3, 3).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+
+    let rect = Rect::from_xywh(1.3, 1.4, 0.5, 0.6).unwrap();
+    pixmap.fill_rect(&rect, &paint);
+
+    assert_eq!(
+        pixmap.pixels(),
+        &[
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(50, 127, 150, 200).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+        ]
+    );
+}
+
+#[test]
+fn tiny_float_rect_aa() {
+    let mut pixmap = Pixmap::new(3, 3).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+
+    let rect = Rect::from_xywh(1.3, 1.4, 0.5, 0.6).unwrap();
+    pixmap.fill_rect(&rect, &paint);
+
+    assert_eq!(
+        pixmap.pixels(),
+        &[
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(51, 128, 153, 60).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+            ColorU8::from_rgba(0, 0, 0, 0).premultiply(),
+        ]
+    );
+}
+
+#[test]
+fn float_rect_clip_top_left_aa() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+
+    let rect = Rect::from_xywh(-10.3, -20.4, 100.5, 70.2).unwrap();
+    pixmap.fill_rect(&rect, &paint);
+
+    let expected = Pixmap::load_png("tests/images/fill/float-rect-clip-top-left-aa.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn float_rect_clip_top_right_aa() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+
+    let rect = Rect::from_xywh(60.3, -20.4, 100.5, 70.2).unwrap();
+    pixmap.fill_rect(&rect, &paint);
+
+    let expected = Pixmap::load_png("tests/images/fill/float-rect-clip-top-right-aa.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn float_rect_clip_bottom_right_aa() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+
+    let rect = Rect::from_xywh(60.3, 40.4, 100.5, 70.2).unwrap();
+    pixmap.fill_rect(&rect, &paint);
+
+    let expected = Pixmap::load_png("tests/images/fill/float-rect-clip-bottom-right-aa.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
 
 #[test]
 fn open_polygon() {

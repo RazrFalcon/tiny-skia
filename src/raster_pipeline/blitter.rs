@@ -9,7 +9,7 @@ use std::ffi::c_void;
 use crate::{Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8, AlphaU8, Shader};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
-use crate::blitter::Blitter;
+use crate::blitter::{Blitter, Mask};
 use crate::raster_pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
 use crate::shaders::StageRec;
 
@@ -21,11 +21,15 @@ pub struct RasterPipelineBlitter {
     // Always points to the top-left of `pixmap`.
     img_ctx: raster_pipeline::MemoryCtx,
 
+    // Updated each call to blit_mask().
+    mask_ctx: raster_pipeline::MemoryCtx,
+
     memset2d_color: Option<PremultipliedColorU8>,
 
     // Built lazily on first use.
     blit_anti_h_rp: Option<RasterPipeline>,
     blit_rect_rp: Option<RasterPipeline>,
+    blit_mask_rp: Option<RasterPipeline>,
 
     // These values are pointed to by the blit pipelines above,
     // which allows us to adjust them from call to call.
@@ -117,16 +121,23 @@ impl RasterPipelineBlitter {
 
         let img_ctx = raster_pipeline::MemoryCtx {
             pixels: pixmap.data().as_ptr() as _,
-            stride: pixmap.size().width_safe(),
+            stride: pixmap.size().width(),
+        };
+
+        let mask_ctx = raster_pipeline::MemoryCtx {
+            pixels: std::ptr::null_mut(),
+            stride: 0,
         };
 
         Some(RasterPipelineBlitter {
             blend_mode,
             color_pipeline,
             img_ctx,
+            mask_ctx,
             memset2d_color,
             blit_anti_h_rp: None,
             blit_rect_rp: None,
+            blit_mask_rp: None,
             current_coverage: 0.0,
         })
     }
@@ -136,7 +147,7 @@ impl Blitter for RasterPipelineBlitter {
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32) {
         let one = unsafe { LengthU32::new_unchecked(1) };
         let r = ScreenIntRect::from_xywh_safe(x, y, width, one);
-        self.blit_rect(r);
+        self.blit_rect(&r);
     }
 
     fn blit_anti_h(&mut self, mut x: u32, y: u32, aa: &[AlphaU8], runs: &[u16]) {
@@ -184,7 +195,7 @@ impl Blitter for RasterPipelineBlitter {
                         ScreenIntRect::from_xywh_unchecked(x, y, u32::from(run), 1)
                     };
 
-                    self.blit_anti_h_rp.as_ref().unwrap().run(rect);
+                    self.blit_anti_h_rp.as_ref().unwrap().run(&rect);
                 }
             }
 
@@ -195,7 +206,19 @@ impl Blitter for RasterPipelineBlitter {
         }
     }
 
-    fn blit_rect(&mut self, rect: ScreenIntRect) {
+    fn blit_v(&mut self, x: u32, y: u32, height: LengthU32, alpha: AlphaU8) {
+        let bounds = ScreenIntRect::from_xywh_safe(x, y, LengthU32::new(1).unwrap(), height);
+
+        let mask = Mask {
+            image: std::slice::from_ref(&alpha),
+            bounds,
+            row_bytes: 0, // so we reuse the 1 "row" for all of height
+        };
+
+        self.blit_mask(&mask, &bounds);
+    }
+
+    fn blit_rect(&mut self, rect: &ScreenIntRect) {
         // TODO: reject out of bounds access
 
         if let Some(c) = self.memset2d_color {
@@ -204,7 +227,7 @@ impl Blitter for RasterPipelineBlitter {
                 let mut addr = self.img_ctx.pixels.cast::<PremultipliedColorU8>();
 
                 // Calculate pixel offset in bytes.
-                let offset = calc_pixel_offset(rect.x(), rect.y() + y, self.img_ctx.stride.get());
+                let offset = calc_pixel_offset(rect.x(), rect.y() + y, self.img_ctx.stride);
                 addr = unsafe { addr.add(offset) };
 
                 for _ in 0..rect.width() as usize {
@@ -243,6 +266,45 @@ impl Blitter for RasterPipelineBlitter {
         }
 
         self.blit_rect_rp.as_ref().unwrap().run(rect);
+    }
+
+    fn blit_mask(&mut self, mask: &Mask, clip: &ScreenIntRect) {
+        // Update `mask_ctx` to point "into" this current mask, but lined up with `img_ctx` at (0,0).
+        {
+            let mask_ptr = mask.image.as_ptr() as *mut c_void;
+            let mask_offset = mask.bounds.left() - mask.bounds.top() * mask.row_bytes;
+            self.mask_ctx.pixels = unsafe { mask_ptr.sub(mask_offset as usize) };
+            self.mask_ctx.stride = mask.row_bytes;
+        }
+
+        if self.blit_mask_rp.is_none() {
+            let img_ctx_ptr = &self.img_ctx as *const _ as *const c_void;
+            let mask_ctx_ptr = &self.mask_ctx as *const _ as *const c_void;
+
+            let mut p = RasterPipelineBuilder::new();
+            p.set_force_hq_pipeline(self.color_pipeline.is_force_hq_pipeline());
+            p.extend(&self.color_pipeline);
+            if self.blend_mode.should_pre_scale_coverage(false) {
+                p.push_with_context(raster_pipeline::Stage::ScaleU8, mask_ctx_ptr);
+                p.push_with_context(raster_pipeline::Stage::LoadDestination, img_ctx_ptr);
+                if let Some(blend_stage) = self.blend_mode.to_stage() {
+                    p.push(blend_stage);
+                }
+            } else {
+                p.push_with_context(raster_pipeline::Stage::LoadDestination, img_ctx_ptr);
+                if let Some(blend_stage) = self.blend_mode.to_stage() {
+                    p.push(blend_stage);
+                }
+
+                p.push_with_context(raster_pipeline::Stage::LerpU8, mask_ctx_ptr);
+            }
+
+            p.push_with_context(raster_pipeline::Stage::Store, img_ctx_ptr);
+
+            self.blit_mask_rp = Some(p.compile());
+        }
+
+        self.blit_mask_rp.as_ref().unwrap().run(clip);
     }
 }
 
