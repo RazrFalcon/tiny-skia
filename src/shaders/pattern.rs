@@ -4,21 +4,36 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Shader,  Transform, FilterQuality, Pixmap};
+use crate::{Shader, Transform, Pixmap, SpreadMode};
 
 use crate::safe_geom_ext::TransformExt;
 use crate::shaders::StageRec;
 use crate::raster_pipeline;
 
+
+/// Controls how much filtering to be done when transforming images.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum FilterQuality {
+    /// Nearest-neighbor. Low quality, but fastest.
+    Nearest,
+    /// Bilinear.
+    Bilinear,
+    /// Bicubic. High quality, but slow.
+    Bicubic,
+}
+
+
 /// A pattern shader.
 ///
-/// Similar to `SkImageShader`, but supports only the repeat mode.
-/// Also, we do not support FilterQuality::Medium, because it involves
+/// Essentially a `SkImageShader`.
+///
+/// Unlike Skia, we do not support FilterQuality::Medium, because it involves
 /// mipmap generation, which adds too much complexity.
 #[derive(Clone, Debug)]
 pub struct Pattern<'a> {
     pixmap: &'a Pixmap,
     quality: FilterQuality,
+    spread_mode: SpreadMode,
     pub(crate) transform: Transform,
 }
 
@@ -26,11 +41,13 @@ impl<'a> Pattern<'a> {
     /// Creates a new pattern shader.
     pub fn new(
         pixmap: &'a Pixmap,
+        spread_mode: SpreadMode,
         quality: FilterQuality,
         transform: Transform,
     ) -> Shader {
         Shader::Pattern(Pattern {
             pixmap,
+            spread_mode,
             quality,
             transform,
         })
@@ -49,19 +66,6 @@ impl<'a> Pattern<'a> {
             width: self.pixmap.size().width_safe(),
             height: self.pixmap.size().height_safe(),
         };
-
-        let limit_x = raster_pipeline::TileCtx {
-            scale: self.pixmap.width() as f32,
-            inv_scale: 1.0 / self.pixmap.width() as f32,
-        };
-
-        let limit_y = raster_pipeline::TileCtx {
-            scale: self.pixmap.height() as f32,
-            inv_scale: 1.0 / self.pixmap.height() as f32,
-        };
-
-        let limit_x = rec.ctx_storage.push_context(limit_x);
-        let limit_y = rec.ctx_storage.push_context(limit_y);
 
         let mut quality = self.quality;
 
@@ -83,14 +87,38 @@ impl<'a> Pattern<'a> {
 
         match quality {
             FilterQuality::Nearest => {
+                let limit_x = raster_pipeline::TileCtx {
+                    scale: self.pixmap.width() as f32,
+                    inv_scale: 1.0 / self.pixmap.width() as f32,
+                };
+
+                let limit_y = raster_pipeline::TileCtx {
+                    scale: self.pixmap.height() as f32,
+                    inv_scale: 1.0 / self.pixmap.height() as f32,
+                };
+
+                let limit_x = rec.ctx_storage.push_context(limit_x);
+                let limit_y = rec.ctx_storage.push_context(limit_y);
                 let ctx = rec.ctx_storage.push_context(ctx);
-                rec.pipeline.push_with_context(raster_pipeline::Stage::RepeatX, limit_x);
-                rec.pipeline.push_with_context(raster_pipeline::Stage::RepeatY, limit_y);
+
+                match self.spread_mode {
+                    SpreadMode::Pad => { /* The gather_xxx stage will clamp for us. */ }
+                    SpreadMode::Repeat => {
+                        rec.pipeline.push_with_context(raster_pipeline::Stage::RepeatX, limit_x);
+                        rec.pipeline.push_with_context(raster_pipeline::Stage::RepeatY, limit_y);
+                    }
+                    SpreadMode::Reflect => {
+                        rec.pipeline.push_with_context(raster_pipeline::Stage::ReflectX, limit_x);
+                        rec.pipeline.push_with_context(raster_pipeline::Stage::ReflectY, limit_y);
+                    }
+                }
+
                 rec.pipeline.push_with_context(raster_pipeline::Stage::Gather, ctx);
             }
             FilterQuality::Bilinear => {
                 let sampler_ctx = raster_pipeline::SamplerCtx {
                     gather: ctx,
+                    spread_mode: self.spread_mode,
                     inv_width: 1.0 / ctx.width.get() as f32,
                     inv_height: 1.0 / ctx.height.get() as f32,
                 };
@@ -100,6 +128,7 @@ impl<'a> Pattern<'a> {
             FilterQuality::Bicubic => {
                 let sampler_ctx = raster_pipeline::SamplerCtx {
                     gather: ctx,
+                    spread_mode: self.spread_mode,
                     inv_width: 1.0 / ctx.width.get() as f32,
                     inv_height: 1.0 / ctx.height.get() as f32,
                 };

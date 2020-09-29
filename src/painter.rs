@@ -30,33 +30,6 @@ impl Default for FillType {
 }
 
 
-/// A gradient spreading mode.
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub enum SpreadMode {
-    /// Replicate the edge color if the shader draws outside of its
-    /// original bounds.
-    Pad,
-
-    /// Repeat the shader's image horizontally and vertically, alternating
-    /// mirror images so that adjacent images always seam.
-    Reflect,
-
-    /// Repeat the shader's image horizontally and vertically.
-    Repeat,
-}
-
-
-/// Controls how much filtering to be done when transforming images.
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub enum FilterQuality {
-    /// Nearest-neighbor. Low quality, but fastest.
-    Nearest,
-    /// Bilinear.
-    Bilinear,
-    /// Bicubic. High quality, but slow.
-    Bicubic,
-}
-
 /// Controls how a path should be filled.
 #[derive(Clone, Debug)]
 pub struct Paint<'a> {

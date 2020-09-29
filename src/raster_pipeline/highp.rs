@@ -18,7 +18,7 @@ and we're using a manual implementation.
 
 use std::ffi::c_void;
 
-use crate::{ScreenIntRect, PremultipliedColorU8, Transform};
+use crate::{ScreenIntRect, PremultipliedColorU8, Transform, SpreadMode};
 
 use crate::wide::{I32x4, U32x4, F32x4};
 
@@ -77,6 +77,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     transform_translate,
     transform_scale_translate,
     transform_2x3,
+    reflect_x,
+    reflect_y,
     repeat_x,
     repeat_y,
     bilinear,
@@ -782,13 +784,44 @@ unsafe fn transform_2x3(
 // The gather stages will hard clamp the output of these stages to [0,limit)...
 // we just need to do the basic repeat or mirroring.
 
+unsafe fn reflect_x(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    let ctx: &super::TileCtx = &*(*program.add(1)).cast();
+    *r = exclusive_reflect(*r, ctx.scale, ctx.inv_scale);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+unsafe fn reflect_y(
+    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
+    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
+    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
+) {
+    let ctx: &super::TileCtx = &*(*program.add(1)).cast();
+    *g = exclusive_reflect(*g, ctx.scale, ctx.inv_scale);
+
+    let next: StageFn = *program.add(2).cast();
+    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
+}
+
+#[inline(always)]
+fn exclusive_reflect(v: F32x4, limit: f32, inv_limit: f32) -> F32x4 {
+    let limit = F32x4::splat(limit);
+    let inv_limit = F32x4::splat(inv_limit);
+    ((v - limit) - (limit + limit) * ((v - limit) * (inv_limit * F32x4::splat(0.5))).floor() - limit).abs()
+}
+
 unsafe fn repeat_x(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
     let ctx: &super::TileCtx = &*(*program.add(1)).cast();
-    *r = exclusive_repeat(ctx, *r);
+    *r = exclusive_repeat(*r, ctx.scale, ctx.inv_scale);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -800,15 +833,15 @@ unsafe fn repeat_y(
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
     let ctx: &super::TileCtx = &*(*program.add(1)).cast();
-    *g = exclusive_repeat(ctx, *g);
+    *g = exclusive_repeat(*g, ctx.scale, ctx.inv_scale);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
 }
 
 #[inline(always)]
-fn exclusive_repeat(ctx: &super::TileCtx, v: F32x4) -> F32x4 {
-    v - (v * F32x4::splat(ctx.inv_scale)).floor() * F32x4::splat(ctx.scale)
+fn exclusive_repeat(v: F32x4, limit: f32, inv_limit: f32) -> F32x4 {
+    v - (v * F32x4::splat(inv_limit)).floor() * F32x4::splat(limit)
 }
 
 unsafe fn bilinear(
@@ -949,8 +982,8 @@ unsafe fn sample(
     ctx: &super::SamplerCtx, mut x: F32x4, mut y: F32x4,
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
 ) {
-    x = tile(x, ctx.gather.width.get() as f32, ctx.inv_width);
-    y = tile(y, ctx.gather.height.get() as f32, ctx.inv_height);
+    x = tile(x, ctx.spread_mode, ctx.gather.width.get() as f32, ctx.inv_width);
+    y = tile(y, ctx.spread_mode, ctx.gather.height.get() as f32, ctx.inv_height);
 
     let ix = gather_ix(&ctx.gather, x, y);
     let data = [
@@ -963,8 +996,14 @@ unsafe fn sample(
 }
 
 #[inline(always)]
-fn tile(v: F32x4, limit: f32, inv_limit: f32) -> F32x4 {
-    v - (v * F32x4::splat(inv_limit)).floor() * F32x4::splat(limit)
+fn tile(v: F32x4, mode: SpreadMode, limit: f32, inv_limit: f32) -> F32x4 {
+    // This match make this function almost 2x slower when building with `-Ctarget-cpu=haswell`.
+    // TODO: optimize
+    match mode {
+        SpreadMode::Pad => v,
+        SpreadMode::Repeat => exclusive_repeat(v, limit, inv_limit),
+        SpreadMode::Reflect => exclusive_reflect(v, limit, inv_limit),
+    }
 }
 
 unsafe fn pad_x1(

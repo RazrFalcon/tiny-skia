@@ -6,7 +6,7 @@
 
 use std::ffi::c_void;
 
-use crate::{ScreenIntRect, LengthU32, Transform, Color, NormalizedF32};
+use crate::{ScreenIntRect, LengthU32, Transform, Color, NormalizedF32, SpreadMode};
 
 use crate::color::PremultipliedColor;
 
@@ -65,6 +65,8 @@ pub enum Stage {
     TransformTranslate, // TODO: remove?
     TransformScaleTranslate, // TODO: remove?
     Transform2X3,
+    ReflectX,
+    ReflectY,
     RepeatX,
     RepeatY,
     Bilinear,
@@ -118,6 +120,7 @@ impl Context for GatherCtx {}
 #[derive(Copy, Clone, Debug)]
 pub struct SamplerCtx {
     pub gather: GatherCtx,
+    pub spread_mode: SpreadMode,
     pub inv_width: f32,
     pub inv_height: f32,
 }

@@ -11,6 +11,7 @@ fn main() {
     paint.anti_alias = true;
     paint.shader = Pattern::new(
         &triangle,
+        SpreadMode::Repeat,
         FilterQuality::Bicubic,
         Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
     );

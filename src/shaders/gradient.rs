@@ -4,10 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Color, Transform, NormalizedF32};
+use crate::{Color, Transform, NormalizedF32, SpreadMode};
 
 use crate::safe_geom_ext::TransformExt;
-use crate::painter::SpreadMode;
 use crate::raster_pipeline::{EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
 use crate::raster_pipeline::{self, RasterPipelineBuilder};
 use crate::scalar::Scalar;

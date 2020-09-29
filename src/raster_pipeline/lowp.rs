@@ -87,6 +87,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     transform_translate,
     transform_scale_translate,
     transform_2x3,
+    null_fn, // ReflectX
+    null_fn, // ReflectY
     null_fn, // RepeatX
     null_fn, // RepeatY
     null_fn, // Bilinear

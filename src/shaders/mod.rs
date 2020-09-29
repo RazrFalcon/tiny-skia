@@ -12,11 +12,28 @@ mod pattern;
 pub use gradient::GradientStop;
 pub use linear_gradient::LinearGradient;
 pub use radial_gradient::RadialGradient;
-pub use pattern::Pattern;
+pub use pattern::{Pattern, FilterQuality};
 
 use crate::{Color, Transform};
 
 use crate::raster_pipeline::{RasterPipelineBuilder, ContextStorage};
+
+
+/// A shader spreading mode.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum SpreadMode {
+    /// Replicate the edge color if the shader draws outside of its
+    /// original bounds.
+    Pad,
+
+    /// Repeat the shader's image horizontally and vertically, alternating
+    /// mirror images so that adjacent images always seam.
+    Reflect,
+
+    /// Repeat the shader's image horizontally and vertically.
+    Repeat,
+}
+
 
 pub struct StageRec<'a> {
     pub ctx_storage: &'a mut ContextStorage,

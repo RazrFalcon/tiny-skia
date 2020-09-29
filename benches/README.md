@@ -136,9 +136,9 @@ when a rendering backend is designed for long horizontal strides.
 
 | Test/Library                | tiny-skia SSE2 | tiny-skia AVX2 | Skia SSE2  | Skia AVX2  | cairo       | raqote     |
 | --------------------------- | -------------: | -------------: | ---------: | ---------: | ----------: | ---------: |
-| plain (nearest, no ts)      |      3,580,633 |      3,408,990 |  1,315,079 |  1,122,982 |     785,550 |  1,865,327 |
-| lq (bilinear, with ts)      |     11,061,091 |      6,680,624 |  4,484,023 |  2,646,523 |  17,612,685 | 24,906,379 |
-| hq (bicubic/gauss, with ts) |     29,916,383 |     16,362,411 | 12,386,848 |  9,364,356 | 162,771,632 |          - |
+| plain (nearest, no ts)      |      3,604,568 |      3,426,429 |  1,315,079 |  1,122,982 |     785,550 |  1,865,327 |
+| lq (bilinear, with ts)      |     10,744,786 |      9,396,174 |  4,484,023 |  2,646,523 |  17,612,685 | 24,906,379 |
+| hq (bicubic/gauss, with ts) |     32,976,005 |     31,067,973 | 12,386,848 |  9,364,356 | 162,771,632 |          - |
 
 Note that `raqote` doesn't support high quality filtering.
 

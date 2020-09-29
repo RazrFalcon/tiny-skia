@@ -33,6 +33,7 @@ fn pattern_tiny_skia(
     paint.anti_alias = true;
     paint.shader = Pattern::new(
         &triangle,
+        SpreadMode::Repeat,
         quality,
         ts,
     );
