@@ -96,7 +96,6 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [x] Blending modes
 - [x] `Path` filling
 - [x] Anti-aliased `Path` filling
-- [ ] Analytical anti-aliased `Path` filling
 - [x] `Path` stroking
 - [ ] `Path` hairline stroking
 - [ ] Anti-aliased `Path` hairline stroking
@@ -109,6 +108,7 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 
 - [ ] Clipping
 - [ ] Anti-aliased clipping
+- [ ] Analytical anti-aliased `Path` filling
 - [ ] Dithering
 
 ### v0.N
@@ -155,6 +155,15 @@ As for the porting process itself, Skia uses goto, inheritance, virtual methods,
 const generics and templates specialization a lot, and all of this features are unavailable in Rust.
 There are also a lot of pointers magic, implicit mutations and caches.
 Therefore we have to compromise or even rewrite some parts from scratch.
+
+## Alternatives
+
+Right now, the only pure Rust alternative is [raqote](https://github.com/jrmuizel/raqote).
+
+- It doesn't support high-quality antialiasing (hairline stroking in particular).
+- It's very slow (see [benchmarks](./benches/README.md)).
+- There are some rendering issues (like gradient transparency).
+- Raqote has a very rudimentary text rendering support, while tiny-skia has none.
 
 ## Safety
 
