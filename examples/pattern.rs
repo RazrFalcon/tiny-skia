@@ -13,6 +13,7 @@ fn main() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Bicubic,
+        NormalizedF32::ONE,
         Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
     );
 

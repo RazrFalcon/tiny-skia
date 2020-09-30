@@ -102,7 +102,7 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [ ] Anti-aliased `Path` hairline stroking
 - [ ] Stroke dashing
 - [x] Gradients (linear, radial and two point conical)
-- [ ] `Pixmap`s blending (image on image rendering)
+- [x] `Pixmap`s blending (image on image rendering)
 - [x] Patterns
 
 ### v0.3
@@ -113,9 +113,37 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 
 ### v0.N
 
+- Linear color space.
 - Move `Path` and most of Bézier math into separate crates. Preferably into existing one
 
 PS: we start from 0.2, because 0.1 was just a bindings.
+
+## Out of scope
+
+Skia is a huge library and we support only a tiny part of.
+And more importantly, we do not plan to support many feature at all.
+
+- GPU rendering.
+- Text rendering (maybe someday).
+- PDF generation.
+- Non-RGBA8888 images.
+- Non-PNG image formats.
+- Advanced Bézier path operations.
+- Conic path segments.
+- Path effects (except dashing).
+- Any kind of resource caching.
+- ICC profiles.
+
+## Notable changes
+
+Despite being a port, we still have a lot of changes even in the supported subset.
+
+- No global alpha.<br/>
+  Unlike Skia, only `Pattern` is allowed to have opacity.
+  In all other cases you should adjust colors opacity manually.
+- No bilinear + mipmap down-scaling support.
+- No bilinear filtering in low precision pipeline.
+- Low precision pipeline uses u16x16 instead of u16x8. And no SIMD (yet).
 
 ## Notes about the port
 

@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Shader, Transform, Pixmap, SpreadMode};
+use crate::{Shader, Transform, Pixmap, SpreadMode, NormalizedF32};
 
 use crate::safe_geom_ext::TransformExt;
 use crate::shaders::StageRec;
@@ -34,6 +34,7 @@ pub struct Pattern<'a> {
     pixmap: &'a Pixmap,
     quality: FilterQuality,
     spread_mode: SpreadMode,
+    opacity: NormalizedF32,
     pub(crate) transform: Transform,
 }
 
@@ -43,12 +44,14 @@ impl<'a> Pattern<'a> {
         pixmap: &'a Pixmap,
         spread_mode: SpreadMode,
         quality: FilterQuality,
+        opacity: NormalizedF32,
         transform: Transform,
     ) -> Shader {
         Shader::Pattern(Pattern {
             pixmap,
             spread_mode,
             quality,
+            opacity,
             transform,
         })
     }
@@ -69,7 +72,7 @@ impl<'a> Pattern<'a> {
 
         let mut quality = self.quality;
 
-        if ts.is_identity() {
+        if ts.is_identity() || ts.is_translate() {
             quality = FilterQuality::Nearest;
         }
 
@@ -83,7 +86,7 @@ impl<'a> Pattern<'a> {
             }
         }
 
-        // TODO: minimizing scale
+        // TODO: minimizing scale via mipmap
 
         match quality {
             FilterQuality::Nearest => {
@@ -139,6 +142,13 @@ impl<'a> Pattern<'a> {
                 rec.pipeline.push(raster_pipeline::Stage::Clamp0);
                 rec.pipeline.push(raster_pipeline::Stage::ClampA);
             }
+        }
+
+        // Unlike Skia, we do not support global opacity and only Pattern allows it.
+        if self.opacity != NormalizedF32::ONE {
+            debug_assert_eq!(std::mem::size_of_val(&self.opacity), 4, "alpha must be f32");
+            let opacity = rec.ctx_storage.push_context(self.opacity.get());
+            rec.pipeline.push_with_context(raster_pipeline::Stage::Scale1Float, opacity);
         }
 
         Some(())

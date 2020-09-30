@@ -90,6 +90,9 @@ pub const STAGES_COUNT: usize = Stage::ApplyVectorMask as usize + 1;
 pub trait Context: std::fmt::Debug {}
 
 
+impl Context for f32 {}
+
+
 #[derive(Copy, Clone, Debug)]
 pub struct MemoryCtx {
     pub pixels: *mut c_void,

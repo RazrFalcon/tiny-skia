@@ -35,6 +35,7 @@ fn pattern_tiny_skia(
         &triangle,
         SpreadMode::Repeat,
         quality,
+        NormalizedF32::ONE,
         ts,
     );
 

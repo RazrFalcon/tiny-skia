@@ -29,6 +29,7 @@ fn pad_nearest() {
         &triangle,
         SpreadMode::Pad,
         FilterQuality::Nearest,
+        NormalizedF32::ONE,
         Transform::identity(),
     );
 
@@ -50,6 +51,7 @@ fn repeat_nearest() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Nearest,
+        NormalizedF32::ONE,
         Transform::identity(),
     );
 
@@ -71,6 +73,7 @@ fn reflect_nearest() {
         &triangle,
         SpreadMode::Reflect,
         FilterQuality::Nearest,
+        NormalizedF32::ONE,
         Transform::identity(),
     );
 
@@ -94,6 +97,7 @@ fn pad_bicubic() {
         &triangle,
         SpreadMode::Pad,
         FilterQuality::Bicubic,
+        NormalizedF32::ONE,
         // Transform must be set, otherwise we will fallback to Nearest.
         Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
     );
@@ -116,6 +120,7 @@ fn repeat_bicubic() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Bicubic,
+        NormalizedF32::ONE,
         // Transform must be set, otherwise we will fallback to Nearest.
         Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
     );
@@ -138,6 +143,7 @@ fn reflect_bicubic() {
         &triangle,
         SpreadMode::Reflect,
         FilterQuality::Bicubic,
+        NormalizedF32::ONE,
         // Transform must be set, otherwise we will fallback to Nearest.
         Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
     );
@@ -160,6 +166,7 @@ fn filter_nearest_no_ts() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Nearest,
+        NormalizedF32::ONE,
         Transform::identity(),
     );
 
@@ -181,6 +188,7 @@ fn filter_nearest() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Nearest,
+        NormalizedF32::ONE,
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
@@ -202,6 +210,7 @@ fn filter_bilinear() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Bilinear,
+        NormalizedF32::ONE,
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
@@ -233,6 +242,7 @@ fn filter_bicubic() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Bicubic,
+        NormalizedF32::ONE,
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
