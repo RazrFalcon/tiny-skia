@@ -11,7 +11,7 @@ fn main() {
     let mut paint = PixmapPaint::default();
     paint.quality = FilterQuality::Bicubic;
 
-    canvas.transform = canvas.transform.post_concat(&Transform::from_row(1.2, 0.5, 0.5, 1.2, 0.0, 0.0).unwrap()).unwrap();
+    canvas.transform(1.2, 0.5, 0.5, 1.2, 0.0, 0.0);
     canvas.draw_pixmap(20, 20, &triangle, &paint);
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);

@@ -28,13 +28,11 @@ fn main() {
     let mut stroke = StrokeProps::default();
     stroke.width = 20.0;
 
-    let ts = Transform::from_row(1.5, 0.3, 1.7, 3.5, -130.0, 50.0).unwrap();
-    canvas.transform = canvas.transform.post_concat(&ts).unwrap();
-
+    canvas.transform(1.5, 0.3, 1.7, 3.5, -130.0, 50.0);
     canvas.stroke_path(&path, &paint, stroke);
 
-    canvas.transform = canvas.transform.post_scale(1.0, -1.0).unwrap();
-    canvas.transform = canvas.transform.post_translate(480.0, 858.0).unwrap();
+    canvas.scale(1.0, -1.0);
+    canvas.translate(480.0, 858.0);
     canvas.stroke_path(&path, &paint, stroke);
 
     canvas.pixmap.save_png("image.png").unwrap();

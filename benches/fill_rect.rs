@@ -135,7 +135,7 @@ fn fill_rect_aa_ts_tiny_skia(bencher: &mut Bencher) {
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
-    canvas.transform = Transform::from_row(1.8, 0.3, -0.7, 0.8, 12.0, 15.3).unwrap();
+    canvas.transform(1.8, 0.3, -0.7, 0.8, 12.0, 15.3);
     let rect = Rect::from_xywh(200.3, 100.4, 500.5, 300.2).unwrap();
 
     bencher.iter(|| {

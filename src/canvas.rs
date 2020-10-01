@@ -41,16 +41,21 @@ impl Default for PixmapPaint {
 
 
 /// Provides a high-level rendering API.
+///
+/// Unlike the most of other types, `Canvas` provides an unchecked API.
+/// Which means that a drawing command will simply be ignored in case of an error
+/// and a caller has no way of checking it.
 #[allow(missing_debug_implementations)]
 #[derive(Clone)]
 pub struct Canvas {
     /// A pixmap owned by the canvas.
     pub pixmap: Pixmap,
     /// Canvas's transform.
-    pub transform: Transform,
+    transform: Transform,
 
     /// A path stroker used to cache temporary stroking data.
     stroker: PathStroker,
+    stroked_path: Option<Path>,
 }
 
 impl From<Pixmap> for Canvas {
@@ -60,11 +65,50 @@ impl From<Pixmap> for Canvas {
             pixmap,
             transform: Transform::identity(),
             stroker: PathStroker::new(),
+            stroked_path: None,
         }
     }
 }
 
 impl Canvas {
+    /// Translates the canvas.
+    #[inline]
+    pub fn translate(&mut self, tx: f32, ty: f32) {
+        if let Some(ts) = self.transform.post_translate(tx, ty) {
+            self.transform = ts;
+        }
+    }
+
+    /// Scales the canvas.
+    #[inline]
+    pub fn scale(&mut self, sx: f32, sy: f32) {
+        if let Some(ts) = self.transform.post_scale(sx, sy) {
+            self.transform = ts;
+        }
+    }
+
+    /// Applies an affine transformation to the canvas.
+    #[inline]
+    pub fn transform(&mut self, sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) {
+        if let Some(ref ts) = Transform::from_row(sx, ky, kx, sy, tx, ty) {
+            if let Some(ts) = self.transform.post_concat(ts) {
+                self.transform = ts;
+            }
+        }
+    }
+
+    /// Gets the current canvas transform.
+    #[inline]
+    pub fn get_transform(&mut self) -> Transform {
+        self.transform
+    }
+
+    /// Sets the canvas transform.
+    #[inline]
+    pub fn set_transform(&mut self, ts: Transform) {
+        self.transform = ts;
+    }
+
     /// Fills a path.
     pub fn fill_path(&mut self, path: &Path, paint: &Paint) {
         self.fill_path_impl(path, paint);
@@ -85,6 +129,16 @@ impl Canvas {
     }
 
     /// Strokes a path.
+    ///
+    /// Stroking is implemented using two separate algorithms:
+    ///
+    /// 1. If a stroke width is wider than 1px (after applying the transformation),
+    ///    a path will be converted into a stroked path and then filled using `Painter::fill_path`.
+    ///    Which means that we have to allocate a separate `Path`, that can be 2-3x larger
+    ///    then the original path.
+    ///    `Canvas` will reuse this allocation during subsequent strokes.
+    /// 2. If a stroke width is thinner than 1px (after applying the transformation),
+    ///    we will use hairline stroking, which doesn't involve a separate path allocation.
     pub fn stroke_path(&mut self, path: &Path, paint: &Paint, stroke: StrokeProps) {
         self.stroke_path_impl(path, paint, stroke);
     }
@@ -105,22 +159,27 @@ impl Canvas {
             (path, paint)
         };
 
-        let stroked_path = self.stroker.stroke(&path, stroke)?;
+        if let Some(stroked_path) = self.stroked_path.take() {
+            self.stroked_path = Some(self.stroker.stroke_to(&path, stroke, stroked_path)?);
+        } else {
+            self.stroked_path = Some(self.stroker.stroke(&path, stroke)?);
+        }
 
-        self.pixmap.fill_path(&stroked_path, paint)
+        self.pixmap.fill_path(self.stroked_path.as_ref()?, paint)
     }
 
     /// Draws a `Pixmap` on top of the current `Pixmap`.
+    ///
+    /// We basically filling a rectangle with a `pixmap` pattern.
     pub fn draw_pixmap(&mut self, x: i32, y: i32, pixmap: &Pixmap, paint: &PixmapPaint) {
         self.draw_pixmap_impl(x, y, pixmap, paint);
     }
 
     #[inline(always)]
     fn draw_pixmap_impl(&mut self, x: i32, y: i32, pixmap: &Pixmap, paint: &PixmapPaint) -> Option<()> {
-        // We basically filling a rect with a `pixmap` pattern.
-
         let rect = pixmap.size().to_int_rect(x, y).to_rect();
 
+        // TODO: SkSpriteBlitter
         // TODO: partially clipped
         // TODO: clipped out
 

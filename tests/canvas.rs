@@ -9,7 +9,7 @@ fn fill_rect() {
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
-    canvas.transform = Transform::from_row(1.2, 0.3, -0.7, 0.8, 12.0, 15.3).unwrap();
+    canvas.transform(1.2, 0.3, -0.7, 0.8, 12.0, 15.3);
     canvas.fill_rect(&Rect::from_xywh(20.3, 10.4, 50.5, 30.2).unwrap(), &paint);
 
     let expected = Pixmap::load_png("tests/images/canvas/fill-rect.png").unwrap();
@@ -70,7 +70,7 @@ fn draw_pixmap_ts() {
     let mut paint = PixmapPaint::default();
     paint.quality = FilterQuality::Bicubic;
 
-    canvas.transform = canvas.transform.post_concat(&Transform::from_row(1.2, 0.5, 0.5, 1.2, 0.0, 0.0).unwrap()).unwrap();
+    canvas.transform(1.2, 0.5, 0.5, 1.2, 0.0, 0.0);
     canvas.draw_pixmap(5, 10, &triangle, &paint);
 
     let expected = Pixmap::load_png("tests/images/canvas/draw-pixmap-ts.png").unwrap();
@@ -104,7 +104,7 @@ fn draw_pixmap_opacity() {
     paint.quality = FilterQuality::Bicubic;
     paint.opacity = NormalizedF32::new_bounded(0.5);
 
-    canvas.transform = canvas.transform.post_concat(&Transform::from_row(1.2, 0.5, 0.5, 1.2, 0.0, 0.0).unwrap()).unwrap();
+    canvas.transform(1.2, 0.5, 0.5, 1.2, 0.0, 0.0);
     canvas.draw_pixmap(5, 10, &triangle, &paint);
 
     let expected = Pixmap::load_png("tests/images/canvas/draw-pixmap-opacity.png").unwrap();

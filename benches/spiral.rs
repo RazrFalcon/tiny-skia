@@ -206,7 +206,8 @@ const CURVES: &[f32] = &[
 fn spiral_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::from(pixmap);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -219,8 +220,7 @@ fn spiral_tiny_skia(bencher: &mut Bencher) {
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        let path = path.stroke(StrokeProps::default()).unwrap();
-        pixmap.fill_path(&path, &paint);
+        canvas.stroke_path(&path, &paint, StrokeProps::default());
     });
 }
 
