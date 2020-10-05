@@ -44,6 +44,11 @@ path = "spiral.rs"
 harness = false
 
 [[bench]]
+name = "hairline"
+path = "hairline.rs"
+harness = false
+
+[[bench]]
 name = "gradients"
 path = "gradients.rs"
 harness = false

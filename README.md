@@ -52,12 +52,14 @@ Which is no surprise.<br>
 The problem is that Skia doesn't support dynamic CPU detection.
 So by enabling AVX2 you're making the resulting binary non-portable,
 since you need a Haswell processor or newer.<br>
-Right now, `tiny-skia` supports only SSE2 instructions and relies on autovectorization.
+Right now, `tiny-skia` directly supports only SSE2 instructions
+and relies on autovectorization for newer one.
 
 Skia also supports ARM NEON instructions, which are unavailable in a stable Rust at the moment.
 Therefore a default scalar implementation will be used instead on ARM and other non-x86 targets.
 
 Accounting all above, `tiny-skia` is 20-100% slower than "a Skia built for a generic x86_64 CPU".
+Which still makes if faster than `cairo` in many cases.
 
 We can technically use the `SkRasterPipeline` directly, to achive the same performance as Skia has.
 But it means that we have to complicate our build process quite a lot.
@@ -97,8 +99,8 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [x] `Path` filling
 - [x] Anti-aliased `Path` filling
 - [x] `Path` stroking
-- [ ] `Path` hairline stroking
-- [ ] Anti-aliased `Path` hairline stroking
+- [x] `Path` hairline stroking
+- [x] Anti-aliased `Path` hairline stroking
 - [ ] Stroke dashing
 - [x] Gradients (linear, radial and two point conical)
 - [x] `Pixmap`s blending (image on image rendering)

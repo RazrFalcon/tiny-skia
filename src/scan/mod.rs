@@ -7,6 +7,7 @@
 pub mod path_aa;
 pub mod path;
 pub mod hairline_aa;
+pub mod hairline;
 
 
 use crate::{Rect, ScreenIntRect, IntRect};

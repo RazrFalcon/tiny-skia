@@ -34,7 +34,7 @@ pub struct Pattern<'a> {
     pixmap: &'a Pixmap,
     quality: FilterQuality,
     spread_mode: SpreadMode,
-    opacity: NormalizedF32,
+    pub(crate) opacity: NormalizedF32,
     pub(crate) transform: Transform,
 }
 

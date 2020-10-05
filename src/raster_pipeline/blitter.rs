@@ -11,6 +11,7 @@ use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::blitter::{Blitter, Mask};
 use crate::raster_pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
+use crate::safe_geom_ext::LENGTH_U32_ONE;
 use crate::shaders::StageRec;
 
 
@@ -145,8 +146,7 @@ impl RasterPipelineBlitter {
 
 impl Blitter for RasterPipelineBlitter {
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32) {
-        let one = unsafe { LengthU32::new_unchecked(1) };
-        let r = ScreenIntRect::from_xywh_safe(x, y, width, one);
+        let r = ScreenIntRect::from_xywh_safe(x, y, width, LENGTH_U32_ONE);
         self.blit_rect(&r);
     }
 
@@ -158,7 +158,7 @@ impl Blitter for RasterPipelineBlitter {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(self.color_pipeline.is_force_hq_pipeline());
             p.extend(&self.color_pipeline);
-            if self.blend_mode.should_pre_scale_coverage(false) {
+            if self.blend_mode.should_pre_scale_coverage() {
                 p.push_with_context(raster_pipeline::Stage::Scale1Float, curr_cov_ptr);
                 p.push_with_context(raster_pipeline::Stage::LoadDestination, ctx_ptr);
                 if let Some(blend_stage) = self.blend_mode.to_stage() {
@@ -207,12 +207,36 @@ impl Blitter for RasterPipelineBlitter {
     }
 
     fn blit_v(&mut self, x: u32, y: u32, height: LengthU32, alpha: AlphaU8) {
-        let bounds = ScreenIntRect::from_xywh_safe(x, y, LengthU32::new(1).unwrap(), height);
+        let bounds = ScreenIntRect::from_xywh_safe(x, y, LENGTH_U32_ONE, height);
 
         let mask = Mask {
             image: std::slice::from_ref(&alpha),
             bounds,
             row_bytes: 0, // so we reuse the 1 "row" for all of height
+        };
+
+        self.blit_mask(&mask, &bounds);
+    }
+
+    fn blit_anti_h2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8) {
+        let bounds = ScreenIntRect::from_xywh(x, y, 2, 1).unwrap();
+
+        let mask = Mask {
+            image: &[alpha0, alpha1],
+            bounds,
+            row_bytes: 2,
+        };
+
+        self.blit_mask(&mask, &bounds);
+    }
+
+    fn blit_anti_v2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8) {
+        let bounds = ScreenIntRect::from_xywh(x, y, 1, 2).unwrap();
+
+        let mask = Mask {
+            image: &[alpha0, alpha1],
+            bounds,
+            row_bytes: 1,
         };
 
         self.blit_mask(&mask, &bounds);
@@ -269,11 +293,18 @@ impl Blitter for RasterPipelineBlitter {
     }
 
     fn blit_mask(&mut self, mask: &Mask, clip: &ScreenIntRect) {
-        // Update `mask_ctx` to point "into" this current mask, but lined up with `img_ctx` at (0,0).
         {
-            let mask_ptr = mask.image.as_ptr() as *mut c_void;
-            let mask_offset = mask.bounds.left() - mask.bounds.top() * mask.row_bytes;
-            self.mask_ctx.pixels = unsafe { mask_ptr.sub(mask_offset as usize) };
+            // Update ctx to point "into" this current mask, but lined up with `img_ctx` at (0,0).
+            // This sort of trickery upsets UBSAN (pointer-overflow) so our ptr must be a usize.
+            // mask.row_bytes is a u32, which would break our addressing math on 64-bit builds.
+            //
+            // No idea how it actually works, but this is the correctly working code.
+            // Any changes will lead to invalid results and sanitizer complains.
+            let mask_ptr = (mask.image.as_ptr() as usize)
+                .wrapping_sub(mask.bounds.left() as usize)
+                .wrapping_sub(mask.bounds.top() as usize * mask.row_bytes as usize);
+
+            self.mask_ctx.pixels = mask_ptr as *mut c_void;
             self.mask_ctx.stride = mask.row_bytes;
         }
 
@@ -284,7 +315,7 @@ impl Blitter for RasterPipelineBlitter {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(self.color_pipeline.is_force_hq_pipeline());
             p.extend(&self.color_pipeline);
-            if self.blend_mode.should_pre_scale_coverage(false) {
+            if self.blend_mode.should_pre_scale_coverage() {
                 p.push_with_context(raster_pipeline::Stage::ScaleU8, mask_ctx_ptr);
                 p.push_with_context(raster_pipeline::Stage::LoadDestination, img_ctx_ptr);
                 if let Some(blend_stage) = self.blend_mode.to_stage() {

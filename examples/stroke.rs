@@ -1,5 +1,7 @@
 use tiny_skia::*;
 
+// TODO: rewrite
+
 fn main() {
     let mut pixmap = Pixmap::new(500, 500).unwrap();
 

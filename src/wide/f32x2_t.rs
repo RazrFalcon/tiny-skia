@@ -16,6 +16,31 @@ impl F32x2 {
         F32x2([x, x])
     }
 
+    pub fn abs(self) -> F32x2 {
+        F32x2([
+            self.x().abs(),
+            self.y().abs(),
+        ])
+    }
+
+    pub fn min(self, other: F32x2) -> F32x2 {
+        F32x2([
+            self.x().min(other.x()),
+            self.y().min(other.y()),
+        ])
+    }
+
+    pub fn max(self, other: F32x2) -> F32x2 {
+        F32x2([
+            self.x().max(other.x()),
+            self.y().max(other.y()),
+        ])
+    }
+
+    pub fn max_component(self) -> f32 {
+        self.x().max(self.y())
+    }
+
     pub fn x(&self) -> f32 { self.0[0] }
     pub fn y(&self) -> f32 { self.0[1] }
 }

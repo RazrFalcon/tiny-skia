@@ -3,8 +3,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// This module is closer to SkDraw than SkCanvas
+// and since it was written from scratch, there is no Google copyright.
+
 use crate::{Pixmap, Transform, Path, Paint, StrokeProps, Painter, Point, PathStroker, NormalizedF32};
 use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillType, Rect, SpreadMode};
+
+use crate::safe_geom_ext::TransformExt;
+use crate::scalar::Scalar;
 
 
 /// Controls how a pixmap should be blended.
@@ -145,27 +151,46 @@ impl Canvas {
 
     #[inline(always)]
     fn stroke_path_impl(&mut self, path: &Path, paint: &Paint, mut stroke: StrokeProps) -> Option<()> {
-        let mut transformed_paint;
-        let transformed_path;
-        let (path, paint) = if !self.transform.is_identity() {
-            stroke.width *= compute_res_scale_for_stroking(&self.transform);
-
-            transformed_paint = paint.clone();
-            transformed_paint.shader.transform(&self.transform);
-
-            transformed_path = path.clone().transform(&self.transform)?;
-            (&transformed_path, &transformed_paint)
-        } else {
-            (path, paint)
-        };
-
-        if let Some(stroked_path) = self.stroked_path.take() {
-            self.stroked_path = Some(self.stroker.stroke_to(&path, stroke, stroked_path)?);
-        } else {
-            self.stroked_path = Some(self.stroker.stroke(&path, stroke)?);
+        if stroke.width < 0.0 {
+            return None;
         }
 
-        self.pixmap.fill_path(self.stroked_path.as_ref()?, paint)
+        let mut paint = paint.clone();
+
+        let transformed_path;
+        let path = if !self.transform.is_identity() {
+            stroke.width *= compute_res_scale_for_stroking(&self.transform);
+
+            paint.shader.transform(&self.transform);
+
+            transformed_path = path.clone().transform(&self.transform)?;
+            &transformed_path
+        } else {
+            path
+        };
+
+        if let Some(coverage) = treat_as_hairline(&paint, stroke, &self.transform) {
+            if coverage == 1.0 {
+                // No changes to the `paint`.
+            } else if paint.blend_mode.should_pre_scale_coverage() {
+                // This is the old technique, which we preserve for now so
+                // we don't change previous results (testing)
+                // the new way seems fine, its just (a tiny bit) different.
+                let scale = (coverage * 256.0) as i32;
+                let new_alpha = 255 * scale >> 8;
+                paint.shader.apply_opacity(NormalizedF32::new_bounded(new_alpha as f32 / 255.0));
+            }
+
+            self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap)
+        } else {
+            if let Some(stroked_path) = self.stroked_path.take() {
+                self.stroked_path = Some(self.stroker.stroke_to(&path, stroke, stroked_path)?);
+            } else {
+                self.stroked_path = Some(self.stroker.stroke(&path, stroke)?);
+            }
+
+            self.pixmap.fill_path(self.stroked_path.as_ref()?, &paint)
+        }
     }
 
     /// Draws a `Pixmap` on top of the current `Pixmap`.
@@ -236,4 +261,46 @@ fn compute_res_scale_for_stroking(ts: &Transform) -> f32 {
     }
 
     1.0
+}
+
+fn treat_as_hairline(paint: &Paint, stroke: StrokeProps, ts: &Transform) -> Option<f32> {
+    debug_assert!(stroke.width >= 0.0);
+
+    if stroke.width == 0.0 {
+        return Some(1.0);
+    }
+
+    if !paint.anti_alias {
+        return None;
+    }
+
+    // We don't care about translate.
+    let ts = {
+        let (sx, ky, kx, sy, _, _) = ts.get_row();
+        Transform::from_row(sx, ky, kx, sy, 0.0, 0.0)?
+    };
+
+    // We need to try to fake a thick-stroke with a modulated hairline.
+    let mut points = [Point::from_xy(stroke.width, 0.0), Point::from_xy(0.0, stroke.width)];
+    ts.map_points(&mut points);
+
+    let len0 = fast_len(points[0]);
+    let len1 = fast_len(points[1]);
+
+    if len0 <= 1.0 && len1 <= 1.0 {
+        return Some(len0.ave(len1));
+    }
+
+    None
+}
+
+#[inline]
+fn fast_len(p: Point) -> f32 {
+    let mut x = p.x.abs();
+    let mut y = p.y.abs();
+    if x < y {
+        std::mem::swap(&mut x, &mut y);
+    }
+
+    x + y.half()
 }

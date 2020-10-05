@@ -38,7 +38,7 @@ impl GradientStop {
 
 #[derive(Clone, Debug)]
 pub struct Gradient {
-    points: Vec<GradientStop>,
+    stops: Vec<GradientStop>,
     tile_mode: SpreadMode,
     pub(crate) transform: Transform,
     points_to_unit: Transform,
@@ -93,7 +93,7 @@ impl Gradient {
         }
 
         Gradient {
-            points,
+            stops: points,
             tile_mode,
             transform,
             points_to_unit,
@@ -136,11 +136,11 @@ impl Gradient {
         }
 
         // The two-stop case with stops at 0 and 1.
-        if self.points.len() == 2 {
+        if self.stops.len() == 2 {
             debug_assert!(self.has_uniform_stops);
 
-            let c0 = self.points[0].color;
-            let c1 = self.points[1].color;
+            let c0 = self.stops[0].color;
+            let c1 = self.stops[1].color;
 
             let ctx = EvenlySpaced2StopGradientCtx {
                 factor: GradientColor::new(
@@ -165,18 +165,18 @@ impl Gradient {
             // Therefore, the max number of stops is `self.points.len()+1`.
             //
             // We also need at least 16 values for lowp pipeline.
-            ctx.factors.reserve((self.points.len() + 1).max(16));
-            ctx.biases.reserve((self.points.len() + 1).max(16));
+            ctx.factors.reserve((self.stops.len() + 1).max(16));
+            ctx.biases.reserve((self.stops.len() + 1).max(16));
 
-            ctx.t_values.reserve(self.points.len() + 1);
+            ctx.t_values.reserve(self.stops.len() + 1);
 
             // Remove the dummy stops inserted by Gradient::new
             // because they are naturally handled by the search method.
-            let (first_stop, last_stop) = if self.points.len() > 2 {
-                let first = if self.points[0].color != self.points[1].color { 0 } else { 1 };
+            let (first_stop, last_stop) = if self.stops.len() > 2 {
+                let first = if self.stops[0].color != self.stops[1].color { 0 } else { 1 };
 
-                let len = self.points.len();
-                let last = if self.points[len - 2].color != self.points[len - 1].color {
+                let len = self.stops.len();
+                let last = if self.stops[len - 2].color != self.stops[len - 1].color {
                     len - 1
                 } else {
                     len - 2
@@ -186,14 +186,14 @@ impl Gradient {
                 (0, 1)
             };
 
-            let mut t_l = self.points[first_stop].position.get();
-            let mut c_l = GradientColor::from(self.points[first_stop].color);
+            let mut t_l = self.stops[first_stop].position.get();
+            let mut c_l = GradientColor::from(self.stops[first_stop].color);
             ctx.push_const_color(c_l);
             ctx.t_values.push(NormalizedF32::ZERO);
             // N.B. lastStop is the index of the last stop, not one after.
             for i in first_stop..last_stop {
-                let t_r = self.points[i + 1].position.get();
-                let c_r = GradientColor::from(self.points[i + 1].color);
+                let t_r = self.stops[i + 1].position.get();
+                let c_r = GradientColor::from(self.stops[i + 1].color);
                 debug_assert!(t_l <= t_r);
                 if t_l < t_r {
                     // For each stop we calculate a bias B and a scale factor F, such that
@@ -248,5 +248,11 @@ impl Gradient {
         rec.pipeline.extend(&post_pipeline);
 
         Some(())
+    }
+
+    pub fn apply_opacity(&mut self, opacity: NormalizedF32) {
+        for stop in &mut self.stops {
+            stop.color = stop.color.mul_alpha(opacity).unwrap();
+        }
     }
 }

@@ -71,7 +71,7 @@ impl Default for BlendMode {
 }
 
 impl BlendMode {
-    pub(crate) fn should_pre_scale_coverage(self, rgb_coverage: bool) -> bool {
+    pub(crate) fn should_pre_scale_coverage(self) -> bool {
         // The most important things we do here are:
         //   1) never pre-scale with rgb coverage if the blend mode involves a source-alpha term;
         //   2) always pre-scale Plus.
@@ -88,13 +88,11 @@ impl BlendMode {
         match self {
             BlendMode::Destination |            // d              --> no sa term, ok!
             BlendMode::DestinationOver |        // d + s*inv(da)  --> no sa term, ok!
-            BlendMode::Plus => true,            // clamp(s+d)     --> no sa term, ok!
-
+            BlendMode::Plus |                   // clamp(s+d)     --> no sa term, ok!
             BlendMode::DestinationOut |         // d * inv(sa)
             BlendMode::SourceAtop |             // s*da + d*inv(sa)
             BlendMode::SourceOver |             // s + d*inv(sa)
-            BlendMode::Xor => !rgb_coverage,    // s*inv(da) + d*inv(sa)
-
+            BlendMode::Xor => true,             // s*inv(da) + d*inv(sa)
             _ => false,
         }
     }

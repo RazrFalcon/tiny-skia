@@ -6,7 +6,7 @@
 
 use crate::fdot6::FDot6;
 use crate::floating_point::SaturateCast;
-use crate::math::{left_shift64, bound};
+use crate::math::{left_shift, left_shift64, bound};
 
 /// A 16.16 fixed point.
 ///
@@ -26,6 +26,14 @@ pub fn from_f32(x: f32) -> Fixed {
     i32::saturate_from(x * ONE as f32)
 }
 
+pub fn floor_to_i32(x: Fixed) -> i32 {
+    x >> 16
+}
+
+pub fn ceil_to_i32(x: Fixed) -> i32 {
+    (x + ONE - 1) >> 16
+}
+
 pub fn round_to_i32(x: Fixed) -> i32 {
     (x + HALF) >> 16
 }
@@ -40,4 +48,10 @@ pub fn div(numer: FDot6, denom: FDot6) -> Fixed {
     let v = left_shift64(numer as i64, 16) / denom as i64;
     let n = bound(i32::MIN as i64, v, i32::MAX as i64);
     n as i32
+}
+
+pub fn fast_div(a: FDot6, b: FDot6) -> Fixed {
+    debug_assert!((left_shift(a, 16) >> 16) == a);
+    debug_assert!(b != 0);
+    left_shift(a, 16) / b
 }

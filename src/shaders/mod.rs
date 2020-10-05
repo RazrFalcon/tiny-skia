@@ -14,7 +14,7 @@ pub use linear_gradient::LinearGradient;
 pub use radial_gradient::RadialGradient;
 pub use pattern::{Pattern, FilterQuality};
 
-use crate::{Color, Transform};
+use crate::{Color, Transform, NormalizedF32};
 
 use crate::raster_pipeline::{RasterPipelineBuilder, ContextStorage};
 
@@ -64,7 +64,7 @@ pub enum Shader<'a> {
 impl<'a> Shader<'a> {
     /// Checks if the shader is guaranteed to produce only opaque colors.
     #[inline]
-    pub(crate) fn is_opaque(&self) -> bool {
+    pub fn is_opaque(&self) -> bool {
         match self {
             Shader::SolidColor(ref c) => c.is_opaque(),
             Shader::LinearGradient(ref g) => g.is_opaque(),
@@ -85,7 +85,8 @@ impl<'a> Shader<'a> {
         }
     }
 
-    pub(crate) fn transform(&mut self, ts: &Transform) {
+    /// Transforms the shader.
+    pub fn transform(&mut self, ts: &Transform) {
         match self {
             Shader::SolidColor(_) => {}
             Shader::LinearGradient(g) => {
@@ -102,6 +103,34 @@ impl<'a> Shader<'a> {
                 if let Some(ts) = p.transform.post_concat(ts) {
                     p.transform = ts;
                 }
+            }
+        }
+    }
+
+    /// Shift shader's opacity.
+    ///
+    /// This is roughly the same as Skia's `SkPaint::setAlpha`.
+    ///
+    /// Unlike Skia, we do not support global alpha/opacity, which is in Skia
+    /// is set via the alpha channel of the `SkPaint::fColor4f`.
+    /// Instead, you can shift the opacity of the shader to whatever value you need.
+    ///
+    /// - For `SolidColor` this function will multiply `color.alpha` by `opacity`.
+    /// - For gradients this function will multiply all colors by `opacity`.
+    /// - For `Pattern` this function will multiply `Patter::opacity` by `opacity`.
+    pub fn apply_opacity(&mut self, opacity: NormalizedF32) {
+        match self {
+            Shader::SolidColor(ref mut c) => {
+                *c = c.mul_alpha(opacity).unwrap();
+            }
+            Shader::LinearGradient(g) => {
+                g.base.apply_opacity(opacity);
+            }
+            Shader::RadialGradient(g) => {
+                g.base.apply_opacity(opacity);
+            }
+            Shader::Pattern(ref mut p) => {
+                p.opacity = NormalizedF32::new(p.opacity.get() * opacity.get()).unwrap();
             }
         }
     }

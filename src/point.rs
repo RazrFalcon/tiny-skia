@@ -73,6 +73,15 @@ impl Point {
         (self.y - other.y).is_nearly_zero_within_tolerance(tolerance)
     }
 
+    /// Scales (fX, fY) so that length() returns one, while preserving ratio of fX to fY,
+    /// if possible.
+    ///
+    /// If prior length is nearly zero, sets vector to (0, 0) and returns
+    /// false; otherwise returns true.
+    pub(crate) fn normalize(&mut self) -> bool {
+        self.set_length_from(self.x, self.y, 1.0)
+    }
+
     /// Sets vector to (x, y) scaled so length() returns one, and so that (x, y)
     /// is proportional to (x, y).
     ///

@@ -279,6 +279,14 @@ impl<'a> PathSegmentsIter<'a> {
 
         false
     }
+
+    pub(crate) fn curr_verb(&self) -> PathVerb {
+        self.path.verbs[self.verb_index - 1]
+    }
+
+    pub(crate) fn next_verb(&self) -> Option<PathVerb> {
+        self.path.verbs.get(self.verb_index).cloned()
+    }
 }
 
 impl<'a> Iterator for PathSegmentsIter<'a> {

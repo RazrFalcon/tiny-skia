@@ -113,6 +113,20 @@ when a rendering backend is designed for long horizontal strides.
 | -------------------- | -------------: | -------------: | ---------: | ---------: | ---------: | ---------: |
 | stroke               |      2,053,756 |      1,939,394 |  1,205,407 |  1,174,229 |  3,161,763 |  5,707,383 |
 
+### hairline stroking
+
+`hairline.rs`
+
+Draws a large spiral using a subpixel stroke width.
+
+| Test/Library | tiny-skia SSE2 | tiny-skia AVX2 | Skia SSE2  | Skia AVX2  | cairo      | raqote     |
+| ------------ | -------------: | -------------: | ---------: | ---------: | ---------: | ---------: |
+| no AA        |      1,494,375 |      1,452,121 |  1,022,641 |  1,027,160 |  2,469,764 |          - |
+| with AA      |      3,953,877 |      3,670,914 |  1,846,240 |  1,868,304 | 13,457,819 |          - |
+
+- `raqote` doesn't support hairline stroking.
+- Not sure why `cairo` is so slow with AA.
+
 ### gradients
 
 `gradients.rs`

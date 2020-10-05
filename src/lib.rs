@@ -1,5 +1,5 @@
 /*!
-`tiny-skia` is a tiny [Skia](https://skia.org/) subset mostly ported to Rust.
+`tiny-skia` is a tiny [Skia](https://skia.org/) subset ported to Rust.
 */
 
 #![doc(html_root_url = "https://docs.rs/tiny-skia/0.2.0")]

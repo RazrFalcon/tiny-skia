@@ -27,7 +27,9 @@ impl<'a> SwappableBuilders<'a> {
 pub struct StrokeProps {
     /// A stroke thickness.
     ///
-    /// Must be > 0.
+    /// Must be >= 0.
+    ///
+    /// When set to 0, a hairline stroking will be used.
     ///
     /// Default: 1.0
     pub width: f32,

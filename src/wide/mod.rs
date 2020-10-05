@@ -3,6 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// This module was written from scratch, therefore there is no Google copyright.
+
 // Some ideas were taken from `pathfinder_simd` (Apache 2.0/MIT).
 
 // F32x16, I32x16 and U32x16 are implemented as [Tx4; 4] and not as [T; 16].

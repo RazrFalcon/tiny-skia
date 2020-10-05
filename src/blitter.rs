@@ -43,6 +43,10 @@ pub trait Blitter {
     /// Blits a vertical run of pixels with a constant alpha value.
     fn blit_v(&mut self, x: u32, y: u32, height: LengthU32, alpha: AlphaU8);
 
+    fn blit_anti_h2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8);
+
+    fn blit_anti_v2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8);
+
     /// Blits a solid rectangle one or more pixels wide.
     fn blit_rect(&mut self, rect: &ScreenIntRect);
 

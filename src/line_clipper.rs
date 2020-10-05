@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, Rect};
+use crate::{Point, Rect, Bounds};
 
 use crate::scalar::Scalar;
 
@@ -90,7 +90,7 @@ pub fn clip<'a>(src: &[Point; 2], clip: &Rect, can_cull_to_the_right: bool, poin
         if tmp[index0].x < clip.left() {
             result_storage[offset] = Point::from_xy(clip.left(), tmp[index0].y);
             offset += 1;
-            result_storage[offset] = Point::from_xy(clip.left(), sect_clamp_with_vertical(tmp, clip.left()));
+            result_storage[offset] = Point::from_xy(clip.left(), sect_clamp_with_vertical(&tmp, clip.left()));
             debug_assert!(is_between_unsorted(result_storage[offset].y, tmp[0].y, tmp[1].y));
         } else {
             result_storage[offset] = tmp[index0];
@@ -98,7 +98,7 @@ pub fn clip<'a>(src: &[Point; 2], clip: &Rect, can_cull_to_the_right: bool, poin
         offset += 1;
 
         if tmp[index1].x > clip.right() {
-            result_storage[offset] = Point::from_xy(clip.right(), sect_clamp_with_vertical(tmp, clip.right()));
+            result_storage[offset] = Point::from_xy(clip.right(), sect_clamp_with_vertical(&tmp, clip.right()));
             debug_assert!(is_between_unsorted(result_storage[offset].y, tmp[0].y, tmp[1].y));
             offset += 1;
             result_storage[offset] = Point::from_xy(clip.right(), tmp[index1].y);
@@ -154,7 +154,7 @@ fn is_between_unsorted(value: f32, limit0: f32, limit1: f32) -> bool {
     }
 }
 
-fn sect_clamp_with_vertical(src: [Point; 2], x: f32) -> f32 {
+fn sect_clamp_with_vertical(src: &[Point; 2], x: f32) -> f32 {
     let y = sect_with_vertical(src, x);
     // Our caller expects y to be between src[0].y and src[1].y (unsorted), but due to the
     // numerics of floats/doubles, we might have computed a value slightly outside of that,
@@ -164,7 +164,7 @@ fn sect_clamp_with_vertical(src: [Point; 2], x: f32) -> f32 {
 }
 
 /// Returns Y coordinate of intersection with vertical line at X.
-fn sect_with_vertical(src: [Point; 2], x: f32) -> f32 {
+fn sect_with_vertical(src: &[Point; 2], x: f32) -> f32 {
     let dx = src[1].x - src[0].x;
     if dx.is_nearly_zero() {
         src[0].y.ave(src[1].y)
@@ -210,4 +210,84 @@ fn pin_unsorted_f64(value: f64, mut limit0: f64, mut limit1: f64) -> f64 {
     } else {
         value
     }
+}
+
+/// Intersect the line segment against the rect. If there is a non-empty
+/// resulting segment, return true and set dst[] to that segment. If not,
+/// return false and ignore dst[].
+///
+/// `clip` is specialized for scan-conversion, as it adds vertical
+/// segments on the sides to show where the line extended beyond the
+/// left or right sides. `intersect` does not.
+pub fn intersect(src: &[Point; 2], clip: &Bounds, dst: &mut [Point; 2]) -> bool {
+    let bounds = Bounds::from_ltrb(
+        src[0].x.min(src[1].x),
+        src[0].y.min(src[1].y),
+        src[0].x.max(src[1].x),
+        src[0].y.max(src[1].y),
+    );
+
+    if let Some(bounds) = bounds {
+        if contains_no_empty_check(clip, &bounds) {
+            dst.copy_from_slice(src);
+            return true;
+        }
+
+        // check for no overlap, and only permit coincident edges if the line
+        // and the edge are colinear
+        if  nested_lt(bounds.right(), clip.left(), bounds.width()) ||
+            nested_lt(clip.right(), bounds.left(), bounds.width()) ||
+            nested_lt(bounds.bottom(), clip.top(), bounds.height()) ||
+            nested_lt(clip.bottom(), bounds.top(), bounds.height())
+        {
+            return false;
+        }
+    }
+
+    let (index0, index1) = if src[0].y < src[1].y { (0, 1) } else { (1, 0) };
+
+    let mut tmp = src.clone();
+
+    // now compute Y intersections
+    if tmp[index0].y < clip.top() {
+        tmp[index0] = Point::from_xy(sect_with_horizontal(src, clip.top()), clip.top());
+    }
+
+    if tmp[index1].y > clip.bottom() {
+        tmp[index1] = Point::from_xy(sect_with_horizontal(src, clip.bottom()), clip.bottom());
+    }
+
+    let (index0, index1) = if tmp[0].x < tmp[1].x { (0, 1) } else { (1, 0) };
+
+    // check for quick-reject in X again, now that we may have been chopped
+    if tmp[index1].x <= clip.left() || tmp[index0].x >= clip.right() {
+        // usually we will return false, but we don't if the line is vertical and coincident
+        // with the clip.
+        if tmp[0].x != tmp[1].x || tmp[0].x < clip.left() || tmp[0].x > clip.right() {
+            return false;
+        }
+    }
+
+    if tmp[index0].x < clip.left() {
+        tmp[index0] = Point::from_xy(clip.left(), sect_with_vertical(src, clip.left()));
+    }
+
+    if tmp[index1].x > clip.right() {
+        tmp[index1] = Point::from_xy(clip.right(), sect_with_vertical(src, clip.right()));
+    }
+
+    dst.copy_from_slice(&tmp);
+    true
+}
+
+fn nested_lt(a: f32, b: f32, dim: f32) -> bool {
+    a <= b && (a < b || dim > 0.0)
+}
+
+// returns true if outer contains inner, even if inner is empty.
+fn contains_no_empty_check(outer: &Bounds, inner: &Bounds) -> bool {
+    outer.left() <= inner.left() &&
+    outer.top() <= inner.top() &&
+    outer.right() >= inner.right() &&
+    outer.bottom() >= inner.bottom()
 }

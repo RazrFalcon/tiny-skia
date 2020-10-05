@@ -58,9 +58,9 @@ use crate::path_builder::PathDirection;
 /// use for : eval(t) == A * t^2 + B * t + C
 #[derive(Default)]
 pub struct QuadCoeff {
-    a: F32x2,
-    b: F32x2,
-    c: F32x2,
+    pub a: F32x2,
+    pub b: F32x2,
+    pub c: F32x2,
 }
 
 impl QuadCoeff {
@@ -82,10 +82,10 @@ impl QuadCoeff {
 
 #[derive(Default)]
 pub struct CubicCoeff {
-    a: F32x2,
-    b: F32x2,
-    c: F32x2,
-    d: F32x2,
+    pub a: F32x2,
+    pub b: F32x2,
+    pub c: F32x2,
+    pub d: F32x2,
 }
 
 impl CubicCoeff {
@@ -322,18 +322,6 @@ pub fn find_unit_quad_roots(a: f32, b: f32, c: f32, roots: &mut [TValue; 3]) -> 
 // even though the 2nd tValue looks < 1.0, after we renormalize it, we end
 // up with 1.0, hence the need to check and just return the last cubic as
 // a degenerate clump of 4 points in the same place.
-//
-// static void test_cubic() {
-//     SkPoint src[4] = {
-//         { 556.25000, 523.03003 },
-//         { 556.23999, 522.96002 },
-//         { 556.21997, 522.89001 },
-//         { 556.21997, 522.82001 }
-//     };
-//     SkPoint dst[10];
-//     SkScalar tval[] = { 0.33333334f, 0.99999994f };
-//     SkChopCubicAt(src, dst, tval, 2);
-// }
 fn chop_cubic_at(src: &[Point; 4], t_values: &[TValue], dst: &mut [Point]) {
     if t_values.is_empty() {
         // nothing to chop
@@ -426,6 +414,21 @@ fn interp(v0: F32x2, v1: F32x2, t: F32x2) -> F32x2 {
 
 fn times_2(value: F32x2) -> F32x2 {
     value + value
+}
+
+pub fn chop_cubic_at_max_curvature(
+    src: &[Point; 4],
+    t_values: &mut [TValue; 3],
+    dst: &mut [Point],
+) -> usize {
+    let roots = find_cubic_max_curvature(src, t_values);
+    if roots.len() == 0 {
+        dst[0..4].copy_from_slice(src);
+    } else {
+        chop_cubic_at(src, roots, dst);
+    }
+
+    roots.len() + 1
 }
 
 // F(t)    = a (1 - t) ^ 2 + 2 b t (1 - t) + c t ^ 2

@@ -289,6 +289,10 @@ impl Color {
         self.a
     }
 
+    pub(crate) fn mul_alpha(&self, alpha: NormalizedF32) -> Option<Self> {
+        Color::from_rgba(self.red(), self.green(), self.blue(), self.alpha() * alpha.get())
+    }
+
     /// Check that color is opaque.
     ///
     /// Alpha == 1.0

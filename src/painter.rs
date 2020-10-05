@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Pixmap, Path, Color, BlendMode, Shader, Rect};
+use crate::{Pixmap, Path, Color, BlendMode, Shader, Rect, LineCap};
 
 use crate::scan;
 use crate::raster_pipeline::{ContextStorage, RasterPipelineBlitter};
@@ -43,6 +43,7 @@ pub struct Paint<'a> {
     /// Default: SourceOver
     pub blend_mode: BlendMode,
 
+    // TODO: remove
     /// A path filling type.
     ///
     /// Default: Winding
@@ -133,6 +134,16 @@ pub trait Painter {
     ///
     /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
     fn fill_path(&mut self, path: &Path, paint: &Paint) -> Option<()>;
+
+    /// A path stroking with subpixel width.
+    ///
+    /// Should be used when stroke width is <= 1.0
+    /// This function doesn't even accept width, which should be regulated via opacity.
+    ///
+    /// See [`Canvas::stroke_path`] for details.
+    ///
+    /// [`Canvas::stroke_path`]: struct.Canvas.html#method.stroke_path
+    fn stroke_hairline(&mut self, path: &Path, paint: &Paint, line_cap: LineCap) -> Option<()>;
 }
 
 impl Painter for Pixmap {
@@ -196,6 +207,19 @@ impl Painter for Pixmap {
             scan::path_aa::fill_path(path, paint.fill_type, &clip, &mut blitter)
         } else {
             scan::path::fill_path(path, paint.fill_type, &clip, &mut blitter)
+        }
+    }
+
+    fn stroke_hairline(&mut self, path: &Path, paint: &Paint, line_cap: LineCap) -> Option<()> {
+        let clip = self.size().to_screen_int_rect(0, 0);
+
+        let mut ctx_storage = ContextStorage::new();
+        let mut blitter = RasterPipelineBlitter::new(paint, &mut ctx_storage, self)?;
+
+        if paint.anti_alias {
+            scan::hairline_aa::stroke_path(path, line_cap, &clip, &mut blitter)
+        } else {
+            scan::hairline::stroke_path(path, line_cap, &clip, &mut blitter)
         }
     }
 }

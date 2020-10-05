@@ -263,6 +263,14 @@ impl Blitter for SuperBlitter<'_> {
         unreachable!()
     }
 
+    fn blit_anti_h2(&mut self, _: u32, _: u32, _: AlphaU8, _: AlphaU8) {
+        unreachable!()
+    }
+
+    fn blit_anti_v2(&mut self, _: u32, _: u32, _: AlphaU8, _: AlphaU8) {
+        unreachable!()
+    }
+
     fn blit_rect(&mut self, _: &ScreenIntRect) {
         unreachable!()
     }

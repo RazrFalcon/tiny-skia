@@ -6,14 +6,53 @@
 
 //! tiny-skia specific checked-geom extensions.
 
-use crate::{Point, Bounds, Transform};
+use std::convert::TryFrom;
+
+use crate::{Point, Bounds, Transform, LengthU32, IntRect};
 
 use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
 use crate::wide::F32x4;
 
+pub const LENGTH_U32_ONE: LengthU32 = unsafe { LengthU32::new_unchecked(1) };
+
+
+pub trait IntRectExt: Sized {
+    fn from_ltrb(l: i32, t: i32, r: i32, b: i32) -> Option<Self>;
+    fn inset(&self, dx: i32, dy: i32) -> Option<Self>;
+    fn make_outset(&self, dx: i32, dy: i32) -> Option<Self>;
+}
+
+impl IntRectExt for IntRect {
+    fn from_ltrb(left: i32, top: i32, right: i32, bottom: i32) -> Option<Self> {
+        let width = u32::try_from(right.checked_sub(left)?).ok()?;
+        let height = u32::try_from(bottom.checked_sub(top)?).ok()?;
+        IntRect::from_xywh(left, top, width, height)
+    }
+
+    fn inset(&self, dx: i32, dy: i32) -> Option<Self> {
+        IntRect::from_ltrb(
+            self.left() + dx,
+            self.top() + dy,
+            self.right() - dx,
+            self.bottom() - dy,
+        )
+    }
+
+    fn make_outset(&self, dx: i32, dy: i32) -> Option<Self> {
+        IntRect::from_ltrb(
+            self.left().saturating_sub(dx),
+            self.top().saturating_sub(dy),
+            self.right().saturating_add(dx),
+            self.bottom().saturating_add(dy),
+        )
+    }
+}
+
 
 pub trait BoundsExt: Sized {
     fn from_points(points: &[Point]) -> Option<Self>;
+    fn inset(&mut self, dx: f32, dy: f32) -> Option<Self>;
+    fn outset(&mut self, dx: f32, dy: f32) -> Option<Self>;
 }
 
 impl BoundsExt for Bounds {
@@ -64,6 +103,19 @@ impl BoundsExt for Bounds {
         } else {
             None
         }
+    }
+
+    fn inset(&mut self, dx: f32, dy: f32) -> Option<Self> {
+        Bounds::from_ltrb(
+            self.left() + dx,
+            self.top() + dy,
+            self.right() - dx,
+            self.bottom() - dy,
+        )
+    }
+
+    fn outset(&mut self, dx: f32, dy: f32) -> Option<Self> {
+        self.inset(-dx, -dy)
     }
 }
 
