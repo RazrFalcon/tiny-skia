@@ -9,27 +9,25 @@ use std::convert::TryFrom;
 use crate::{Rect, IntRect, ScreenIntRect, AlphaU8, LengthU32, Path, LineCap, Point, Bounds};
 
 use crate::blitter::Blitter;
-use crate::fdot6::{self, FDot6};
-use crate::fdot8::{self, FDot8};
-use crate::fixed::{self, Fixed};
+use crate::fixed_point::{fdot6, fdot8, fdot16, FDot6, FDot8, FDot16};
 use crate::line_clipper;
 use crate::safe_geom_ext::{BoundsExt, LENGTH_U32_ONE, IntRectExt};
 
 #[derive(Copy, Clone, Debug)]
 struct FixedRect {
-    left: Fixed,
-    top: Fixed,
-    right: Fixed,
-    bottom: Fixed,
+    left: FDot16,
+    top: FDot16,
+    right: FDot16,
+    bottom: FDot16,
 }
 
 impl FixedRect {
     fn from_rect(src: &Rect) -> Self {
         FixedRect {
-            left: fixed::from_f32(src.left()),
-            top: fixed::from_f32(src.top()),
-            right: fixed::from_f32(src.right()),
-            bottom: fixed::from_f32(src.bottom()),
+            left: fdot16::from_f32(src.left()),
+            top: fdot16::from_f32(src.top()),
+            right: fdot16::from_f32(src.right()),
+            bottom: fdot16::from_f32(src.bottom()),
         }
     }
 }
@@ -58,10 +56,10 @@ pub fn fill_rect(
 
 fn fill_fixed_rect(rect: &FixedRect, blitter: &mut dyn Blitter) {
     fill_dot8(
-        fdot8::from_fixed(rect.left),
-        fdot8::from_fixed(rect.top),
-        fdot8::from_fixed(rect.right),
-        fdot8::from_fixed(rect.bottom),
+        fdot8::from_fdot16(rect.left),
+        fdot8::from_fdot16(rect.top),
+        fdot8::from_fdot16(rect.right),
+        fdot8::from_fdot16(rect.bottom),
         true,
         blitter,
     )
@@ -308,10 +306,10 @@ fn do_anti_hairline(
     }
 
     // The caller must clip the line to [-32767.0 ... 32767.0] ahead of time  (in dot6 format)
-    debug_assert!(fdot6::can_convert_to_fixed(x0));
-    debug_assert!(fdot6::can_convert_to_fixed(y0));
-    debug_assert!(fdot6::can_convert_to_fixed(x1));
-    debug_assert!(fdot6::can_convert_to_fixed(y1));
+    debug_assert!(fdot6::can_convert_to_fdot16(x0));
+    debug_assert!(fdot6::can_convert_to_fdot16(y0));
+    debug_assert!(fdot6::can_convert_to_fdot16(x1));
+    debug_assert!(fdot6::can_convert_to_fdot16(y1));
 
     if (x1 - x0).abs() > fdot6::from_i32(511) || (y1 - y0).abs() > fdot6::from_i32(511) {
         // instead of (x0 + x1) >> 1, we shift each separately. This is less
@@ -345,14 +343,14 @@ fn do_anti_hairline(
 
         istart = fdot6::floor(x0);
         istop = fdot6::ceil(x1);
-        fstart = fdot6::to_fixed(y0);
+        fstart = fdot6::to_fdot16(y0);
         if y0 == y1 {
             // completely horizontal, take fast case
             slope = 0;
             blitter_kind = Some(BlitterKind::HLine);
         } else {
-            slope = fixed::fast_div(y1 - y0, x1 - x0);
-            debug_assert!(slope >= -fixed::ONE && slope <= fixed::ONE);
+            slope = fdot16::fast_div(y1 - y0, x1 - x0);
+            debug_assert!(slope >= -fdot16::ONE && slope <= fdot16::ONE);
             fstart += (slope * (32 - (x0 & 63)) + 32) >> 6;
             blitter_kind = Some(BlitterKind::Horish);
         }
@@ -399,13 +397,13 @@ fn do_anti_hairline(
             // now test if our Y values are completely inside the clip
             let (mut top, mut bottom) = if slope >= 0 {
                 // T2B
-                let top = fixed::floor_to_i32(fstart - fixed::HALF);
-                let bottom = fixed::ceil_to_i32(fstart + (istop - istart - 1) * slope + fixed::HALF);
+                let top = fdot16::floor_to_i32(fstart - fdot16::HALF);
+                let bottom = fdot16::ceil_to_i32(fstart + (istop - istart - 1) * slope + fdot16::HALF);
                 (top, bottom)
             } else {
                 // B2T
-                let bottom = fixed::ceil_to_i32(fstart + fixed::HALF);
-                let top = fixed::floor_to_i32(fstart + (istop - istart - 1) * slope - fixed::HALF);
+                let bottom = fdot16::ceil_to_i32(fstart + fdot16::HALF);
+                let top = fdot16::floor_to_i32(fstart + (istop - istart - 1) * slope - fdot16::HALF);
                 (top, bottom)
             };
 
@@ -427,7 +425,7 @@ fn do_anti_hairline(
 
         istart = fdot6::floor(y0);
         istop = fdot6::ceil(y1);
-        fstart = fdot6::to_fixed(x0);
+        fstart = fdot6::to_fdot16(x0);
         if x0 == x1 {
             if y0 == y1 {
                 // are we zero length? nothing to do
@@ -437,8 +435,8 @@ fn do_anti_hairline(
             slope = 0;
             blitter_kind = Some(BlitterKind::VLine);
         } else {
-            slope = fixed::fast_div(x1 - x0, y1 - y0);
-            debug_assert!(slope <= fixed::ONE && slope >= -fixed::ONE);
+            slope = fdot16::fast_div(x1 - x0, y1 - y0);
+            debug_assert!(slope <= fdot16::ONE && slope >= -fdot16::ONE);
             fstart += (slope * (32 - (y0 & 63)) + 32) >> 6;
             blitter_kind = Some(BlitterKind::Vertish);
         }
@@ -484,13 +482,13 @@ fn do_anti_hairline(
             // now test if our X values are completely inside the clip
             let (mut left, mut right) = if slope >= 0 {
                 // L2R
-                let left = fixed::floor_to_i32(fstart - fixed::HALF);
-                let right = fixed::ceil_to_i32(fstart + (istop - istart - 1) * slope + fixed::HALF);
+                let left = fdot16::floor_to_i32(fstart - fdot16::HALF);
+                let right = fdot16::ceil_to_i32(fstart + (istop - istart - 1) * slope + fdot16::HALF);
                 (left, right)
             } else {
                 // R2L
-                let right = fixed::ceil_to_i32(fstart + fixed::HALF);
-                let left = fixed::floor_to_i32(fstart + (istop - istart - 1) * slope - fixed::HALF);
+                let right = fdot16::ceil_to_i32(fstart + fdot16::HALF);
+                let left = fdot16::floor_to_i32(fstart + (istop - istart - 1) * slope - fdot16::HALF);
                 (left, right)
             };
 
@@ -552,16 +550,16 @@ fn contribution_64(ordinate: FDot6) -> i32 {
 
 
 trait AntiHairBlitter {
-    fn draw_cap(&mut self, x: u32, fy: Fixed, slope: Fixed, mod64: i32) -> Fixed;
-    fn draw_line(&mut self, x: u32, stopx: u32, fy: Fixed, slope: Fixed) -> Fixed;
+    fn draw_cap(&mut self, x: u32, fy: FDot16, slope: FDot16, mod64: i32) -> FDot16;
+    fn draw_line(&mut self, x: u32, stopx: u32, fy: FDot16, slope: FDot16) -> FDot16;
 }
 
 
 struct HLineAntiHairBlitter<'a>(&'a mut dyn Blitter);
 
 impl AntiHairBlitter for HLineAntiHairBlitter<'_> {
-    fn draw_cap(&mut self, x: u32, mut fy: Fixed, _: Fixed, mod64: i32) -> Fixed {
-        fy += fixed::ONE / 2;
+    fn draw_cap(&mut self, x: u32, mut fy: FDot16, _: FDot16, mod64: i32) -> FDot16 {
+        fy += fdot16::ONE / 2;
         fy = fy.max(0);
 
         let y = (fy >> 16) as u32;
@@ -579,12 +577,12 @@ impl AntiHairBlitter for HLineAntiHairBlitter<'_> {
             call_hline_blitter(x, y.max(1) - 1, LENGTH_U32_ONE, ma, self.0);
         }
 
-        fy - fixed::ONE / 2
+        fy - fdot16::ONE / 2
     }
 
-    fn draw_line(&mut self, x: u32, stop_x: u32, mut fy: Fixed, _: Fixed) -> Fixed {
+    fn draw_line(&mut self, x: u32, stop_x: u32, mut fy: FDot16, _: FDot16) -> FDot16 {
         let count = LengthU32::new(stop_x - x).unwrap();
-        fy += fixed::ONE / 2;
+        fy += fdot16::ONE / 2;
         fy = fy.max(0);
 
         let y = (fy >> 16) as u32;
@@ -601,7 +599,7 @@ impl AntiHairBlitter for HLineAntiHairBlitter<'_> {
             call_hline_blitter(x, y.max(1) - 1, count, a, self.0);
         }
 
-        fy - fixed::ONE / 2
+        fy - fdot16::ONE / 2
     }
 }
 
@@ -609,8 +607,8 @@ impl AntiHairBlitter for HLineAntiHairBlitter<'_> {
 struct HorishAntiHairBlitter<'a>(&'a mut dyn Blitter);
 
 impl AntiHairBlitter for HorishAntiHairBlitter<'_> {
-    fn draw_cap(&mut self, x: u32, mut fy: Fixed, dy: Fixed, mod64: i32) -> Fixed {
-        fy += fixed::ONE / 2;
+    fn draw_cap(&mut self, x: u32, mut fy: FDot16, dy: FDot16, mod64: i32) -> FDot16 {
+        fy += fdot16::ONE / 2;
         fy = fy.max(0);
 
         let lower_y = (fy >> 16) as u32;
@@ -619,13 +617,13 @@ impl AntiHairBlitter for HorishAntiHairBlitter<'_> {
         let a1 = fdot6::small_scale(a, mod64);
         self.0.blit_anti_v2(x, lower_y.max(1) - 1, a0, a1);
 
-        fy + dy - fixed::ONE / 2
+        fy + dy - fdot16::ONE / 2
     }
 
-    fn draw_line(&mut self, mut x: u32, stop_x: u32, mut fy: Fixed, dy: Fixed) -> Fixed {
+    fn draw_line(&mut self, mut x: u32, stop_x: u32, mut fy: FDot16, dy: FDot16) -> FDot16 {
         debug_assert!(x < stop_x);
 
-        fy += fixed::ONE / 2;
+        fy += fdot16::ONE / 2;
         loop {
             fy = fy.max(0);
             let lower_y = (fy >> 16) as u32;
@@ -639,7 +637,7 @@ impl AntiHairBlitter for HorishAntiHairBlitter<'_> {
             }
         }
 
-        fy - fixed::ONE / 2
+        fy - fdot16::ONE / 2
     }
 }
 
@@ -647,9 +645,9 @@ impl AntiHairBlitter for HorishAntiHairBlitter<'_> {
 struct VLineAntiHairBlitter<'a>(&'a mut dyn Blitter);
 
 impl AntiHairBlitter for VLineAntiHairBlitter<'_> {
-    fn draw_cap(&mut self, y: u32, mut fx: Fixed, dx: Fixed, mod64: i32) -> Fixed {
+    fn draw_cap(&mut self, y: u32, mut fx: FDot16, dx: FDot16, mod64: i32) -> FDot16 {
         debug_assert!(dx == 0);
-        fx += fixed::ONE / 2;
+        fx += fdot16::ONE / 2;
         fx = fx.max(0);
 
         let x = (fx >> 16) as u32;
@@ -665,13 +663,13 @@ impl AntiHairBlitter for VLineAntiHairBlitter<'_> {
             self.0.blit_v(x.max(1) - 1, y, LENGTH_U32_ONE, ma);
         }
 
-        fx - fixed::ONE / 2
+        fx - fdot16::ONE / 2
     }
 
-    fn draw_line(&mut self, y: u32, stop_y: u32, mut fx: Fixed, dx: Fixed) -> Fixed {
+    fn draw_line(&mut self, y: u32, stop_y: u32, mut fx: FDot16, dx: FDot16) -> FDot16 {
         debug_assert!(dx == 0);
         let height = LengthU32::new(stop_y - y).unwrap();
-        fx += fixed::ONE / 2;
+        fx += fdot16::ONE / 2;
         fx = fx.max(0);
 
         let x = (fx >> 16) as u32;
@@ -686,7 +684,7 @@ impl AntiHairBlitter for VLineAntiHairBlitter<'_> {
             self.0.blit_v(x.max(1) - 1, y, height, a);
         }
 
-        fx - fixed::ONE / 2
+        fx - fdot16::ONE / 2
     }
 }
 
@@ -694,21 +692,21 @@ impl AntiHairBlitter for VLineAntiHairBlitter<'_> {
 struct VertishAntiHairBlitter<'a>(&'a mut dyn Blitter);
 
 impl AntiHairBlitter for VertishAntiHairBlitter<'_> {
-    fn draw_cap(&mut self, y: u32, mut fx: Fixed, dx: Fixed, mod64: i32) -> Fixed {
-        fx += fixed::ONE / 2;
+    fn draw_cap(&mut self, y: u32, mut fx: FDot16, dx: FDot16, mod64: i32) -> FDot16 {
+        fx += fdot16::ONE / 2;
         fx = fx.max(0);
 
         let x = (fx >> 16) as u32;
         let a = i32_to_alpha(fx >> 8);
         self.0.blit_anti_h2(x.max(1) - 1, y, fdot6::small_scale(255 - a, mod64), fdot6::small_scale(a, mod64));
 
-        fx + dx - fixed::ONE / 2
+        fx + dx - fdot16::ONE / 2
     }
 
-    fn draw_line(&mut self, mut y: u32, stop_y: u32, mut fx: Fixed, dx: Fixed) -> Fixed {
+    fn draw_line(&mut self, mut y: u32, stop_y: u32, mut fx: FDot16, dx: FDot16) -> FDot16 {
         debug_assert!(y < stop_y);
 
-        fx += fixed::ONE / 2;
+        fx += fdot16::ONE / 2;
         loop {
             fx = fx.max(0);
             let x = (fx >> 16) as u32;
@@ -722,7 +720,7 @@ impl AntiHairBlitter for VertishAntiHairBlitter<'_> {
             }
         }
 
-        fx - fixed::ONE / 2
+        fx - fdot16::ONE / 2
     }
 }
 

@@ -6,8 +6,7 @@
 
 use crate::Point;
 
-use crate::fdot6::{self, FDot6};
-use crate::fixed::{self, Fixed};
+use crate::fixed_point::{fdot6, fdot16, FDot6, FDot16};
 use crate::math::left_shift;
 
 /// We store 1<<shift in a (signed) byte, so its maximum value is 1<<6 == 64.
@@ -63,8 +62,8 @@ pub struct LineEdge {
     pub prev: Option<u32>,
     pub next: Option<u32>,
 
-    pub x: Fixed,
-    pub dx: Fixed,
+    pub x: FDot16,
+    pub dx: FDot16,
     pub first_y: i32,
     pub last_y: i32,
     pub winding: i8,        // 1 or -1
@@ -100,7 +99,7 @@ impl LineEdge {
         Some(LineEdge {
             next: None,
             prev: None,
-            x: fdot6::to_fixed(x0 + fixed::mul(slope, dy)),
+            x: fdot6::to_fdot16(x0 + fdot16::mul(slope, dy)),
             dx: slope,
             first_y: top,
             last_y: bottom - 1,
@@ -112,7 +111,7 @@ impl LineEdge {
         self.dx == 0
     }
 
-    fn update(&mut self, mut x0: Fixed, mut y0: Fixed, mut x1: Fixed, mut y1: Fixed) -> bool {
+    fn update(&mut self, mut x0: FDot16, mut y0: FDot16, mut x1: FDot16, mut y1: FDot16) -> bool {
         debug_assert!(self.winding == 1 || self.winding == -1);
 
         y0 >>= 10;
@@ -134,7 +133,7 @@ impl LineEdge {
         let slope = fdot6::div(x1 - x0, y1 - y0);
         let dy = compute_dy(top, y0);
 
-        self.x = fdot6::to_fixed(x0 + fixed::mul(slope, dy));
+        self.x = fdot6::to_fdot16(x0 + fdot16::mul(slope, dy));
         self.dx = slope;
         self.first_y= top;
         self.last_y = bottom - 1;
@@ -149,14 +148,14 @@ pub struct QuadraticEdge {
     pub line: LineEdge,
     pub curve_count: i8,
     curve_shift: u8, // applied to all dx/ddx/dddx
-    qx: Fixed,
-    qy: Fixed,
-    qdx: Fixed,
-    qdy: Fixed,
-    qddx: Fixed,
-    qddy: Fixed,
-    q_last_x: Fixed,
-    q_last_y: Fixed,
+    qx: FDot16,
+    qy: FDot16,
+    qdx: FDot16,
+    qdy: FDot16,
+    qddx: FDot16,
+    qddy: FDot16,
+    q_last_x: FDot16,
+    q_last_y: FDot16,
 }
 
 impl QuadraticEdge {
@@ -233,21 +232,21 @@ impl QuadraticEdge {
         let curve_shift = (shift - 1) as u8;
 
         let mut a = fdot6_to_fixed_div2(x0 - x1 - x1 + x2);  // 1/2 the real value
-        let mut b = fdot6::to_fixed(x1 - x0);                // 1/2 the real value
+        let mut b = fdot6::to_fdot16(x1 - x0);                // 1/2 the real value
 
-        let qx     = fdot6::to_fixed(x0);
+        let qx     = fdot6::to_fdot16(x0);
         let qdx    = b + (a >> shift);     // biased by shift
         let qddx   = a >> (shift - 1);     // biased by shift
 
         a = fdot6_to_fixed_div2(y0 - y1 - y1 + y2);  // 1/2 the real value
-        b = fdot6::to_fixed(y1 - y0);                // 1/2 the real value
+        b = fdot6::to_fdot16(y1 - y0);                // 1/2 the real value
 
-        let qy     = fdot6::to_fixed(y0);
+        let qy     = fdot6::to_fdot16(y0);
         let qdy    = b + (a >> shift);     // biased by shift
         let qddy   = a >> (shift - 1);     // biased by shift
 
-        let q_last_x = fdot6::to_fixed(x2);
-        let q_last_y = fdot6::to_fixed(y2);
+        let q_last_x = fdot6::to_fdot16(x2);
+        let q_last_y = fdot6::to_fdot16(y2);
 
         Some(QuadraticEdge {
             line: LineEdge {
@@ -323,16 +322,16 @@ pub struct CubicEdge {
     pub curve_count: i8,
     curve_shift: u8, // applied to all dx/ddx/dddx except for dshift exception
     dshift: u8, // applied to cdx and cdy
-    cx: Fixed,
-    cy: Fixed,
-    cdx: Fixed,
-    cdy: Fixed,
-    cddx: Fixed,
-    cddy: Fixed,
-    cdddx: Fixed,
-    cdddy: Fixed,
-    c_last_x: Fixed,
-    c_last_y: Fixed,
+    cx: FDot16,
+    cy: FDot16,
+    cdx: FDot16,
+    cdy: FDot16,
+    cddx: FDot16,
+    cddy: FDot16,
+    cdddx: FDot16,
+    cdddy: FDot16,
+    c_last_x: FDot16,
+    c_last_y: FDot16,
 }
 
 impl CubicEdge {
@@ -407,7 +406,7 @@ impl CubicEdge {
         let mut c = fdot6_up_shift(3 * (x0 - x1 - x1 + x2), up_shift);
         let mut d = fdot6_up_shift(x3 + 3 * (x1 - x2) - x0, up_shift);
 
-        let cx     = fdot6::to_fixed(x0);
+        let cx     = fdot6::to_fdot16(x0);
         let cdx    = b + (c >> shift) + (d >> (2*shift));    // biased by shift
         let cddx   = 2 * c + ((3 * d) >> (shift - 1));       // biased by 2*shift
         let cdddx  = (3 * d) >> (shift - 1);                 // biased by 2*shift
@@ -416,13 +415,13 @@ impl CubicEdge {
         c = fdot6_up_shift(3 * (y0 - y1 - y1 + y2), up_shift);
         d = fdot6_up_shift(y3 + 3 * (y1 - y2) - y0, up_shift);
 
-        let cy     = fdot6::to_fixed(y0);
+        let cy     = fdot6::to_fdot16(y0);
         let cdy    = b + (c >> shift) + (d >> (2*shift));    // biased by shift
         let cddy   = 2 * c + ((3 * d) >> (shift - 1));       // biased by 2*shift
         let cdddy  = (3 * d) >> (shift - 1);                 // biased by 2*shift
 
-        let c_last_x = fdot6::to_fixed(x3);
-        let c_last_y = fdot6::to_fixed(y3);
+        let c_last_x = fdot6::to_fdot16(x3);
+        let c_last_y = fdot6::to_fdot16(y3);
 
         Some(CubicEdge {
             line: LineEdge {
@@ -543,7 +542,7 @@ fn cheap_distance(mut dx: FDot6, mut dy: FDot6) -> FDot6 {
 //
 // In the fixed case, we want to turn the fixed into .6 by saying pt >> 10,
 // or pt >> 8 for antialiasing. This is implemented as pt >> (10 - shift).
-fn fdot6_to_fixed_div2(value: FDot6) -> Fixed {
+fn fdot6_to_fixed_div2(value: FDot6) -> FDot16 {
     // we want to return SkFDot6ToFixed(value >> 1), but we don't want to throw
     // away data in value, so just perform a modify up-shift
     left_shift(value, 16 - 6 - 1)

@@ -9,8 +9,7 @@ use std::convert::TryInto;
 use crate::{Path, ScreenIntRect, LineCap, Point, PathSegment, Bounds, IntRect};
 
 use crate::blitter::Blitter;
-use crate::fdot6;
-use crate::fixed;
+use crate::fixed_point::{fdot6, fdot16};
 use crate::floating_point::{FLOAT_PI, SaturateCast};
 use crate::line_clipper;
 use crate::path::PathVerb;
@@ -61,10 +60,10 @@ fn hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut d
         let mut x1 = fdot6::from_f32(pts[1].x);
         let mut y1 = fdot6::from_f32(pts[1].y);
 
-        debug_assert!(fdot6::can_convert_to_fixed(x0));
-        debug_assert!(fdot6::can_convert_to_fixed(y0));
-        debug_assert!(fdot6::can_convert_to_fixed(x1));
-        debug_assert!(fdot6::can_convert_to_fixed(y1));
+        debug_assert!(fdot6::can_convert_to_fdot16(x0));
+        debug_assert!(fdot6::can_convert_to_fdot16(y0));
+        debug_assert!(fdot6::can_convert_to_fdot16(x1));
+        debug_assert!(fdot6::can_convert_to_fdot16(y1));
 
         let dx = x1 - x0;
         let dy = y1 - y0;
@@ -85,8 +84,8 @@ fn hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut d
                 continue;
             }
 
-            let slope = fixed::div(dy, dx);
-            let mut start_y = fdot6::to_fixed(y0) + (slope * ((32 - x0) & 63) >> 6);
+            let slope = fdot16::div(dy, dx);
+            let mut start_y = fdot6::to_fdot16(y0) + (slope * ((32 - x0) & 63) >> 6);
 
             debug_assert!(ix0 < ix1);
             loop {
@@ -116,8 +115,8 @@ fn hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut d
                 continue;
             }
 
-            let slope = fixed::div(dx, dy);
-            let mut start_x = fdot6::to_fixed(x0) + (slope * ((32 - y0) & 63) >> 6);
+            let slope = fdot16::div(dx, dy);
+            let mut start_x = fdot6::to_fdot16(x0) + (slope * ((32 - y0) & 63) >> 6);
 
             debug_assert!(iy0 < iy1);
             loop {

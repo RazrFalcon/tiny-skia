@@ -11,8 +11,7 @@ use crate::{Path, IntRect, FillType, LengthU32, Bounds, ScreenIntRect};
 use crate::blitter::Blitter;
 use crate::edge::{Edge, LineEdge};
 use crate::edge_builder::{BasicEdgeBuilder, ShiftedIntRect};
-use crate::fdot6;
-use crate::fixed::{self, Fixed};
+use crate::fixed_point::{fdot6, fdot16, FDot16};
 use crate::floating_point::SaturateCast;
 
 pub fn fill_path(
@@ -172,7 +171,7 @@ fn walk_edges(
         while edges[curr_idx].first_y <= curr_y as i32 {
             debug_assert!(edges[curr_idx].last_y >= curr_y as i32);
 
-            let x = fixed::round_to_i32(edges[curr_idx].x) as u32; // TODO: check
+            let x = fdot16::round_to_i32(edges[curr_idx].x) as u32; // TODO: check
 
             if (w & winding_mask) == 0 {
                 // we're starting interval
@@ -302,7 +301,7 @@ fn insert_edge_after(curr_idx: usize, after_idx: usize, edges: &mut [Edge]) {
 // insertion, marching forwards from here. The implementation could have started from the left
 // of the prior insertion, and search to the right, or with some additional caching, binary
 // search the starting point. More work could be done to determine optimal new edge insertion.
-fn backward_insert_start(mut prev_idx: usize, x: Fixed, edges: &mut [Edge]) -> usize {
+fn backward_insert_start(mut prev_idx: usize, x: FDot16, edges: &mut [Edge]) -> usize {
     while let Some(prev) = edges[prev_idx].prev {
         prev_idx = prev as usize;
         if edges[prev_idx].x <= x {

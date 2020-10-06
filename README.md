@@ -102,9 +102,11 @@ and [num-ext](https://github.com/RazrFalcon/num-ext).
 - [x] `Path` hairline stroking
 - [x] Anti-aliased `Path` hairline stroking
 - [ ] Stroke dashing
-- [x] Gradients (linear, radial and two point conical)
+- [x] Gradients (linear and radial)
 - [x] `Pixmap`s blending (image on image rendering)
 - [x] Patterns
+- [ ] Stroke rect
+- [ ] Testing
 
 ### v0.3
 
