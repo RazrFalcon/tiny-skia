@@ -386,7 +386,7 @@ fn do_anti_hairline(
 
             if istop > clip.right() {
                 istop = clip.right();
-                scale_stop = 0;  // so we don't draw this last column
+                scale_stop = 0; // so we don't draw this last column
             }
 
             debug_assert!(istart <= istop);
@@ -471,7 +471,7 @@ fn do_anti_hairline(
             }
             if istop > clip.bottom() {
                 istop = clip.bottom();
-                scale_stop = 0;  // so we don't draw this last row
+                scale_stop = 0; // so we don't draw this last row
             }
 
             debug_assert!(istart <= istop);

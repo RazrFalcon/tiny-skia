@@ -964,7 +964,7 @@ impl Conic {
 
         // Now compute any remaing (sub-90-degree) arc for the last conic
         let final_pt = Point::from_xy(x, y);
-        let last_q = quadrant_points[quadrant * 2];  // will already be a unit-vector
+        let last_q = quadrant_points[quadrant * 2]; // will already be a unit-vector
         let dot = last_q.dot(final_pt);
         debug_assert!(0.0 <= dot && dot <= 1.0 + SCALAR_NEARLY_ZERO);
 
@@ -974,7 +974,6 @@ impl Conic {
             // we compute its length from cos(theta/2) = length / 1, using half-angle identity we get
             // length = sqrt(2 / (1 + cos(theta)). We already have cos() when to computed the dot.
             // This is nice, since our computed weight is cos(theta/2) as well!
-            //
             let cos_theta_over_2 = ((1.0 + dot) / 2.0).sqrt();
             off_curve.set_length(cos_theta_over_2.invert());
             if !last_q.almost_equal(off_curve) {

@@ -232,14 +232,14 @@ impl QuadraticEdge {
         let curve_shift = (shift - 1) as u8;
 
         let mut a = fdot6_to_fixed_div2(x0 - x1 - x1 + x2);  // 1/2 the real value
-        let mut b = fdot6::to_fdot16(x1 - x0);                // 1/2 the real value
+        let mut b = fdot6::to_fdot16(x1 - x0);               // 1/2 the real value
 
         let qx     = fdot6::to_fdot16(x0);
         let qdx    = b + (a >> shift);     // biased by shift
         let qddx   = a >> (shift - 1);     // biased by shift
 
         a = fdot6_to_fixed_div2(y0 - y1 - y1 + y2);  // 1/2 the real value
-        b = fdot6::to_fdot16(y1 - y0);                // 1/2 the real value
+        b = fdot6::to_fdot16(y1 - y0);               // 1/2 the real value
 
         let qy     = fdot6::to_fdot16(y0);
         let qdy    = b + (a >> shift);     // biased by shift

@@ -4,6 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// Skia uses fixed points pretty chaotically, therefore we cannot use
+// strongly typed wrappers. Which is unfortunate.
+
 use crate::floating_point::SaturateCast;
 use crate::math::{left_shift, left_shift64, bound};
 

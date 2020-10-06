@@ -248,7 +248,7 @@ pub fn stroke_path_impl(
 
         if line_cap != LineCap::Butt {
             if prev_verb == PathVerb::Move && verb == PathVerb::Line && verb == PathVerb::Quad && verb == PathVerb::Cubic {
-                first_pt = last_pt2;  // the curve moved the initial point, so close to it instead
+                first_pt = last_pt2; // the curve moved the initial point, so close to it instead
             }
 
             prev_verb = verb;
