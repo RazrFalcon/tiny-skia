@@ -8,7 +8,7 @@ fn two_stops_linear_tiny_skia(
 ) {
     use tiny_skia::*;
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::new(1000, 1000).unwrap();
 
     let mut paint = Paint::default();
     paint.force_hq_pipeline = hq;
@@ -29,7 +29,7 @@ fn two_stops_linear_tiny_skia(
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        pixmap.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillType::Winding);
     });
 }
 
@@ -489,7 +489,7 @@ fn three_stops_linear_even_cairo(bencher: &mut Bencher) {
 fn simple_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::new(1000, 1000).unwrap();
 
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
@@ -513,7 +513,7 @@ fn simple_radial_tiny_skia(bencher: &mut Bencher) {
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        pixmap.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillType::Winding);
     });
 }
 
@@ -635,7 +635,7 @@ fn simple_radial_cairo(bencher: &mut Bencher) {
 fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::new(1000, 1000).unwrap();
 
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
@@ -659,7 +659,7 @@ fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        pixmap.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillType::Winding);
     });
 }
 

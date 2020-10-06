@@ -3,7 +3,7 @@ use tiny_skia::*;
 fn main() {
     let triangle = crate_triangle();
 
-    let mut pixmap = Pixmap::new(400, 400).unwrap();
+    let mut canvas = Canvas::new(400, 400).unwrap();
 
     let now = std::time::Instant::now();
 
@@ -19,15 +19,15 @@ fn main() {
 
     let path = PathBuilder::from_circle(200.0, 200.0, 180.0).unwrap();
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 
-    pixmap.save_png("image.png").unwrap();
+    canvas.pixmap.save_png("image.png").unwrap();
 }
 
 fn crate_triangle() -> Pixmap {
-    let mut pixmap = Pixmap::new(20, 20).unwrap();
+    let mut canvas = Canvas::new(20, 20).unwrap();
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -40,7 +40,7 @@ fn crate_triangle() -> Pixmap {
     pb.close();
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
-    pixmap
+    canvas.pixmap
 }

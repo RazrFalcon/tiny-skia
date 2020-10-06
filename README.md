@@ -70,29 +70,27 @@ You can find more information in [benches/README.md](./benches/README.md).
 
 ## API overview
 
-The API is a bit unconventional. It doesn't look like cairo, QPainter (Qt) or even Skia.
+The API is a bit unconventional. It doesn't look like cairo, QPainter (Qt), HTML Canvas or even Skia.
 
-To start, there are two levels:
+The core ideas are that almost everything is stateless, immutable and valid.
 
-1. A low-level API called `Painter`, which supports only the basic operations like path filling.
-2. A high-level API called `Canvas`, which is built on top of `Painter`
-   and provides world transformation and stroking.
-
-The main idea is that `Canvas` relies only on a public API, so you can reimplement one yourself.
-
-Another difference is that everything is strongly typed and checked on creation.
-`Size`, `Rect`, `Color`, `Path`, `Transform` - everything is guarantee to be valid at all times.
-You cannot create a zero or negative `Size`. You cannot create an empty `Path`.
-You cannot create a `Transform` with a zero scale. And so on.<br>
-Most of it is handled by external crates like
-[safe-geom](https://github.com/RazrFalcon/safe-geom)
-and [num-ext](https://github.com/RazrFalcon/num-ext).
+- `Canvas` provides a fairly spartan and low-level API.
+  We don't have a `draw_path` method. Instead, there are `fill_path` and `stroke_path`.
+- `Canvas` contains a single state: world transform.
+- The only truly mutable type is `Pixmap`, which is our raster image.
+- `Path` cannot be modified after creation.
+  It can be transformed, but this function consumes the object.
+- All geometry types are always valid and immutable.
+  You cannot create a negative `Size`.
+  You cannot create a `Transform` with a zero scale.
+  And so on.
+- All types that store `f32` guarantee that it is finite.
 
 ## Roadmap
 
 ### v0.2
 
-- [x] Foundation: `Pixmap`, `Painter`, `Path`, geometry primitives, etc.
+- [x] Foundation: `Pixmap`, `Canvas`, `Path`, geometry primitives, etc.
 - [x] Port `SkRasterPipeline` to Rust.
 - [x] PNG load/save
 - [x] Blending modes

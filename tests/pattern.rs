@@ -1,7 +1,7 @@
 use tiny_skia::*;
 
 fn crate_triangle() -> Pixmap {
-    let mut pixmap = Pixmap::new(20, 20).unwrap();
+    let mut canvas = Canvas::new(20, 20).unwrap();
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -14,14 +14,14 @@ fn crate_triangle() -> Pixmap {
     pb.close();
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
-    pixmap
+    canvas.pixmap
 }
 
 #[test]
 fn pad_nearest() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -35,15 +35,15 @@ fn pad_nearest() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/pad-nearest.png").unwrap();
-    assert_eq!(pixmap, expected);
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]
 fn repeat_nearest() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -57,15 +57,15 @@ fn repeat_nearest() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/repeat-nearest.png").unwrap();
-    assert_eq!(pixmap, expected);
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]
 fn reflect_nearest() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -79,17 +79,17 @@ fn reflect_nearest() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/reflect-nearest.png").unwrap();
-    assert_eq!(pixmap, expected);
+    assert_eq!(canvas.pixmap, expected);
 }
 
 // We have to test tile mode for bilinear/bicubic separately,
 // because they're using a different algorithm from nearest.
 #[test]
 fn pad_bicubic() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -104,15 +104,15 @@ fn pad_bicubic() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/pad-bicubic.png").unwrap();
-    assert_eq!(pixmap, expected);
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]
 fn repeat_bicubic() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -127,15 +127,15 @@ fn repeat_bicubic() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/repeat-bicubic.png").unwrap();
-    assert_eq!(pixmap, expected);
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]
 fn reflect_bicubic() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -150,15 +150,15 @@ fn reflect_bicubic() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/reflect-bicubic.png").unwrap();
-    assert_eq!(pixmap, expected);
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]
 fn filter_nearest_no_ts() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -172,15 +172,15 @@ fn filter_nearest_no_ts() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-nearest-no-ts.png").unwrap();
-    assert_eq!(pixmap, expected);
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]
 fn filter_nearest() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -194,15 +194,15 @@ fn filter_nearest() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-nearest.png").unwrap();
-    assert_eq!(pixmap, expected);
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]
 fn filter_bilinear() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -216,25 +216,25 @@ fn filter_bilinear() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     // SIMD and non-SIMD version produce a slightly different results. Not sure why.
     #[cfg(all(feature = "sse2", target_feature = "sse2"))]
     {
         let expected = Pixmap::load_png("tests/images/pattern/filter-bilinear.png").unwrap();
-        assert_eq!(pixmap, expected);
+        assert_eq!(canvas.pixmap, expected);
     }
 
     #[cfg(not(all(feature = "sse2", target_feature = "sse2")))]
     {
         let expected = Pixmap::load_png("tests/images/pattern/filter-bilinear-no-simd.png").unwrap();
-        assert_eq!(pixmap, expected);
+        assert_eq!(canvas.pixmap, expected);
     }
 }
 
 #[test]
 fn filter_bicubic() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::new(200, 200).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -248,8 +248,8 @@ fn filter_bicubic() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-bicubic.png").unwrap();
-    assert_eq!(pixmap, expected);
+    assert_eq!(canvas.pixmap, expected);
 }

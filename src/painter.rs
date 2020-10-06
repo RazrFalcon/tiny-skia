@@ -30,7 +30,7 @@ impl Default for FillType {
 }
 
 
-/// Controls how a path should be filled.
+/// Controls how a shape should be painted.
 #[derive(Clone, Debug)]
 pub struct Paint<'a> {
     /// A paint shader.

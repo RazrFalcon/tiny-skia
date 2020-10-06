@@ -23,8 +23,7 @@ fn draw_pixmap() {
 
     // A pixmap with the bottom half filled with solid color.
     let sub_pixmap = {
-        let pixmap = Pixmap::new(100, 100).unwrap();
-        let mut canvas = Canvas::from(pixmap);
+        let mut canvas = Canvas::new(100, 100).unwrap();
         let mut paint = Paint::default();
         paint.set_color_rgba8(50, 127, 150, 200);
         let rect = Rect::from_xywh(0.0, 50.0, 100.0, 50.0).unwrap();
@@ -47,7 +46,7 @@ fn draw_pixmap() {
 #[test]
 fn draw_pixmap_ts() {
     let triangle = {
-        let mut pixmap = Pixmap::new(100, 100).unwrap();
+        let mut canvas = Canvas::new(100, 100).unwrap();
 
         let mut paint = Paint::default();
         paint.set_color_rgba8(50, 127, 150, 200);
@@ -59,9 +58,9 @@ fn draw_pixmap_ts() {
         pb.line_to(50.0, 0.0);
         pb.close();
         let path = pb.finish().unwrap();
-        pixmap.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillType::Winding);
 
-        pixmap
+        canvas.pixmap
     };
 
     let pixmap = Pixmap::new(200, 200).unwrap();
@@ -80,7 +79,7 @@ fn draw_pixmap_ts() {
 #[test]
 fn draw_pixmap_opacity() {
     let triangle = {
-        let mut pixmap = Pixmap::new(100, 100).unwrap();
+        let mut canvas = Canvas::new(100, 100).unwrap();
 
         let mut paint = Paint::default();
         paint.set_color_rgba8(50, 127, 150, 200);
@@ -92,9 +91,9 @@ fn draw_pixmap_opacity() {
         pb.line_to(50.0, 0.0);
         pb.close();
         let path = pb.finish().unwrap();
-        pixmap.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillType::Winding);
 
-        pixmap
+        canvas.pixmap
     };
 
     let pixmap = Pixmap::new(200, 200).unwrap();

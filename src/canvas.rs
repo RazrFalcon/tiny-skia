@@ -6,9 +6,10 @@
 // This module is closer to SkDraw than SkCanvas
 // and since it was written from scratch, there is no Google copyright.
 
-use crate::{Pixmap, Transform, Path, Paint, StrokeProps, Painter, Point, PathStroker, NormalizedF32};
+use crate::{Pixmap, Transform, Path, Paint, StrokeProps, Point, PathStroker, NormalizedF32, Color};
 use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillType, Rect, SpreadMode};
 
+use crate::painter::Painter;
 use crate::safe_geom_ext::TransformExt;
 use crate::scalar::Scalar;
 
@@ -77,6 +78,23 @@ impl From<Pixmap> for Canvas {
 }
 
 impl Canvas {
+    /// Creates a new canvas.
+    ///
+    /// Allocates a new pixmap. Use `Canvas::from(pixmap)` to reuse an existing one.
+    ///
+    /// Zero size in an error.
+    ///
+    /// Pixmap's width is limited by i32::MAX/4.
+    #[inline]
+    pub fn new(width: u32, height: u32) -> Option<Self> {
+        Some(Canvas {
+            pixmap: Pixmap::new(width, height)?,
+            transform: Transform::identity(),
+            stroker: PathStroker::new(),
+            stroked_path: None,
+        })
+    }
+
     /// Translates the canvas.
     #[inline]
     pub fn translate(&mut self, tx: f32, ty: f32) {
@@ -113,6 +131,11 @@ impl Canvas {
     #[inline]
     pub fn set_transform(&mut self, ts: Transform) {
         self.transform = ts;
+    }
+
+    /// Fills the whole canvas with a color.
+    pub fn fill_canvas(&mut self, color: Color) {
+        self.pixmap.fill(color);
     }
 
     /// Fills a path.

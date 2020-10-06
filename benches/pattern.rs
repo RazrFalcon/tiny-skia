@@ -8,7 +8,7 @@ fn pattern_tiny_skia(
     use tiny_skia::*;
 
     fn crate_triangle() -> Pixmap {
-        let mut pixmap = Pixmap::new(20, 20).unwrap();
+        let mut canvas = Canvas::new(20, 20).unwrap();
 
         let mut paint = Paint::default();
         paint.set_color_rgba8(50, 127, 150, 200);
@@ -21,12 +21,12 @@ fn pattern_tiny_skia(
         pb.close();
         let path = pb.finish().unwrap();
 
-        pixmap.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillType::Winding);
 
-        pixmap
+        canvas.pixmap
     }
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::new(1000, 1000).unwrap();
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -48,7 +48,7 @@ fn pattern_tiny_skia(
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        pixmap.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillType::Winding);
     });
 }
 

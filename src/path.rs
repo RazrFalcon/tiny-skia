@@ -29,7 +29,7 @@ pub enum PathVerb {
 /// - Has a valid, precomputed bounds.
 /// - All points are finite.
 /// - Has at least two segments.
-/// - Each contour starts with a Move.
+/// - Each contour starts with a MoveTo.
 /// - No duplicated Move.
 /// - No duplicated Close.
 #[derive(Clone, PartialEq)]

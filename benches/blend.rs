@@ -3,7 +3,7 @@ use bencher::{benchmark_group, benchmark_main, Bencher};
 fn fill_tiny_skia(blend_mode: tiny_skia::BlendMode, bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::new(1000, 1000).unwrap();
 
     let mut paint1 = Paint::default();
     paint1.set_color_rgba8(50, 127, 150, 200);
@@ -33,10 +33,10 @@ fn fill_tiny_skia(blend_mode: tiny_skia::BlendMode, bencher: &mut Bencher) {
         pb.finish().unwrap()
     };
 
-    pixmap.fill_path(&path1, &paint1, FillType::Winding);
+    canvas.fill_path(&path1, &paint1, FillType::Winding);
 
     bencher.iter(|| {
-        pixmap.fill_path(&path2, &paint2, FillType::Winding);
+        canvas.fill_path(&path2, &paint2, FillType::Winding);
     });
 }
 
