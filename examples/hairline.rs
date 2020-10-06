@@ -18,7 +18,7 @@ fn main() {
     paint.anti_alias = true;
 
     for i in 0..20 {
-        let mut stroke = StrokeProps::default();
+        let mut stroke = Stroke::default();
         stroke.width = 2.0 - (i as f32 / 10.0);
         canvas.stroke_path(&path, &paint, stroke);
         canvas.translate(0.0, 20.0);

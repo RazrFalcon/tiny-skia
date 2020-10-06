@@ -61,4 +61,4 @@ pub use pixmap::Pixmap;
 pub use point::Point;
 pub use shaders::{GradientStop, SpreadMode, FilterQuality};
 pub use shaders::{Shader, LinearGradient, RadialGradient, Pattern};
-pub use stroker::{LineCap, LineJoin, StrokeProps, PathStroker};
+pub use stroker::{LineCap, LineJoin, Stroke, PathStroker};

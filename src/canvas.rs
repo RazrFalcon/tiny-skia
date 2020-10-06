@@ -6,7 +6,7 @@
 // This module is closer to SkDraw than SkCanvas
 // and since it was written from scratch, there is no Google copyright.
 
-use crate::{Pixmap, Transform, Path, Paint, StrokeProps, Point, PathStroker, NormalizedF32, Color};
+use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, PathStroker, NormalizedF32, Color};
 use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillType, Rect, SpreadMode};
 
 use crate::painter::Painter;
@@ -168,12 +168,12 @@ impl Canvas {
     ///    `Canvas` will reuse this allocation during subsequent strokes.
     /// 2. If a stroke width is thinner than 1px (after applying the transformation),
     ///    we will use hairline stroking, which doesn't involve a separate path allocation.
-    pub fn stroke_path(&mut self, path: &Path, paint: &Paint, stroke: StrokeProps) {
+    pub fn stroke_path(&mut self, path: &Path, paint: &Paint, stroke: Stroke) {
         self.stroke_path_impl(path, paint, stroke);
     }
 
     #[inline(always)]
-    fn stroke_path_impl(&mut self, path: &Path, paint: &Paint, mut stroke: StrokeProps) -> Option<()> {
+    fn stroke_path_impl(&mut self, path: &Path, paint: &Paint, mut stroke: Stroke) -> Option<()> {
         if stroke.width < 0.0 {
             return None;
         }
@@ -285,7 +285,7 @@ fn compute_res_scale_for_stroking(ts: &Transform) -> f32 {
     1.0
 }
 
-fn treat_as_hairline(paint: &Paint, stroke: StrokeProps, ts: &Transform) -> Option<f32> {
+fn treat_as_hairline(paint: &Paint, stroke: Stroke, ts: &Transform) -> Option<f32> {
     debug_assert!(stroke.width >= 0.0);
 
     if stroke.width == 0.0 {

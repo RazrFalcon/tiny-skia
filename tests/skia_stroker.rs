@@ -17,10 +17,10 @@ fn quad_stroker_one_off() {
                f32::from_bits(0x43c941c8), f32::from_bits(0x42b3ace3));
     let path = pb.finish().unwrap();
 
-    let mut props = StrokeProps::default();
-    props.width = 164.683548;
+    let mut stroke = Stroke::default();
+    stroke.width = 164.683548;
 
-    assert!(path.stroke(props).is_some());
+    assert!(path.stroke(stroke).is_some());
 }
 
 #[test]
@@ -32,8 +32,8 @@ fn cubic_stroker_one_off() {
                 f32::from_bits(0x43f1cd32), f32::from_bits(0x42802ec1));
     let path = pb.finish().unwrap();
 
-    let mut props = StrokeProps::default();
-    props.width = 42.835968;
+    let mut stroke = Stroke::default();
+    stroke.width = 42.835968;
 
-    assert!(path.stroke(props).is_some());
+    assert!(path.stroke(stroke).is_some());
 }

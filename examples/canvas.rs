@@ -25,7 +25,7 @@ fn main() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    let mut stroke = StrokeProps::default();
+    let mut stroke = Stroke::default();
     stroke.width = 20.0;
 
     canvas.transform(1.5, 0.3, 1.7, 3.5, -130.0, 50.0);

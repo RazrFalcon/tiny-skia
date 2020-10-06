@@ -16,10 +16,10 @@ fn cubic_1() {
                 51.0161362, 1511.52478);
     let path = pb.finish().unwrap();
 
-    let mut props = StrokeProps::default();
-    props.width = 0.394537568;
+    let mut stroke = Stroke::default();
+    stroke.width = 0.394537568;
 
-    assert!(path.stroke(props).is_none());
+    assert!(path.stroke(stroke).is_none());
 }
 
 #[test]
@@ -35,10 +35,10 @@ fn cubic_2() {
                 f32::from_bits(0x424c1119), f32::from_bits(0x44bcf0ca));
     let path = pb.finish().unwrap();
 
-    let mut props = StrokeProps::default();
-    props.width = 0.394537568;
+    let mut stroke = Stroke::default();
+    stroke.width = 0.394537568;
 
-    assert!(path.stroke(props).is_some());
+    assert!(path.stroke(stroke).is_some());
 }
 
 // TODO: test_strokerect
@@ -57,8 +57,8 @@ fn big() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    let mut props = StrokeProps::default();
-    props.width = 1.49679073e+10;
+    let mut stroke = Stroke::default();
+    stroke.width = 1.49679073e+10;
 
-    assert!(path.stroke(props).is_some());
+    assert!(path.stroke(stroke).is_some());
 }

@@ -36,7 +36,7 @@ fn crate_triangle() -> Pixmap {
     canvas.fill_path(&path, &paint, FillType::Winding);
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(0.0, 0.0, 200.0, 200.0).unwrap());
-    let stroke = StrokeProps::default();
+    let stroke = Stroke::default();
     paint.set_color_rgba8(200, 0, 0, 220);
     canvas.stroke_path(&path, &paint, stroke); // TODO: stroke_rect
 

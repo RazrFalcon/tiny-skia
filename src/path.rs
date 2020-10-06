@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, PathBuilder, Bounds, Transform, StrokeProps, PathStroker};
+use crate::{Point, PathBuilder, Bounds, Transform, Stroke, PathStroker};
 
 use crate::safe_geom_ext::{BoundsExt, TransformExt};
 use crate::scalar::SCALAR_MAX;
@@ -75,7 +75,7 @@ impl Path {
     ///
     /// ```ignore
     /// let mut stroker = PathStroker::new();
-    /// stroker.stroke(self, props);
+    /// stroker.stroke(self, stroke);
     /// ```
     ///
     /// Returns `None` when:
@@ -83,9 +83,9 @@ impl Path {
     /// - `width` <= 0 or Nan/inf
     /// - `miter_limit` < 4 or Nan/inf
     /// - produced stroke has invalid bounds
-    pub fn stroke(&self, props: StrokeProps) -> Option<Self> {
+    pub fn stroke(&self, stroke: Stroke) -> Option<Self> {
         let mut stroker = PathStroker::new();
-        stroker.stroke(self, props)
+        stroker.stroke(self, stroke)
     }
 
     /// Sometimes in the drawing pipeline, we have to perform math on path coordinates, even after

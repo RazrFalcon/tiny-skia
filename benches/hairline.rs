@@ -220,7 +220,7 @@ fn draw_tiny_skia(aa: bool, bencher: &mut Bencher) {
     }
     let path = pb.finish().unwrap();
 
-    let mut stroke = StrokeProps::default();
+    let mut stroke = Stroke::default();
     stroke.width = 0.5;
 
     bencher.iter(|| {

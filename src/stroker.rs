@@ -25,7 +25,7 @@ impl<'a> SwappableBuilders<'a> {
 
 /// Stroke properties.
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub struct StrokeProps {
+pub struct Stroke {
     /// A stroke thickness.
     ///
     /// Must be >= 0.
@@ -51,10 +51,10 @@ pub struct StrokeProps {
     pub line_join: LineJoin,
 }
 
-impl Default for StrokeProps {
+impl Default for Stroke {
     #[inline]
     fn default() -> Self {
-        StrokeProps {
+        Stroke {
             width: 1.0,
             miter_limit: 4.0,
             line_cap: LineCap::default(),
@@ -263,10 +263,10 @@ impl PathStroker {
     pub fn stroke(
         &mut self,
         path: &Path,
-        props: StrokeProps,
+        stroke: Stroke,
     ) -> Option<Path> {
-        let width = NonZeroPositiveF32::new(props.width)?;
-        self.stroke_inner(path, width, props.miter_limit, props.line_cap, props.line_join)
+        let width = NonZeroPositiveF32::new(stroke.width)?;
+        self.stroke_inner(path, width, stroke.miter_limit, stroke.line_cap, stroke.line_join)
     }
 
     /// Stokes the path into the `out_path`.
@@ -275,11 +275,11 @@ impl PathStroker {
     pub fn stroke_to(
         &mut self,
         path: &Path,
-        props: StrokeProps,
+        stroke: Stroke,
         out_path: Path,
     ) -> Option<Path> {
         self.outer = out_path.clear();
-        self.stroke(path, props)
+        self.stroke(path, stroke)
     }
 
     fn stroke_inner(

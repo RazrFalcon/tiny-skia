@@ -103,6 +103,7 @@ The core ideas are that almost everything is stateless, immutable and valid.
 - [x] Gradients (linear and radial)
 - [x] `Pixmap`s blending (image on image rendering)
 - [x] Patterns
+- [x] Fill rect
 - [ ] Stroke rect
 - [ ] Testing
 

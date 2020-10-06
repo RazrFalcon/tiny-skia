@@ -7,12 +7,12 @@ fn zero_len_subpath_butt_cap() {
     pb.line_to(100.0, 100.0);
     let path = pb.finish().unwrap();
 
-    let mut props = StrokeProps::default();
-    props.width = 20.0;
-    props.line_cap = LineCap::Butt;
+    let mut stroke = Stroke::default();
+    stroke.width = 20.0;
+    stroke.line_cap = LineCap::Butt;
 
     // A zero-len subpath with a butt line cap produces nothing.
-    assert_eq!(path.stroke(props), None);
+    assert_eq!(path.stroke(stroke), None);
 }
 
 #[test]
@@ -22,12 +22,12 @@ fn zero_len_subpath_round_cap() {
     pb.line_to(100.0, 100.0);
     let path = pb.finish().unwrap();
 
-    let mut props = StrokeProps::default();
-    props.width = 20.0;
-    props.line_cap = LineCap::Round;
+    let mut stroke = Stroke::default();
+    stroke.width = 20.0;
+    stroke.line_cap = LineCap::Round;
 
     // A zero-len subpath with a round line cap produces a circle.
-    let stroke_path = path.stroke(props).unwrap();
+    let stroke_path = path.stroke(stroke).unwrap();
 
     // Skia sure spams a lot...
     let expected = {
@@ -57,12 +57,12 @@ fn zero_len_subpath_square_cap() {
     pb.line_to(100.0, 100.0);
     let path = pb.finish().unwrap();
 
-    let mut props = StrokeProps::default();
-    props.width = 20.0;
-    props.line_cap = LineCap::Square;
+    let mut stroke = Stroke::default();
+    stroke.width = 20.0;
+    stroke.line_cap = LineCap::Square;
 
     // A zero-len subpath with a round line cap produces a circle.
-    let stroke_path = path.stroke(props).unwrap();
+    let stroke_path = path.stroke(stroke).unwrap();
 
     let expected = {
         let mut pb = PathBuilder::new();
@@ -89,8 +89,8 @@ fn auto_close() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    let props = StrokeProps::default();
-    let stroke_path = path.stroke(props).unwrap();
+    let stroke = Stroke::default();
+    let stroke_path = path.stroke(stroke).unwrap();
 
     let mut iter = stroke_path.segments();
     iter.set_auto_close(true);
@@ -118,8 +118,8 @@ fn auto_close() {
 #[test]
 fn circle() {
     let path = PathBuilder::from_circle(100.0, 100.0, 50.0).unwrap();
-    let props = StrokeProps::default();
-    let stroke_path = path.stroke(props).unwrap();
+    let stroke = Stroke::default();
+    let stroke_path = path.stroke(stroke).unwrap();
 
     let mut iter = stroke_path.segments();
     assert_eq!(iter.next().unwrap(), PathSegment::new_move_to(150.5, 100.0));
@@ -168,11 +168,11 @@ fn round_cap_join() {
     pb.cubic_to(30.563658, 99.066835, 30.546308, 99.280724, 30.557592, 99.305282);
     let path = pb.finish().unwrap();
 
-    let mut props = StrokeProps::default();
-    props.width = 30.0;
-    props.line_cap = LineCap::Round;
-    props.line_join = LineJoin::Round;
-    let stroke_path = path.stroke(props).unwrap();
+    let mut stroke = Stroke::default();
+    stroke.width = 30.0;
+    stroke.line_cap = LineCap::Round;
+    stroke.line_join = LineJoin::Round;
+    let stroke_path = path.stroke(stroke).unwrap();
 
     let mut iter = stroke_path.segments();
     assert_eq!(iter.next().unwrap(), PathSegment::new_move_to(176.65611, 43.44233));

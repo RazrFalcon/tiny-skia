@@ -19,7 +19,7 @@ fn main() {
         pb.finish().unwrap()
     };
 
-    let mut stroke = StrokeProps::default();
+    let mut stroke = Stroke::default();
     stroke.width = 4.0;
 
     canvas.stroke_path(&path, &paint, stroke);
