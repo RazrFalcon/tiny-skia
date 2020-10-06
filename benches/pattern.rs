@@ -21,7 +21,7 @@ fn pattern_tiny_skia(
         pb.close();
         let path = pb.finish().unwrap();
 
-        pixmap.fill_path(&path, &paint);
+        pixmap.fill_path(&path, &paint, FillType::Winding);
 
         pixmap
     }
@@ -48,7 +48,7 @@ fn pattern_tiny_skia(
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        pixmap.fill_path(&path, &paint);
+        pixmap.fill_path(&path, &paint, FillType::Winding);
     });
 }
 

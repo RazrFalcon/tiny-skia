@@ -59,7 +59,7 @@ fn draw_pixmap_ts() {
         pb.line_to(50.0, 0.0);
         pb.close();
         let path = pb.finish().unwrap();
-        pixmap.fill_path(&path, &paint);
+        pixmap.fill_path(&path, &paint, FillType::Winding);
 
         pixmap
     };
@@ -92,7 +92,7 @@ fn draw_pixmap_opacity() {
         pb.line_to(50.0, 0.0);
         pb.close();
         let path = pb.finish().unwrap();
-        pixmap.fill_path(&path, &paint);
+        pixmap.fill_path(&path, &paint, FillType::Winding);
 
         pixmap
     };

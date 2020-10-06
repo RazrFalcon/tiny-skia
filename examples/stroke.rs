@@ -37,7 +37,7 @@ fn stroke_simple(pixmap: &mut Pixmap) {
     props.width = 4.0;
     let stroked_path = path.stroke(props).unwrap();
 
-    pixmap.fill_path(&stroked_path, &paint);
+    pixmap.fill_path(&stroked_path, &paint, FillType::Winding);
 }
 
 // The stroking algorithm will use multiple temporary Path buffers.
@@ -63,7 +63,7 @@ fn stroke_preserve(pixmap: &mut Pixmap) {
     };
 
     let stroked_path = stroker.stroke(&path, props).unwrap();
-    pixmap.fill_path(&stroked_path, &paint);
+    pixmap.fill_path(&stroked_path, &paint, FillType::Winding);
 
     // All path building/stroking code below will not allocate new memory.
 
@@ -82,5 +82,5 @@ fn stroke_preserve(pixmap: &mut Pixmap) {
     let stroked_path = stroker.stroke_to(&path, props, stroked_path).unwrap();
 
     paint.set_color_rgba8(0, 0, 0xDD, 0xAA);
-    pixmap.fill_path(&stroked_path, &paint);
+    pixmap.fill_path(&stroked_path, &paint, FillType::Winding);
 }

@@ -7,7 +7,6 @@ fn fill_aa_tiny_skia(bencher: &mut Bencher) {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
-    paint.fill_type = FillType::EvenOdd;
     paint.anti_alias = true;
 
     let mut pb = PathBuilder::new();
@@ -20,7 +19,7 @@ fn fill_aa_tiny_skia(bencher: &mut Bencher) {
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        pixmap.fill_path(&path, &paint);
+        pixmap.fill_path(&path, &paint, FillType::EvenOdd);
     });
 }
 

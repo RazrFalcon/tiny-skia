@@ -12,7 +12,7 @@ fn horizontal_line() {
     pb.line_to(90.0, 10.0);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -30,7 +30,7 @@ fn vertical_line() {
     pb.line_to(10.0, 90.0);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -48,7 +48,7 @@ fn single_line() {
     pb.line_to(90.0, 90.0);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -250,7 +250,7 @@ fn open_polygon() {
     pb.line_to(90.744819, 40.864522);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/polygon.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -273,7 +273,7 @@ fn closed_polygon() {
     pb.close(); // the only difference
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/polygon.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -285,7 +285,6 @@ fn winding_star() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
-    paint.fill_type = FillType::Winding;
 
     let mut pb = PathBuilder::new();
     pb.move_to(50.0,  7.5);
@@ -295,7 +294,7 @@ fn winding_star() {
     pb.line_to(25.0, 87.5);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/winding-star.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -307,7 +306,6 @@ fn even_odd_star() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
-    paint.fill_type = FillType::EvenOdd;
 
     let mut pb = PathBuilder::new();
     pb.move_to(50.0,  7.5);
@@ -317,7 +315,7 @@ fn even_odd_star() {
     pb.line_to(25.0, 87.5);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::EvenOdd);
 
     let expected = Pixmap::load_png("tests/images/fill/even-odd-star.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -329,14 +327,13 @@ fn quad_curve() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
-    paint.fill_type = FillType::EvenOdd;
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 15.0);
     pb.quad_to(95.0, 35.0, 75.0, 90.0);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::EvenOdd);
 
     let expected = Pixmap::load_png("tests/images/fill/quad.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -348,14 +345,13 @@ fn cubic_curve() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
-    paint.fill_type = FillType::EvenOdd;
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 15.0);
     pb.cubic_to(95.0, 35.0, 0.0, 75.0, 75.0, 90.0);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::EvenOdd);
 
     let expected = Pixmap::load_png("tests/images/fill/cubic.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -369,7 +365,7 @@ fn memset2d() {
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 90.0, 90.0).unwrap());
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/memset2d.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -384,7 +380,7 @@ fn memset2d_out_of_bounds() {
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(50.0, 50.0, 120.0, 120.0).unwrap());
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/memset2d-2.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -406,7 +402,6 @@ fn fill_aa() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
-    paint.fill_type = FillType::EvenOdd;
     paint.anti_alias = true;
 
     let mut pb = PathBuilder::new();
@@ -417,7 +412,7 @@ fn fill_aa() {
     pb.line_to(25.0, 87.5);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::EvenOdd);
 
     let expected = Pixmap::load_png("tests/images/fill/star-aa.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -436,7 +431,7 @@ fn overflow_in_walk_edges_1() {
     let path = pb.finish().unwrap();
 
     // Must not panic.
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 }
 
 #[test]
@@ -454,7 +449,7 @@ fn clip_line_1() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-line-1.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -476,7 +471,7 @@ fn clip_line_2() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-line-2.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -494,7 +489,7 @@ fn clip_quad() {
     pb.quad_to(150.0, 150.0, 85.0, 15.0);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-quad.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -513,7 +508,7 @@ fn clip_cubic_1() {
     pb.cubic_to(0.0, 175.0, 195.0, 70.0, 75.0, 20.0);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-cubic-1.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -532,7 +527,7 @@ fn clip_cubic_2() {
     pb.cubic_to(10.0, 40.0, 90.0, 120.0, 125.0, 20.0);
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-cubic-2.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -552,5 +547,5 @@ fn aa_endless_loop() {
     let path = pb.finish().unwrap();
 
     // Must not loop.
-    assert!(pixmap.fill_path(&path, &paint).is_some());
+    assert!(pixmap.fill_path(&path, &paint, FillType::Winding).is_some());
 }

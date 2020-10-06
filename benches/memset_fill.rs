@@ -14,7 +14,7 @@ fn source_fill_tiny_skia(bencher: &mut Bencher) {
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(100.0, 100.0, 900.0, 900.0).unwrap());
 
     bencher.iter(|| {
-        pixmap.fill_path(&path, &paint);
+        pixmap.fill_path(&path, &paint, FillType::Winding);
     });
 }
 
@@ -94,7 +94,7 @@ fn opaque_fill_tiny_skia(bencher: &mut Bencher) {
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(100.0, 100.0, 900.0, 900.0).unwrap());
 
     bencher.iter(|| {
-        pixmap.fill_path(&path, &paint);
+        pixmap.fill_path(&path, &paint, FillType::Winding);
     });
 }
 

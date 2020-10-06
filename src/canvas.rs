@@ -116,21 +116,21 @@ impl Canvas {
     }
 
     /// Fills a path.
-    pub fn fill_path(&mut self, path: &Path, paint: &Paint) {
-        self.fill_path_impl(path, paint);
+    pub fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillType) {
+        self.fill_path_impl(path, paint, fill_type);
     }
 
     #[inline(always)]
-    fn fill_path_impl(&mut self, path: &Path, paint: &Paint) -> Option<()> {
+    fn fill_path_impl(&mut self, path: &Path, paint: &Paint, fill_type: FillType) -> Option<()> {
         if !self.transform.is_identity() {
             let path = path.clone().transform(&self.transform)?;
 
             let mut paint = paint.clone();
             paint.shader.transform(&self.transform);
 
-            self.pixmap.fill_path(&path, &paint)
+            self.pixmap.fill_path(&path, &paint, fill_type)
         } else {
-            self.pixmap.fill_path(path, paint)
+            self.pixmap.fill_path(path, paint, fill_type)
         }
     }
 
@@ -189,7 +189,7 @@ impl Canvas {
                 self.stroked_path = Some(self.stroker.stroke(&path, stroke)?);
             }
 
-            self.pixmap.fill_path(self.stroked_path.as_ref()?, &paint)
+            self.pixmap.fill_path(self.stroked_path.as_ref()?, &paint, FillType::Winding)
         }
     }
 
@@ -220,7 +220,6 @@ impl Canvas {
                 transform,
             ),
             blend_mode: paint.blend_mode,
-            fill_type: FillType::default(), // Doesn't matter, since we are filling a rectangle.
             anti_alias: false, // Skia doesn't use it too.
             force_hq_pipeline: false, // Pattern will use hq anyway.
         };
@@ -244,7 +243,7 @@ impl Canvas {
         } else {
             let bounds = rect.to_bounds()?;
             let path = PathBuilder::from_bounds(bounds);
-            self.fill_path_impl(&path, paint)
+            self.fill_path_impl(&path, paint, FillType::Winding)
         }
     }
 }

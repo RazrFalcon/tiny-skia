@@ -34,8 +34,8 @@ fn main() {
         pb.finish().unwrap()
     };
 
-    pixmap.fill_path(&path1, &paint1);
-    pixmap.fill_path(&path2, &paint2);
+    pixmap.fill_path(&path1, &paint1, FillType::Winding);
+    pixmap.fill_path(&path2, &paint2, FillType::Winding);
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 

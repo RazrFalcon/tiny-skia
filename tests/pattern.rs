@@ -14,7 +14,7 @@ fn crate_triangle() -> Pixmap {
     pb.close();
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     pixmap
 }
@@ -35,7 +35,7 @@ fn pad_nearest() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/pad-nearest.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -57,7 +57,7 @@ fn repeat_nearest() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/repeat-nearest.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -79,7 +79,7 @@ fn reflect_nearest() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/reflect-nearest.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -104,7 +104,7 @@ fn pad_bicubic() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/pad-bicubic.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -127,7 +127,7 @@ fn repeat_bicubic() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/repeat-bicubic.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -150,7 +150,7 @@ fn reflect_bicubic() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/reflect-bicubic.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -172,7 +172,7 @@ fn filter_nearest_no_ts() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-nearest-no-ts.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -194,7 +194,7 @@ fn filter_nearest() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-nearest.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -216,7 +216,7 @@ fn filter_bilinear() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     // SIMD and non-SIMD version produce a slightly different results. Not sure why.
     #[cfg(all(feature = "sse2", target_feature = "sse2"))]
@@ -248,7 +248,7 @@ fn filter_bicubic() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-bicubic.png").unwrap();
     assert_eq!(pixmap, expected);

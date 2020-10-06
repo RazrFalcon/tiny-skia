@@ -18,7 +18,7 @@ fn two_stops_linear_pad_lq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-pad-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -42,7 +42,7 @@ fn two_stops_linear_repeat_lq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-repeat-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -66,7 +66,7 @@ fn two_stops_linear_reflect_lq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-reflect-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -92,7 +92,7 @@ fn three_stops_evenly_spaced_lq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/three-stops-evenly-spaced-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -117,7 +117,7 @@ fn two_stops_unevenly_spaced_lq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-unevenly-spaced-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -142,7 +142,7 @@ fn two_stops_linear_pad_hq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     // SIMD and non-SIMD version produce a slightly different results. Not sure why.
     #[cfg(all(feature = "sse2", target_feature = "sse2"))]
@@ -177,7 +177,7 @@ fn two_stops_linear_repeat_hq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-repeat-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -202,7 +202,7 @@ fn two_stops_linear_reflect_hq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-reflect-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -229,7 +229,7 @@ fn three_stops_evenly_spaced_hq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/three-stops-evenly-spaced-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -255,7 +255,7 @@ fn two_stops_unevenly_spaced_hq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-unevenly-spaced-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -283,7 +283,7 @@ fn well_behaved_radial() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/well-behaved-radial.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -308,7 +308,7 @@ fn focal_on_circle_radial() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     // SIMD and non-SIMD version produce a slightly different results. Not sure why.
     #[cfg(all(feature = "sse2", target_feature = "sse2"))]
@@ -343,7 +343,7 @@ fn conical_greater_radial() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/conical-greater-radial.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -368,7 +368,7 @@ fn simple_radial_lq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/simple-radial-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -394,7 +394,7 @@ fn simple_radial_hq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/simple-radial-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -420,7 +420,7 @@ fn simple_radial_with_ts_hq() {
 
     let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/gradients/simple-radial-with-ts-hq.png").unwrap();
     assert_eq!(pixmap, expected);

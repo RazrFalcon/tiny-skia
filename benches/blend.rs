@@ -33,10 +33,10 @@ fn fill_tiny_skia(blend_mode: tiny_skia::BlendMode, bencher: &mut Bencher) {
         pb.finish().unwrap()
     };
 
-    pixmap.fill_path(&path1, &paint1);
+    pixmap.fill_path(&path1, &paint1, FillType::Winding);
 
     bencher.iter(|| {
-        pixmap.fill_path(&path2, &paint2);
+        pixmap.fill_path(&path2, &paint2, FillType::Winding);
     });
 }
 
@@ -201,7 +201,7 @@ fn source_atop_raqote(bencher: &mut Bencher)         { fill_raqote(raqote::Blend
 fn destination_atop_raqote(bencher: &mut Bencher)    { fill_raqote(raqote::BlendMode::DstAtop, bencher); }
 fn xor_raqote(bencher: &mut Bencher)                 { fill_raqote(raqote::BlendMode::Xor, bencher); }
 fn plus_raqote(bencher: &mut Bencher)                { fill_raqote(raqote::BlendMode::Add, bencher); }
-// fn modulate_raqote(bencher: &mut Bencher)            { fill_raqote(raqote::BlendMode::Modulate, bencher); } // TODO: missing?
+// fn modulate_raqote(bencher: &mut Bencher)            { fill_raqote(raqote::BlendMode::Modulate, bencher); }
 fn screen_raqote(bencher: &mut Bencher)              { fill_raqote(raqote::BlendMode::Screen, bencher); }
 fn overlay_raqote(bencher: &mut Bencher)             { fill_raqote(raqote::BlendMode::Overlay, bencher); }
 fn darken_raqote(bencher: &mut Bencher)              { fill_raqote(raqote::BlendMode::Darken, bencher); }
@@ -266,7 +266,7 @@ fn source_atop_cairo(bencher: &mut Bencher)         { fill_cairo(cairo::Operator
 fn destination_atop_cairo(bencher: &mut Bencher)    { fill_cairo(cairo::Operator::DestAtop, bencher); }
 fn xor_cairo(bencher: &mut Bencher)                 { fill_cairo(cairo::Operator::Xor, bencher); }
 fn plus_cairo(bencher: &mut Bencher)                { fill_cairo(cairo::Operator::Add, bencher); }
-// fn modulate_cairo(bencher: &mut Bencher)            { fill_cairo(cairo::Operator::Modulate, bencher); } // TODO: missing?
+// fn modulate_cairo(bencher: &mut Bencher)            { fill_cairo(cairo::Operator::Modulate, bencher); }
 fn screen_cairo(bencher: &mut Bencher)              { fill_cairo(cairo::Operator::Screen, bencher); }
 fn overlay_cairo(bencher: &mut Bencher)             { fill_cairo(cairo::Operator::Overlay, bencher); }
 fn darken_cairo(bencher: &mut Bencher)              { fill_cairo(cairo::Operator::Darken, bencher); }

@@ -43,12 +43,6 @@ pub struct Paint<'a> {
     /// Default: SourceOver
     pub blend_mode: BlendMode,
 
-    // TODO: remove
-    /// A path filling type.
-    ///
-    /// Default: Winding
-    pub fill_type: FillType,
-
     /// Enables anti-aliased painting.
     ///
     /// Default: false
@@ -79,7 +73,6 @@ impl Default for Paint<'_> {
         Paint {
             shader: Shader::SolidColor(Color::BLACK),
             blend_mode: BlendMode::default(),
-            fill_type: FillType::default(),
             anti_alias: false,
             force_hq_pipeline: false,
         }
@@ -133,7 +126,7 @@ pub trait Painter {
     /// Draws a filled path onto the pixmap.
     ///
     /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
-    fn fill_path(&mut self, path: &Path, paint: &Paint) -> Option<()>;
+    fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillType) -> Option<()>;
 
     /// A path stroking with subpixel width.
     ///
@@ -177,7 +170,7 @@ impl Painter for Pixmap {
         }
     }
 
-    fn fill_path(&mut self, path: &Path, paint: &Paint) -> Option<()> {
+    fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillType) -> Option<()> {
         // This is sort of similar to SkDraw::drawPath
 
         // to_rect will fail when bounds' width/height is zero.
@@ -204,9 +197,9 @@ impl Painter for Pixmap {
         let mut blitter = RasterPipelineBlitter::new(paint, &mut ctx_storage, self)?;
 
         if paint.anti_alias {
-            scan::path_aa::fill_path(path, paint.fill_type, &clip, &mut blitter)
+            scan::path_aa::fill_path(path, fill_type, &clip, &mut blitter)
         } else {
-            scan::path::fill_path(path, paint.fill_type, &clip, &mut blitter)
+            scan::path::fill_path(path, fill_type, &clip, &mut blitter)
         }
     }
 

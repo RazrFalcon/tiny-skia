@@ -19,7 +19,7 @@ fn main() {
 
     let path = PathBuilder::from_circle(200.0, 200.0, 180.0).unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 
@@ -40,7 +40,7 @@ fn crate_triangle() -> Pixmap {
     pb.close();
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     pixmap
 }

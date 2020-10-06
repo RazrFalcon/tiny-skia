@@ -25,7 +25,7 @@ fn main() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    pixmap.fill_path(&path, &paint);
+    pixmap.fill_path(&path, &paint, FillType::Winding);
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 
