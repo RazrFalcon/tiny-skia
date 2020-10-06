@@ -9,7 +9,7 @@ use std::convert::TryFrom;
 use crate::{Path, IntRect, FillType, LengthU32, ScreenIntRect, AlphaU8, Bounds};
 
 use crate::alpha_runs::AlphaRuns;
-use crate::blitter::{Blitter, Mask};
+use crate::blitter::Blitter;
 use crate::math::left_shift;
 
 /// controls how much we super-sample (when we use that scan conversion)
@@ -253,30 +253,6 @@ impl Blitter for SuperBlitter<'_> {
             max_value,
             self.offset_x,
         );
-    }
-
-    fn blit_anti_h(&mut self, _: u32, _: u32, _: &[AlphaU8], _: &[u16]) {
-        unreachable!()
-    }
-
-    fn blit_v(&mut self, _: u32, _: u32, _: LengthU32, _: AlphaU8) {
-        unreachable!()
-    }
-
-    fn blit_anti_h2(&mut self, _: u32, _: u32, _: AlphaU8, _: AlphaU8) {
-        unreachable!()
-    }
-
-    fn blit_anti_v2(&mut self, _: u32, _: u32, _: AlphaU8, _: AlphaU8) {
-        unreachable!()
-    }
-
-    fn blit_rect(&mut self, _: &ScreenIntRect) {
-        unreachable!()
-    }
-
-    fn blit_mask(&mut self, _: &Mask, _: &ScreenIntRect) {
-        unreachable!()
     }
 }
 

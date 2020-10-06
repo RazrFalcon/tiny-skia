@@ -22,7 +22,9 @@ pub struct Mask<'a> {
 /// The coordinates passed to the `blit_*` calls are in destination pixel space.
 pub trait Blitter {
     /// Blits a horizontal run of one or more pixels.
-    fn blit_h(&mut self, x: u32, y: u32, width: LengthU32);
+    fn blit_h(&mut self, _x: u32, _y: u32, _width: LengthU32) {
+        unreachable!()
+    }
 
     /// Blits a horizontal run of antialiased pixels.
     ///
@@ -38,18 +40,30 @@ pub trait Blitter {
     /// entry will by at runs[7]. The runs array and antialias[] are coupled by index. So, if the
     /// np entry is at runs[45] = 12 then the alpha value can be found at antialias[45] = 0x88.
     /// This would mean to use an alpha value of 0x88 for the next 12 pixels starting at pixel 45.
-    fn blit_anti_h(&mut self, x: u32, y: u32, antialias: &[AlphaU8], runs: &[u16]);
+    fn blit_anti_h(&mut self, _x: u32, _y: u32, _antialias: &[AlphaU8], _runs: &[u16]) {
+        unreachable!()
+    }
 
     /// Blits a vertical run of pixels with a constant alpha value.
-    fn blit_v(&mut self, x: u32, y: u32, height: LengthU32, alpha: AlphaU8);
+    fn blit_v(&mut self, _x: u32, _y: u32, _height: LengthU32, _alpha: AlphaU8) {
+        unreachable!()
+    }
 
-    fn blit_anti_h2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8);
+    fn blit_anti_h2(&mut self, _x: u32, _y: u32, _alpha0: AlphaU8, _alpha1: AlphaU8) {
+        unreachable!()
+    }
 
-    fn blit_anti_v2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8);
+    fn blit_anti_v2(&mut self, _x: u32, _y: u32, _alpha0: AlphaU8, _alpha1: AlphaU8) {
+        unreachable!()
+    }
 
     /// Blits a solid rectangle one or more pixels wide.
-    fn blit_rect(&mut self, rect: &ScreenIntRect);
+    fn blit_rect(&mut self, _rect: &ScreenIntRect) {
+        unreachable!()
+    }
 
     /// Blits a pattern of pixels defined by a rectangle-clipped mask.
-    fn blit_mask(&mut self, mask: &Mask, clip: &ScreenIntRect);
+    fn blit_mask(&mut self, _mask: &Mask, _clip: &ScreenIntRect) {
+        unreachable!()
+    }
 }

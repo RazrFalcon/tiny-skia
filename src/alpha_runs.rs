@@ -13,8 +13,6 @@ use crate::color::AlphaU8;
 /// Sparseness allows us to independently compose several paths into the
 /// same AlphaRuns buffer.
 pub struct AlphaRuns {
-    // Skia defines those arrays externally, but we're using a simpler version for now.
-    // TODO: use a single memory chunk, just like Skia
     pub runs: Vec<u16>,
     pub alpha: Vec<u8>,
 }
