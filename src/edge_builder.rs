@@ -48,7 +48,7 @@ impl ShiftedIntRect {
             self.shifted.y() >> self.shift,
             self.shifted.width() >> self.shift,
             self.shifted.height() >> self.shift,
-        ).unwrap()
+        ).unwrap() // cannot fail, because the original rect was valid
     }
 }
 

@@ -94,15 +94,17 @@ fn fill_dot8(l: FDot8, t: FDot8, r: FDot8, b: FDot8, fill_inner: bool, blitter: 
         let mut left = l >> 8;
         if left == ((r - 1) >> 8) {
             // just 1-pixel wide
-            let left = u32::try_from(left).unwrap();
-            let top = u32::try_from(top).unwrap();
-            blitter.blit_v(left, top, height, to_alpha(r - l - 1));
+            if let (Ok(left), Ok(top)) = (u32::try_from(left), u32::try_from(top)) {
+                blitter.blit_v(left, top, height, to_alpha(r - l - 1));
+            } else {
+                debug_assert!(false);
+            }
         } else {
             if l & 0xFF != 0 {
-                {
-                    let left = u32::try_from(left).unwrap();
-                    let top = u32::try_from(top).unwrap();
+                if let (Ok(left), Ok(top)) = (u32::try_from(left), u32::try_from(top)) {
                     blitter.blit_v(left, top, height, to_alpha(256 - (l & 0xFF)));
+                } else {
+                    debug_assert!(false);
                 }
 
                 left += 1;
@@ -112,17 +114,23 @@ fn fill_dot8(l: FDot8, t: FDot8, r: FDot8, b: FDot8, fill_inner: bool, blitter: 
             let width = right - left;
             if fill_inner {
                 if let Some(width) = u32::try_from(width).ok().and_then(LengthU32::new) {
-                    let left = u32::try_from(left).unwrap();
-                    let top = u32::try_from(top).unwrap();
-                    let rect = ScreenIntRect::from_xywh_safe(left, top, width, height);
-                    blitter.blit_rect(&rect);
+                    if let (Ok(left), Ok(top)) = (u32::try_from(left), u32::try_from(top)) {
+                        let rect = ScreenIntRect::from_xywh_safe(left, top, width, height);
+                        blitter.blit_rect(&rect);
+                    } else {
+                        debug_assert!(false);
+                    }
+                } else {
+                    debug_assert!(false);
                 }
             }
 
             if r & 0xFF != 0 {
-                let right = u32::try_from(right).unwrap();
-                let top = u32::try_from(top).unwrap();
-                blitter.blit_v(right, top, height, to_alpha(r & 0xFF));
+                if let (Ok(right), Ok(top)) = (u32::try_from(right), u32::try_from(top)) {
+                    blitter.blit_v(right, top, height, to_alpha(r & 0xFF));
+                } else {
+                    debug_assert!(false);
+                }
             }
         }
     }
@@ -136,20 +144,24 @@ fn do_scanline(l: FDot8, top: i32, r: FDot8, alpha: AlphaU8, blitter: &mut dyn B
     debug_assert!(l < r);
 
     let one_len = LENGTH_U32_ONE;
-    let top = u32::try_from(top).unwrap();
+    let top = match u32::try_from(top) {
+        Ok(n) => n,
+        _ => return,
+    };
 
     if (l >> 8) == ((r - 1) >> 8) {
         // 1x1 pixel
-        let left = u32::try_from(l >> 8).unwrap();
-        blitter.blit_v(left, top, one_len, alpha_mul(alpha, r - l));
+        if let Ok(left) = u32::try_from(l >> 8) {
+            blitter.blit_v(left, top, one_len, alpha_mul(alpha, r - l));
+        }
+
         return;
     }
 
     let mut left = l >> 8;
 
     if l & 0xFF != 0 {
-        {
-            let left = u32::try_from(l >> 8).unwrap();
+        if let Ok(left) = u32::try_from(l >> 8) {
             blitter.blit_v(left, top, one_len, alpha_mul(alpha, 256 - (l & 0xFF)));
         }
 
@@ -159,13 +171,15 @@ fn do_scanline(l: FDot8, top: i32, r: FDot8, alpha: AlphaU8, blitter: &mut dyn B
     let right = r >> 8;
     let width = right - left;
     if let Some(width) = u32::try_from(width).ok().and_then(LengthU32::new) {
-        let left = u32::try_from(left).unwrap();
-        call_hline_blitter(left, top, width, alpha, blitter);
+        if let Ok(left) = u32::try_from(left) {
+            call_hline_blitter(left, top, width, alpha, blitter);
+        }
     }
 
     if r & 0xFF != 0 {
-        let right = u32::try_from(right).unwrap();
-        blitter.blit_v(right, top, one_len, alpha_mul(alpha, r & 0xFF));
+        if let Ok(right) = u32::try_from(right) {
+            blitter.blit_v(right, top, one_len, alpha_mul(alpha, r & 0xFF));
+        }
     }
 }
 
@@ -581,7 +595,11 @@ impl AntiHairBlitter for HLineAntiHairBlitter<'_> {
     }
 
     fn draw_line(&mut self, x: u32, stop_x: u32, mut fy: FDot16, _: FDot16) -> FDot16 {
-        let count = LengthU32::new(stop_x - x).unwrap();
+        let count = match LengthU32::new(stop_x - x) {
+            Some(n) => n,
+            None => return fy,
+        };
+
         fy += fdot16::ONE / 2;
         fy = fy.max(0);
 
@@ -668,7 +686,11 @@ impl AntiHairBlitter for VLineAntiHairBlitter<'_> {
 
     fn draw_line(&mut self, y: u32, stop_y: u32, mut fx: FDot16, dx: FDot16) -> FDot16 {
         debug_assert!(dx == 0);
-        let height = LengthU32::new(stop_y - y).unwrap();
+        let height = match LengthU32::new(stop_y - y) {
+            Some(n) => n,
+            None => return fx,
+        };
+
         fx += fdot16::ONE / 2;
         fx = fx.max(0);
 

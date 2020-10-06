@@ -695,6 +695,8 @@ impl PathStroker {
             } else {
                 // If the cubic inflection falls on the cusp, subdivide the cubic
                 // to find the tangent at that point.
+                //
+                // Unwrap never fails, because we already checked that `t` is not 0/1,
                 let t = path_geometry::TValue::new(t.get()).unwrap();
                 path_geometry::chop_cubic_at2(&cubic, t, &mut chopped);
                 dxy = chopped[3] - chopped[2];
@@ -1366,7 +1368,11 @@ fn round_joiner(
         dir = PathDirection::CCW;
     }
 
-    let ts = Transform::from_row(radius, 0.0, 0.0, radius, pivot.x, pivot.y).unwrap();
+    let ts = match Transform::from_row(radius, 0.0, 0.0, radius, pivot.x, pivot.y) {
+        Some(ts) => ts,
+        None => return,
+    };
+
     let mut conics = [path_geometry::Conic::default(); 5];
     let conics = path_geometry::Conic::build_unit_arc(before, after, dir, &ts, &mut conics);
     if let Some(conics) = conics {
@@ -1526,7 +1532,7 @@ impl QuadConstruct {
     // return false if start and end are too close to have a unique middle
     fn init(&mut self, start: NormalizedF32, end: NormalizedF32) -> bool {
         self.start_t = start;
-        self.mid_t = NormalizedF32::new((start.get() + end.get()).half()).unwrap();
+        self.mid_t = NormalizedF32::new_bounded((start.get() + end.get()).half());
         self.end_t = end;
         self.start_set = false;
         self.end_set = false;

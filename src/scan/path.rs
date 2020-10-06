@@ -142,8 +142,8 @@ pub fn fill_path_impl(
         stop_y = bottom as i32;
     }
 
-    let start_y = u32::try_from(start_y).unwrap();
-    let stop_y = u32::try_from(stop_y).unwrap();
+    let start_y = u32::try_from(start_y).ok()?;
+    let stop_y = u32::try_from(stop_y).ok()?;
 
     // TODO: walk_simple_edges
 

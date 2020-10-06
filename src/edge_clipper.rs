@@ -4,8 +4,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::convert::TryInto;
-
 use arrayvec::ArrayVec;
 
 use crate::{Path, Rect, Point, Bounds};
@@ -15,6 +13,20 @@ use crate::path_geometry;
 use crate::line_clipper;
 use crate::path::{PathEdge, PathEdgeIter};
 use crate::scalar::SCALAR_MAX;
+
+// This is a fail-safe `arr[n..n+3].try_into().unwrap()` alternative.
+// Everything is checked at compile-time so there is no bound checking and panics.
+macro_rules! copy_3_points {
+    ($arr:expr, $i:expr) => {
+        [$arr[$i], $arr[$i+1], $arr[$i+2]]
+    };
+}
+
+macro_rules! copy_4_points {
+    ($arr:expr, $i:expr) => {
+        [$arr[$i], $arr[$i+1], $arr[$i+2], $arr[$i+3]]
+    };
+}
 
 /// Max curvature in X and Y split cubic into 9 pieces, * (line + cubic).
 const MAX_VERBS: usize = 18;
@@ -73,10 +85,10 @@ impl EdgeClipper {
             let count_y = path_geometry::chop_quad_at_y_extrema(&pts, &mut mono_y);
             for y in 0..=count_y {
                 let mut mono_x = [Point::zero(); 5];
-                let y_points: [Point; 3] = mono_y[y*2..y*2+3].try_into().unwrap();
+                let y_points: [Point; 3] = copy_3_points!(mono_y, y * 2);
                 let count_x = path_geometry::chop_quad_at_x_extrema(&y_points, &mut mono_x);
                 for x in 0..=count_x {
-                    let x_points: [Point; 3] = mono_x[x*2..x*2+3].try_into().unwrap();
+                    let x_points: [Point; 3] = copy_3_points!(mono_x, x * 2);
                     self.clip_mono_quad(&x_points);
                 }
             }
@@ -156,7 +168,7 @@ impl EdgeClipper {
                 tmp[1].x = tmp[1].x.min(self.clip.right());
                 tmp[2].x = self.clip.right();
 
-                self.push_quad(&tmp[0..3].try_into().unwrap(), reverse);
+                self.push_quad(&copy_3_points!(tmp, 0), reverse);
                 self.push_vline(self.clip.right(), tmp[2].y, tmp[4].y, reverse);
             } else {
                 // if chopMonoQuadAtY failed, then we may have hit inexact numerics
@@ -196,10 +208,10 @@ impl EdgeClipper {
                 let count_y = path_geometry::chop_cubic_at_y_extrema(&pts, &mut mono_y);
                 for y in 0..=count_y {
                     let mut mono_x = [Point::zero(); 10];
-                    let y_points: [Point; 4] = mono_y[y*3..y*3+4].try_into().unwrap();
+                    let y_points: [Point; 4] = copy_4_points!(mono_y, y * 3);
                     let count_x = path_geometry::chop_cubic_at_x_extrema(&y_points, &mut mono_x);
                     for x in 0..=count_x {
-                        let x_points: [Point; 4] = mono_x[x*3..x*3+4].try_into().unwrap();
+                        let x_points: [Point; 4] = copy_4_points!(mono_x, x * 3);
                         self.clip_mono_cubic(&x_points);
                     }
                 }
@@ -273,7 +285,7 @@ impl EdgeClipper {
             tmp[3].x = self.clip.right();
             tmp[2].x = tmp[2].x.min(self.clip.right());
 
-            self.push_cubic(&tmp[0..4].try_into().unwrap(), reverse);
+            self.push_cubic(&copy_4_points!(tmp, 0), reverse);
             self.push_vline(self.clip.right(), tmp[3].y, tmp[6].y, reverse);
         } else {
             // wholly inside the clip
@@ -349,7 +361,8 @@ fn quick_reject(bounds: &Bounds, clip: &Rect) -> bool {
 // it to be increasing in Y. If it had to reverse the order of the points,
 // it returns true, otherwise it returns false
 fn sort_increasing_y(src: &[Point], dst: &mut [Point]) -> bool {
-    // we need the data to be monotonically increasing in Y
+    // We need the data to be monotonically increasing in Y.
+    // Never fails, because src is always non-empty.
     if src[0].y > src.last().unwrap().y {
         for (i, p) in src.iter().rev().enumerate() {
             dst[i] = *p;
@@ -464,7 +477,7 @@ fn chop_cubic_in_y(clip: &Rect, pts: &mut [Point; 4]) {
         // a guess, and re-chop against fTop. Then we fall through to checking if we need to
         // smash the first 1 or 2 Y values.
         if tmp[3].y < clip.top() && tmp[4].y < clip.top() && tmp[5].y < clip.top() {
-            let tmp2: [Point; 4] = tmp[3..7].try_into().unwrap();
+            let tmp2: [Point; 4] = copy_4_points!(tmp, 3);
             chop_mono_cubic_at_y(&tmp2, clip.top(), &mut tmp);
         }
 
