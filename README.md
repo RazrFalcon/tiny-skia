@@ -77,6 +77,7 @@ The core ideas are that almost everything is stateless, immutable and valid.
 - `Canvas` provides a fairly spartan and low-level API.
   We don't have a `draw_path` method. Instead, there are `fill_path` and `stroke_path`.
 - `Canvas` contains a single state: world transform.
+  We don't have save/restore functionality.
 - The only truly mutable type is `Pixmap`, which is our raster image.
 - `Path` cannot be modified after creation.
   It can be transformed, but this function consumes the object.
@@ -105,6 +106,7 @@ The core ideas are that almost everything is stateless, immutable and valid.
 - [x] Patterns
 - [x] Fill rect
 - [ ] Stroke rect
+- [ ] Rectangular clipping
 - [ ] Testing
 
 ### v0.3
@@ -118,6 +120,7 @@ The core ideas are that almost everything is stateless, immutable and valid.
 
 - Linear color space.
 - Move `Path` and most of Bézier math into separate crates. Preferably into existing one
+- Move SIMD support to an external crate.
 
 PS: we start from 0.2, because 0.1 was just a bindings.
 

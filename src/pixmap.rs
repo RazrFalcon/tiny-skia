@@ -7,7 +7,7 @@
 use std::convert::TryFrom;
 use std::num::NonZeroUsize;
 
-use crate::IntSize;
+use crate::{IntSize, Color};
 
 use crate::color::PremultipliedColorU8;
 
@@ -28,6 +28,8 @@ pub struct Pixmap {
 
 impl Pixmap {
     /// Allocates a new pixmap.
+    ///
+    /// A pixmap is filled with transparent black by default, aka (0, 0, 0, 0).
     ///
     /// Zero size in an error.
     ///
@@ -80,6 +82,13 @@ impl Pixmap {
         self.data.as_slice()
     }
 
+    /// Returns the mutable internal data.
+    ///
+    /// Bytes are ordered as RGBA.
+    pub fn data_mut(&mut self) -> &mut [u8] {
+        self.data.as_mut_slice()
+    }
+
     /// Consumes the internal data.
     ///
     /// Bytes are ordered as RGBA.
@@ -107,13 +116,21 @@ impl Pixmap {
     }
 
     /// Returns a mutable slice of pixels.
-    pub(crate) fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
+    pub fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
         #[allow(clippy::cast_ptr_alignment)]
         unsafe {
             std::slice::from_raw_parts_mut(
                 self.data.as_ptr() as *mut PremultipliedColorU8,
                 self.data.len() / BYTES_PER_PIXEL,
             )
+        }
+    }
+
+    /// Fills the entire pixmap with a specified color.
+    pub fn fill(&mut self, color: Color) {
+        let c = color.premultiply().to_color_u8();
+        for p in self.pixels_mut() {
+            *p = c;
         }
     }
 

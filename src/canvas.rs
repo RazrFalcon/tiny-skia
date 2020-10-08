@@ -80,6 +80,8 @@ impl From<Pixmap> for Canvas {
 impl Canvas {
     /// Creates a new canvas.
     ///
+    /// A canvas is filled with transparent black by default, aka (0, 0, 0, 0).
+    ///
     /// Allocates a new pixmap. Use `Canvas::from(pixmap)` to reuse an existing one.
     ///
     /// Zero size in an error.
@@ -98,7 +100,7 @@ impl Canvas {
     /// Translates the canvas.
     #[inline]
     pub fn translate(&mut self, tx: f32, ty: f32) {
-        if let Some(ts) = self.transform.post_translate(tx, ty) {
+        if let Some(ts) = self.transform.pre_translate(tx, ty) {
             self.transform = ts;
         }
     }
@@ -106,7 +108,7 @@ impl Canvas {
     /// Scales the canvas.
     #[inline]
     pub fn scale(&mut self, sx: f32, sy: f32) {
-        if let Some(ts) = self.transform.post_scale(sx, sy) {
+        if let Some(ts) = self.transform.pre_scale(sx, sy) {
             self.transform = ts;
         }
     }
@@ -115,9 +117,15 @@ impl Canvas {
     #[inline]
     pub fn transform(&mut self, sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) {
         if let Some(ref ts) = Transform::from_row(sx, ky, kx, sy, tx, ty) {
-            if let Some(ts) = self.transform.post_concat(ts) {
-                self.transform = ts;
-            }
+            self.apply_transform(ts);
+        }
+    }
+
+    /// Applies an affine transformation to the canvas.
+    #[inline]
+    pub fn apply_transform(&mut self, ts: &Transform) {
+        if let Some(ts) = self.transform.pre_concat(ts) {
+            self.transform = ts;
         }
     }
 
@@ -131,6 +139,12 @@ impl Canvas {
     #[inline]
     pub fn set_transform(&mut self, ts: Transform) {
         self.transform = ts;
+    }
+
+    /// Resets the canvas transform to identity.
+    #[inline]
+    pub fn reset_transform(&mut self) {
+        self.transform = Transform::identity();
     }
 
     /// Fills the whole canvas with a color.

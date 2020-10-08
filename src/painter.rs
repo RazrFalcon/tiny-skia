@@ -107,11 +107,6 @@ impl<'a> Paint<'a> {
 
 /// Provides a low-level rendering API.
 pub trait Painter {
-    /// Fills the entire pixmap with a specified color.
-    ///
-    /// This is essentially a memset, therefore it's very fast.
-    fn fill(&mut self, color: Color);
-
     /// Draws a filled rectangle onto the pixmap.
     ///
     /// This function is usually slower than filling a rectangular path,
@@ -140,15 +135,6 @@ pub trait Painter {
 }
 
 impl Painter for Pixmap {
-    fn fill(&mut self, color: Color) {
-        // TODO: use memset for colors with even components, like 0 0 0 0
-
-        let c = color.premultiply().to_color_u8();
-        for p in self.pixels_mut() {
-            *p = c;
-        }
-    }
-
     fn fill_rect(&mut self, rect: &Rect, paint: &Paint) -> Option<()> {
         // TODO: ignore rects outside the pixmap
 
