@@ -192,8 +192,7 @@ unsafe fn move_destination_to_source(
 unsafe fn premultiply(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg
-    : &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     *r = div255(*r * *a);
     *g = div255(*g * *a);
@@ -244,9 +243,8 @@ pub unsafe fn load_dst(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
-    let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
-    load_8888_(ptr, dr, dg, db, da);
+    let ctx = super::PixelsCtx::from_program(program);
+    load_8888_(ctx.ptr_at_xy(dx, dy), dr, dg, db, da);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -257,9 +255,8 @@ pub unsafe fn load_dst_tail(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
-    let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
-    load_8888_tail_(tail, ptr, dr, dg, db, da);
+    let ctx = super::PixelsCtx::from_program(program);
+    load_8888_tail_(tail, ctx.ptr_at_xy(dx, dy), dr, dg, db, da);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -270,9 +267,8 @@ pub unsafe fn store(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
-    let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
-    store_8888_(ptr, r, g, b, a);
+    let ctx = super::PixelsCtx::from_program(program);
+    store_8888_(ctx.ptr_at_xy(dx, dy), r, g, b, a);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -283,9 +279,8 @@ pub unsafe fn store_tail(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
-    let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
-    store_8888_tail_(tail, ptr, r, g, b, a);
+    let ctx = super::PixelsCtx::from_program(program);
+    store_8888_tail_(tail, ctx.ptr_at_xy(dx, dy), r, g, b, a);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -296,8 +291,8 @@ unsafe fn scale_u8(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
-    let ptr = ctx.ptr_at_xy::<u8>(dx, dy);
+    let ctx: &super::MaskCtx = &*(*program.add(1)).cast();
+    let ptr = ctx.ptr_at_xy(dx, dy);
 
     // Load u8xTail and cast it to U16x16.
     let mut data = [0u8; STAGE_WIDTH];
@@ -335,8 +330,8 @@ unsafe fn lerp_u8(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
-    let ptr = ctx.ptr_at_xy::<u8>(dx, dy);
+    let ctx: &super::MaskCtx = &*(*program.add(1)).cast();
+    let ptr = ctx.ptr_at_xy(dx, dy);
 
     // Load u8xTail and cast it to U16x16.
     let mut data = [0u8; STAGE_WIDTH];
@@ -486,8 +481,8 @@ pub unsafe fn source_over_rgba(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
-    let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
+    let ctx = super::PixelsCtx::from_program(program);
+    let ptr = ctx.ptr_at_xy(dx, dy);
     load_8888_(ptr, dr, dg, db, da);
     *r = *r + div255(*dr * inv(*a));
     *g = *g + div255(*dg * inv(*a));
@@ -504,8 +499,8 @@ pub unsafe fn source_over_rgba_tail(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::MemoryCtx = &*(*program.add(1)).cast();
-    let ptr = ctx.ptr_at_xy::<PremultipliedColorU8>(dx, dy);
+    let ctx = super::PixelsCtx::from_program(program);
+    let ptr = ctx.ptr_at_xy(dx, dy);
     load_8888_tail_(tail, ptr, dr, dg, db, da);
     *r = *r + div255(*dr * inv(*a));
     *g = *g + div255(*dg * inv(*a));

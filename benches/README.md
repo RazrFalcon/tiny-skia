@@ -22,6 +22,8 @@ All measurement are in nanoseconds. Lower is better.
 
 `blend.rs`
 
+Filling a shape with a solid color.
+
 | Mode/Library         | tiny-skia SSE2 | tiny-skia AVX2 | Skia SSE2  | Skia AVX2  | cairo      | raqote     |
 | -------------------- | -------------: | -------------: | ---------: | ---------: | ---------: | ---------: |
 | clear                |         49,373 |         42,307 |     45,898 |     50,203 |     62,331 |  1,043,659 |

@@ -6,7 +6,7 @@
 
 use std::ffi::c_void;
 
-use crate::{ScreenIntRect, LengthU32, Transform, Color, NormalizedF32, SpreadMode};
+use crate::{ScreenIntRect, LengthU32, Transform, Color, NormalizedF32, SpreadMode, PremultipliedColorU8};
 
 use crate::color::PremultipliedColor;
 
@@ -93,20 +93,44 @@ pub trait Context: std::fmt::Debug {}
 impl Context for f32 {}
 
 
-#[derive(Copy, Clone, Debug)]
-pub struct MemoryCtx {
-    pub pixels: *mut c_void,
-    pub stride: u32, // can be zero
+#[derive(Debug)]
+pub struct PixelsCtx<'a> {
+    pub pixels: &'a mut [PremultipliedColorU8],
+    pub stride: LengthU32,
 }
 
-impl MemoryCtx {
+impl PixelsCtx<'_> {
     #[inline(always)]
-    pub unsafe fn ptr_at_xy<T>(&self, dx: usize, dy: usize) -> *mut T {
-        self.pixels.cast::<T>().add(self.stride as usize * dy + dx)
+    pub unsafe fn from_program(program: *const *const c_void) -> &'static mut Self {
+        // We have to cast `*const` to `*mut` first, because Rust doesn't allow
+        // modifying `PixelsCtx::pixels` via `&PixelsCtx`.
+        // Even though that `PixelsCtx::pixels` is actually mutable.
+        &mut *(*program.add(1) as *mut c_void).cast()
+    }
+
+    #[inline(always)]
+    pub unsafe fn ptr_at_xy(&mut self, dx: usize, dy: usize) -> *mut PremultipliedColorU8 {
+        self.pixels.as_mut_ptr().add(self.stride.get() as usize * dy + dx)
     }
 }
 
-impl Context for MemoryCtx {}
+impl Context for PixelsCtx<'_> {}
+
+
+#[derive(Debug)]
+pub struct MaskCtx {
+    pub pixels: *mut u8,
+    pub stride: u32, // can be zero
+}
+
+impl MaskCtx {
+    #[inline(always)]
+    pub unsafe fn ptr_at_xy(&self, dx: usize, dy: usize) -> *mut u8 {
+        self.pixels.add(self.stride as usize * dy + dx)
+    }
+}
+
+impl Context for MaskCtx {}
 
 
 #[derive(Copy, Clone, Debug)]
@@ -489,9 +513,9 @@ mod blend_tests {
                 let mut canvas = Canvas::new(1, 1).unwrap();
                 canvas.fill_canvas(Color::from_rgba8(50, 127, 150, 200));
 
-                let img_ctx = MemoryCtx {
-                    pixels: canvas.pixmap.data().as_ptr() as _,
-                    stride: canvas.pixmap.size().width(),
+                let img_ctx = PixelsCtx {
+                    stride: canvas.pixmap.size().width_safe(),
+                    pixels: canvas.pixmap.pixels_mut(),
                 };
                 let img_ctx = &img_ctx as *const _ as *const c_void;
 

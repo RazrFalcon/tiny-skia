@@ -15,15 +15,15 @@ use crate::safe_geom_ext::LENGTH_U32_ONE;
 use crate::shaders::StageRec;
 
 
-pub struct RasterPipelineBlitter {
+pub struct RasterPipelineBlitter<'a> {
     blend_mode: BlendMode,
     color_pipeline: RasterPipelineBuilder,
 
     // Always points to the top-left of `pixmap`.
-    img_ctx: raster_pipeline::MemoryCtx,
+    pixels_ctx: raster_pipeline::PixelsCtx<'a>,
 
     // Updated each call to blit_mask().
-    mask_ctx: raster_pipeline::MemoryCtx,
+    mask_ctx: raster_pipeline::MaskCtx,
 
     memset2d_color: Option<PremultipliedColorU8>,
 
@@ -37,12 +37,12 @@ pub struct RasterPipelineBlitter {
     current_coverage: f32,
 }
 
-impl RasterPipelineBlitter {
+impl<'a> RasterPipelineBlitter<'a> {
     pub fn new(
         paint: &Paint,
         ctx_storage: &mut ContextStorage,
-        pixmap: &mut Pixmap,
-    ) -> Option<RasterPipelineBlitter> {
+        pixmap: &'a mut Pixmap,
+    ) -> Option<Self> {
         let mut shader_pipeline = RasterPipelineBuilder::new();
         match &paint.shader {
             Shader::SolidColor(ref color) => {
@@ -78,7 +78,7 @@ impl RasterPipelineBlitter {
         shader_pipeline: &RasterPipelineBuilder,
         is_opaque: bool,
         is_constant: bool,
-        pixmap: &mut Pixmap,
+        pixmap: &'a mut Pixmap,
     ) -> Option<Self> {
         // Fast-reject.
         // This is basically SkInterpretXfermode().
@@ -120,12 +120,12 @@ impl RasterPipelineBlitter {
             memset2d_color = Some(PremultipliedColorU8::TRANSPARENT);
         }
 
-        let img_ctx = raster_pipeline::MemoryCtx {
-            pixels: pixmap.data().as_ptr() as _,
-            stride: pixmap.size().width(),
+        let img_ctx = raster_pipeline::PixelsCtx {
+            stride: pixmap.size().width_safe(),
+            pixels: pixmap.pixels_mut(),
         };
 
-        let mask_ctx = raster_pipeline::MemoryCtx {
+        let mask_ctx = raster_pipeline::MaskCtx {
             pixels: std::ptr::null_mut(),
             stride: 0,
         };
@@ -133,7 +133,7 @@ impl RasterPipelineBlitter {
         Some(RasterPipelineBlitter {
             blend_mode,
             color_pipeline,
-            img_ctx,
+            pixels_ctx: img_ctx,
             mask_ctx,
             memset2d_color,
             blit_anti_h_rp: None,
@@ -144,7 +144,7 @@ impl RasterPipelineBlitter {
     }
 }
 
-impl Blitter for RasterPipelineBlitter {
+impl Blitter for RasterPipelineBlitter<'_> {
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32) {
         let r = ScreenIntRect::from_xywh_safe(x, y, width, LENGTH_U32_ONE);
         self.blit_rect(&r);
@@ -152,7 +152,7 @@ impl Blitter for RasterPipelineBlitter {
 
     fn blit_anti_h(&mut self, mut x: u32, y: u32, aa: &[AlphaU8], runs: &[u16]) {
         if self.blit_anti_h_rp.is_none() {
-            let ctx_ptr = &self.img_ctx as *const _ as *const c_void;
+            let ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
             let curr_cov_ptr = &self.current_coverage as *const _ as *const c_void;
 
             let mut p = RasterPipelineBuilder::new();
@@ -248,10 +248,10 @@ impl Blitter for RasterPipelineBlitter {
         if let Some(c) = self.memset2d_color {
             for y in 0..rect.height() {
                 // Cast pixmap data to color.
-                let mut addr = self.img_ctx.pixels.cast::<PremultipliedColorU8>();
+                let mut addr = self.pixels_ctx.pixels.as_mut_ptr();
 
                 // Calculate pixel offset in bytes.
-                let offset = calc_pixel_offset(rect.x(), rect.y() + y, self.img_ctx.stride);
+                let offset = calc_pixel_offset(rect.x(), rect.y() + y, self.pixels_ctx.stride.get());
                 addr = unsafe { addr.add(offset) };
 
                 for _ in 0..rect.width() as usize {
@@ -270,7 +270,7 @@ impl Blitter for RasterPipelineBlitter {
             p.set_force_hq_pipeline(self.color_pipeline.is_force_hq_pipeline());
             p.extend(&self.color_pipeline);
 
-            let ctx_ptr = &self.img_ctx as *const _ as *const c_void;
+            let ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
 
             if self.blend_mode == BlendMode::SourceOver {
                 // TODO: ignore when dither_rate is non-zero
@@ -304,12 +304,12 @@ impl Blitter for RasterPipelineBlitter {
                 .wrapping_sub(mask.bounds.left() as usize)
                 .wrapping_sub(mask.bounds.top() as usize * mask.row_bytes as usize);
 
-            self.mask_ctx.pixels = mask_ptr as *mut c_void;
+            self.mask_ctx.pixels = mask_ptr as *mut u8;
             self.mask_ctx.stride = mask.row_bytes;
         }
 
         if self.blit_mask_rp.is_none() {
-            let img_ctx_ptr = &self.img_ctx as *const _ as *const c_void;
+            let img_ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
             let mask_ctx_ptr = &self.mask_ctx as *const _ as *const c_void;
 
             let mut p = RasterPipelineBuilder::new();
