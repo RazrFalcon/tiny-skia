@@ -84,9 +84,7 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     null_fn, // Color
     null_fn, // Luminosity
     source_over_rgba,
-    transform_translate,
-    transform_scale_translate,
-    transform_2x3,
+    transform,
     null_fn, // ReflectX
     null_fn, // ReflectY
     null_fn, // RepeatX
@@ -512,50 +510,7 @@ pub unsafe fn source_over_rgba_tail(
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
 }
 
-unsafe fn transform_translate(
-    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
-) {
-    let ts: &Transform = &*(*program.add(1)).cast();
-    let (tx, ty) = ts.get_translate();
-
-    let x = join(r, g);
-    let y = join(b, a);
-
-    let nx = x + F32x16::splat(tx);
-    let ny = y + F32x16::splat(ty);
-
-    split(&nx, r, g);
-    split(&ny, b, a);
-
-    let next: StageFn = *program.add(2).cast();
-    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
-}
-
-unsafe fn transform_scale_translate(
-    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
-) {
-    let ts: &Transform = &*(*program.add(1)).cast();
-    let (sx, sy) = ts.get_scale();
-    let (tx, ty) = ts.get_translate();
-
-    let x = join(r, g);
-    let y = join(b, a);
-
-    let nx = mad(x, F32x16::splat(sx), F32x16::splat(tx));
-    let ny = mad(y, F32x16::splat(sy), F32x16::splat(ty));
-
-    split(&nx, r, g);
-    split(&ny, b, a);
-
-    let next: StageFn = *program.add(2).cast();
-    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
-}
-
-unsafe fn transform_2x3(
+unsafe fn transform(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,

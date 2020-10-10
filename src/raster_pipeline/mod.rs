@@ -62,9 +62,7 @@ pub enum Stage {
     Color,
     Luminosity,
     SourceOverRgba,
-    TransformTranslate, // TODO: remove?
-    TransformScaleTranslate, // TODO: remove?
-    Transform2X3,
+    Transform,
     ReflectX,
     ReflectY,
     RepeatX,
@@ -348,18 +346,9 @@ impl RasterPipelineBuilder {
     }
 
     pub fn push_transform(&mut self, ts: Transform, ctx_storage: &mut ContextStorage) {
-        if ts.is_identity() {
-            return;
-        }
-
-        let ctx = ctx_storage.push_context(ts);
-
-        if ts.is_translate() {
-            self.push_with_context(Stage::TransformTranslate, ctx);
-        } else if ts.is_scale_translate() {
-            self.push_with_context(Stage::TransformScaleTranslate, ctx);
-        } else {
-            self.push_with_context(Stage::Transform2X3, ctx);
+        if !ts.is_identity() {
+            let ctx = ctx_storage.push_context(ts);
+            self.push_with_context(Stage::Transform, ctx);
         }
     }
 

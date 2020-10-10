@@ -74,9 +74,7 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     color,
     luminosity,
     source_over_rgba,
-    transform_translate,
-    transform_scale_translate,
-    transform_2x3,
+    transform,
     reflect_x,
     reflect_y,
     repeat_x,
@@ -728,38 +726,7 @@ pub unsafe fn source_over_rgba_tail(
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
 }
 
-unsafe fn transform_translate(
-    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
-    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
-) {
-    let ts: &Transform = &*(*program.add(1)).cast();
-    let (tx, ty) = ts.get_translate();
-
-    *r = *r + F32x4::splat(tx);
-    *g = *g + F32x4::splat(ty);
-
-    let next: StageFn = *program.add(2).cast();
-    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
-}
-
-unsafe fn transform_scale_translate(
-    tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
-    dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
-) {
-    let ts: &Transform = &*(*program.add(1)).cast();
-    let (sx, sy) = ts.get_scale();
-    let (tx, ty) = ts.get_translate();
-
-    *r = mad(*r, F32x4::splat(sx), F32x4::splat(tx));
-    *g = mad(*g, F32x4::splat(sy), F32x4::splat(ty));
-
-    let next: StageFn = *program.add(2).cast();
-    next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
-}
-
-unsafe fn transform_2x3(
+unsafe fn transform(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
