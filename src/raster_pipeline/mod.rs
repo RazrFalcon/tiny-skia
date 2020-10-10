@@ -6,15 +6,19 @@
 
 use std::ffi::c_void;
 
-use crate::{ScreenIntRect, LengthU32, Transform, Color, NormalizedF32, SpreadMode, PremultipliedColorU8};
+use arrayvec::ArrayVec;
 
-use crate::color::PremultipliedColor;
+use crate::{ScreenIntRect, LengthU32, Transform, Color, NormalizedF32, SpreadMode};
+use crate::{PremultipliedColor, PremultipliedColorU8};
 
 pub use blitter::RasterPipelineBlitter;
 
 mod blitter;
 mod lowp;
 mod highp;
+
+
+const MAX_STAGES: usize = 16; // More than enough.
 
 
 #[allow(dead_code)]
@@ -248,17 +252,16 @@ impl Context for Transform {}
 
 #[derive(Debug)]
 pub struct ContextStorage {
-    // TODO: stack array + fallback
     // TODO: find a better way
     // We cannot use just `c_void` here, like Skia,
     // because it will work only for POD types.
-    items: Vec<*mut dyn Context>,
+    items: ArrayVec<[*mut dyn Context; MAX_STAGES]>,
 }
 
 impl ContextStorage {
     pub fn new() -> Self {
         ContextStorage {
-            items: Vec::new(),
+            items: ArrayVec::new(),
         }
     }
 
@@ -306,8 +309,7 @@ struct StageList {
 }
 
 pub struct RasterPipelineBuilder {
-    // TODO: stack array + fallback
-    stages: Vec<StageList>,
+    stages: ArrayVec<[StageList; MAX_STAGES]>,
     slots_needed: usize,
     force_hq_pipeline: bool,
 }
@@ -315,7 +317,7 @@ pub struct RasterPipelineBuilder {
 impl RasterPipelineBuilder {
     pub fn new() -> Self {
         RasterPipelineBuilder {
-            stages: Vec::with_capacity(32),
+            stages: ArrayVec::new(),
             slots_needed: 1, // We always need one extra slot for just_return().
             force_hq_pipeline: false,
         }
@@ -362,24 +364,22 @@ impl RasterPipelineBuilder {
     }
 
     pub fn extend(&mut self, other: &Self) {
-        if other.is_empty() {
-            return;
+        if !other.is_empty() {
+            self.stages.try_extend_from_slice(&other.stages).unwrap();
+            self.slots_needed += other.slots_needed - 1; // Don't double count just_return().
         }
-
-        self.stages.extend_from_slice(&other.stages);
-        self.slots_needed += other.slots_needed - 1; // Don't double count just_return().
     }
 
     pub fn compile(&self) -> RasterPipeline {
         if self.stages.is_empty() {
             return RasterPipeline {
-                program: Vec::new(),
-                tail_program: Vec::new(),
+                program: ArrayVec::new(),
+                tail_program: ArrayVec::new(),
                 is_highp: false,
             };
         }
 
-        let mut program: Vec<*const c_void> = Vec::with_capacity(self.slots_needed);
+        let mut program = ArrayVec::new();
 
         let mut is_highp = self.force_hq_pipeline;
         if !self.force_hq_pipeline {
@@ -460,9 +460,8 @@ impl RasterPipelineBuilder {
 }
 
 pub struct RasterPipeline {
-    // TODO: stack array + fallback
-    program: Vec<*const c_void>,
-    tail_program: Vec<*const c_void>,
+    program: ArrayVec<[*const c_void; MAX_STAGES]>,
+    tail_program: ArrayVec<[*const c_void; MAX_STAGES]>,
     is_highp: bool,
 }
 
