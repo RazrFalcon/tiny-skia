@@ -111,8 +111,24 @@ impl PixelsCtx<'_> {
     }
 
     #[inline(always)]
-    pub unsafe fn ptr_at_xy(&mut self, dx: usize, dy: usize) -> *mut PremultipliedColorU8 {
-        self.pixels.as_mut_ptr().add(self.stride.get() as usize * dy + dx)
+    fn offset(&self, dx: usize, dy: usize) -> usize {
+        self.stride.get() as usize * dy + dx
+    }
+
+    #[inline(always)]
+    pub fn slice_at_xy(&mut self, dx: usize, dy: usize) -> &mut [PremultipliedColorU8] {
+        let offset = self.offset(dx, dy);
+        &mut self.pixels[offset..]
+    }
+
+    #[inline(always)]
+    pub fn slice4_at_xy(&mut self, dx: usize, dy: usize) -> &mut [PremultipliedColorU8; highp::STAGE_WIDTH] {
+        arrayref::array_mut_ref!(self.pixels, self.offset(dx, dy), highp::STAGE_WIDTH)
+    }
+
+    #[inline(always)]
+    pub fn slice16_at_xy(&mut self, dx: usize, dy: usize) -> &mut [PremultipliedColorU8; lowp::STAGE_WIDTH] {
+        arrayref::array_mut_ref!(self.pixels, self.offset(dx, dy), lowp::STAGE_WIDTH)
     }
 }
 

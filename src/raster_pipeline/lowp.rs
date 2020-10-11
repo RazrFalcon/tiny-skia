@@ -32,7 +32,7 @@ use crate::{ScreenIntRect, PremultipliedColorU8, Transform};
 
 use crate::wide::{F32x4, U16x16, F32x16};
 
-const STAGE_WIDTH: usize = 16;
+pub const STAGE_WIDTH: usize = 16;
 
 type StageFn = unsafe fn(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
@@ -242,7 +242,7 @@ pub unsafe fn load_dst(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
-    load_8888_(ctx.ptr_at_xy(dx, dy), dr, dg, db, da);
+    load_8888(ctx.slice16_at_xy(dx, dy), dr, dg, db, da);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -254,7 +254,7 @@ pub unsafe fn load_dst_tail(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
-    load_8888_tail_(tail, ctx.ptr_at_xy(dx, dy), dr, dg, db, da);
+    load_8888_tail(tail, ctx.slice_at_xy(dx, dy), dr, dg, db, da);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -266,7 +266,7 @@ pub unsafe fn store(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
-    store_8888_(ctx.ptr_at_xy(dx, dy), r, g, b, a);
+    store_8888(r, g, b, a, ctx.slice16_at_xy(dx, dy));
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -278,7 +278,7 @@ pub unsafe fn store_tail(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
-    store_8888_tail_(tail, ctx.ptr_at_xy(dx, dy), r, g, b, a);
+    store_8888_tail(r, g, b, a, tail, ctx.slice_at_xy(dx, dy));
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -480,13 +480,13 @@ pub unsafe fn source_over_rgba(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
-    let ptr = ctx.ptr_at_xy(dx, dy);
-    load_8888_(ptr, dr, dg, db, da);
+    let pixels = ctx.slice16_at_xy(dx, dy);
+    load_8888(pixels, dr, dg, db, da);
     *r = *r + div255(*dr * inv(*a));
     *g = *g + div255(*dg * inv(*a));
     *b = *b + div255(*db * inv(*a));
     *a = *a + div255(*da * inv(*a));
-    store_8888_(ptr, r, g, b, a);
+    store_8888(r, g, b, a, pixels);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -498,13 +498,13 @@ pub unsafe fn source_over_rgba_tail(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
-    let ptr = ctx.ptr_at_xy(dx, dy);
-    load_8888_tail_(tail, ptr, dr, dg, db, da);
+    let pixels = ctx.slice_at_xy(dx, dy);
+    load_8888_tail(tail, pixels, dr, dg, db, da);
     *r = *r + div255(*dr * inv(*a));
     *g = *g + div255(*dg * inv(*a));
     *b = *b + div255(*db * inv(*a));
     *a = *a + div255(*da * inv(*a));
-    store_8888_tail_(tail, ptr, r, g, b, a);
+    store_8888_tail(r, g, b, a, tail, pixels);
 
     let next: StageFn = *program.add(2).cast();
     next(tail, program.add(2), dx,dy, r,g,b,a, dr,dg,db,da);
@@ -739,29 +739,7 @@ pub unsafe fn null_fn(
 }
 
 #[inline(always)]
-unsafe fn load_8888_(
-    ptr: *const PremultipliedColorU8,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-) {
-    // Cast a data pointer to a fixed size array.
-    let data = &*(ptr as *const [PremultipliedColorU8; STAGE_WIDTH]);
-    load_8888__(data, r, g, b, a);
-}
-
-#[inline(always)]
-unsafe fn load_8888_tail_(
-    tail: usize, ptr: *const PremultipliedColorU8,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-) {
-    // Fill a dummy array with `tail` values. `tail` is always in a 1..STAGE_WIDTH-1 range.
-    // This way we can reuse the `load_8888__` method and remove any branches.
-    let mut data = [PremultipliedColorU8::TRANSPARENT; STAGE_WIDTH];
-    std::ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), tail);
-    load_8888__(&data, r, g, b, a);
-}
-
-#[inline(always)]
-unsafe fn load_8888__(
+unsafe fn load_8888(
     data: &[PremultipliedColorU8; STAGE_WIDTH],
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
 ) {
@@ -795,37 +773,49 @@ unsafe fn load_8888__(
 }
 
 #[inline(always)]
-unsafe fn store_8888_(
-    ptr: *mut PremultipliedColorU8,
+unsafe fn load_8888_tail(
+    tail: usize, data: &[PremultipliedColorU8],
+    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
+) {
+    // Fill a dummy array with `tail` values. `tail` is always in a 1..STAGE_WIDTH-1 range.
+    // This way we can reuse the `load_8888__` method and remove any branches.
+    let mut tmp = [PremultipliedColorU8::TRANSPARENT; STAGE_WIDTH];
+    std::ptr::copy_nonoverlapping(data.as_ptr(), tmp.as_mut_ptr(), tail);
+    load_8888(&tmp, r, g, b, a);
+}
+
+#[inline(always)]
+unsafe fn store_8888(
     r: &U16x16, g: &U16x16, b: &U16x16, a: &U16x16,
+    data: &mut [PremultipliedColorU8; STAGE_WIDTH],
 ) {
     let r = r.as_slice();
     let g = g.as_slice();
     let b = b.as_slice();
     let a = a.as_slice();
 
-    *ptr.add( 0) = PremultipliedColorU8::from_rgba_unchecked(r[ 0] as u8, g[ 0] as u8, b[ 0] as u8, a[ 0] as u8);
-    *ptr.add( 1) = PremultipliedColorU8::from_rgba_unchecked(r[ 1] as u8, g[ 1] as u8, b[ 1] as u8, a[ 1] as u8);
-    *ptr.add( 2) = PremultipliedColorU8::from_rgba_unchecked(r[ 2] as u8, g[ 2] as u8, b[ 2] as u8, a[ 2] as u8);
-    *ptr.add( 3) = PremultipliedColorU8::from_rgba_unchecked(r[ 3] as u8, g[ 3] as u8, b[ 3] as u8, a[ 3] as u8);
-    *ptr.add( 4) = PremultipliedColorU8::from_rgba_unchecked(r[ 4] as u8, g[ 4] as u8, b[ 4] as u8, a[ 4] as u8);
-    *ptr.add( 5) = PremultipliedColorU8::from_rgba_unchecked(r[ 5] as u8, g[ 5] as u8, b[ 5] as u8, a[ 5] as u8);
-    *ptr.add( 6) = PremultipliedColorU8::from_rgba_unchecked(r[ 6] as u8, g[ 6] as u8, b[ 6] as u8, a[ 6] as u8);
-    *ptr.add( 7) = PremultipliedColorU8::from_rgba_unchecked(r[ 7] as u8, g[ 7] as u8, b[ 7] as u8, a[ 7] as u8);
-    *ptr.add( 8) = PremultipliedColorU8::from_rgba_unchecked(r[ 8] as u8, g[ 8] as u8, b[ 8] as u8, a[ 8] as u8);
-    *ptr.add( 9) = PremultipliedColorU8::from_rgba_unchecked(r[ 9] as u8, g[ 9] as u8, b[ 9] as u8, a[ 9] as u8);
-    *ptr.add(10) = PremultipliedColorU8::from_rgba_unchecked(r[10] as u8, g[10] as u8, b[10] as u8, a[10] as u8);
-    *ptr.add(11) = PremultipliedColorU8::from_rgba_unchecked(r[11] as u8, g[11] as u8, b[11] as u8, a[11] as u8);
-    *ptr.add(12) = PremultipliedColorU8::from_rgba_unchecked(r[12] as u8, g[12] as u8, b[12] as u8, a[12] as u8);
-    *ptr.add(13) = PremultipliedColorU8::from_rgba_unchecked(r[13] as u8, g[13] as u8, b[13] as u8, a[13] as u8);
-    *ptr.add(14) = PremultipliedColorU8::from_rgba_unchecked(r[14] as u8, g[14] as u8, b[14] as u8, a[14] as u8);
-    *ptr.add(15) = PremultipliedColorU8::from_rgba_unchecked(r[15] as u8, g[15] as u8, b[15] as u8, a[15] as u8);
+    data[ 0] = PremultipliedColorU8::from_rgba_unchecked(r[ 0] as u8, g[ 0] as u8, b[ 0] as u8, a[ 0] as u8);
+    data[ 1] = PremultipliedColorU8::from_rgba_unchecked(r[ 1] as u8, g[ 1] as u8, b[ 1] as u8, a[ 1] as u8);
+    data[ 2] = PremultipliedColorU8::from_rgba_unchecked(r[ 2] as u8, g[ 2] as u8, b[ 2] as u8, a[ 2] as u8);
+    data[ 3] = PremultipliedColorU8::from_rgba_unchecked(r[ 3] as u8, g[ 3] as u8, b[ 3] as u8, a[ 3] as u8);
+    data[ 4] = PremultipliedColorU8::from_rgba_unchecked(r[ 4] as u8, g[ 4] as u8, b[ 4] as u8, a[ 4] as u8);
+    data[ 5] = PremultipliedColorU8::from_rgba_unchecked(r[ 5] as u8, g[ 5] as u8, b[ 5] as u8, a[ 5] as u8);
+    data[ 6] = PremultipliedColorU8::from_rgba_unchecked(r[ 6] as u8, g[ 6] as u8, b[ 6] as u8, a[ 6] as u8);
+    data[ 7] = PremultipliedColorU8::from_rgba_unchecked(r[ 7] as u8, g[ 7] as u8, b[ 7] as u8, a[ 7] as u8);
+    data[ 8] = PremultipliedColorU8::from_rgba_unchecked(r[ 8] as u8, g[ 8] as u8, b[ 8] as u8, a[ 8] as u8);
+    data[ 9] = PremultipliedColorU8::from_rgba_unchecked(r[ 9] as u8, g[ 9] as u8, b[ 9] as u8, a[ 9] as u8);
+    data[10] = PremultipliedColorU8::from_rgba_unchecked(r[10] as u8, g[10] as u8, b[10] as u8, a[10] as u8);
+    data[11] = PremultipliedColorU8::from_rgba_unchecked(r[11] as u8, g[11] as u8, b[11] as u8, a[11] as u8);
+    data[12] = PremultipliedColorU8::from_rgba_unchecked(r[12] as u8, g[12] as u8, b[12] as u8, a[12] as u8);
+    data[13] = PremultipliedColorU8::from_rgba_unchecked(r[13] as u8, g[13] as u8, b[13] as u8, a[13] as u8);
+    data[14] = PremultipliedColorU8::from_rgba_unchecked(r[14] as u8, g[14] as u8, b[14] as u8, a[14] as u8);
+    data[15] = PremultipliedColorU8::from_rgba_unchecked(r[15] as u8, g[15] as u8, b[15] as u8, a[15] as u8);
 }
 
 #[inline(always)]
-unsafe fn store_8888_tail_(
-    tail: usize, ptr: *mut PremultipliedColorU8,
+unsafe fn store_8888_tail(
     r: &U16x16, g: &U16x16, b: &U16x16, a: &U16x16,
+    tail: usize, data: &mut [PremultipliedColorU8],
 ) {
     let r = r.as_slice();
     let g = g.as_slice();
@@ -836,7 +826,7 @@ unsafe fn store_8888_tail_(
     // knows that we have only 16 steps and slices access is guarantee to be valid.
     // This removes bounds checking and a possible panic call.
     for i in 0..STAGE_WIDTH {
-        *ptr.add(i) = PremultipliedColorU8::from_rgba_unchecked(
+        data[i] = PremultipliedColorU8::from_rgba_unchecked(
             r[i] as u8, g[i] as u8, b[i] as u8, a[i] as u8,
         );
 
