@@ -177,9 +177,9 @@ enum IntersectRayType {
 pub struct PathStroker {
     radius: f32,
     inv_miter_limit: f32,
-    res_scale: f32, // TODO: const
-    inv_res_scale: f32, // TODO: const
-    inv_res_scale_squared: f32, // TODO: const
+    res_scale: f32,
+    inv_res_scale: f32,
+    inv_res_scale_squared: f32,
 
     first_normal: Point,
     prev_normal: Point,
@@ -219,15 +219,12 @@ impl Default for PathStroker {
 impl PathStroker {
     /// Creates a new PathStroker.
     pub fn new() -> Self {
-        // The '4' below matches the fill scan converter's error term.
-        let inv_res_scale = 4.0.invert();
-
         PathStroker {
             radius: 0.0,
             inv_miter_limit: 0.0,
             res_scale: 1.0,
-            inv_res_scale,
-            inv_res_scale_squared: inv_res_scale.sqr(),
+            inv_res_scale: 1.0,
+            inv_res_scale_squared: 1.0,
 
             first_normal: Point::zero(),
             prev_normal: Point::zero(),
@@ -264,9 +261,11 @@ impl PathStroker {
         &mut self,
         path: &Path,
         stroke: Stroke,
+        transform: &Transform,
     ) -> Option<Path> {
         let width = NonZeroPositiveF32::new(stroke.width)?;
-        self.stroke_inner(path, width, stroke.miter_limit, stroke.line_cap, stroke.line_join)
+        let res_scale = compute_res_scale(transform);
+        self.stroke_inner(path, width, stroke.miter_limit, stroke.line_cap, stroke.line_join, res_scale)
     }
 
     /// Stokes the path into the `out_path`.
@@ -276,10 +275,11 @@ impl PathStroker {
         &mut self,
         path: &Path,
         stroke: Stroke,
+        transform: &Transform,
         out_path: Path,
     ) -> Option<Path> {
         self.outer = out_path.clear();
-        self.stroke(path, stroke)
+        self.stroke(path, stroke, transform)
     }
 
     fn stroke_inner(
@@ -289,6 +289,7 @@ impl PathStroker {
         miter_limit: f32,
         line_cap: LineCap,
         mut line_join: LineJoin,
+        res_scale: f32,
     ) -> Option<Path> {
         // TODO: stroke_rect optimization
 
@@ -301,6 +302,11 @@ impl PathStroker {
                 inv_miter_limit = miter_limit.invert();
             }
         }
+
+        self.res_scale = res_scale;
+        // The '4' below matches the fill scan converter's error term.
+        self.inv_res_scale = (res_scale * 4.0).invert();
+        self.inv_res_scale_squared = self.inv_res_scale.sqr();
 
         self.radius = width.get().half();
         self.inv_miter_limit = inv_miter_limit;
@@ -1817,4 +1823,18 @@ fn cubic_in_line(cubic: &[Point; 4]) -> bool {
 
     pt_to_line(cubic[mid1], cubic[outer1], cubic[outer2]) <= line_slop &&
     pt_to_line(cubic[mid2], cubic[outer1], cubic[outer2]) <= line_slop
+}
+
+fn compute_res_scale(ts: &Transform) -> f32 {
+    let (sx, ky, kx, sy, _,  _) = ts.get_row();
+    let sx = Point::from_xy(sx, kx).length();
+    let sy = Point::from_xy(ky, sy).length();
+    if sx.is_finite() && sy.is_finite() {
+        let scale = sx.max(sy);
+        if scale > 0.0 {
+            return scale;
+        }
+    }
+
+    1.0
 }

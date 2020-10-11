@@ -1,10 +1,10 @@
+// Copyright 2006 The Android Open Source Project
 // Copyright 2020 Evgeniy Reizner
 //
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// This module is closer to SkDraw than SkCanvas
-// and since it was written from scratch, there is no Google copyright.
+// This module is closer to SkDraw than SkCanvas.
 
 use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, PathStroker, NormalizedF32, Color};
 use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillType, Rect, SpreadMode};
@@ -187,26 +187,13 @@ impl Canvas {
     }
 
     #[inline(always)]
-    fn stroke_path_impl(&mut self, path: &Path, paint: &Paint, mut stroke: Stroke) -> Option<()> {
+    fn stroke_path_impl(&mut self, path: &Path, paint: &Paint, stroke: Stroke) -> Option<()> {
         if stroke.width < 0.0 {
             return None;
         }
 
-        let mut paint = paint.clone();
-
-        let transformed_path;
-        let path = if !self.transform.is_identity() {
-            stroke.width *= compute_res_scale_for_stroking(&self.transform);
-
-            paint.shader.transform(&self.transform);
-
-            transformed_path = path.clone().transform(&self.transform)?;
-            &transformed_path
-        } else {
-            path
-        };
-
         if let Some(coverage) = treat_as_hairline(&paint, stroke, &self.transform) {
+            let mut paint = paint.clone();
             if coverage == 1.0 {
                 // No changes to the `paint`.
             } else if paint.blend_mode.should_pre_scale_coverage() {
@@ -218,15 +205,29 @@ impl Canvas {
                 paint.shader.apply_opacity(NormalizedF32::new_bounded(new_alpha as f32 / 255.0));
             }
 
-            self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap)
-        } else {
-            if let Some(stroked_path) = self.stroked_path.take() {
-                self.stroked_path = Some(self.stroker.stroke_to(&path, stroke, stroked_path)?);
-            } else {
-                self.stroked_path = Some(self.stroker.stroke(&path, stroke)?);
+            if self.transform.is_identity() {
+                paint.shader.transform(&self.transform);
             }
 
-            self.pixmap.fill_path(self.stroked_path.as_ref()?, &paint, FillType::Winding)
+            self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap)
+        } else {
+            let mut stroked_path = if let Some(stroked_path) = self.stroked_path.take() {
+                self.stroker.stroke_to(&path, stroke, &self.transform, stroked_path)
+            } else {
+                self.stroker.stroke(&path, stroke, &self.transform)
+            }?;
+            stroked_path = stroked_path.transform(&self.transform)?;
+            self.stroked_path = Some(stroked_path);
+
+            let path = self.stroked_path.as_ref()?;
+            if !self.transform.is_identity() {
+                let mut paint = paint.clone();
+                paint.shader.transform(&self.transform);
+
+                self.pixmap.fill_path(&path, &paint, FillType::Winding)
+            } else {
+                self.pixmap.fill_path(path, paint, FillType::Winding)
+            }
         }
     }
 
@@ -283,20 +284,6 @@ impl Canvas {
             self.fill_path_impl(&path, paint, FillType::Winding)
         }
     }
-}
-
-fn compute_res_scale_for_stroking(ts: &Transform) -> f32 {
-    let (sx, ky, kx, sy, _,  _) = ts.get_row();
-    let sx = Point::from_xy(sx, kx).length();
-    let sy = Point::from_xy(ky, sy).length();
-    if sx.is_finite() && sy.is_finite() {
-        let scale = sx.max(sy);
-        if scale > 0.0 {
-            return scale;
-        }
-    }
-
-    1.0
 }
 
 fn treat_as_hairline(paint: &Paint, stroke: Stroke, ts: &Transform) -> Option<f32> {

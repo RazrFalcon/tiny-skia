@@ -61,6 +61,10 @@ impl Path {
     ///
     /// Some points may become NaN/inf therefore this method can fail.
     pub fn transform(mut self, ts: &Transform) -> Option<Self> {
+        if ts.is_identity() {
+            return Some(self);
+        }
+
         ts.map_points(&mut self.points);
 
         // Update bounds.
@@ -85,7 +89,7 @@ impl Path {
     /// - produced stroke has invalid bounds
     pub fn stroke(&self, stroke: Stroke) -> Option<Self> {
         let mut stroker = PathStroker::new();
-        stroker.stroke(self, stroke)
+        stroker.stroke(self, stroke, &Transform::identity())
     }
 
     /// Sometimes in the drawing pipeline, we have to perform math on path coordinates, even after
