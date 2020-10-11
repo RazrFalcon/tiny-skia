@@ -515,12 +515,28 @@ fn do_anti_hairline(
         }
     }
 
-    // TODO: remove Box
-    let mut hair_blitter: Box<dyn AntiHairBlitter> = match blitter_kind? {
-        BlitterKind::HLine => Box::new(HLineAntiHairBlitter(blitter)),
-        BlitterKind::Horish => Box::new(HorishAntiHairBlitter(blitter)),
-        BlitterKind::VLine => Box::new(VLineAntiHairBlitter(blitter)),
-        BlitterKind::Vertish => Box::new(VertishAntiHairBlitter(blitter)),
+    // A bit ugly, but looks like this is the only way to have stack allocated object trait.
+    let mut hline_blitter;
+    let mut horish_blitter;
+    let mut vline_blitter;
+    let mut vertish_blitter;
+    let hair_blitter: &mut dyn AntiHairBlitter = match blitter_kind? {
+        BlitterKind::HLine => {
+            hline_blitter = HLineAntiHairBlitter(blitter);
+            &mut hline_blitter
+        },
+        BlitterKind::Horish => {
+            horish_blitter = HorishAntiHairBlitter(blitter);
+            &mut horish_blitter
+        },
+        BlitterKind::VLine => {
+            vline_blitter = VLineAntiHairBlitter(blitter);
+            &mut vline_blitter
+        },
+        BlitterKind::Vertish => {
+            vertish_blitter = VertishAntiHairBlitter(blitter);
+            &mut vertish_blitter
+        },
     };
 
     debug_assert!(istart >= 0);
