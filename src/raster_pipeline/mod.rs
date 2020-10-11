@@ -103,11 +103,11 @@ pub struct PixelsCtx<'a> {
 
 impl PixelsCtx<'_> {
     #[inline(always)]
-    pub unsafe fn from_program(program: *const *const c_void) -> &'static mut Self {
+    pub fn from_program(program: *const *const c_void) -> &'static mut Self {
         // We have to cast `*const` to `*mut` first, because Rust doesn't allow
         // modifying `PixelsCtx::pixels` via `&PixelsCtx`.
         // Even though that `PixelsCtx::pixels` is actually mutable.
-        &mut *(*program.add(1) as *mut c_void).cast()
+        unsafe { &mut *(*program.add(1) as *mut c_void).cast() }
     }
 
     #[inline(always)]
@@ -143,8 +143,16 @@ pub struct MaskCtx {
 
 impl MaskCtx {
     #[inline(always)]
-    pub unsafe fn ptr_at_xy(&self, dx: usize, dy: usize) -> *mut u8 {
-        self.pixels.add(self.stride as usize * dy + dx)
+    pub fn from_program(program: *const *const c_void) -> &'static mut Self {
+        // We have to cast `*const` to `*mut` first, because Rust doesn't allow
+        // modifying `MaskCtx::pixels` via `&MaskCtx`.
+        // Even though that `MaskCtx::pixels` is actually mutable.
+        unsafe { &mut *(*program.add(1) as *mut c_void).cast() }
+    }
+
+    #[inline(always)]
+    pub fn ptr_at_xy(&mut self, dx: usize, dy: usize) -> *mut u8 {
+        unsafe { self.pixels.add(self.stride as usize * dy + dx) }
     }
 }
 
@@ -153,7 +161,7 @@ impl Context for MaskCtx {}
 
 #[derive(Copy, Clone, Debug)]
 pub struct GatherCtx {
-    pub pixels: *mut c_void,
+    pub pixels: *mut c_void, // TODO: to slice
     pub stride: LengthU32,
     pub width: LengthU32,
     pub height: LengthU32,
