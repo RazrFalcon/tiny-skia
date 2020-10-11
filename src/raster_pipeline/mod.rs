@@ -18,7 +18,7 @@ mod lowp;
 mod highp;
 
 
-const MAX_STAGES: usize = 16; // More than enough.
+const MAX_STAGES: usize = 32; // More than enough.
 
 
 #[allow(dead_code)]
