@@ -9,8 +9,8 @@ use crate::{LengthU32, ScreenIntRect, AlphaU8};
 use crate::alpha_runs::AlphaRun;
 
 /// Mask is used to describe alpha bitmaps.
-pub struct Mask<'a> {
-    pub image: &'a [u8],
+pub struct Mask {
+    pub image: [u8; 2],
     pub bounds: ScreenIntRect,
     pub row_bytes: u32,
 }

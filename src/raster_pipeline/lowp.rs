@@ -281,28 +281,26 @@ fn scale_u8(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     let ctx = super::MaskCtx::from_program(program);
-    let ptr = ctx.ptr_at_xy(dx, dy);
 
     // Load u8xTail and cast it to U16x16.
-    let mut data = [0u8; STAGE_WIDTH];
-    unsafe { std::ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), tail); }
+    let data = ctx.copy_at_xy(dx, dy, tail);
     let c = U16x16([
-        u16::from(data[ 0]),
-        u16::from(data[ 1]),
-        u16::from(data[ 2]),
-        u16::from(data[ 3]),
-        u16::from(data[ 4]),
-        u16::from(data[ 5]),
-        u16::from(data[ 6]),
-        u16::from(data[ 7]),
-        u16::from(data[ 8]),
-        u16::from(data[ 9]),
-        u16::from(data[10]),
-        u16::from(data[11]),
-        u16::from(data[12]),
-        u16::from(data[13]),
-        u16::from(data[14]),
-        u16::from(data[15]),
+        u16::from(data[0]),
+        u16::from(data[1]),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
     ]);
 
     *r = div255(*r * c);
@@ -319,28 +317,26 @@ fn lerp_u8(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     let ctx = super::MaskCtx::from_program(program);
-    let ptr = ctx.ptr_at_xy(dx, dy);
 
     // Load u8xTail and cast it to U16x16.
-    let mut data = [0u8; STAGE_WIDTH];
-    unsafe { std::ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), tail); }
+    let data = ctx.copy_at_xy(dx, dy, tail);
     let c = U16x16([
-        u16::from(data[ 0]),
-        u16::from(data[ 1]),
-        u16::from(data[ 2]),
-        u16::from(data[ 3]),
-        u16::from(data[ 4]),
-        u16::from(data[ 5]),
-        u16::from(data[ 6]),
-        u16::from(data[ 7]),
-        u16::from(data[ 8]),
-        u16::from(data[ 9]),
-        u16::from(data[10]),
-        u16::from(data[11]),
-        u16::from(data[12]),
-        u16::from(data[13]),
-        u16::from(data[14]),
-        u16::from(data[15]),
+        u16::from(data[0]),
+        u16::from(data[1]),
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
     ]);
 
     *r = lerp(*dr, *r, c);

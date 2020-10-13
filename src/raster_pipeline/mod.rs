@@ -135,10 +135,11 @@ impl PixelsCtx<'_> {
 impl Context for PixelsCtx<'_> {}
 
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct MaskCtx {
-    pub pixels: *mut u8,
+    pub pixels: [u8; 2],
     pub stride: u32, // can be zero
+    pub shift: usize, // mask offset/position in pixmap coordinates
 }
 
 impl MaskCtx {
@@ -151,8 +152,15 @@ impl MaskCtx {
     }
 
     #[inline(always)]
-    pub fn ptr_at_xy(&mut self, dx: usize, dy: usize) -> *mut u8 {
-        unsafe { self.pixels.add(self.stride as usize * dy + dx) }
+    pub fn copy_at_xy(&self, dx: usize, dy: usize, tail: usize) -> [u8; 2] {
+        let offset = (self.stride as usize * dy + dx) - self.shift;
+        // We have only 3 variants, so unroll them.
+        match (offset, tail) {
+            (0, 1) => [self.pixels[0], 0],
+            (0, 2) => [self.pixels[0], self.pixels[1]],
+            (1, 1) => [self.pixels[1], 0],
+            _ => [0, 0] // unreachable
+        }
     }
 }
 

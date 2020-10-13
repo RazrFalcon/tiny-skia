@@ -327,12 +327,10 @@ fn scale_u8(
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
     let ctx = super::MaskCtx::from_program(program);
-    let ptr = ctx.ptr_at_xy(dx, dy);
 
     // Load u8xTail and cast it to F32x4.
-    let mut data = [0u8; STAGE_WIDTH];
-    unsafe { std::ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), tail); }
-    let c = F32x4::new(data[0] as f32, data[1] as f32, data[2] as f32, data[3] as f32);
+    let data = ctx.copy_at_xy(dx, dy, tail);
+    let c = F32x4::new(data[0] as f32, data[1] as f32, 0.0, 0.0);
     let c = c / F32x4::splat(255.0);
 
     *r = *r * c;
@@ -349,12 +347,10 @@ fn lerp_u8(
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
     let ctx = super::MaskCtx::from_program(program);
-    let ptr = ctx.ptr_at_xy(dx, dy);
 
     // Load u8xTail and cast it to F32x4.
-    let mut data = [0u8; STAGE_WIDTH];
-    unsafe { std::ptr::copy_nonoverlapping(ptr, data.as_mut_ptr(), tail); }
-    let c = F32x4::new(data[0] as f32, data[1] as f32, data[2] as f32, data[3] as f32);
+    let data = ctx.copy_at_xy(dx, dy, tail);
+    let c = F32x4::new(data[0] as f32, data[1] as f32, 0.0, 0.0);
     let c = c / F32x4::splat(255.0);
 
     *r = lerp(*dr, *r, c);

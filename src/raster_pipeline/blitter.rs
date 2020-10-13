@@ -126,16 +126,11 @@ impl<'a> RasterPipelineBlitter<'a> {
             pixels: pixmap.pixels_mut(),
         };
 
-        let mask_ctx = raster_pipeline::MaskCtx {
-            pixels: std::ptr::null_mut(),
-            stride: 0,
-        };
-
         Some(RasterPipelineBlitter {
             blend_mode,
             color_pipeline,
             pixels_ctx: img_ctx,
-            mask_ctx,
+            mask_ctx: raster_pipeline::MaskCtx::default(),
             memset2d_color,
             blit_anti_h_rp: None,
             blit_rect_rp: None,
@@ -209,7 +204,7 @@ impl Blitter for RasterPipelineBlitter<'_> {
         let bounds = ScreenIntRect::from_xywh_safe(x, y, LENGTH_U32_ONE, height);
 
         let mask = Mask {
-            image: std::slice::from_ref(&alpha),
+            image: [alpha, alpha],
             bounds,
             row_bytes: 0, // so we reuse the 1 "row" for all of height
         };
@@ -221,7 +216,7 @@ impl Blitter for RasterPipelineBlitter<'_> {
         let bounds = ScreenIntRect::from_xywh(x, y, 2, 1).unwrap();
 
         let mask = Mask {
-            image: &[alpha0, alpha1],
+            image: [alpha0, alpha1],
             bounds,
             row_bytes: 2,
         };
@@ -233,7 +228,7 @@ impl Blitter for RasterPipelineBlitter<'_> {
         let bounds = ScreenIntRect::from_xywh(x, y, 1, 2).unwrap();
 
         let mask = Mask {
-            image: &[alpha0, alpha1],
+            image: [alpha0, alpha1],
             bounds,
             row_bytes: 1,
         };
@@ -292,20 +287,11 @@ impl Blitter for RasterPipelineBlitter<'_> {
     }
 
     fn blit_mask(&mut self, mask: &Mask, clip: &ScreenIntRect) {
-        {
-            // Update ctx to point "into" this current mask, but lined up with `img_ctx` at (0,0).
-            // This sort of trickery upsets UBSAN (pointer-overflow) so our ptr must be a usize.
-            // mask.row_bytes is a u32, which would break our addressing math on 64-bit builds.
-            //
-            // No idea how it actually works, but this is the correctly working code.
-            // Any changes will lead to invalid results and sanitizer complains.
-            let mask_ptr = (mask.image.as_ptr() as usize)
-                .wrapping_sub(mask.bounds.left() as usize)
-                .wrapping_sub(mask.bounds.top() as usize * mask.row_bytes as usize);
-
-            self.mask_ctx.pixels = mask_ptr as *mut u8;
-            self.mask_ctx.stride = mask.row_bytes;
-        }
+        self.mask_ctx = raster_pipeline::MaskCtx {
+            pixels: mask.image,
+            stride: mask.row_bytes,
+            shift: (mask.bounds.left() + mask.bounds.top() * mask.row_bytes) as usize,
+        };
 
         if self.blit_mask_rp.is_none() {
             let img_ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
