@@ -4,23 +4,26 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::LengthU32;
+use std::convert::TryFrom;
+use std::num::NonZeroU16;
 
-use crate::color::AlphaU8;
+use crate::{LengthU32, AlphaU8};
+
+pub type AlphaRun = Option<NonZeroU16>;
 
 /// Sparse array of run-length-encoded alpha (supersampling coverage) values.
 ///
 /// Sparseness allows us to independently compose several paths into the
 /// same AlphaRuns buffer.
 pub struct AlphaRuns {
-    pub runs: Vec<u16>,
+    pub runs: Vec<AlphaRun>,
     pub alpha: Vec<u8>,
 }
 
 impl AlphaRuns {
     pub fn new(width: LengthU32) -> Self {
         let mut runs = AlphaRuns {
-            runs: vec![0; (width.get() + 1) as usize],
+            runs: vec![None; (width.get() + 1) as usize],
             alpha: vec![0; (width.get() + 1) as usize],
         };
         runs.reset(width);
@@ -35,14 +38,18 @@ impl AlphaRuns {
 
     /// Returns true if the scanline contains only a single run, of alpha value 0.
     pub fn is_empty(&self) -> bool {
-        debug_assert!(self.runs[0] > 0);
-        self.alpha[0] == 0 && self.runs[usize::from(self.runs[0])] == 0
+        debug_assert!(self.runs[0].is_some());
+        match self.runs[0] {
+            Some(run) => self.alpha[0] == 0 && self.runs[usize::from(run.get())].is_none(),
+            None => true,
+        }
     }
 
     /// Reinitialize for a new scanline.
     pub fn reset(&mut self, width: LengthU32) {
-        self.runs[0] = width.get() as u16;
-        self.runs[width.get() as usize] = 0;
+        let run = u16::try_from(width.get()).unwrap();
+        self.runs[0] = NonZeroU16::new(run);
+        self.runs[width.get() as usize] = None;
         self.alpha[0] = 0;
     }
 
@@ -107,7 +114,7 @@ impl AlphaRuns {
                 );
                 self.alpha[alpha_offset] = a;
 
-                let n = usize::from(self.runs[runs_offset]);
+                let n = usize::from(self.runs[runs_offset].unwrap().get());
                 debug_assert!(n <= middle_count);
                 alpha_offset += n;
                 runs_offset += n;
@@ -144,7 +151,7 @@ impl AlphaRuns {
     /// break_run(..., 2, 5) would produce AAAABBBB rle as A2A2B3B1.
     /// Allows add() to sum another run to some of the new sub-runs.
     /// i.e. adding ..CCCCC. would produce AADDEEEB, rle as A2D2E3B1.
-    fn break_run(runs: &mut [u16], alpha: &mut [u8], mut x: usize, count: usize) {
+    fn break_run(runs: &mut [AlphaRun], alpha: &mut [u8], mut x: usize, count: usize) {
         debug_assert!(count > 0);
 
         let orig_x = x;
@@ -152,13 +159,13 @@ impl AlphaRuns {
         let mut alpha_offset = 0;
 
         while x > 0 {
-            let n = usize::from(runs[runs_offset]);
+            let n = usize::from(runs[runs_offset].unwrap().get());
             debug_assert!(n > 0);
 
             if x < n {
                 alpha[alpha_offset + x] = alpha[alpha_offset];
-                runs[runs_offset + 0] = x as u16;
-                runs[runs_offset + x] = (n - x) as u16;
+                runs[runs_offset + 0] = NonZeroU16::new(x as u16);
+                runs[runs_offset + x] = NonZeroU16::new((n - x) as u16);
                 break;
             }
             runs_offset += n;
@@ -171,13 +178,13 @@ impl AlphaRuns {
         x = count;
 
         loop {
-            let n = usize::from(runs[runs_offset]);
+            let n = usize::from(runs[runs_offset].unwrap().get());
             debug_assert!(n > 0);
 
             if x < n {
                 alpha[alpha_offset + x] = alpha[alpha_offset];
-                runs[runs_offset + 0] = x as u16;
-                runs[runs_offset + x] = (n - x) as u16;
+                runs[runs_offset + 0] = NonZeroU16::new(x as u16);
+                runs[runs_offset + x] = NonZeroU16::new((n - x) as u16);
                 break;
             }
 

@@ -9,6 +9,7 @@ use std::ffi::c_void;
 use crate::{Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8, AlphaU8, Shader};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
+use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
 use crate::raster_pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
 use crate::safe_geom_ext::LENGTH_U32_ONE;
@@ -150,7 +151,7 @@ impl Blitter for RasterPipelineBlitter<'_> {
         self.blit_rect(&r);
     }
 
-    fn blit_anti_h(&mut self, mut x: u32, y: u32, aa: &[AlphaU8], runs: &[u16]) {
+    fn blit_anti_h(&mut self, mut x: u32, y: u32, aa: &[AlphaU8], runs: &[AlphaRun]) {
         if self.blit_anti_h_rp.is_none() {
             let ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
             let curr_cov_ptr = &self.current_coverage as *const _ as *const c_void;
@@ -180,29 +181,27 @@ impl Blitter for RasterPipelineBlitter<'_> {
 
         let mut aa_offset = 0;
         let mut run_offset = 0;
-        let mut run = runs[0];
-        while run > 0 {
+        let mut run_opt = runs[0];
+        while let Some(run) = run_opt {
+            let width = LengthU32::from(run);
+
             match aa[aa_offset] {
                 ALPHA_U8_TRANSPARENT => {}
                 ALPHA_U8_OPAQUE => {
-                    let w = unsafe { LengthU32::new_unchecked(run as u32) };
-                    self.blit_h(x, y, w);
+                    self.blit_h(x, y, width);
                 }
                 alpha => {
                     self.current_coverage = alpha as f32 * (1.0 / 255.0);
 
-                    let rect = unsafe {
-                        ScreenIntRect::from_xywh_unchecked(x, y, u32::from(run), 1)
-                    };
-
+                    let rect = ScreenIntRect::from_xywh_safe(x, y, width, LENGTH_U32_ONE);
                     self.blit_anti_h_rp.as_ref().unwrap().run(&rect);
                 }
             }
 
-            x += u32::from(run);
-            run_offset += usize::from(run);
-            aa_offset += usize::from(run);
-            run = runs[run_offset];
+            x += width.get();
+            run_offset += usize::from(run.get());
+            aa_offset += usize::from(run.get());
+            run_opt = runs[run_offset];
         }
     }
 

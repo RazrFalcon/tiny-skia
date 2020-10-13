@@ -5,6 +5,7 @@
 // found in the LICENSE file.
 
 use std::convert::TryFrom;
+use std::num::NonZeroU16;
 
 use crate::{Rect, IntRect, ScreenIntRect, AlphaU8, LengthU32, Path, LineCap, Point, Bounds};
 
@@ -186,7 +187,7 @@ fn do_scanline(l: FDot8, top: i32, r: FDot8, alpha: AlphaU8, blitter: &mut dyn B
 fn call_hline_blitter(mut x: u32, y: u32, count: LengthU32, alpha: AlphaU8, blitter: &mut dyn Blitter) {
     const HLINE_STACK_BUFFER: usize = 100;
 
-    let mut runs = [0u16; HLINE_STACK_BUFFER + 1];
+    let mut runs = [None; HLINE_STACK_BUFFER + 1];
     let mut aa = [0u8; HLINE_STACK_BUFFER];
 
     let mut count = count.get();
@@ -204,8 +205,8 @@ fn call_hline_blitter(mut x: u32, y: u32, count: LengthU32, alpha: AlphaU8, blit
         }
 
         debug_assert!(n <= std::u16::MAX as u32);
-        runs[0] = n as u16;
-        runs[n as usize] = 0;
+        runs[0] = NonZeroU16::new(n as u16);
+        runs[n as usize] = None;
         blitter.blit_anti_h(x, y, &aa, &runs);
         x += n;
 

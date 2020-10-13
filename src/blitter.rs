@@ -6,6 +6,8 @@
 
 use crate::{LengthU32, ScreenIntRect, AlphaU8};
 
+use crate::alpha_runs::AlphaRun;
+
 /// Mask is used to describe alpha bitmaps.
 pub struct Mask<'a> {
     pub image: &'a [u8],
@@ -40,7 +42,7 @@ pub trait Blitter {
     /// entry will by at runs[7]. The runs array and antialias[] are coupled by index. So, if the
     /// np entry is at runs[45] = 12 then the alpha value can be found at antialias[45] = 0x88.
     /// This would mean to use an alpha value of 0x88 for the next 12 pixels starting at pixel 45.
-    fn blit_anti_h(&mut self, _x: u32, _y: u32, _antialias: &[AlphaU8], _runs: &[u16]) {
+    fn blit_anti_h(&mut self, _x: u32, _y: u32, _antialias: &[AlphaU8], _runs: &[AlphaRun]) {
         unreachable!()
     }
 
