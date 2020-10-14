@@ -13,6 +13,8 @@ use crate::{PremultipliedColor, PremultipliedColorU8};
 
 pub use blitter::RasterPipelineBlitter;
 
+use crate::wide::U32x4;
+
 mod blitter;
 mod lowp;
 mod highp;
@@ -169,10 +171,22 @@ impl Context for MaskCtx {}
 
 #[derive(Copy, Clone, Debug)]
 pub struct GatherCtx {
-    pub pixels: *mut c_void, // TODO: to slice
+    pub pixels: *const PremultipliedColorU8, // TODO: to slice
     pub stride: LengthU32,
     pub width: LengthU32,
     pub height: LengthU32,
+}
+
+impl GatherCtx {
+    #[inline(always)]
+    pub fn gather(&self, index: U32x4) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
+        unsafe {[
+            *self.pixels.add(index.x() as usize),
+            *self.pixels.add(index.y() as usize),
+            *self.pixels.add(index.z() as usize),
+            *self.pixels.add(index.w() as usize),
+        ]}
+    }
 }
 
 impl Context for GatherCtx {}
@@ -263,7 +277,7 @@ impl Context for GradientCtx {}
 #[derive(Copy, Clone, Debug)]
 pub struct TwoPointConicalGradientCtx {
     // This context is used only in highp, where we use Tx4.
-    pub mask: [u32; 4],
+    pub mask: U32x4,
     pub p0: f32,
 }
 

@@ -118,27 +118,23 @@ pub fn start(
         let end = rect.right() as usize;
 
         while x + STAGE_WIDTH <= end {
-            unsafe {
-                let next: StageFn = *program.cast();
-                next(
-                    STAGE_WIDTH, program, x, y as usize,
-                    &mut r, &mut g, &mut b, &mut a,
-                    &mut dr, &mut dg, &mut db, &mut da,
-                );
-            }
+            let next = cast_stage_fn(program);
+            next(
+                STAGE_WIDTH, program, x, y as usize,
+                &mut r, &mut g, &mut b, &mut a,
+                &mut dr, &mut dg, &mut db, &mut da,
+            );
 
             x += STAGE_WIDTH;
         }
 
         if x != end {
-            unsafe {
-                let next: StageFn = *tail_program.cast();
-                next(
-                    end - x, tail_program, x, y as usize,
-                    &mut r, &mut g, &mut b, &mut a,
-                    &mut dr, &mut dg, &mut db, &mut da,
-                );
-            }
+            let next = cast_stage_fn(tail_program);
+            next(
+                end - x, tail_program, x, y as usize,
+                &mut r, &mut g, &mut b, &mut a,
+                &mut dr, &mut dg, &mut db, &mut da,
+            );
         }
     }
 }
@@ -212,7 +208,7 @@ fn uniform_color(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::UniformColorCtx = cast_stage(program);
+    let ctx: &super::UniformColorCtx = cast_stage_ctx(program);
     *r = F32x4::splat(ctx.r);
     *g = F32x4::splat(ctx.g);
     *b = F32x4::splat(ctx.b);
@@ -279,16 +275,10 @@ pub fn gather(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::GatherCtx = cast_stage(program);
+    let ctx: &super::GatherCtx = cast_stage_ctx(program);
 
     let ix = gather_ix(ctx, *r, *g);
-    let data = unsafe { [
-        *ctx.pixels.cast::<PremultipliedColorU8>().add(ix.x() as usize),
-        *ctx.pixels.cast::<PremultipliedColorU8>().add(ix.y() as usize),
-        *ctx.pixels.cast::<PremultipliedColorU8>().add(ix.z() as usize),
-        *ctx.pixels.cast::<PremultipliedColorU8>().add(ix.w() as usize),
-    ] };
-    load_8888(&data, r, g, b, a);
+    load_8888(&ctx.gather(ix), r, g, b, a);
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
 }
@@ -366,7 +356,7 @@ fn scale_1_float(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let c: f32 = *cast_stage(program);
+    let c: f32 = *cast_stage_ctx(program);
     let c = F32x4::splat(c);
     *r = *r * c;
     *g = *g * c;
@@ -381,7 +371,7 @@ fn lerp_1_float(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let c: f32 = *cast_stage(program);
+    let c: f32 = *cast_stage_ctx(program);
     let c = F32x4::splat(c);
     *r = lerp(*dr, *r, c);
     *g = lerp(*dg, *g, c);
@@ -706,7 +696,7 @@ fn transform(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ts: &Transform = cast_stage(program);
+    let ts: &Transform = cast_stage_ctx(program);
     let (sx, ky, kx, sy, tx, ty) = ts.get_row();
 
     let tr = mad(*r, F32x4::splat(sx), mad(*g, F32x4::splat(kx), F32x4::splat(tx)));
@@ -726,7 +716,7 @@ fn reflect_x(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::TileCtx = cast_stage(program);
+    let ctx: &super::TileCtx = cast_stage_ctx(program);
     *r = exclusive_reflect(*r, ctx.scale, ctx.inv_scale);
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
@@ -737,7 +727,7 @@ fn reflect_y(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::TileCtx = cast_stage(program);
+    let ctx: &super::TileCtx = cast_stage_ctx(program);
     *g = exclusive_reflect(*g, ctx.scale, ctx.inv_scale);
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
@@ -755,7 +745,7 @@ fn repeat_x(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::TileCtx = cast_stage(program);
+    let ctx: &super::TileCtx = cast_stage_ctx(program);
     *r = exclusive_repeat(*r, ctx.scale, ctx.inv_scale);
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
@@ -766,7 +756,7 @@ fn repeat_y(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::TileCtx = cast_stage(program);
+    let ctx: &super::TileCtx = cast_stage_ctx(program);
     *g = exclusive_repeat(*g, ctx.scale, ctx.inv_scale);
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
@@ -782,7 +772,7 @@ fn bilinear(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::SamplerCtx = cast_stage(program);
+    let ctx: &super::SamplerCtx = cast_stage_ctx(program);
 
     let x = *r;
     let fx = (x + F32x4::splat(0.5)).fract();
@@ -802,7 +792,7 @@ fn bicubic(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::SamplerCtx = cast_stage(program);
+    let ctx: &super::SamplerCtx = cast_stage_ctx(program);
 
     let x = *r;
     let fx = (x + F32x4::splat(0.5)).fract();
@@ -917,13 +907,7 @@ fn sample(
     y = tile(y, ctx.spread_mode, ctx.gather.height.get() as f32, ctx.inv_height);
 
     let ix = gather_ix(&ctx.gather, x, y);
-    let data = unsafe { [
-        *ctx.gather.pixels.cast::<PremultipliedColorU8>().add(ix.x() as usize),
-        *ctx.gather.pixels.cast::<PremultipliedColorU8>().add(ix.y() as usize),
-        *ctx.gather.pixels.cast::<PremultipliedColorU8>().add(ix.z() as usize),
-        *ctx.gather.pixels.cast::<PremultipliedColorU8>().add(ix.w() as usize),
-    ] };
-    load_8888(&data, r, g, b, a);
+    load_8888(&ctx.gather.gather(ix), r, g, b, a);
 }
 
 #[inline(always)]
@@ -976,7 +960,7 @@ fn gradient(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::GradientCtx = cast_stage(program);
+    let ctx: &super::GradientCtx = cast_stage_ctx(program);
 
     // N.B. The loop starts at 1 because idx 0 is the color to use before the first stop.
     let t = *r;
@@ -1034,7 +1018,7 @@ fn evenly_spaced_2_stop_gradient(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::EvenlySpaced2StopGradientCtx = cast_stage(program);
+    let ctx: &super::EvenlySpaced2StopGradientCtx = cast_stage_ctx(program);
 
     let t = *r;
     *r = mad(t, F32x4::splat(ctx.factor.r), F32x4::splat(ctx.bias.r));
@@ -1074,7 +1058,7 @@ fn xy_to_2pt_conical_well_behaved(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::TwoPointConicalGradientCtx = cast_stage(program);
+    let ctx: &super::TwoPointConicalGradientCtx = cast_stage_ctx(program);
 
     let x = *r;
     let y = *g;
@@ -1088,7 +1072,7 @@ fn xy_to_2pt_conical_greater(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::TwoPointConicalGradientCtx = cast_stage(program);
+    let ctx: &super::TwoPointConicalGradientCtx = cast_stage_ctx(program);
 
     let x = *r;
     let y = *g;
@@ -1102,17 +1086,19 @@ fn mask_2pt_conical_degenerates(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &mut super::TwoPointConicalGradientCtx = cast_stage_mut(program);
+    let ctx: &mut super::TwoPointConicalGradientCtx = cast_stage_ctx_mut(program);
 
     let t = *r;
     let is_degenerate = t.packed_le(F32x4::default()) | t.packed_ne(t);
     *r = is_degenerate.if_then_else(F32x4::default(), t);
 
     let is_not_degenerate = !is_degenerate;
-    ctx.mask[0] = if is_not_degenerate.x() != 0 { !0 } else { 0 };
-    ctx.mask[1] = if is_not_degenerate.y() != 0 { !0 } else { 0 };
-    ctx.mask[2] = if is_not_degenerate.z() != 0 { !0 } else { 0 };
-    ctx.mask[3] = if is_not_degenerate.w() != 0 { !0 } else { 0 };
+    ctx.mask = U32x4::new(
+        if is_not_degenerate.x() != 0 { !0 } else { 0 },
+        if is_not_degenerate.y() != 0 { !0 } else { 0 },
+        if is_not_degenerate.z() != 0 { !0 } else { 0 },
+        if is_not_degenerate.w() != 0 { !0 } else { 0 },
+    );
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
 }
@@ -1122,13 +1108,12 @@ fn apply_vector_mask(
     r: &mut F32x4, g: &mut F32x4, b: &mut F32x4, a: &mut F32x4,
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
-    let ctx: &super::TwoPointConicalGradientCtx = cast_stage(program);
+    let ctx: &super::TwoPointConicalGradientCtx = cast_stage_ctx(program);
 
-    let mask = U32x4::new(ctx.mask[0], ctx.mask[1], ctx.mask[2], ctx.mask[3]);
-    *r = (r.to_u32x4_bitcast() & mask).to_f32x4_bitcast();
-    *g = (g.to_u32x4_bitcast() & mask).to_f32x4_bitcast();
-    *b = (b.to_u32x4_bitcast() & mask).to_f32x4_bitcast();
-    *a = (a.to_u32x4_bitcast() & mask).to_f32x4_bitcast();
+    *r = (r.to_u32x4_bitcast() & ctx.mask).to_f32x4_bitcast();
+    *g = (g.to_u32x4_bitcast() & ctx.mask).to_f32x4_bitcast();
+    *b = (b.to_u32x4_bitcast() & ctx.mask).to_f32x4_bitcast();
+    *a = (a.to_u32x4_bitcast() & ctx.mask).to_f32x4_bitcast();
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
 }
@@ -1142,12 +1127,17 @@ pub fn just_return(
 }
 
 #[inline(always)]
-fn cast_stage<T>(program: *const *const c_void) -> &'static T {
+fn cast_stage_fn(program: *const *const c_void) -> StageFn {
+    unsafe { *program.cast() }
+}
+
+#[inline(always)]
+fn cast_stage_ctx<T>(program: *const *const c_void) -> &'static T {
     unsafe { &*(*program.add(1)).cast() }
 }
 
 #[inline(always)]
-fn cast_stage_mut<T>(program: *const *const c_void) -> &'static mut T {
+fn cast_stage_ctx_mut<T>(program: *const *const c_void) -> &'static mut T {
     unsafe { &mut *(*program.add(1) as *mut c_void).cast() }
 }
 
@@ -1158,7 +1148,7 @@ fn next_stage(
     dr: &mut F32x4, dg: &mut F32x4, db: &mut F32x4, da: &mut F32x4,
 ) {
     unsafe {
-        let next: StageFn = *program.add(offset).cast();
+        let next = cast_stage_fn(program.add(offset));
         next(tail, program.add(offset), dx,dy, r,g,b,a, dr,dg,db,da);
     }
 }
@@ -1201,7 +1191,7 @@ fn load_8888_tail(
     // Fill a dummy array with `tail` values. `tail` is always in a 1..STAGE_WIDTH-1 range.
     // This way we can reuse the `load_8888_` method and remove any branches.
     let mut tmp = [PremultipliedColorU8::TRANSPARENT; STAGE_WIDTH];
-    unsafe { std::ptr::copy_nonoverlapping(data.as_ptr(), tmp.as_mut_ptr(), tail); }
+    tmp[0..tail].copy_from_slice(&data[0..tail]);
     load_8888(&tmp, r, g, b, a);
 }
 

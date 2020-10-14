@@ -134,27 +134,23 @@ pub fn start(
         let end = rect.right() as usize;
 
         while x + STAGE_WIDTH <= end {
-            unsafe {
-                let next: StageFn = *program.cast();
-                next(
-                    STAGE_WIDTH, program, x, y as usize,
-                    &mut r, &mut g, &mut b, &mut a,
-                    &mut dr, &mut dg, &mut db, &mut da,
-                );
-            }
+            let next = cast_stage_fn(program);
+            next(
+                STAGE_WIDTH, program, x, y as usize,
+                &mut r, &mut g, &mut b, &mut a,
+                &mut dr, &mut dg, &mut db, &mut da,
+            );
 
             x += STAGE_WIDTH;
         }
 
         if x != end {
-            unsafe {
-                let next: StageFn = *tail_program.cast();
-                next(
-                    end - x, tail_program, x, y as usize,
-                    &mut r, &mut g, &mut b, &mut a,
-                    &mut dr, &mut dg, &mut db, &mut da,
-                );
-            }
+            let next = cast_stage_fn(tail_program);
+            next(
+                end - x, tail_program, x, y as usize,
+                &mut r, &mut g, &mut b, &mut a,
+                &mut dr, &mut dg, &mut db, &mut da,
+            );
         }
     }
 }
@@ -202,7 +198,7 @@ fn uniform_color(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::UniformColorCtx = cast_stage(program);
+    let ctx: &super::UniformColorCtx = cast_stage_ctx(program);
     *r = U16x16::splat(ctx.rgba[0]);
     *g = U16x16::splat(ctx.rgba[1]);
     *b = U16x16::splat(ctx.rgba[2]);
@@ -352,7 +348,7 @@ fn scale_1_float(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let c: f32 = *cast_stage(program);
+    let c: f32 = *cast_stage_ctx(program);
     let c = from_float(c);
     *r = div255(*r * c);
     *g = div255(*g * c);
@@ -367,7 +363,7 @@ fn lerp_1_float(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let c: f32 = *cast_stage(program);
+    let c: f32 = *cast_stage_ctx(program);
     let c = from_float(c);
     *r = lerp(*dr, *r, c);
     *g = lerp(*dg, *g, c);
@@ -494,7 +490,7 @@ fn transform(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ts: &Transform = cast_stage(program);
+    let ts: &Transform = cast_stage_ctx(program);
     let (sx, ky, kx, sy, tx, ty) = ts.get_row();
 
     let x = join(r, g);
@@ -555,7 +551,7 @@ fn gradient(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::GradientCtx = cast_stage(program);
+    let ctx: &super::GradientCtx = cast_stage_ctx(program);
 
     // N.B. The loop starts at 1 because idx 0 is the color to use before the first stop.
     let t = join(r, g);
@@ -589,7 +585,7 @@ fn evenly_spaced_2_stop_gradient(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx: &super::EvenlySpaced2StopGradientCtx = cast_stage(program);
+    let ctx: &super::EvenlySpaced2StopGradientCtx = cast_stage_ctx(program);
 
     let t = join(r, g);
     round_f32_to_u16(
@@ -711,7 +707,12 @@ pub fn null_fn(
 }
 
 #[inline(always)]
-fn cast_stage<T>(program: *const *const c_void) -> &'static T {
+fn cast_stage_fn(program: *const *const c_void) -> StageFn {
+    unsafe { *program.cast() }
+}
+
+#[inline(always)]
+fn cast_stage_ctx<T>(program: *const *const c_void) -> &'static T {
     unsafe { &*(*program.add(1)).cast() }
 }
 
@@ -722,7 +723,7 @@ fn next_stage(
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
     unsafe {
-        let next: StageFn = *program.add(offset).cast();
+        let next = cast_stage_fn(program.add(offset));
         next(tail, program.add(offset), dx,dy, r,g,b,a, dr,dg,db,da);
     }
 }
@@ -769,7 +770,7 @@ fn load_8888_tail(
     // Fill a dummy array with `tail` values. `tail` is always in a 1..STAGE_WIDTH-1 range.
     // This way we can reuse the `load_8888__` method and remove any branches.
     let mut tmp = [PremultipliedColorU8::TRANSPARENT; STAGE_WIDTH];
-    unsafe { std::ptr::copy_nonoverlapping(data.as_ptr(), tmp.as_mut_ptr(), tail); }
+    tmp[0..tail].copy_from_slice(&data[0..tail]);
     load_8888(&tmp, r, g, b, a);
 }
 

@@ -64,7 +64,7 @@ impl<'a> Pattern<'a> {
         rec.pipeline.push_transform(ts, rec.ctx_storage);
 
         let ctx = raster_pipeline::GatherCtx {
-            pixels: self.pixmap.data().as_ptr() as _,
+            pixels: self.pixmap.pixels().as_ptr(),
             stride: self.pixmap.size().width_safe(),
             width: self.pixmap.size().width_safe(),
             height: self.pixmap.size().height_safe(),
