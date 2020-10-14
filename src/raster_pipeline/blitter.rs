@@ -18,7 +18,7 @@ use crate::shaders::StageRec;
 
 pub struct RasterPipelineBlitter<'a> {
     blend_mode: BlendMode,
-    color_pipeline: RasterPipelineBuilder,
+    shader_pipeline: RasterPipelineBuilder,
 
     // Always points to the top-left of `pixmap`.
     pixels_ctx: raster_pipeline::PixelsCtx<'a>,
@@ -45,6 +45,8 @@ impl<'a> RasterPipelineBlitter<'a> {
         pixmap: &'a mut Pixmap,
     ) -> Option<Self> {
         let mut shader_pipeline = RasterPipelineBuilder::new();
+        shader_pipeline.force_hq_pipeline = paint.force_hq_pipeline;
+
         match &paint.shader {
             Shader::SolidColor(ref color) => {
                 // Having no shader makes things nice and easy... just use the paint color.
@@ -52,7 +54,7 @@ impl<'a> RasterPipelineBlitter<'a> {
                 shader_pipeline.push_with_context(raster_pipeline::Stage::UniformColor, color_ctx);
 
                 let is_constant = true;
-                RasterPipelineBlitter::new_inner(paint, &shader_pipeline, color.is_opaque(),
+                RasterPipelineBlitter::new_inner(paint, shader_pipeline, color.is_opaque(),
                                                  is_constant, pixmap)
             }
             shader => {
@@ -65,7 +67,7 @@ impl<'a> RasterPipelineBlitter<'a> {
                 };
 
                 if shader.push_stages(rec) {
-                    RasterPipelineBlitter::new_inner(paint, &shader_pipeline, is_opaque,
+                    RasterPipelineBlitter::new_inner(paint, shader_pipeline, is_opaque,
                                                      is_constant, pixmap)
                 } else {
                     None
@@ -76,7 +78,7 @@ impl<'a> RasterPipelineBlitter<'a> {
 
     fn new_inner(
         paint: &Paint,
-        shader_pipeline: &RasterPipelineBuilder,
+        shader_pipeline: RasterPipelineBuilder,
         is_opaque: bool,
         is_constant: bool,
         pixmap: &'a mut Pixmap,
@@ -90,14 +92,9 @@ impl<'a> RasterPipelineBlitter<'a> {
             _ => {}
         }
 
-        // Our job in this factory is to fill out the blitter's color pipeline.
+        // Our job in this factory is to fill out the blitter's shader pipeline.
         // This is the common front of the full blit pipelines, each constructed lazily on first use.
         // The full blit pipelines handle reading and writing the dst, blending, coverage, dithering.
-        let mut color_pipeline = RasterPipelineBuilder::new();
-        color_pipeline.set_force_hq_pipeline(paint.force_hq_pipeline);
-
-        // Let's get the shader in first.
-        color_pipeline.extend(shader_pipeline);
 
         // We can strength-reduce SrcOver into Src when opaque.
         let mut blend_mode = paint.blend_mode;
@@ -128,7 +125,7 @@ impl<'a> RasterPipelineBlitter<'a> {
 
         Some(RasterPipelineBlitter {
             blend_mode,
-            color_pipeline,
+            shader_pipeline,
             pixels_ctx: img_ctx,
             mask_ctx: raster_pipeline::MaskCtx::default(),
             memset2d_color,
@@ -152,8 +149,8 @@ impl Blitter for RasterPipelineBlitter<'_> {
             let curr_cov_ptr = &self.current_coverage as *const _ as *const c_void;
 
             let mut p = RasterPipelineBuilder::new();
-            p.set_force_hq_pipeline(self.color_pipeline.is_force_hq_pipeline());
-            p.extend(&self.color_pipeline);
+            p.set_force_hq_pipeline(self.shader_pipeline.is_force_hq_pipeline());
+            p.extend(&self.shader_pipeline);
             if self.blend_mode.should_pre_scale_coverage() {
                 p.push_with_context(raster_pipeline::Stage::Scale1Float, curr_cov_ptr);
                 p.push_with_context(raster_pipeline::Stage::LoadDestination, ctx_ptr);
@@ -261,8 +258,8 @@ impl Blitter for RasterPipelineBlitter<'_> {
 
         if self.blit_rect_rp.is_none() {
             let mut p = RasterPipelineBuilder::new();
-            p.set_force_hq_pipeline(self.color_pipeline.is_force_hq_pipeline());
-            p.extend(&self.color_pipeline);
+            p.set_force_hq_pipeline(self.shader_pipeline.is_force_hq_pipeline());
+            p.extend(&self.shader_pipeline);
 
             let ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
 
@@ -298,8 +295,8 @@ impl Blitter for RasterPipelineBlitter<'_> {
             let mask_ctx_ptr = &self.mask_ctx as *const _ as *const c_void;
 
             let mut p = RasterPipelineBuilder::new();
-            p.set_force_hq_pipeline(self.color_pipeline.is_force_hq_pipeline());
-            p.extend(&self.color_pipeline);
+            p.set_force_hq_pipeline(self.shader_pipeline.is_force_hq_pipeline());
+            p.extend(&self.shader_pipeline);
             if self.blend_mode.should_pre_scale_coverage() {
                 p.push_with_context(raster_pipeline::Stage::ScaleU8, mask_ctx_ptr);
                 p.push_with_context(raster_pipeline::Stage::LoadDestination, img_ctx_ptr);
