@@ -176,7 +176,7 @@ impl Cubic64 {
 
             Cubic64Pair { points: dst }
         } else {
-            let dst_f64 = points64_to_f64s_mut!(dst, 7);
+            let dst_f64 = points64_to_f64s_mut!(&mut dst, 7);
             interp_cubic_coords(self.as_f64_slice(), t, dst_f64);
             interp_cubic_coords(&self.as_f64_slice()[1..], t, &mut dst_f64[1..]);
             Cubic64Pair { points: dst }

@@ -127,14 +127,12 @@ fn halley_cbrt3d(d: f64) -> f64 {
 // cube root approximation using bit hack for 64-bit float
 // adapted from Kahan's cbrt
 fn cbrt_5d(d: f64) -> f64 {
-    unsafe {
-        let b1 = 715094163;
-        let mut t: f64 = 0.0;
-        let pt: &mut [u32; 2] = std::mem::transmute(&mut t);
-        let px: [u32; 2] = std::mem::transmute(d);
-        pt[1] = px[1] / 3 + b1;
-        t
-    }
+    let b1 = 715094163;
+    let mut t: f64 = 0.0;
+    let pt: &mut [u32; 2] = bytemuck::cast_mut(&mut t);
+    let px: [u32; 2] = bytemuck::cast(d);
+    pt[1] = px[1] / 3 + b1;
+    t
 }
 
 // iterative cube root approximation using Halley's method (double)

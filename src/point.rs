@@ -11,13 +11,17 @@ use crate::wide::F32x2;
 /// Converts `&[Point; N]` into `&[f32; N*2]`.
 macro_rules! points_to_f32s {
     ($pts:expr, $n:expr) => {
-        unsafe { &*($pts as *const [Point; $n] as *const [f32; $n * 2]) }
+        bytemuck::cast_ref::<[Point; $n], [f32; $n * 2]>($pts)
     };
 }
+
+unsafe impl bytemuck::Zeroable for Point {}
+unsafe impl bytemuck::Pod for Point {}
 
 
 /// A point.
 #[allow(missing_docs)]
+#[repr(C)]
 #[derive(Copy, Clone, PartialEq, Default, Debug)]
 pub struct Point {
     pub x: f32,

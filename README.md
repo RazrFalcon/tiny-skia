@@ -173,8 +173,7 @@ Right now, the only pure Rust alternative is [raqote](https://github.com/jrmuize
 
 ## Safety
 
-The project relies on some unsafe code. Mostly for `mem::transmute`.
-The pixels access is fully checked.
+The project relies on some unsafe code.
 
 ## License
 

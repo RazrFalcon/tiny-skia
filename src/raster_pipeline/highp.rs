@@ -297,7 +297,7 @@ fn gather_ix(ctx: &super::GatherCtx, mut x: F32x4, mut y: F32x4) -> U32x4 {
 #[inline(always)]
 fn ulp_sub(v: f32) -> f32 {
     // Somewhat similar to v - f32::EPSILON
-    unsafe { std::mem::transmute::<u32, f32>(std::mem::transmute::<f32, u32>(v) - 1) }
+    bytemuck::cast::<u32, f32>(bytemuck::cast::<f32, u32>(v) - 1)
 }
 
 pub fn store_tail(

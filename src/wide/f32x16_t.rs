@@ -16,38 +16,35 @@ impl F32x16 {
 
     #[inline]
     pub fn abs(&self) -> Self {
-        unsafe {
-            // Yes, Skia does it in the same way.
-            let abs = |x| std::mem::transmute::<i32, f32>(
-                            std::mem::transmute::<f32, i32>(x) & 0x7fffffff);
+        // Yes, Skia does it in the same way.
+        let abs = |x| bytemuck::cast::<i32, f32>(bytemuck::cast::<f32, i32>(x) & 0x7fffffff);
 
-            F32x16([
-                F32x4::new(
-                    abs(self.0[0].as_slice()[0]),
-                    abs(self.0[0].as_slice()[1]),
-                    abs(self.0[0].as_slice()[2]),
-                    abs(self.0[0].as_slice()[3]),
-                ),
-                F32x4::new(
-                    abs(self.0[1].as_slice()[0]),
-                    abs(self.0[1].as_slice()[1]),
-                    abs(self.0[1].as_slice()[2]),
-                    abs(self.0[1].as_slice()[3]),
-                ),
-                F32x4::new(
-                    abs(self.0[2].as_slice()[0]),
-                    abs(self.0[2].as_slice()[1]),
-                    abs(self.0[2].as_slice()[2]),
-                    abs(self.0[2].as_slice()[3]),
-                ),
-                F32x4::new(
-                    abs(self.0[3].as_slice()[0]),
-                    abs(self.0[3].as_slice()[1]),
-                    abs(self.0[3].as_slice()[2]),
-                    abs(self.0[3].as_slice()[3]),
-                ),
-            ])
-        }
+        F32x16([
+            F32x4::new(
+                abs(self.0[0].as_slice()[0]),
+                abs(self.0[0].as_slice()[1]),
+                abs(self.0[0].as_slice()[2]),
+                abs(self.0[0].as_slice()[3]),
+            ),
+            F32x4::new(
+                abs(self.0[1].as_slice()[0]),
+                abs(self.0[1].as_slice()[1]),
+                abs(self.0[1].as_slice()[2]),
+                abs(self.0[1].as_slice()[3]),
+            ),
+            F32x4::new(
+                abs(self.0[2].as_slice()[0]),
+                abs(self.0[2].as_slice()[1]),
+                abs(self.0[2].as_slice()[2]),
+                abs(self.0[2].as_slice()[3]),
+            ),
+            F32x4::new(
+                abs(self.0[3].as_slice()[0]),
+                abs(self.0[3].as_slice()[1]),
+                abs(self.0[3].as_slice()[2]),
+                abs(self.0[3].as_slice()[3]),
+            ),
+        ])
     }
 
     pub fn packed_gt(self, other: &Self) -> U32x16 {
