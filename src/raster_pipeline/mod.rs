@@ -5,6 +5,7 @@
 // found in the LICENSE file.
 
 use std::ffi::c_void;
+use std::rc::Rc;
 
 use arrayvec::ArrayVec;
 
@@ -288,12 +289,8 @@ impl Context for TileCtx {}
 impl Context for Transform {}
 
 
-#[derive(Debug)]
 pub struct ContextStorage {
-    // TODO: find a better way
-    // We cannot use just `c_void` here, like Skia,
-    // because it will work only for POD types.
-    items: ArrayVec<[*mut dyn Context; MAX_STAGES]>,
+    items: ArrayVec<[Rc<dyn Context>; MAX_STAGES]>,
 }
 
 impl ContextStorage {
@@ -324,17 +321,10 @@ impl ContextStorage {
     }
 
     pub fn push_context<T: Context + 'static>(&mut self, t: T) -> *const c_void {
-        let ptr = Box::into_raw(Box::new(t));
-        self.items.push(ptr);
-        ptr as *const c_void
-    }
-}
-
-impl Drop for ContextStorage {
-    fn drop(&mut self) {
-        for item in &self.items {
-            unsafe { Box::from_raw(*item) };
-        }
+        let rc = Rc::new(t);
+        let ptr = Rc::as_ptr(&rc) as *const c_void;
+        self.items.push(rc.clone());
+        ptr
     }
 }
 
