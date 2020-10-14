@@ -276,7 +276,7 @@ fn scale_u8(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx = super::MaskCtx::from_program(program);
+    let ctx: &super::MaskCtx = cast_stage_ctx(program);
 
     // Load u8xTail and cast it to U16x16.
     let data = ctx.copy_at_xy(dx, dy, tail);
@@ -312,7 +312,7 @@ fn lerp_u8(
     r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
     dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
 ) {
-    let ctx = super::MaskCtx::from_program(program);
+    let ctx: &super::MaskCtx = cast_stage_ctx(program);
 
     // Load u8xTail and cast it to U16x16.
     let data = ctx.copy_at_xy(dx, dy, tail);

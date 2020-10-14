@@ -146,14 +146,6 @@ pub struct MaskCtx {
 
 impl MaskCtx {
     #[inline(always)]
-    pub fn from_program(program: *const *const c_void) -> &'static mut Self {
-        // We have to cast `*const` to `*mut` first, because Rust doesn't allow
-        // modifying `MaskCtx::pixels` via `&MaskCtx`.
-        // Even though that `MaskCtx::pixels` is actually mutable.
-        unsafe { &mut *(*program.add(1) as *mut c_void).cast() }
-    }
-
-    #[inline(always)]
     pub fn copy_at_xy(&self, dx: usize, dy: usize, tail: usize) -> [u8; 2] {
         let offset = (self.stride as usize * dy + dx) - self.shift;
         // We have only 3 variants, so unroll them.
