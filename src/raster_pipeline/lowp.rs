@@ -15,12 +15,12 @@ Skia uses u16x8 (128bit) types for a generic CPU and u16x16 (256bit) for modern 
 But instead of explicit SIMD instructions, it mainly relies on clang's vector extensions.
 And since they are unavailable in Rust, we have to do everything manually.
 
-According to benchmarks, a SIMD-accelerated u16x8 in Rust is almost 2x slower than in Skia.
+According to out benchmarks, a SIMD-accelerated u16x8 in Rust is almost 2x slower than in Skia.
 Not sure why. For example, there are no div instruction for u16x8, so we have to use
 a basic scalar version. Which means unnecessary load/store. No idea what clang does in this case.
-Surprisingly, a SIMD-accelerated u16x8 is even slower than a scalar one. Not sure why.
+Surprisingly, a SIMD-accelerated u16x8 is even slower than a scalar one. Again. not sure why.
 
-Unlike Skia, we are using u16x16 by default and relying on rustc/llvm auto vectorization instead.
+Therefore we are using scalar u16x16 by default and relying on rustc/llvm auto vectorization instead.
 When targeting a generic CPU, we're just 5-10% slower than Skia. While u16x8 is 30-40% slower.
 And while `-C target-cpu=haswell` boosts our performance by around 25%,
 we are still 40-60% behind Skia built for Haswell.

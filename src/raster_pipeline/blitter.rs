@@ -234,8 +234,6 @@ impl Blitter for RasterPipelineBlitter<'_> {
     }
 
     fn blit_rect(&mut self, rect: &ScreenIntRect) {
-        // TODO: reject out of bounds access
-
         if let Some(c) = self.memset2d_color {
             for y in 0..rect.height() {
                 // Cast pixmap data to color.
