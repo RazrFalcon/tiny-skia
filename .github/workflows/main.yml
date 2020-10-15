@@ -11,11 +11,17 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.36.0
+          - 1.45.0
           - stable
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+
+    - name: Install toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        override: true
 
     - name: Build without default features
       run: cargo build --verbose --no-default-features

@@ -241,7 +241,7 @@ dependencies = [
 [[package]]
 name = "safe-geom"
 version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/checked-geom?rev=4378e57#4378e578ca4f4b06b6ac20e0107312819b006d48"
+source = "git+https://github.com/RazrFalcon/checked-geom?rev=8a96c1b#8a96c1ba8b29a041eb5ebe256c0f246960e3711e"
 dependencies = [
  "num-ext",
 ]

@@ -2,7 +2,7 @@
 ![Build Status](https://github.com/RazrFalcon/tiny-skia/workflows/Rust/badge.svg)
 [![Crates.io](https://img.shields.io/crates/v/tiny-skia.svg)](https://crates.io/crates/tiny-skia)
 [![Documentation](https://docs.rs/tiny-skia/badge.svg)](https://docs.rs/tiny-skia)
-[![Rust 1.36+](https://img.shields.io/badge/rust-1.36+-orange.svg)](https://www.rust-lang.org)
+[![Rust 1.45+](https://img.shields.io/badge/rust-1.45+-orange.svg)](https://www.rust-lang.org)
 
 `tiny-skia` is a tiny [Skia] subset ported to Rust.
 
