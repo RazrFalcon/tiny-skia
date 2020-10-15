@@ -16,7 +16,7 @@ use crate::path::PathVerb;
 use crate::path_geometry;
 use crate::safe_geom_ext::{LENGTH_U32_ONE, IntRectExt, BoundsExt};
 use crate::scalar::Scalar;
-use crate::wide::F32x2;
+use crate::wide::f32x2;
 
 pub type LineProc = fn(&[Point], Option<&ScreenIntRect>, &mut dyn Blitter) -> Option<()>;
 
@@ -425,8 +425,8 @@ fn hair_quad2(
     let mut tmp = [Point::zero(); MAX_POINTS];
     tmp[0] = points[0];
 
-    let mut t = F32x2::default();
-    let dt = F32x2::splat(1.0 / lines as f32);
+    let mut t = f32x2::default();
+    let dt = f32x2::splat(1.0 / lines as f32);
     for i in 1..lines {
         t = t + dt;
         tmp[i] = Point::from_f32x2((coeff.a * t + coeff.b) * t + coeff.c);
@@ -557,8 +557,8 @@ fn hair_cubic2(
     debug_assert!(lines < MAX_POINTS);
     let mut tmp = [Point::zero(); MAX_POINTS];
 
-    let dt = F32x2::splat(1.0 / lines as f32);
-    let mut t = F32x2::default();
+    let dt = f32x2::splat(1.0 / lines as f32);
+    let mut t = f32x2::default();
 
     tmp[0] = points[0];
     for i in 1..lines {
@@ -580,8 +580,8 @@ fn compute_cubic_segments(points: &[Point; 4]) -> usize {
     let p2 = points[2].to_f32x2();
     let p3 = points[3].to_f32x2();
 
-    let one_third = F32x2::splat(1.0 / 3.0);
-    let two_third = F32x2::splat(2.0 / 3.0);
+    let one_third = f32x2::splat(1.0 / 3.0);
+    let two_third = f32x2::splat(2.0 / 3.0);
 
     let p13 = one_third * p3 + two_third * p0;
     let p23 = one_third * p0 + two_third * p3;

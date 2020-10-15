@@ -5,7 +5,7 @@
 // found in the LICENSE file.
 
 use crate::scalar::Scalar;
-use crate::wide::F32x2;
+use crate::wide::f32x2;
 
 
 /// Converts `&[Point; N]` into `&[f32; N*2]`.
@@ -43,12 +43,12 @@ impl Point {
         Point { x, y }
     }
 
-    pub(crate) fn from_f32x2(r: F32x2) -> Self {
+    pub(crate) fn from_f32x2(r: f32x2) -> Self {
         Point::from_xy(r.x(), r.y())
     }
 
-    pub(crate) fn to_f32x2(&self) -> F32x2 {
-        F32x2::new(self.x, self.y)
+    pub(crate) fn to_f32x2(&self) -> f32x2 {
+        f32x2::new(self.x, self.y)
     }
 
     /// Creates a point at 0x0 position.

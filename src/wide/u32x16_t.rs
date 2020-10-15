@@ -3,27 +3,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use super::{U32x4, F32x16};
+use super::{u32x4, U32x4Ext, I32x4Ext};
 
-#[derive(Copy, Clone)]
-pub struct U32x16(pub [U32x4; 4]);
+#[allow(non_camel_case_types)]
+#[derive(Copy, Clone, Debug)]
+pub struct u32x16(pub [u32x4; 4]);
 
-impl U32x16 {
-    pub fn if_then_else(&self, t: F32x16, e: F32x16) -> F32x16 {
-        F32x16([
-            self.0[0].if_then_else(t.0[0], e.0[0]),
-            self.0[1].if_then_else(t.0[1], e.0[1]),
-            self.0[2].if_then_else(t.0[2], e.0[2]),
-            self.0[3].if_then_else(t.0[3], e.0[3]),
-        ])
-    }
-}
+impl std::ops::Add<u32x16> for u32x16 {
+    type Output = u32x16;
 
-impl std::ops::Add<U32x16> for U32x16 {
-    type Output = U32x16;
-
-    fn add(self, other: U32x16) -> U32x16 {
-        U32x16([
+    fn add(self, other: u32x16) -> u32x16 {
+        u32x16([
             self.0[0] + other.0[0],
             self.0[0] + other.0[0],
             self.0[0] + other.0[0],
@@ -32,26 +22,15 @@ impl std::ops::Add<U32x16> for U32x16 {
     }
 }
 
-impl std::ops::Mul<U32x16> for U32x16 {
-    type Output = U32x16;
+impl std::ops::Mul<u32x16> for u32x16 {
+    type Output = u32x16;
 
-    fn mul(self, other: U32x16) -> U32x16 {
-        U32x16([
-            self.0[0] * other.0[0],
-            self.0[0] * other.0[0],
-            self.0[0] * other.0[0],
-            self.0[0] * other.0[0],
+    fn mul(self, other: u32x16) -> u32x16 {
+        u32x16([
+            (self.0[0].to_i32x4_bitcast() * other.0[0].to_i32x4_bitcast()).to_u32x4_bitcast(),
+            (self.0[0].to_i32x4_bitcast() * other.0[0].to_i32x4_bitcast()).to_u32x4_bitcast(),
+            (self.0[0].to_i32x4_bitcast() * other.0[0].to_i32x4_bitcast()).to_u32x4_bitcast(),
+            (self.0[0].to_i32x4_bitcast() * other.0[0].to_i32x4_bitcast()).to_u32x4_bitcast(),
         ])
-    }
-}
-
-impl std::fmt::Debug for U32x16 {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        write!(f, "U32x16({} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {})",
-               self.0[0].x(), self.0[0].y(), self.0[0].z(), self.0[0].w(),
-               self.0[1].x(), self.0[1].y(), self.0[1].z(), self.0[1].w(),
-               self.0[2].x(), self.0[2].y(), self.0[2].z(), self.0[2].w(),
-               self.0[3].x(), self.0[3].y(), self.0[3].z(), self.0[3].w(),
-        )
     }
 }

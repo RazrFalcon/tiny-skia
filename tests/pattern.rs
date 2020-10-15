@@ -218,18 +218,8 @@ fn filter_bilinear() {
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
-    // SIMD and non-SIMD version produce a slightly different results. Not sure why.
-    #[cfg(all(feature = "sse2", target_feature = "sse2"))]
-    {
-        let expected = Pixmap::load_png("tests/images/pattern/filter-bilinear.png").unwrap();
-        assert_eq!(canvas.pixmap, expected);
-    }
-
-    #[cfg(not(all(feature = "sse2", target_feature = "sse2")))]
-    {
-        let expected = Pixmap::load_png("tests/images/pattern/filter-bilinear-no-simd.png").unwrap();
-        assert_eq!(canvas.pixmap, expected);
-    }
+    let expected = Pixmap::load_png("tests/images/pattern/filter-bilinear.png").unwrap();
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]

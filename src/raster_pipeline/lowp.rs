@@ -30,14 +30,14 @@ use std::ffi::c_void;
 
 use crate::{ScreenIntRect, PremultipliedColorU8, Transform};
 
-use crate::wide::{F32x4, U16x16, F32x16};
+use crate::wide::{f32x4, u16x16, f32x16};
 
 pub const STAGE_WIDTH: usize = 16;
 
 type StageFn = fn(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 );
 
 // Must be in the same order as raster_pipeline::Stage
@@ -120,14 +120,14 @@ pub fn start(
     tail_program: *const *const c_void,
     rect: &ScreenIntRect,
 ) {
-    let mut  r = U16x16::default();
-    let mut  g = U16x16::default();
-    let mut  b = U16x16::default();
-    let mut  a = U16x16::default();
-    let mut dr = U16x16::default();
-    let mut dg = U16x16::default();
-    let mut db = U16x16::default();
-    let mut da = U16x16::default();
+    let mut  r = u16x16::default();
+    let mut  g = u16x16::default();
+    let mut  b = u16x16::default();
+    let mut  a = u16x16::default();
+    let mut dr = u16x16::default();
+    let mut dg = u16x16::default();
+    let mut db = u16x16::default();
+    let mut da = u16x16::default();
 
     for y in rect.y()..rect.bottom() {
         let mut x = rect.x() as usize;
@@ -157,8 +157,8 @@ pub fn start(
 
 fn move_source_to_destination(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     *dr = *r;
     *dg = *g;
@@ -170,8 +170,8 @@ fn move_source_to_destination(
 
 fn move_destination_to_source(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     *r = *dr;
     *g = *dg;
@@ -183,8 +183,8 @@ fn move_destination_to_source(
 
 fn premultiply(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     *r = div255(*r * *a);
     *g = div255(*g * *a);
@@ -195,32 +195,32 @@ fn premultiply(
 
 fn uniform_color(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx: &super::UniformColorCtx = cast_stage_ctx(program);
-    *r = U16x16::splat(ctx.rgba[0]);
-    *g = U16x16::splat(ctx.rgba[1]);
-    *b = U16x16::splat(ctx.rgba[2]);
-    *a = U16x16::splat(ctx.rgba[3]);
+    *r = u16x16::splat(ctx.rgba[0]);
+    *g = u16x16::splat(ctx.rgba[1]);
+    *b = u16x16::splat(ctx.rgba[2]);
+    *a = u16x16::splat(ctx.rgba[3]);
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
 }
 
 fn seed_shader(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
-    let iota = F32x16([
-        F32x4::new( 0.5,  1.5,  2.5,  3.5),
-        F32x4::new( 4.5,  5.5,  6.5,  7.5),
-        F32x4::new( 8.5,  9.5, 10.5, 11.5),
-        F32x4::new(12.5, 13.5, 14.5, 15.5),
+    let iota = f32x16([
+        f32x4::from([ 0.5,  1.5,  2.5,  3.5]),
+        f32x4::from([ 4.5,  5.5,  6.5,  7.5]),
+        f32x4::from([ 8.5,  9.5, 10.5, 11.5]),
+        f32x4::from([12.5, 13.5, 14.5, 15.5]),
     ]);
 
-    let x = F32x16::splat(dx as f32) + iota;
-    let y = F32x16::splat(dy as f32 + 0.5);
+    let x = f32x16::splat(dx as f32) + iota;
+    let y = f32x16::splat(dy as f32 + 0.5);
     split(&x, r, g);
     split(&y, b, a);
 
@@ -229,8 +229,8 @@ fn seed_shader(
 
 pub fn load_dst(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
     load_8888(ctx.slice16_at_xy(dx, dy), dr, dg, db, da);
@@ -240,8 +240,8 @@ pub fn load_dst(
 
 pub fn load_dst_tail(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
     load_8888_tail(tail, ctx.slice_at_xy(dx, dy), dr, dg, db, da);
@@ -251,8 +251,8 @@ pub fn load_dst_tail(
 
 pub fn store(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
     store_8888(r, g, b, a, ctx.slice16_at_xy(dx, dy));
@@ -262,8 +262,8 @@ pub fn store(
 
 pub fn store_tail(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
     store_8888_tail(r, g, b, a, tail, ctx.slice_at_xy(dx, dy));
@@ -273,14 +273,14 @@ pub fn store_tail(
 
 fn scale_u8(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx: &super::MaskCtx = cast_stage_ctx(program);
 
-    // Load u8xTail and cast it to U16x16.
+    // Load u8xTail and cast it to u16x16.
     let data = ctx.copy_at_xy(dx, dy, tail);
-    let c = U16x16([
+    let c = u16x16([
         u16::from(data[0]),
         u16::from(data[1]),
         0,
@@ -309,14 +309,14 @@ fn scale_u8(
 
 fn lerp_u8(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx: &super::MaskCtx = cast_stage_ctx(program);
 
-    // Load u8xTail and cast it to U16x16.
+    // Load u8xTail and cast it to u16x16.
     let data = ctx.copy_at_xy(dx, dy, tail);
-    let c = U16x16([
+    let c = u16x16([
         u16::from(data[0]),
         u16::from(data[1]),
         0,
@@ -345,8 +345,8 @@ fn lerp_u8(
 
 fn scale_1_float(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let c: f32 = *cast_stage_ctx(program);
     let c = from_float(c);
@@ -360,8 +360,8 @@ fn scale_1_float(
 
 fn lerp_1_float(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let c: f32 = *cast_stage_ctx(program);
     let c = from_float(c);
@@ -377,8 +377,8 @@ macro_rules! blend_fn {
     ($name:ident, $f:expr) => {
         fn $name(
             tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-            r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-            dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+            r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+            dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
         ) {
             *r = $f(*r, *dr, *a, *da);
             *g = $f(*g, *dg, *a, *da);
@@ -390,7 +390,7 @@ macro_rules! blend_fn {
     };
 }
 
-blend_fn!(clear,            |_, _,  _,  _| U16x16::splat(0));
+blend_fn!(clear,            |_, _,  _,  _| u16x16::splat(0));
 blend_fn!(source_atop,      |s, d, sa, da| div255(s * da + d * inv(sa)));
 blend_fn!(destination_atop, |s, d, sa, da| div255(d * sa + s * inv(da)));
 blend_fn!(source_in,        |s, _,  _, da| div255(s * da));
@@ -405,15 +405,15 @@ blend_fn!(screen,           |s, d,  _,  _| s + d - div255(s * d));
 blend_fn!(xor,              |s, d, sa, da| div255(s * inv(da) + d * inv(sa)));
 
 // Wants a type for some reason.
-blend_fn!(plus, |s: U16x16, d, _, _| (s + d).min(&U16x16::splat(255)));
+blend_fn!(plus, |s: u16x16, d, _, _| (s + d).min(&u16x16::splat(255)));
 
 
 macro_rules! blend_fn2 {
     ($name:ident, $f:expr) => {
         fn $name(
             tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-            r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-            dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+            r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+            dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
         ) {
             // The same logic applied to color, and source_over for alpha.
             *r = $f(*r, *dr, *a, *da);
@@ -426,35 +426,35 @@ macro_rules! blend_fn2 {
     };
 }
 
-blend_fn2!(darken,      |s: U16x16, d, sa, da| s + d - div255((s * da).max(&(d * sa))));
-blend_fn2!(lighten,     |s: U16x16, d, sa, da| s + d - div255((s * da).min(&(d * sa))));
-blend_fn2!(exclusion,   |s: U16x16, d,  _,  _| s + d - U16x16::splat(2) * div255(s * d));
+blend_fn2!(darken,      |s: u16x16, d, sa, da| s + d - div255((s * da).max(&(d * sa))));
+blend_fn2!(lighten,     |s: u16x16, d, sa, da| s + d - div255((s * da).min(&(d * sa))));
+blend_fn2!(exclusion,   |s: u16x16, d,  _,  _| s + d - u16x16::splat(2) * div255(s * d));
 
-blend_fn2!(difference,  |s: U16x16, d, sa, da|
-    s + d - U16x16::splat(2) * div255((s * da).min(&(d * sa))));
+blend_fn2!(difference,  |s: u16x16, d, sa, da|
+    s + d - u16x16::splat(2) * div255((s * da).min(&(d * sa))));
 
-blend_fn2!(hard_light, |s: U16x16, d: U16x16, sa, da| {
+blend_fn2!(hard_light, |s: u16x16, d: u16x16, sa, da| {
     div255(s * inv(da) + d * inv(sa)
-        + (s+s).packed_le(&sa).if_then_else(
-            U16x16::splat(2) * s * d,
-            sa * da - U16x16::splat(2) * (sa-s)*(da-d)
+        + (s+s).cmp_le(&sa).if_then_else(
+            u16x16::splat(2) * s * d,
+            sa * da - u16x16::splat(2) * (sa-s)*(da-d)
         )
     )
 });
 
-blend_fn2!(overlay, |s: U16x16, d: U16x16, sa, da| {
+blend_fn2!(overlay, |s: u16x16, d: u16x16, sa, da| {
     div255(s * inv(da) + d * inv(sa)
-        + (d+d).packed_le(&da).if_then_else(
-            U16x16::splat(2) * s * d,
-            sa * da - U16x16::splat(2) * (sa-s)*(da-d)
+        + (d+d).cmp_le(&da).if_then_else(
+            u16x16::splat(2) * s * d,
+            sa * da - u16x16::splat(2) * (sa-s)*(da-d)
         )
     )
 });
 
 pub fn source_over_rgba(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
     let pixels = ctx.slice16_at_xy(dx, dy);
@@ -470,8 +470,8 @@ pub fn source_over_rgba(
 
 pub fn source_over_rgba_tail(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx = super::PixelsCtx::from_program(program);
     let pixels = ctx.slice_at_xy(dx, dy);
@@ -487,8 +487,8 @@ pub fn source_over_rgba_tail(
 
 fn transform(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ts: &Transform = cast_stage_ctx(program);
     let (sx, ky, kx, sy, tx, ty) = ts.get_row();
@@ -496,8 +496,8 @@ fn transform(
     let x = join(r, g);
     let y = join(b, a);
 
-    let nx = mad(x, F32x16::splat(sx), mad(y, F32x16::splat(kx), F32x16::splat(tx)));
-    let ny = mad(x, F32x16::splat(ky), mad(y, F32x16::splat(sy), F32x16::splat(ty)));
+    let nx = mad(x, f32x16::splat(sx), mad(y, f32x16::splat(kx), f32x16::splat(tx)));
+    let ny = mad(x, f32x16::splat(ky), mad(y, f32x16::splat(sy), f32x16::splat(ty)));
 
     split(&nx, r, g);
     split(&ny, b, a);
@@ -507,8 +507,8 @@ fn transform(
 
 fn pad_x1(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let x = join(r, g);
     let x = x.normalize();
@@ -519,15 +519,15 @@ fn pad_x1(
 
 fn reflect_x1(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let x = join(r, g);
     let two = |x| x + x;
     let x = (
-        (x - F32x16::splat(1.0))
-        - two(((x - F32x16::splat(1.0)) * F32x16::splat(0.5)).floor())
-        - F32x16::splat(1.0)
+        (x - f32x16::splat(1.0))
+        - two(((x - f32x16::splat(1.0)) * f32x16::splat(0.5)).floor())
+        - f32x16::splat(1.0)
     ).abs().normalize();
     split(&x, r, g);
 
@@ -536,8 +536,8 @@ fn reflect_x1(
 
 fn repeat_x1(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let x = join(r, g);
     let x = (x - x.floor()).normalize();
@@ -548,32 +548,36 @@ fn repeat_x1(
 
 fn gradient(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx: &super::GradientCtx = cast_stage_ctx(program);
 
     // N.B. The loop starts at 1 because idx 0 is the color to use before the first stop.
     let t = join(r, g);
-    let mut idx = U16x16::splat(0);
+    let mut idx = u16x16::splat(0);
     for i in 1..ctx.len {
         let tt = ctx.t_values[i].get();
-        idx.0[ 0] += (t.0[0].x() >= tt) as u16;
-        idx.0[ 1] += (t.0[0].y() >= tt) as u16;
-        idx.0[ 2] += (t.0[0].z() >= tt) as u16;
-        idx.0[ 3] += (t.0[0].w() >= tt) as u16;
-        idx.0[ 4] += (t.0[1].x() >= tt) as u16;
-        idx.0[ 5] += (t.0[1].y() >= tt) as u16;
-        idx.0[ 6] += (t.0[1].z() >= tt) as u16;
-        idx.0[ 7] += (t.0[1].w() >= tt) as u16;
-        idx.0[ 8] += (t.0[2].x() >= tt) as u16;
-        idx.0[ 9] += (t.0[2].y() >= tt) as u16;
-        idx.0[10] += (t.0[2].z() >= tt) as u16;
-        idx.0[11] += (t.0[2].w() >= tt) as u16;
-        idx.0[12] += (t.0[3].x() >= tt) as u16;
-        idx.0[13] += (t.0[3].y() >= tt) as u16;
-        idx.0[14] += (t.0[3].z() >= tt) as u16;
-        idx.0[15] += (t.0[3].w() >= tt) as u16;
+        let t0: [f32; 4] = t.0[0].into();
+        let t1: [f32; 4] = t.0[1].into();
+        let t2: [f32; 4] = t.0[2].into();
+        let t3: [f32; 4] = t.0[3].into();
+        idx.0[ 0] += (t0[0] >= tt) as u16;
+        idx.0[ 1] += (t0[1] >= tt) as u16;
+        idx.0[ 2] += (t0[2] >= tt) as u16;
+        idx.0[ 3] += (t0[3] >= tt) as u16;
+        idx.0[ 4] += (t1[0] >= tt) as u16;
+        idx.0[ 5] += (t1[1] >= tt) as u16;
+        idx.0[ 6] += (t1[2] >= tt) as u16;
+        idx.0[ 7] += (t1[3] >= tt) as u16;
+        idx.0[ 8] += (t2[0] >= tt) as u16;
+        idx.0[ 9] += (t2[1] >= tt) as u16;
+        idx.0[10] += (t2[2] >= tt) as u16;
+        idx.0[11] += (t2[3] >= tt) as u16;
+        idx.0[12] += (t3[0] >= tt) as u16;
+        idx.0[13] += (t3[1] >= tt) as u16;
+        idx.0[14] += (t3[2] >= tt) as u16;
+        idx.0[15] += (t3[3] >= tt) as u16;
     }
     gradient_lookup(ctx, &idx, t, r, g, b, a);
 
@@ -582,17 +586,17 @@ fn gradient(
 
 fn evenly_spaced_2_stop_gradient(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let ctx: &super::EvenlySpaced2StopGradientCtx = cast_stage_ctx(program);
 
     let t = join(r, g);
     round_f32_to_u16(
-        mad(t, F32x16::splat(ctx.factor.r), F32x16::splat(ctx.bias.r)),
-        mad(t, F32x16::splat(ctx.factor.g), F32x16::splat(ctx.bias.g)),
-        mad(t, F32x16::splat(ctx.factor.b), F32x16::splat(ctx.bias.b)),
-        mad(t, F32x16::splat(ctx.factor.a), F32x16::splat(ctx.bias.a)),
+        mad(t, f32x16::splat(ctx.factor.r), f32x16::splat(ctx.bias.r)),
+        mad(t, f32x16::splat(ctx.factor.g), f32x16::splat(ctx.bias.g)),
+        mad(t, f32x16::splat(ctx.factor.b), f32x16::splat(ctx.bias.b)),
+        mad(t, f32x16::splat(ctx.factor.a), f32x16::splat(ctx.bias.a)),
         r, g, b, a,
     );
 
@@ -601,8 +605,8 @@ fn evenly_spaced_2_stop_gradient(
 
 fn xy_to_radius(
     tail: usize, program: *const *const c_void, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     let x = join(r, g);
     let y = join(b, a);
@@ -616,38 +620,38 @@ fn xy_to_radius(
 // We are using u16 for index, not u32 as Skia, to simplify the code a bit.
 // The gradient creation code will not allow that many stops anyway.
 fn gradient_lookup(
-    ctx: &super::GradientCtx, idx: &U16x16, t: F32x16,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
+    ctx: &super::GradientCtx, idx: &u16x16, t: f32x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
 ) {
     macro_rules! gather {
         ($d:expr, $c:ident) => {
             // Surprisingly, but bound checking doesn't affect the performance.
             // And since `idx` can contain any number, we should leave it in place.
-            F32x16([
-                F32x4::new(
+            f32x16([
+                f32x4::from([
                     $d[idx.0[ 0] as usize].$c,
                     $d[idx.0[ 1] as usize].$c,
                     $d[idx.0[ 2] as usize].$c,
                     $d[idx.0[ 3] as usize].$c,
-                ),
-                F32x4::new(
+                ]),
+                f32x4::from([
                     $d[idx.0[ 4] as usize].$c,
                     $d[idx.0[ 5] as usize].$c,
                     $d[idx.0[ 6] as usize].$c,
                     $d[idx.0[ 7] as usize].$c,
-                ),
-                F32x4::new(
+                ]),
+                f32x4::from([
                     $d[idx.0[ 8] as usize].$c,
                     $d[idx.0[ 9] as usize].$c,
                     $d[idx.0[10] as usize].$c,
                     $d[idx.0[11] as usize].$c,
-                ),
-                F32x4::new(
+                ]),
+                f32x4::from([
                     $d[idx.0[12] as usize].$c,
                     $d[idx.0[13] as usize].$c,
                     $d[idx.0[14] as usize].$c,
                     $d[idx.0[15] as usize].$c,
-                ),
+                ]),
             ])
         };
     }
@@ -673,16 +677,16 @@ fn gradient_lookup(
 
 #[inline(always)]
 fn round_f32_to_u16(
-    rf: F32x16, gf: F32x16, bf: F32x16, af: F32x16,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
+    rf: f32x16, gf: f32x16, bf: f32x16, af: f32x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
 ) {
     // TODO: may produce a slightly different result to Skia
     //       affects the two_stops_linear_mirror test
 
-    let rf = rf.normalize() * F32x16::splat(255.0) + F32x16::splat(0.5);
-    let gf = gf.normalize() * F32x16::splat(255.0) + F32x16::splat(0.5);
-    let bf = bf.normalize() * F32x16::splat(255.0) + F32x16::splat(0.5);
-    let af = af * F32x16::splat(255.0) + F32x16::splat(0.5);
+    let rf = rf.normalize() * f32x16::splat(255.0) + f32x16::splat(0.5);
+    let gf = gf.normalize() * f32x16::splat(255.0) + f32x16::splat(0.5);
+    let bf = bf.normalize() * f32x16::splat(255.0) + f32x16::splat(0.5);
+    let af = af * f32x16::splat(255.0) + f32x16::splat(0.5);
 
     rf.save_to_u16x16(r);
     gf.save_to_u16x16(g);
@@ -692,16 +696,16 @@ fn round_f32_to_u16(
 
 pub fn just_return(
     _: usize, _: *const *const c_void, _: usize, _: usize,
-    _: &mut U16x16, _: &mut U16x16, _: &mut U16x16, _: &mut U16x16,
-    _: &mut U16x16, _: &mut U16x16, _: &mut U16x16, _: &mut U16x16,
+    _: &mut u16x16, _: &mut u16x16, _: &mut u16x16, _: &mut u16x16,
+    _: &mut u16x16, _: &mut u16x16, _: &mut u16x16, _: &mut u16x16,
 ) {
     // Ends the loop.
 }
 
 pub fn null_fn(
     _: usize, _: *const *const c_void, _: usize, _: usize,
-    _: &mut U16x16, _: &mut U16x16, _: &mut U16x16, _: &mut U16x16,
-    _: &mut U16x16, _: &mut U16x16, _: &mut U16x16, _: &mut U16x16,
+    _: &mut u16x16, _: &mut u16x16, _: &mut u16x16, _: &mut u16x16,
+    _: &mut u16x16, _: &mut u16x16, _: &mut u16x16, _: &mut u16x16,
 ) {
     // Just for unsupported functions in STAGES.
 }
@@ -719,8 +723,8 @@ fn cast_stage_ctx<T>(program: *const *const c_void) -> &'static T {
 #[inline(always)]
 fn next_stage(
     tail: usize, program: *const *const c_void, offset: usize, dx: usize, dy: usize,
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
-    dr: &mut U16x16, dg: &mut U16x16, db: &mut U16x16, da: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
+    dr: &mut u16x16, dg: &mut u16x16, db: &mut u16x16, da: &mut u16x16,
 ) {
     unsafe {
         let next = cast_stage_fn(program.add(offset));
@@ -731,30 +735,30 @@ fn next_stage(
 #[inline(always)]
 fn load_8888(
     data: &[PremultipliedColorU8; STAGE_WIDTH],
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
 ) {
-    *r = U16x16([
+    *r = u16x16([
         data[ 0].red() as u16, data[ 1].red() as u16, data[ 2].red() as u16, data[ 3].red() as u16,
         data[ 4].red() as u16, data[ 5].red() as u16, data[ 6].red() as u16, data[ 7].red() as u16,
         data[ 8].red() as u16, data[ 9].red() as u16, data[10].red() as u16, data[11].red() as u16,
         data[12].red() as u16, data[13].red() as u16, data[14].red() as u16, data[15].red() as u16,
     ]);
 
-    *g = U16x16([
+    *g = u16x16([
         data[ 0].green() as u16, data[ 1].green() as u16, data[ 2].green() as u16, data[ 3].green() as u16,
         data[ 4].green() as u16, data[ 5].green() as u16, data[ 6].green() as u16, data[ 7].green() as u16,
         data[ 8].green() as u16, data[ 9].green() as u16, data[10].green() as u16, data[11].green() as u16,
         data[12].green() as u16, data[13].green() as u16, data[14].green() as u16, data[15].green() as u16,
     ]);
 
-    *b = U16x16([
+    *b = u16x16([
         data[ 0].blue() as u16, data[ 1].blue() as u16, data[ 2].blue() as u16, data[ 3].blue() as u16,
         data[ 4].blue() as u16, data[ 5].blue() as u16, data[ 6].blue() as u16, data[ 7].blue() as u16,
         data[ 8].blue() as u16, data[ 9].blue() as u16, data[10].blue() as u16, data[11].blue() as u16,
         data[12].blue() as u16, data[13].blue() as u16, data[14].blue() as u16, data[15].blue() as u16,
     ]);
 
-    *a = U16x16([
+    *a = u16x16([
         data[ 0].alpha() as u16, data[ 1].alpha() as u16, data[ 2].alpha() as u16, data[ 3].alpha() as u16,
         data[ 4].alpha() as u16, data[ 5].alpha() as u16, data[ 6].alpha() as u16, data[ 7].alpha() as u16,
         data[ 8].alpha() as u16, data[ 9].alpha() as u16, data[10].alpha() as u16, data[11].alpha() as u16,
@@ -765,7 +769,7 @@ fn load_8888(
 #[inline(always)]
 fn load_8888_tail(
     tail: usize, data: &[PremultipliedColorU8],
-    r: &mut U16x16, g: &mut U16x16, b: &mut U16x16, a: &mut U16x16,
+    r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
 ) {
     // Fill a dummy array with `tail` values. `tail` is always in a 1..STAGE_WIDTH-1 range.
     // This way we can reuse the `load_8888__` method and remove any branches.
@@ -776,7 +780,7 @@ fn load_8888_tail(
 
 #[inline(always)]
 fn store_8888(
-    r: &U16x16, g: &U16x16, b: &U16x16, a: &U16x16,
+    r: &u16x16, g: &u16x16, b: &u16x16, a: &u16x16,
     data: &mut [PremultipliedColorU8; STAGE_WIDTH],
 ) {
     let r = r.as_slice();
@@ -804,7 +808,7 @@ fn store_8888(
 
 #[inline(always)]
 fn store_8888_tail(
-    r: &U16x16, g: &U16x16, b: &U16x16, a: &U16x16,
+    r: &u16x16, g: &u16x16, b: &u16x16, a: &u16x16,
     tail: usize, data: &mut [PremultipliedColorU8],
 ) {
     let r = r.as_slice();
@@ -827,28 +831,28 @@ fn store_8888_tail(
 }
 
 #[inline(always)]
-fn div255(v: U16x16) -> U16x16 {
-    (v + U16x16::splat(255)) / U16x16::splat(256)
+fn div255(v: u16x16) -> u16x16 {
+    (v + u16x16::splat(255)) / u16x16::splat(256)
 }
 
 #[inline(always)]
-fn inv(v: U16x16) -> U16x16 {
-    U16x16::splat(255) - v
+fn inv(v: u16x16) -> u16x16 {
+    u16x16::splat(255) - v
 }
 
 #[inline(always)]
-fn from_float(f: f32) -> U16x16 {
-    U16x16::splat((f * 255.0 + 0.5) as u16)
+fn from_float(f: f32) -> u16x16 {
+    u16x16::splat((f * 255.0 + 0.5) as u16)
 }
 
 #[inline(always)]
-fn lerp(from: U16x16, to: U16x16, t: U16x16) -> U16x16 {
+fn lerp(from: u16x16, to: u16x16, t: u16x16) -> u16x16 {
     div255(from * inv(t) + to * t)
 }
 
 #[inline(always)]
-fn split(v: &F32x16, lo: &mut U16x16, hi: &mut U16x16) {
-    const U16X16_SIZEOF: usize = std::mem::size_of::<U16x16>();
+fn split(v: &f32x16, lo: &mut u16x16, hi: &mut u16x16) {
+    const U16X16_SIZEOF: usize = std::mem::size_of::<u16x16>();
 
     unsafe {
         let v_data = v.0.as_ptr() as *mut u8;
@@ -866,10 +870,10 @@ fn split(v: &F32x16, lo: &mut U16x16, hi: &mut U16x16) {
 }
 
 #[inline(always)]
-fn join(lo: &U16x16, hi: &U16x16) -> F32x16 {
-    const U16X16_SIZEOF: usize = std::mem::size_of::<U16x16>();
+fn join(lo: &u16x16, hi: &u16x16) -> f32x16 {
+    const U16X16_SIZEOF: usize = std::mem::size_of::<u16x16>();
 
-    let mut v = F32x16::default();
+    let mut v = f32x16::default();
     unsafe {
         let v_data = v.0.as_mut_ptr() as *mut u8;
         std::ptr::copy_nonoverlapping(
@@ -888,6 +892,6 @@ fn join(lo: &U16x16, hi: &U16x16) -> F32x16 {
 }
 
 #[inline(always)]
-fn mad(f: F32x16, m: F32x16, a: F32x16) -> F32x16 {
+fn mad(f: f32x16, m: f32x16, a: f32x16) -> f32x16 {
     f * m + a
 }

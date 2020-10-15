@@ -11,7 +11,7 @@ use std::convert::TryFrom;
 use crate::{Point, Bounds, Transform, LengthU32, IntRect};
 
 use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
-use crate::wide::F32x4;
+use crate::wide::f32x4;
 
 pub const LENGTH_U32_ONE: LengthU32 = unsafe { LengthU32::new_unchecked(1) };
 
@@ -69,22 +69,22 @@ impl BoundsExt for Bounds {
         let mut max;
         if points.len() & 1 != 0 {
             let pt = points[0];
-            min = F32x4::new(pt.x, pt.y, pt.x, pt.y);
+            min = f32x4::from([pt.x, pt.y, pt.x, pt.y]);
             max = min;
             offset += 1;
         } else {
             let pt0 = points[0];
             let pt1 = points[1];
-            min = F32x4::new(pt0.x, pt0.y, pt1.x, pt1.y);
+            min = f32x4::from([pt0.x, pt0.y, pt1.x, pt1.y]);
             max = min;
             offset += 2;
         }
 
-        let mut accum = F32x4::default();
+        let mut accum = f32x4::default();
         while offset != points.len() {
             let pt0 = points[offset + 0];
             let pt1 = points[offset + 1];
-            let xy = F32x4::new(pt0.x, pt0.y, pt1.x, pt1.y);
+            let xy = f32x4::from([pt0.x, pt0.y, pt1.x, pt1.y]);
 
             accum *= xy;
             min = min.min(xy);
@@ -92,13 +92,15 @@ impl BoundsExt for Bounds {
             offset += 2;
         }
 
-        let all_finite = accum * F32x4::default() == F32x4::default();
+        let all_finite = accum * f32x4::default() == f32x4::default();
+        let min: [f32; 4] = min.into();
+        let max: [f32; 4] = max.into();
         if all_finite {
             Bounds::from_ltrb(
-                min.x().min(min.z()),
-                min.y().min(min.w()),
-                max.x().max(max.z()),
-                max.y().max(max.w()),
+                min[0].min(min[2]),
+                min[1].min(min[3]),
+                max[0].max(max[2]),
+                max[1].max(max[3]),
             )
         } else {
             None

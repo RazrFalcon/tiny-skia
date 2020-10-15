@@ -10,7 +10,7 @@ use crate::raster_pipeline;
 use crate::safe_geom_ext::TransformExt;
 use crate::scalar::Scalar;
 use crate::shaders::StageRec;
-use crate::wide::U32x4;
+use crate::wide::u32x4;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 
 #[derive(Copy, Clone, Debug)]
@@ -150,7 +150,7 @@ impl RadialGradient {
                 // Unlike, we have only the Focal radial gradient type.
 
                 let ctx = raster_pipeline::TwoPointConicalGradientCtx {
-                    mask: U32x4::default(),
+                    mask: u32x4::default(),
                     p0: 1.0 / focal_data.r1,
                 };
 

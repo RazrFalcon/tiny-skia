@@ -10,12 +10,13 @@
 // We also have to inline all the methods. They are pretty large,
 // but without the inlining the performance is plummeting.
 
+#[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Default, Debug)]
-pub struct U16x16(pub [u16; 16]);
+pub struct u16x16(pub [u16; 16]);
 
 macro_rules! impl_u16x16_op {
     ($a:expr, $op:ident, $b:expr) => {
-        U16x16([
+        u16x16([
             $a.0[ 0].$op($b.0[ 0]),
             $a.0[ 1].$op($b.0[ 1]),
             $a.0[ 2].$op($b.0[ 2]),
@@ -36,10 +37,10 @@ macro_rules! impl_u16x16_op {
     };
 }
 
-impl U16x16 {
+impl u16x16 {
     #[inline]
     pub fn splat(n: u16) -> Self {
-        U16x16([n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n])
+        u16x16([n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n])
     }
 
     #[inline]
@@ -63,8 +64,8 @@ impl U16x16 {
     }
 
     #[inline]
-    pub fn packed_le(&self, other: &Self) -> Self {
-        U16x16([
+    pub fn cmp_le(&self, other: &Self) -> Self {
+        u16x16([
             if self.0[ 0] <= other.0[ 0] { !0 } else { 0 },
             if self.0[ 1] <= other.0[ 1] { !0 } else { 0 },
             if self.0[ 2] <= other.0[ 2] { !0 } else { 0 },
@@ -90,66 +91,66 @@ impl U16x16 {
     }
 }
 
-impl std::ops::Add<U16x16> for U16x16 {
+impl std::ops::Add<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
-    fn add(self, other: U16x16) -> Self::Output {
+    fn add(self, other: u16x16) -> Self::Output {
         impl_u16x16_op!(self, add, other)
     }
 }
 
-impl std::ops::Sub<U16x16> for U16x16 {
+impl std::ops::Sub<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
-    fn sub(self, other: U16x16) -> Self::Output {
+    fn sub(self, other: u16x16) -> Self::Output {
         impl_u16x16_op!(self, sub, other)
     }
 }
 
-impl std::ops::Mul<U16x16> for U16x16 {
+impl std::ops::Mul<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
-    fn mul(self, other: U16x16) -> Self::Output {
+    fn mul(self, other: u16x16) -> Self::Output {
         impl_u16x16_op!(self, mul, other)
     }
 }
 
-impl std::ops::Div<U16x16> for U16x16 {
+impl std::ops::Div<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
-    fn div(self, other: U16x16) -> Self::Output {
+    fn div(self, other: u16x16) -> Self::Output {
         impl_u16x16_op!(self, div, other)
     }
 }
 
-impl std::ops::BitAnd<U16x16> for U16x16 {
+impl std::ops::BitAnd<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
-    fn bitand(self, other: U16x16) -> Self::Output {
+    fn bitand(self, other: u16x16) -> Self::Output {
         impl_u16x16_op!(self, bitand, other)
     }
 }
 
-impl std::ops::BitOr<U16x16> for U16x16 {
+impl std::ops::BitOr<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
-    fn bitor(self, other: U16x16) -> Self::Output {
+    fn bitor(self, other: u16x16) -> Self::Output {
         impl_u16x16_op!(self, bitor, other)
     }
 }
 
-impl std::ops::Not for U16x16 {
+impl std::ops::Not for u16x16 {
     type Output = Self;
 
     #[inline]
     fn not(self) -> Self::Output {
-        U16x16([
+        u16x16([
             !self.0[ 0],
             !self.0[ 1],
             !self.0[ 2],

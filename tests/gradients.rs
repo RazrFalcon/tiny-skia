@@ -144,18 +144,8 @@ fn two_stops_linear_pad_hq() {
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
-    // SIMD and non-SIMD version produce a slightly different results. Not sure why.
-    #[cfg(all(feature = "sse2", target_feature = "sse2"))]
-    {
-        let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-pad-hq.png").unwrap();
-        assert_eq!(canvas.pixmap, expected);
-    }
-
-    #[cfg(not(all(feature = "sse2", target_feature = "sse2")))]
-    {
-        let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-pad-hq-no-simd.png").unwrap();
-        assert_eq!(canvas.pixmap, expected);
-    }
+    let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-pad-hq.png").unwrap();
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]
@@ -310,18 +300,8 @@ fn focal_on_circle_radial() {
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
-    // SIMD and non-SIMD version produce a slightly different results. Not sure why.
-    #[cfg(all(feature = "sse2", target_feature = "sse2"))]
-    {
-        let expected = Pixmap::load_png("tests/images/gradients/focal-on-circle-radial.png").unwrap();
-        assert_eq!(canvas.pixmap, expected);
-    }
-
-    #[cfg(not(all(feature = "sse2", target_feature = "sse2")))]
-    {
-        let expected = Pixmap::load_png("tests/images/gradients/focal-on-circle-radial-no-simd.png").unwrap();
-        assert_eq!(canvas.pixmap, expected);
-    }
+    let expected = Pixmap::load_png("tests/images/gradients/focal-on-circle-radial.png").unwrap();
+    assert_eq!(canvas.pixmap, expected);
 }
 
 #[test]

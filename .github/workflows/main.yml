@@ -20,11 +20,8 @@ jobs:
     - name: Build without default features
       run: cargo build --verbose --no-default-features
 
-    - name: Run tests without SIMD
+    - name: Run tests
       run: cargo test --verbose --no-default-features --features png-format
-
-    - name: Run tests with SIMD
-      run: cargo test --verbose --no-default-features --features png-format,sse2
   sanitize:
     runs-on: ubuntu-18.04
     steps:

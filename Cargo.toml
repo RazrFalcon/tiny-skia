@@ -20,12 +20,10 @@ memmap2 = { version = "0.1", optional = true }
 num-ext = { git = "https://github.com/RazrFalcon/num-ext", rev = "109f01a" }
 png = { version = "0.16.6", optional = true }
 safe-geom = { git = "https://github.com/RazrFalcon/checked-geom", rev = "4378e57" }
+wide = "0.6.1"
 
 [features]
-default = ["sse2", "png-format"]
-
-# Enables SSE2 SIMD on x86 targets.
-sse2 = []
+default = ["png-format"]
 
 # Allows loading and saving `Pixmap` as PNG.
 png-format = ["png", "memmap2"]

@@ -9,7 +9,7 @@ use crate::{Point, NormalizedF32, Transform};
 use crate::safe_geom_ext::TransformExt;
 use crate::floating_point::FLOAT_PI;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
-use crate::wide::F32x2;
+use crate::wide::f32x2;
 
 mod private {
     use crate::scalar::Scalar;
@@ -58,9 +58,9 @@ use crate::path_builder::PathDirection;
 /// use for : eval(t) == A * t^2 + B * t + C
 #[derive(Default)]
 pub struct QuadCoeff {
-    pub a: F32x2,
-    pub b: F32x2,
-    pub c: F32x2,
+    pub a: f32x2,
+    pub b: f32x2,
+    pub c: f32x2,
 }
 
 impl QuadCoeff {
@@ -74,7 +74,7 @@ impl QuadCoeff {
         QuadCoeff { a, b, c }
     }
 
-    pub fn eval(&self, t: F32x2) -> F32x2 {
+    pub fn eval(&self, t: f32x2) -> f32x2 {
         (self.a * t + self.b) * t + self.c
     }
 }
@@ -82,10 +82,10 @@ impl QuadCoeff {
 
 #[derive(Default)]
 pub struct CubicCoeff {
-    pub a: F32x2,
-    pub b: F32x2,
-    pub c: F32x2,
-    pub d: F32x2,
+    pub a: f32x2,
+    pub b: f32x2,
+    pub c: f32x2,
+    pub d: f32x2,
 }
 
 impl CubicCoeff {
@@ -94,7 +94,7 @@ impl CubicCoeff {
         let p1 = points[1].to_f32x2();
         let p2 = points[2].to_f32x2();
         let p3 = points[3].to_f32x2();
-        let three = F32x2::splat(3.0);
+        let three = f32x2::splat(3.0);
 
         CubicCoeff {
             a: p3 + three * (p1 - p2) - p0,
@@ -104,7 +104,7 @@ impl CubicCoeff {
         }
     }
 
-    pub fn eval(&self, t: F32x2) -> F32x2 {
+    pub fn eval(&self, t: f32x2) -> f32x2 {
         ((self.a * t + self.b) * t + self.c) * t + self.d
     }
 }
@@ -190,7 +190,7 @@ pub fn chop_quad_at(src: &[Point], t: TValue, dst: &mut [Point; 5]) {
     let p0 = src[0].to_f32x2();
     let p1 = src[1].to_f32x2();
     let p2 = src[2].to_f32x2();
-    let tt = F32x2::splat(t.get());
+    let tt = f32x2::splat(t.get());
 
     let p01 = interp(p0, p1, tt);
     let p12 = interp(p1, p2, tt);
@@ -376,7 +376,7 @@ pub fn chop_cubic_at2(src: &[Point; 4], t: TValue, dst: &mut [Point]) {
     let p1 = src[1].to_f32x2();
     let p2 = src[2].to_f32x2();
     let p3 = src[3].to_f32x2();
-    let tt = F32x2::splat(t.get());
+    let tt = f32x2::splat(t.get());
 
     let ab = interp(p0, p1, tt);
     let bc = interp(p1, p2, tt);
@@ -408,11 +408,11 @@ fn valid_unit_divide(mut numer: f32, mut denom: f32) -> Option<TValue> {
     TValue::new(r)
 }
 
-fn interp(v0: F32x2, v1: F32x2, t: F32x2) -> F32x2 {
+fn interp(v0: f32x2, v1: f32x2, t: f32x2) -> f32x2 {
     v0 + (v1 - v0) * t
 }
 
-fn times_2(value: F32x2) -> F32x2 {
+fn times_2(value: f32x2) -> f32x2 {
     value + value
 }
 
@@ -469,7 +469,7 @@ pub fn find_quad_max_curvature(src: &[Point; 3]) -> NormalizedF32 {
 }
 
 pub fn eval_quad_at(src: &[Point; 3], t: NormalizedF32) -> Point {
-    Point::from_f32x2(QuadCoeff::from_points(src).eval(F32x2::splat(t.get())))
+    Point::from_f32x2(QuadCoeff::from_points(src).eval(f32x2::splat(t.get())))
 }
 
 /// Set pt to the point on the src quadratic specified by t.
@@ -492,7 +492,7 @@ fn eval_quad_tangent_at(src: &[Point; 3], tol: NormalizedF32) -> Point {
 
     let b = p1 - p0;
     let a = p2 - p1 - b;
-    let t = a * F32x2::splat(tol.get()) + b;
+    let t = a * f32x2::splat(tol.get()) + b;
 
     Point::from_f32x2(t + t)
 }
@@ -637,7 +637,7 @@ pub fn eval_cubic_at(
     curvature: Option<&mut Point>,
 ) {
     if let Some(loc) = loc {
-        *loc = Point::from_f32x2(CubicCoeff::from_points(src).eval(F32x2::splat(t.get())));
+        *loc = Point::from_f32x2(CubicCoeff::from_points(src).eval(f32x2::splat(t.get())));
     }
 
     if let Some(tangent) = tangent {
@@ -671,12 +671,12 @@ fn eval_cubic_derivative(src: &[Point; 4], t: NormalizedF32) -> Point {
     let p3 = src[3].to_f32x2();
 
     let coeff = QuadCoeff {
-        a: p3 + F32x2::splat(3.0) * (p1 - p2) - p0,
+        a: p3 + f32x2::splat(3.0) * (p1 - p2) - p0,
         b: times_2(p2 - times_2(p1) + p0),
         c: p1 - p0,
     };
 
-    Point::from_f32x2(coeff.eval(F32x2::splat(t.get())))
+    Point::from_f32x2(coeff.eval(f32x2::splat(t.get())))
 }
 
 fn eval_cubic_2nd_derivative(src: &[Point; 4], t: NormalizedF32) -> Point {
@@ -684,10 +684,10 @@ fn eval_cubic_2nd_derivative(src: &[Point; 4], t: NormalizedF32) -> Point {
     let p1 = src[1].to_f32x2();
     let p2 = src[2].to_f32x2();
     let p3 = src[3].to_f32x2();
-    let a = p3 + F32x2::splat(3.0) * (p1 - p2) - p0;
+    let a = p3 + f32x2::splat(3.0) * (p1 - p2) - p0;
     let b = p2 - times_2(p1) + p0;
 
-    Point::from_f32x2(a * F32x2::splat(t.get()) + b)
+    Point::from_f32x2(a * f32x2::splat(t.get()) + b)
 }
 
 // http://www.faculty.idc.ac.il/arik/quality/appendixA.html
@@ -863,16 +863,16 @@ impl Conic {
     }
 
     fn chop(&self) -> (Conic, Conic) {
-        let scale = F32x2::splat((1.0 + self.weight).invert());
+        let scale = f32x2::splat((1.0 + self.weight).invert());
         let new_w = subdivide_weight_value(self.weight);
 
         let p0 = self.points[0].to_f32x2();
         let p1 = self.points[1].to_f32x2();
         let p2 = self.points[2].to_f32x2();
-        let ww = F32x2::splat(self.weight);
+        let ww = f32x2::splat(self.weight);
 
         let wp1 = ww * p1;
-        let m = (p0 + times_2(wp1) + p2) * scale * F32x2::splat(0.5);
+        let m = (p0 + times_2(wp1) + p2) * scale * f32x2::splat(0.5);
         let mut m_pt = Point::from_f32x2(m);
         if !m_pt.is_finite() {
             let w_d = self.weight as f64;

@@ -247,6 +247,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "safe_arch"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1ff3d6d9696af502cc3110dacce942840fb06ff4514cad92236ecc455f2ce05"
+dependencies = [
+ "bytemuck",
+]
+
+[[package]]
 name = "skia-rs"
 version = "0.1.0"
 dependencies = [
@@ -271,6 +280,7 @@ dependencies = [
  "num-ext",
  "png 0.16.7",
  "safe-geom",
+ "wide",
 ]
 
 [[package]]
@@ -278,3 +288,13 @@ name = "typed-arena"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0685c84d5d54d1c26f7d3eb96cd41550adb97baed141a761cf335d3d33bcd0ae"
+
+[[package]]
+name = "wide"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87f9148cb9829070e2244578eb7704d096b82bd8819c309564e075de71ef1a1f"
+dependencies = [
+ "bytemuck",
+ "safe_arch",
+]
