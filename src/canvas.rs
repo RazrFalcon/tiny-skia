@@ -201,7 +201,7 @@ impl Canvas {
                 // we don't change previous results (testing)
                 // the new way seems fine, its just (a tiny bit) different.
                 let scale = (coverage * 256.0) as i32;
-                let new_alpha = 255 * scale >> 8;
+                let new_alpha = (255 * scale) >> 8;
                 paint.shader.apply_opacity(NormalizedF32::new_bounded(new_alpha as f32 / 255.0));
             }
 

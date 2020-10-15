@@ -36,7 +36,7 @@ fn hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut d
     let max = 32767.0;
     let fixed_bounds = Bounds::from_ltrb(-max, -max, max, max)?;
 
-    let clip_bounds = clip.and_then(|c| c.to_rect().to_bounds()).clone();
+    let clip_bounds = clip.and_then(|c| c.to_rect().to_bounds());
 
     for i in 0..points.len() - 1 {
         let mut pts = [Point::zero(); 2];
@@ -150,9 +150,7 @@ pub fn stroke_path_impl(
     {
         let cap_out = if line_cap == LineCap::Butt { 1.0 } else { 2.0 };
         let ibounds = path.bounds().outset(cap_out, cap_out)?.to_rect()?.round_out();
-        if clip.to_int_rect().intersect(&ibounds).is_none() {
-            return None;
-        }
+        clip.to_int_rect().intersect(&ibounds)?;
 
         if !clip.to_int_rect().contains(&ibounds) {
             // We now cache two scalar rects, to use for culling per-segment (e.g. cubic).

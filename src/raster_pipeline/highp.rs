@@ -159,9 +159,9 @@ fn premultiply(
     r: &mut f32x4, g: &mut f32x4, b: &mut f32x4, a: &mut f32x4,
     dr: &mut f32x4, dg: &mut f32x4, db: &mut f32x4, da: &mut f32x4,
 ) {
-    *r = *r * *a;
-    *g = *g * *a;
-    *b = *b * *a;
+    *r *= *a;
+    *g *= *a;
+    *b *= *a;
 
     next_stage(tail, program, 1, dx,dy, r,g,b,a, dr,dg,db,da);
 }
@@ -325,10 +325,10 @@ fn scale_u8(
     let c = f32x4::from([data[0] as f32, data[1] as f32, 0.0, 0.0]);
     let c = c / f32x4::splat(255.0);
 
-    *r = *r * c;
-    *g = *g * c;
-    *b = *b * c;
-    *a = *a * c;
+    *r *= c;
+    *g *= c;
+    *b *= c;
+    *a *= c;
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
 }
@@ -360,10 +360,10 @@ fn scale_1_float(
 ) {
     let c: f32 = *cast_stage_ctx(program);
     let c = f32x4::splat(c);
-    *r = *r * c;
-    *g = *g * c;
-    *b = *b * c;
-    *a = *a * c;
+    *r *= c;
+    *g *= c;
+    *b *= c;
+    *a *= c;
 
     next_stage(tail, program, 2, dx,dy, r,g,b,a, dr,dg,db,da);
 }
@@ -636,9 +636,9 @@ fn set_sat(r: &mut f32x4, g: &mut f32x4, b: &mut f32x4, s: f32x4) {
 #[inline(always)]
 fn set_lum(r: &mut f32x4, g: &mut f32x4, b: &mut f32x4, l: f32x4) {
     let diff = l - lum(*r, *g, *b);
-    *r = *r + diff;
-    *g = *g + diff;
-    *b = *b + diff;
+    *r += diff;
+    *g += diff;
+    *b += diff;
 }
 
 #[inline(always)]
@@ -856,10 +856,10 @@ fn sampler_2x2(
             *b = mad(w, bb, *b);
             *a = mad(w, aa, *a);
 
-            x = x + one;
+            x += one;
         }
 
-        y = y + one;
+        y += one;
     }
 }
 
@@ -893,10 +893,10 @@ fn sampler_4x4(
             *b = mad(w, bb, *b);
             *a = mad(w, aa, *a);
 
-            x = x + one;
+            x += one;
         }
 
-        y = y + one;
+        y += one;
     }
 }
 
@@ -975,7 +975,7 @@ fn gradient(
             (t[2] >= tt) as u32,
             (t[3] >= tt) as u32,
         ]);
-        idx = idx + n;
+        idx += n;
     }
     gradient_lookup(ctx, &idx, *r, r, g, b, a);
 

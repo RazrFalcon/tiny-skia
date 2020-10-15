@@ -329,7 +329,7 @@ impl ContextStorage {
     pub fn push_context<T: Context + 'static>(&mut self, t: T) -> *const c_void {
         let rc = Rc::new(t);
         let ptr = Rc::as_ptr(&rc) as *const c_void;
-        self.items.push(rc.clone());
+        self.items.push(rc);
         ptr
     }
 }

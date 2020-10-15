@@ -85,16 +85,15 @@ impl BlendMode {
         // than as a separate stage that'd come after the lerp.
         //
         // This function is a finer-grained breakdown of SkBlendMode_SupportsCoverageAsAlpha().
-        match self {
+        matches!(self,
             BlendMode::Destination |            // d              --> no sa term, ok!
             BlendMode::DestinationOver |        // d + s*inv(da)  --> no sa term, ok!
             BlendMode::Plus |                   // clamp(s+d)     --> no sa term, ok!
             BlendMode::DestinationOut |         // d * inv(sa)
             BlendMode::SourceAtop |             // s*da + d*inv(sa)
             BlendMode::SourceOver |             // s + d*inv(sa)
-            BlendMode::Xor => true,             // s*inv(da) + d*inv(sa)
-            _ => false,
-        }
+            BlendMode::Xor             // s*inv(da) + d*inv(sa)
+        )
     }
 
     pub(crate) fn to_stage(self) -> Option<raster_pipeline::Stage> {

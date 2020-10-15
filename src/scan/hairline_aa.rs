@@ -255,7 +255,7 @@ fn anti_hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &
         }
 
         if let Some(clip_bounds) = clip_bounds {
-            let tmp = pts.clone();
+            let tmp = pts;
             if !line_clipper::intersect(&tmp, &clip_bounds, &mut pts) {
                 continue;
             }

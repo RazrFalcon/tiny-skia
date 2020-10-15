@@ -422,7 +422,7 @@ pub fn chop_cubic_at_max_curvature(
     dst: &mut [Point],
 ) -> usize {
     let roots = find_cubic_max_curvature(src, t_values);
-    if roots.len() == 0 {
+    if roots.is_empty() {
         dst[0..4].copy_from_slice(src);
     } else {
         chop_cubic_at(src, roots, dst);

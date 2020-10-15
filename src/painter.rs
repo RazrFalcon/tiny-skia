@@ -97,10 +97,7 @@ impl<'a> Paint<'a> {
     /// Checks that the paint source is a solid color.
     #[inline]
     pub fn is_solid_color(&self) -> bool {
-        match self.shader {
-            Shader::SolidColor(_) => true,
-            _ => false,
-        }
+        matches!(self.shader, Shader::SolidColor(_))
     }
 }
 
