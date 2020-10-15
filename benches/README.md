@@ -152,9 +152,9 @@ Draws a large spiral using a subpixel stroke width.
 
 | Test/Library                | tiny-skia SSE2 | tiny-skia AVX2 | Skia SSE2  | Skia AVX2  | cairo       | raqote     |
 | --------------------------- | -------------: | -------------: | ---------: | ---------: | ----------: | ---------: |
-| plain (nearest, no ts)      |      3,530,869 |      3,493,259 |  1,315,079 |  1,122,982 |     785,550 |  1,865,327 |
-| lq (bilinear, with ts)      |     10,453,062 |      9,262,008 |  4,484,023 |  2,646,523 |  17,612,685 | 24,906,379 |
-| hq (bicubic/gauss, with ts) |     34,352,701 |     29,779,978 | 12,386,848 |  9,364,356 | 162,771,632 |          - |
+| plain (nearest, no ts)      |      3,761,216 |      3,540,706 |  1,315,079 |  1,122,982 |     785,550 |  1,865,327 |
+| lq (bilinear, with ts)      |     10,755,040 |      8,408,190 |  4,484,023 |  2,646,523 |  17,612,685 | 24,906,379 |
+| hq (bicubic/gauss, with ts) |     34,658,282 |     27,495,689 | 12,386,848 |  9,364,356 | 162,771,632 |          - |
 
 Note that `raqote` doesn't support high quality filtering.
 

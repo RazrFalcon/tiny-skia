@@ -164,7 +164,10 @@ impl Context for MaskCtx {}
 
 #[derive(Copy, Clone, Debug)]
 pub struct GatherCtx {
-    pub pixels: *const PremultipliedColorU8, // TODO: to slice
+    // We have to use a pointer to bypass lifetime restrictions.
+    // The access is still bound checked.
+    pub pixels: *const PremultipliedColorU8,
+    pub pixels_len: usize,
     pub stride: LengthU32,
     pub width: LengthU32,
     pub height: LengthU32,
@@ -173,13 +176,14 @@ pub struct GatherCtx {
 impl GatherCtx {
     #[inline(always)]
     pub fn gather(&self, index: u32x4) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
+        let pixels = unsafe { std::slice::from_raw_parts(self.pixels, self.pixels_len) };
         let index: [u32; 4] = index.into();
-        unsafe {[
-            *self.pixels.add(index[0] as usize),
-            *self.pixels.add(index[1] as usize),
-            *self.pixels.add(index[2] as usize),
-            *self.pixels.add(index[3] as usize),
-        ]}
+        [
+            pixels[index[0] as usize],
+            pixels[index[1] as usize],
+            pixels[index[2] as usize],
+            pixels[index[3] as usize],
+        ]
     }
 }
 
@@ -291,6 +295,7 @@ impl Context for Transform {}
 
 
 pub struct ContextStorage {
+    // We have to use Rc because Box doesn't provide as_pts method.
     items: ArrayVec<[Rc<dyn Context>; MAX_STAGES]>,
 }
 
