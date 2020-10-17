@@ -11,7 +11,7 @@ use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
-use crate::raster_pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
+use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
 use crate::safe_geom_ext::LENGTH_U32_ONE;
 use crate::shaders::StageRec;
 
@@ -21,10 +21,10 @@ pub struct RasterPipelineBlitter<'a> {
     shader_pipeline: RasterPipelineBuilder,
 
     // Always points to the top-left of `pixmap`.
-    pixels_ctx: raster_pipeline::PixelsCtx<'a>,
+    pixels_ctx: pipeline::PixelsCtx<'a>,
 
     // Updated each call to blit_mask().
-    mask_ctx: raster_pipeline::MaskCtx,
+    mask_ctx: pipeline::MaskCtx,
 
     memset2d_color: Option<PremultipliedColorU8>,
 
@@ -51,7 +51,7 @@ impl<'a> RasterPipelineBlitter<'a> {
             Shader::SolidColor(ref color) => {
                 // Having no shader makes things nice and easy... just use the paint color.
                 let color_ctx = ctx_storage.create_uniform_color_context(color.premultiply());
-                shader_pipeline.push_with_context(raster_pipeline::Stage::UniformColor, color_ctx);
+                shader_pipeline.push_with_context(pipeline::Stage::UniformColor, color_ctx);
 
                 let is_constant = true;
                 RasterPipelineBlitter::new_inner(paint, shader_pipeline, color.is_opaque(),
@@ -118,7 +118,7 @@ impl<'a> RasterPipelineBlitter<'a> {
             memset2d_color = Some(PremultipliedColorU8::TRANSPARENT);
         }
 
-        let img_ctx = raster_pipeline::PixelsCtx {
+        let img_ctx = pipeline::PixelsCtx {
             stride: pixmap.size().width_safe(),
             pixels: pixmap.pixels_mut(),
         };
@@ -127,7 +127,7 @@ impl<'a> RasterPipelineBlitter<'a> {
             blend_mode,
             shader_pipeline,
             pixels_ctx: img_ctx,
-            mask_ctx: raster_pipeline::MaskCtx::default(),
+            mask_ctx: pipeline::MaskCtx::default(),
             memset2d_color,
             blit_anti_h_rp: None,
             blit_rect_rp: None,
@@ -152,21 +152,21 @@ impl Blitter for RasterPipelineBlitter<'_> {
             p.set_force_hq_pipeline(self.shader_pipeline.is_force_hq_pipeline());
             p.extend(&self.shader_pipeline);
             if self.blend_mode.should_pre_scale_coverage() {
-                p.push_with_context(raster_pipeline::Stage::Scale1Float, curr_cov_ptr);
-                p.push_with_context(raster_pipeline::Stage::LoadDestination, ctx_ptr);
+                p.push_with_context(pipeline::Stage::Scale1Float, curr_cov_ptr);
+                p.push_with_context(pipeline::Stage::LoadDestination, ctx_ptr);
                 if let Some(blend_stage) = self.blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
             } else {
-                p.push_with_context(raster_pipeline::Stage::LoadDestination, ctx_ptr);
+                p.push_with_context(pipeline::Stage::LoadDestination, ctx_ptr);
                 if let Some(blend_stage) = self.blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
 
-                p.push_with_context(raster_pipeline::Stage::Lerp1Float, curr_cov_ptr);
+                p.push_with_context(pipeline::Stage::Lerp1Float, curr_cov_ptr);
             }
 
-            p.push_with_context(raster_pipeline::Stage::Store, ctx_ptr);
+            p.push_with_context(pipeline::Stage::Store, ctx_ptr);
 
             self.blit_anti_h_rp = Some(p.compile());
         }
@@ -263,16 +263,16 @@ impl Blitter for RasterPipelineBlitter<'_> {
 
             if self.blend_mode == BlendMode::SourceOver {
                 // TODO: ignore when dither_rate is non-zero
-                p.push_with_context(raster_pipeline::Stage::SourceOverRgba, ctx_ptr);
+                p.push_with_context(pipeline::Stage::SourceOverRgba, ctx_ptr);
             } else {
                 if self.blend_mode != BlendMode::Source {
-                    p.push_with_context(raster_pipeline::Stage::LoadDestination, ctx_ptr);
+                    p.push_with_context(pipeline::Stage::LoadDestination, ctx_ptr);
                     if let Some(blend_stage) = self.blend_mode.to_stage() {
                         p.push(blend_stage);
                     }
                 }
 
-                p.push_with_context(raster_pipeline::Stage::Store, ctx_ptr);
+                p.push_with_context(pipeline::Stage::Store, ctx_ptr);
             }
 
             self.blit_rect_rp = Some(p.compile());
@@ -282,7 +282,7 @@ impl Blitter for RasterPipelineBlitter<'_> {
     }
 
     fn blit_mask(&mut self, mask: &Mask, clip: &ScreenIntRect) {
-        self.mask_ctx = raster_pipeline::MaskCtx {
+        self.mask_ctx = pipeline::MaskCtx {
             pixels: mask.image,
             stride: mask.row_bytes,
             shift: (mask.bounds.left() + mask.bounds.top() * mask.row_bytes) as usize,
@@ -296,21 +296,21 @@ impl Blitter for RasterPipelineBlitter<'_> {
             p.set_force_hq_pipeline(self.shader_pipeline.is_force_hq_pipeline());
             p.extend(&self.shader_pipeline);
             if self.blend_mode.should_pre_scale_coverage() {
-                p.push_with_context(raster_pipeline::Stage::ScaleU8, mask_ctx_ptr);
-                p.push_with_context(raster_pipeline::Stage::LoadDestination, img_ctx_ptr);
+                p.push_with_context(pipeline::Stage::ScaleU8, mask_ctx_ptr);
+                p.push_with_context(pipeline::Stage::LoadDestination, img_ctx_ptr);
                 if let Some(blend_stage) = self.blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
             } else {
-                p.push_with_context(raster_pipeline::Stage::LoadDestination, img_ctx_ptr);
+                p.push_with_context(pipeline::Stage::LoadDestination, img_ctx_ptr);
                 if let Some(blend_stage) = self.blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
 
-                p.push_with_context(raster_pipeline::Stage::LerpU8, mask_ctx_ptr);
+                p.push_with_context(pipeline::Stage::LerpU8, mask_ctx_ptr);
             }
 
-            p.push_with_context(raster_pipeline::Stage::Store, img_ctx_ptr);
+            p.push_with_context(pipeline::Stage::Store, img_ctx_ptr);
 
             self.blit_mask_rp = Some(p.compile());
         }

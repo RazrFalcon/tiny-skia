@@ -7,8 +7,8 @@
 use crate::{Color, Transform, NormalizedF32, SpreadMode};
 
 use crate::safe_geom_ext::TransformExt;
-use crate::raster_pipeline::{EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
-use crate::raster_pipeline::{self, RasterPipelineBuilder};
+use crate::pipeline::{EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
+use crate::pipeline::{self, RasterPipelineBuilder};
 use crate::scalar::Scalar;
 use crate::shaders::StageRec;
 
@@ -109,7 +109,7 @@ impl Gradient {
     ) -> Option<()> {
         let mut post_pipeline = RasterPipelineBuilder::new();
 
-        rec.pipeline.push(raster_pipeline::Stage::SeedShader);
+        rec.pipeline.push(pipeline::Stage::SeedShader);
 
         let mut ts = self.transform.invert()?;
         ts = ts.post_concat(&self.points_to_unit)?;
@@ -119,10 +119,10 @@ impl Gradient {
 
         match self.tile_mode {
             SpreadMode::Reflect => {
-                rec.pipeline.push(raster_pipeline::Stage::ReflectX1);
+                rec.pipeline.push(pipeline::Stage::ReflectX1);
             }
             SpreadMode::Repeat => {
-                rec.pipeline.push(raster_pipeline::Stage::RepeatX1);
+                rec.pipeline.push(pipeline::Stage::RepeatX1);
             }
             SpreadMode::Pad => {
                 if self.has_uniform_stops {
@@ -130,7 +130,7 @@ impl Gradient {
                     // If not, there may be hard stops, and clamping ruins hard stops at 0 and/or 1.
                     // In that case, we must make sure we're using the general "gradient" stage,
                     // which is the only stage that will correctly handle unclamped t.
-                    rec.pipeline.push(raster_pipeline::Stage::PadX1);
+                    rec.pipeline.push(pipeline::Stage::PadX1);
                 }
             }
         }
@@ -153,7 +153,7 @@ impl Gradient {
             };
 
             let ctx = rec.ctx_storage.push_context(ctx);
-            rec.pipeline.push_with_context(raster_pipeline::Stage::EvenlySpaced2StopGradient, ctx);
+            rec.pipeline.push_with_context(pipeline::Stage::EvenlySpaced2StopGradient, ctx);
         } else {
             // Unlike Skia, we do not support the `evenly_spaced_gradient` stage.
             // In our case, there is no performance difference.
@@ -238,11 +238,11 @@ impl Gradient {
             }
 
             let ctx = rec.ctx_storage.push_context(ctx);
-            rec.pipeline.push_with_context(raster_pipeline::Stage::Gradient, ctx);
+            rec.pipeline.push_with_context(pipeline::Stage::Gradient, ctx);
         }
 
         if !self.colors_are_opaque {
-            rec.pipeline.push(raster_pipeline::Stage::Premultiply);
+            rec.pipeline.push(pipeline::Stage::Premultiply);
         }
 
         rec.pipeline.extend(&post_pipeline);

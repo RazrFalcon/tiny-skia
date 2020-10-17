@@ -8,7 +8,7 @@ use crate::{Shader, Transform, Pixmap, SpreadMode, NormalizedF32};
 
 use crate::safe_geom_ext::TransformExt;
 use crate::shaders::StageRec;
-use crate::raster_pipeline;
+use crate::pipeline;
 
 
 /// Controls how much filtering to be done when transforming images.
@@ -59,11 +59,11 @@ impl<'a> Pattern<'a> {
     pub(crate) fn push_stages(&self, rec: StageRec) -> Option<()> {
         let ts = self.transform.invert()?;
 
-        rec.pipeline.push(raster_pipeline::Stage::SeedShader);
+        rec.pipeline.push(pipeline::Stage::SeedShader);
 
         rec.pipeline.push_transform(ts, rec.ctx_storage);
 
-        let ctx = raster_pipeline::GatherCtx {
+        let ctx = pipeline::GatherCtx {
             pixels: self.pixmap.pixels().as_ptr(),
             pixels_len: self.pixmap.pixels().len(),
             stride: self.pixmap.size().width_safe(),
@@ -91,12 +91,12 @@ impl<'a> Pattern<'a> {
 
         match quality {
             FilterQuality::Nearest => {
-                let limit_x = raster_pipeline::TileCtx {
+                let limit_x = pipeline::TileCtx {
                     scale: self.pixmap.width() as f32,
                     inv_scale: 1.0 / self.pixmap.width() as f32,
                 };
 
-                let limit_y = raster_pipeline::TileCtx {
+                let limit_y = pipeline::TileCtx {
                     scale: self.pixmap.height() as f32,
                     inv_scale: 1.0 / self.pixmap.height() as f32,
                 };
@@ -108,40 +108,40 @@ impl<'a> Pattern<'a> {
                 match self.spread_mode {
                     SpreadMode::Pad => { /* The gather_xxx stage will clamp for us. */ }
                     SpreadMode::Repeat => {
-                        rec.pipeline.push_with_context(raster_pipeline::Stage::RepeatX, limit_x);
-                        rec.pipeline.push_with_context(raster_pipeline::Stage::RepeatY, limit_y);
+                        rec.pipeline.push_with_context(pipeline::Stage::RepeatX, limit_x);
+                        rec.pipeline.push_with_context(pipeline::Stage::RepeatY, limit_y);
                     }
                     SpreadMode::Reflect => {
-                        rec.pipeline.push_with_context(raster_pipeline::Stage::ReflectX, limit_x);
-                        rec.pipeline.push_with_context(raster_pipeline::Stage::ReflectY, limit_y);
+                        rec.pipeline.push_with_context(pipeline::Stage::ReflectX, limit_x);
+                        rec.pipeline.push_with_context(pipeline::Stage::ReflectY, limit_y);
                     }
                 }
 
-                rec.pipeline.push_with_context(raster_pipeline::Stage::Gather, ctx);
+                rec.pipeline.push_with_context(pipeline::Stage::Gather, ctx);
             }
             FilterQuality::Bilinear => {
-                let sampler_ctx = raster_pipeline::SamplerCtx {
+                let sampler_ctx = pipeline::SamplerCtx {
                     gather: ctx,
                     spread_mode: self.spread_mode,
                     inv_width: 1.0 / ctx.width.get() as f32,
                     inv_height: 1.0 / ctx.height.get() as f32,
                 };
                 let sampler_ctx = rec.ctx_storage.push_context(sampler_ctx);
-                rec.pipeline.push_with_context(raster_pipeline::Stage::Bilinear, sampler_ctx);
+                rec.pipeline.push_with_context(pipeline::Stage::Bilinear, sampler_ctx);
             }
             FilterQuality::Bicubic => {
-                let sampler_ctx = raster_pipeline::SamplerCtx {
+                let sampler_ctx = pipeline::SamplerCtx {
                     gather: ctx,
                     spread_mode: self.spread_mode,
                     inv_width: 1.0 / ctx.width.get() as f32,
                     inv_height: 1.0 / ctx.height.get() as f32,
                 };
                 let sampler_ctx = rec.ctx_storage.push_context(sampler_ctx);
-                rec.pipeline.push_with_context(raster_pipeline::Stage::Bicubic, sampler_ctx);
+                rec.pipeline.push_with_context(pipeline::Stage::Bicubic, sampler_ctx);
 
                 // Bicubic filtering naturally produces out of range values on both sides of [0,1].
-                rec.pipeline.push(raster_pipeline::Stage::Clamp0);
-                rec.pipeline.push(raster_pipeline::Stage::ClampA);
+                rec.pipeline.push(pipeline::Stage::Clamp0);
+                rec.pipeline.push(pipeline::Stage::ClampA);
             }
         }
 
@@ -149,7 +149,7 @@ impl<'a> Pattern<'a> {
         if self.opacity != NormalizedF32::ONE {
             debug_assert_eq!(std::mem::size_of_val(&self.opacity), 4, "alpha must be f32");
             let opacity = rec.ctx_storage.push_context(self.opacity.get());
-            rec.pipeline.push_with_context(raster_pipeline::Stage::Scale1Float, opacity);
+            rec.pipeline.push_with_context(pipeline::Stage::Scale1Float, opacity);
         }
 
         Some(())

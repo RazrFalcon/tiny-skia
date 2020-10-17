@@ -16,7 +16,7 @@ pub use pattern::{Pattern, FilterQuality};
 
 use crate::{Color, Transform, NormalizedF32};
 
-use crate::raster_pipeline::{RasterPipelineBuilder, ContextStorage};
+use crate::pipeline::{RasterPipelineBuilder, ContextStorage};
 
 
 /// A shader spreading mode.

@@ -38,7 +38,7 @@ mod path_builder;
 mod path_geometry;
 mod path_ops;
 mod pixmap;
-mod raster_pipeline;
+mod pipeline;
 mod safe_geom_ext;
 mod scalar;
 mod scan;

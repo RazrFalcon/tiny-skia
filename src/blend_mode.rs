@@ -1,4 +1,4 @@
-use crate::raster_pipeline;
+use crate::pipeline;
 
 /// A blending mode.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
@@ -96,37 +96,37 @@ impl BlendMode {
         )
     }
 
-    pub(crate) fn to_stage(self) -> Option<raster_pipeline::Stage> {
+    pub(crate) fn to_stage(self) -> Option<pipeline::Stage> {
         match self {
-            BlendMode::Clear            => Some(raster_pipeline::Stage::Clear),
+            BlendMode::Clear            => Some(pipeline::Stage::Clear),
             BlendMode::Source           => None, // This stage is a no-op.
-            BlendMode::Destination      => Some(raster_pipeline::Stage::MoveDestinationToSource),
-            BlendMode::SourceOver       => Some(raster_pipeline::Stage::SourceOver),
-            BlendMode::DestinationOver  => Some(raster_pipeline::Stage::DestinationOver),
-            BlendMode::SourceIn         => Some(raster_pipeline::Stage::SourceIn),
-            BlendMode::DestinationIn    => Some(raster_pipeline::Stage::DestinationIn),
-            BlendMode::SourceOut        => Some(raster_pipeline::Stage::SourceOut),
-            BlendMode::DestinationOut   => Some(raster_pipeline::Stage::DestinationOut),
-            BlendMode::SourceAtop       => Some(raster_pipeline::Stage::SourceAtop),
-            BlendMode::DestinationAtop  => Some(raster_pipeline::Stage::DestinationAtop),
-            BlendMode::Xor              => Some(raster_pipeline::Stage::Xor),
-            BlendMode::Plus             => Some(raster_pipeline::Stage::Plus),
-            BlendMode::Modulate         => Some(raster_pipeline::Stage::Modulate),
-            BlendMode::Screen           => Some(raster_pipeline::Stage::Screen),
-            BlendMode::Overlay          => Some(raster_pipeline::Stage::Overlay),
-            BlendMode::Darken           => Some(raster_pipeline::Stage::Darken),
-            BlendMode::Lighten          => Some(raster_pipeline::Stage::Lighten),
-            BlendMode::ColorDodge       => Some(raster_pipeline::Stage::ColorDodge),
-            BlendMode::ColorBurn        => Some(raster_pipeline::Stage::ColorBurn),
-            BlendMode::HardLight        => Some(raster_pipeline::Stage::HardLight),
-            BlendMode::SoftLight        => Some(raster_pipeline::Stage::SoftLight),
-            BlendMode::Difference       => Some(raster_pipeline::Stage::Difference),
-            BlendMode::Exclusion        => Some(raster_pipeline::Stage::Exclusion),
-            BlendMode::Multiply         => Some(raster_pipeline::Stage::Multiply),
-            BlendMode::Hue              => Some(raster_pipeline::Stage::Hue),
-            BlendMode::Saturation       => Some(raster_pipeline::Stage::Saturation),
-            BlendMode::Color            => Some(raster_pipeline::Stage::Color),
-            BlendMode::Luminosity       => Some(raster_pipeline::Stage::Luminosity),
+            BlendMode::Destination      => Some(pipeline::Stage::MoveDestinationToSource),
+            BlendMode::SourceOver       => Some(pipeline::Stage::SourceOver),
+            BlendMode::DestinationOver  => Some(pipeline::Stage::DestinationOver),
+            BlendMode::SourceIn         => Some(pipeline::Stage::SourceIn),
+            BlendMode::DestinationIn    => Some(pipeline::Stage::DestinationIn),
+            BlendMode::SourceOut        => Some(pipeline::Stage::SourceOut),
+            BlendMode::DestinationOut   => Some(pipeline::Stage::DestinationOut),
+            BlendMode::SourceAtop       => Some(pipeline::Stage::SourceAtop),
+            BlendMode::DestinationAtop  => Some(pipeline::Stage::DestinationAtop),
+            BlendMode::Xor              => Some(pipeline::Stage::Xor),
+            BlendMode::Plus             => Some(pipeline::Stage::Plus),
+            BlendMode::Modulate         => Some(pipeline::Stage::Modulate),
+            BlendMode::Screen           => Some(pipeline::Stage::Screen),
+            BlendMode::Overlay          => Some(pipeline::Stage::Overlay),
+            BlendMode::Darken           => Some(pipeline::Stage::Darken),
+            BlendMode::Lighten          => Some(pipeline::Stage::Lighten),
+            BlendMode::ColorDodge       => Some(pipeline::Stage::ColorDodge),
+            BlendMode::ColorBurn        => Some(pipeline::Stage::ColorBurn),
+            BlendMode::HardLight        => Some(pipeline::Stage::HardLight),
+            BlendMode::SoftLight        => Some(pipeline::Stage::SoftLight),
+            BlendMode::Difference       => Some(pipeline::Stage::Difference),
+            BlendMode::Exclusion        => Some(pipeline::Stage::Exclusion),
+            BlendMode::Multiply         => Some(pipeline::Stage::Multiply),
+            BlendMode::Hue              => Some(pipeline::Stage::Hue),
+            BlendMode::Saturation       => Some(pipeline::Stage::Saturation),
+            BlendMode::Color            => Some(pipeline::Stage::Color),
+            BlendMode::Luminosity       => Some(pipeline::Stage::Luminosity),
         }
     }
 }

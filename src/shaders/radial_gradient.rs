@@ -6,7 +6,7 @@
 
 use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 
-use crate::raster_pipeline;
+use crate::pipeline;
 use crate::safe_geom_ext::TransformExt;
 use crate::scalar::Scalar;
 use crate::shaders::StageRec;
@@ -149,7 +149,7 @@ impl RadialGradient {
             if let Some(focal_data) = self.focal_data {
                 // Unlike, we have only the Focal radial gradient type.
 
-                let ctx = raster_pipeline::TwoPointConicalGradientCtx {
+                let ctx = pipeline::TwoPointConicalGradientCtx {
                     mask: u32x4::default(),
                     p0: 1.0 / focal_data.r1,
                 };
@@ -157,23 +157,23 @@ impl RadialGradient {
                 let ctx = rec.ctx_storage.push_context(ctx);
 
                 if focal_data.is_focal_on_circle() {
-                    rec.pipeline.push(raster_pipeline::Stage::XYTo2PtConicalFocalOnCircle);
+                    rec.pipeline.push(pipeline::Stage::XYTo2PtConicalFocalOnCircle);
                 } else if focal_data.is_well_behaved() {
                     rec.pipeline.push_with_context(
-                        raster_pipeline::Stage::XYTo2PtConicalWellBehaved, ctx);
+                        pipeline::Stage::XYTo2PtConicalWellBehaved, ctx);
                 } else {
                     rec.pipeline.push_with_context(
-                        raster_pipeline::Stage::XYTo2PtConicalGreater, ctx);
+                        pipeline::Stage::XYTo2PtConicalGreater, ctx);
                 }
 
                 if !focal_data.is_well_behaved() {
                     rec.pipeline.push_with_context(
-                        raster_pipeline::Stage::Mask2PtConicalDegenerates, ctx);
+                        pipeline::Stage::Mask2PtConicalDegenerates, ctx);
 
-                    post_p.push_with_context(raster_pipeline::Stage::ApplyVectorMask, ctx);
+                    post_p.push_with_context(pipeline::Stage::ApplyVectorMask, ctx);
                 }
             } else {
-                rec.pipeline.push(raster_pipeline::Stage::XYToRadius);
+                rec.pipeline.push(pipeline::Stage::XYToRadius);
             }
         }).is_some()
     }

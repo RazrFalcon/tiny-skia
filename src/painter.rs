@@ -7,7 +7,7 @@
 use crate::{Pixmap, Path, Color, BlendMode, Shader, Rect, LineCap};
 
 use crate::scan;
-use crate::raster_pipeline::{ContextStorage, RasterPipelineBlitter};
+use crate::pipeline::{ContextStorage, RasterPipelineBlitter};
 
 // 8K is 1 too big, since 8K << supersample == 32768 which is too big for Fixed.
 const MAX_DIM: u32 = 8192 - 1;
