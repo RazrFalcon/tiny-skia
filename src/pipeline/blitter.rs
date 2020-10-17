@@ -11,8 +11,8 @@ use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
+use crate::math::LENGTH_U32_ONE;
 use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
-use crate::safe_geom_ext::LENGTH_U32_ONE;
 use crate::shaders::StageRec;
 
 

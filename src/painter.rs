@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Pixmap, Path, Color, BlendMode, Shader, Rect, LineCap};
+use crate::{Pixmap, Path, Color, BlendMode, Shader, LineCap, Rect};
 
 use crate::scan;
 use crate::pipeline::{ContextStorage, RasterPipelineBlitter};
@@ -113,7 +113,7 @@ pub trait Painter {
     /// Used mainly to render a pixmap onto a pixmap.
     ///
     /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
-    fn fill_rect(&mut self, rect: &Rect, paint: &Paint) -> Option<()>;
+    fn fill_rect(&mut self, rect: Rect, paint: &Paint) -> Option<()>;
 
     /// Draws a filled path onto the pixmap.
     ///
@@ -132,7 +132,7 @@ pub trait Painter {
 }
 
 impl Painter for Pixmap {
-    fn fill_rect(&mut self, rect: &Rect, paint: &Paint) -> Option<()> {
+    fn fill_rect(&mut self, rect: Rect, paint: &Paint) -> Option<()> {
         // TODO: ignore rects outside the pixmap
 
         // TODO: draw tiler
@@ -147,9 +147,9 @@ impl Painter for Pixmap {
         let mut blitter = RasterPipelineBlitter::new(paint, &mut ctx_storage, self)?;
 
         if paint.anti_alias {
-            scan::fill_rect_aa(rect, &clip, &mut blitter)
+            scan::fill_rect_aa(&rect, &clip, &mut blitter)
         } else {
-            scan::fill_rect(rect, &clip, &mut blitter)
+            scan::fill_rect(&rect, &clip, &mut blitter)
         }
     }
 
@@ -160,7 +160,7 @@ impl Painter for Pixmap {
         // This is an intended behaviour since the only
         // reason for width/height to be zero is a horizontal/vertical line.
         // And in both cases there is nothing to fill.
-        let path_bounds = path.bounds().to_rect()?;
+        let path_bounds = path.bounds();
         let path_int_bounds = path_bounds.round_out();
 
         // TODO: ignore paths outside the pixmap

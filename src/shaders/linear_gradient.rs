@@ -6,7 +6,6 @@
 
 use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 
-use crate::safe_geom_ext::TransformExt;
 use crate::scalar::Scalar;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::shaders::StageRec;

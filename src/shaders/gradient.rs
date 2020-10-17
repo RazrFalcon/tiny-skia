@@ -6,7 +6,6 @@
 
 use crate::{Color, Transform, NormalizedF32, SpreadMode};
 
-use crate::safe_geom_ext::TransformExt;
 use crate::pipeline::{EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
 use crate::pipeline::{self, RasterPipelineBuilder};
 use crate::scalar::Scalar;

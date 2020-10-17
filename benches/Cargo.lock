@@ -239,14 +239,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "safe-geom"
-version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/checked-geom?rev=8a96c1b#8a96c1ba8b29a041eb5ebe256c0f246960e3711e"
-dependencies = [
- "num-ext",
-]
-
-[[package]]
 name = "safe_arch"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -279,7 +271,6 @@ dependencies = [
  "memmap2",
  "num-ext",
  "png 0.16.7",
- "safe-geom",
  "wide",
 ]
 

@@ -6,9 +6,8 @@
 
 use arrayvec::ArrayVec;
 
-use crate::{Path, Rect, Point, Bounds};
+use crate::{Path, Point, Rect};
 
-use crate::safe_geom_ext::BoundsExt;
 use crate::path_geometry;
 use crate::line_clipper;
 use crate::path::{PathEdge, PathEdgeIter};
@@ -78,7 +77,7 @@ impl EdgeClipper {
 
     fn clip_quad(mut self, p0: Point, p1: Point, p2: Point) -> Option<ClippedEdges> {
         let pts = [p0, p1, p2];
-        let bounds = Bounds::from_points(&pts)?;
+        let bounds = Rect::from_points(&pts)?;
 
         if !quick_reject(&bounds, &self.clip) {
             let mut mono_y = [Point::zero(); 5];
@@ -192,7 +191,7 @@ impl EdgeClipper {
 
     fn clip_cubic(mut self, p0: Point, p1: Point, p2: Point, p3: Point) -> Option<ClippedEdges> {
         let pts = [p0, p1, p2, p3];
-        let bounds = Bounds::from_points(&pts)?;
+        let bounds = Rect::from_points(&pts)?;
 
         // check if we're clipped out vertically
         if bounds.bottom() > self.clip.top() && bounds.top() < self.clip.bottom() {
@@ -353,7 +352,7 @@ impl Iterator for EdgeClipperIter<'_> {
     }
 }
 
-fn quick_reject(bounds: &Bounds, clip: &Rect) -> bool {
+fn quick_reject(bounds: &Rect, clip: &Rect) -> bool {
     bounds.top() >= clip.bottom() || bounds.bottom() <= clip.top()
 }
 
@@ -450,7 +449,7 @@ fn chop_mono_quad_at(c0: f32, c1: f32, c2: f32, target: f32, t: &mut path_geomet
     }
 }
 
-fn too_big_for_reliable_float_math(r: &Bounds) -> bool {
+fn too_big_for_reliable_float_math(r: &Rect) -> bool {
     // limit set as the largest float value for which we can still reliably compute things like
     // - chopping at XY extrema
     // - chopping at Y or X values for clipping

@@ -120,7 +120,6 @@ The core ideas are that almost everything is stateless, immutable and valid.
 
 - Linear color space.
 - Move `Path` and most of Bézier math into separate crates. Preferably into existing one
-- Move SIMD support to an external crate.
 
 PS: we start from 0.2, because 0.1 was just a bindings.
 

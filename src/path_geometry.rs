@@ -6,7 +6,6 @@
 
 use crate::{Point, NormalizedF32, Transform};
 
-use crate::safe_geom_ext::TransformExt;
 use crate::floating_point::FLOAT_PI;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 use crate::wide::f32x2;

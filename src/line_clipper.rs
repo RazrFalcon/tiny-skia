@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, Rect, Bounds};
+use crate::{Point, Rect};
 
 use crate::scalar::Scalar;
 
@@ -219,8 +219,8 @@ fn pin_unsorted_f64(value: f64, mut limit0: f64, mut limit1: f64) -> f64 {
 /// `clip` is specialized for scan-conversion, as it adds vertical
 /// segments on the sides to show where the line extended beyond the
 /// left or right sides. `intersect` does not.
-pub fn intersect(src: &[Point; 2], clip: &Bounds, dst: &mut [Point; 2]) -> bool {
-    let bounds = Bounds::from_ltrb(
+pub fn intersect(src: &[Point; 2], clip: &Rect, dst: &mut [Point; 2]) -> bool {
+    let bounds = Rect::from_ltrb(
         src[0].x.min(src[1].x),
         src[0].y.min(src[1].y),
         src[0].x.max(src[1].x),
@@ -285,7 +285,7 @@ fn nested_lt(a: f32, b: f32, dim: f32) -> bool {
 }
 
 // returns true if outer contains inner, even if inner is empty.
-fn contains_no_empty_check(outer: &Bounds, inner: &Bounds) -> bool {
+fn contains_no_empty_check(outer: &Rect, inner: &Rect) -> bool {
     outer.left() <= inner.left() &&
     outer.top() <= inner.top() &&
     outer.right() >= inner.right() &&

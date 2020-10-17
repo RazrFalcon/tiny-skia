@@ -11,7 +11,7 @@ fn fill_rect_tiny_skia(bencher: &mut Bencher) {
     let rect = Rect::from_xywh(50.7, 20.1, 812.4, 777.3).unwrap();
 
     bencher.iter(|| {
-        canvas.fill_rect(&rect, &paint);
+        canvas.fill_rect(rect, &paint);
     });
 }
 
@@ -73,7 +73,7 @@ fn fill_rect_aa_tiny_skia(bencher: &mut Bencher) {
     let rect = Rect::from_xywh(50.7, 20.1, 812.4, 777.3).unwrap();
 
     bencher.iter(|| {
-        canvas.fill_rect(&rect, &paint);
+        canvas.fill_rect(rect, &paint);
     });
 }
 
@@ -139,7 +139,7 @@ fn fill_rect_aa_ts_tiny_skia(bencher: &mut Bencher) {
     let rect = Rect::from_xywh(200.3, 100.4, 500.5, 300.2).unwrap();
 
     bencher.iter(|| {
-        canvas.fill_rect(&rect, &paint);
+        canvas.fill_rect(rect, &paint);
     });
 }
 

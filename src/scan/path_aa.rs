@@ -6,7 +6,7 @@
 
 use std::convert::TryFrom;
 
-use crate::{Path, IntRect, FillType, LengthU32, ScreenIntRect, AlphaU8, Bounds};
+use crate::{Path, IntRect, FillType, LengthU32, ScreenIntRect, AlphaU8, Rect};
 
 use crate::alpha_runs::AlphaRuns;
 use crate::blitter::Blitter;
@@ -27,12 +27,12 @@ pub fn fill_path(
 ) -> Option<()> {
     // Unlike `path.bounds.to_rect()?.round_out()`,
     // this method rounds out first and then converts into a Rect.
-    let ir = Bounds::from_ltrb(
+    let ir = Rect::from_ltrb(
         path.bounds.left().floor(),
         path.bounds.top().floor(),
         path.bounds.right().ceil(),
         path.bounds.bottom().ceil(),
-    )?.to_rect()?.round_out();
+    )?.round_out();
 
     // If the intersection of the path bounds and the clip bounds
     // will overflow 32767 when << by SHIFT, we can't supersample,
@@ -134,15 +134,15 @@ impl<'a> BaseSuperBlitter<'a> {
         clip_rect: &ScreenIntRect,
         blitter: &'a mut dyn Blitter,
     ) -> Option<Self> {
-        let sect_bounds = bounds.intersect(&clip_rect.to_int_rect())?.to_screen_int_rect()?;
+        let sect = bounds.intersect(&clip_rect.to_int_rect())?.to_screen_int_rect()?;
         Some(BaseSuperBlitter {
             real_blitter: blitter,
-            curr_iy: sect_bounds.top() as i32 - 1,
-            width: sect_bounds.width_safe(),
-            left: sect_bounds.left(),
-            super_left: sect_bounds.left() << SHIFT,
-            curr_y: (sect_bounds.top() << SHIFT) as i32 - 1,
-            top: sect_bounds.top() as i32,
+            curr_iy: sect.top() as i32 - 1,
+            width: sect.width_safe(),
+            left: sect.left(),
+            super_left: sect.left() << SHIFT,
+            curr_y: (sect.top() << SHIFT) as i32 - 1,
+            top: sect.top() as i32,
         })
     }
 }

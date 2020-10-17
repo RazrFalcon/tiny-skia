@@ -6,15 +6,15 @@
 
 use std::convert::TryInto;
 
-use crate::{Path, ScreenIntRect, LineCap, Point, PathSegment, Bounds, IntRect};
+use crate::{Path, ScreenIntRect, LineCap, Point, PathSegment, Rect, IntRect};
 
 use crate::blitter::Blitter;
 use crate::fixed_point::{fdot6, fdot16};
 use crate::floating_point::{FLOAT_PI, SaturateCast};
 use crate::line_clipper;
+use crate::math::LENGTH_U32_ONE;
 use crate::path::PathVerb;
 use crate::path_geometry;
-use crate::safe_geom_ext::{LENGTH_U32_ONE, IntRectExt, BoundsExt};
 use crate::scalar::Scalar;
 use crate::wide::f32x2;
 
@@ -34,9 +34,9 @@ pub fn stroke_path(
 
 fn hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut dyn Blitter) -> Option<()> {
     let max = 32767.0;
-    let fixed_bounds = Bounds::from_ltrb(-max, -max, max, max)?;
+    let fixed_bounds = Rect::from_ltrb(-max, -max, max, max)?;
 
-    let clip_bounds = clip.and_then(|c| c.to_rect().to_bounds());
+    let clip_bounds = clip.map(|c| c.to_rect());
 
     for i in 0..points.len() - 1 {
         let mut pts = [Point::zero(); 2];
@@ -149,7 +149,7 @@ pub fn stroke_path_impl(
 
     {
         let cap_out = if line_cap == LineCap::Butt { 1.0 } else { 2.0 };
-        let ibounds = path.bounds().outset(cap_out, cap_out)?.to_rect()?.round_out();
+        let ibounds = path.bounds().outset(cap_out, cap_out)?.round_out();
         clip.to_int_rect().intersect(&ibounds)?;
 
         if !clip.to_int_rect().contains(&ibounds) {
@@ -364,8 +364,8 @@ fn hair_quad(
 ) -> Option<()> {
     if let Some(inset_clip) = inset_clip {
         debug_assert!(outset_clip.is_some());
-        let inset_clip = inset_clip.to_rect().to_bounds()?;
-        let outset_clip = outset_clip?.to_rect().to_bounds()?;
+        let inset_clip = inset_clip.to_rect();
+        let outset_clip = outset_clip?.to_rect();
 
         let bounds = compute_nocheck_quad_bounds(points)?;
         if !geometric_overlap(&outset_clip, &bounds) {
@@ -379,7 +379,7 @@ fn hair_quad(
     Some(())
 }
 
-fn compute_nocheck_quad_bounds(points: &[Point; 3]) -> Option<Bounds> {
+fn compute_nocheck_quad_bounds(points: &[Point; 3]) -> Option<Rect> {
     debug_assert!(points[0].is_finite());
     debug_assert!(points[1].is_finite());
     debug_assert!(points[2].is_finite());
@@ -392,15 +392,15 @@ fn compute_nocheck_quad_bounds(points: &[Point; 3]) -> Option<Bounds> {
         max = max.max(pair);
     }
 
-    Bounds::from_ltrb(min.x(), min.y(), max.x(), max.y())
+    Rect::from_ltrb(min.x(), min.y(), max.x(), max.y())
 }
 
-fn geometric_overlap(a: &Bounds, b: &Bounds) -> bool {
+fn geometric_overlap(a: &Rect, b: &Rect) -> bool {
     a.left() < b.right() && b.left() < a.right() &&
     a.top() < b.bottom() && b.top() < a.bottom()
 }
 
-fn geometric_contains(outer: &Bounds, inner: &Bounds) -> bool {
+fn geometric_contains(outer: &Rect, inner: &Rect) -> bool {
     inner.right() <= outer.right() && inner.left() >= outer.left() &&
     inner.bottom() <= outer.bottom() && inner.top() >= outer.top()
 }
@@ -479,8 +479,8 @@ fn hair_cubic(
 ) -> Option<()> {
     if let Some(inset_clip) = inset_clip {
         debug_assert!(outset_clip.is_some());
-        let inset_clip = inset_clip.to_rect().to_bounds()?;
-        let outset_clip = outset_clip?.to_rect().to_bounds()?;
+        let inset_clip = inset_clip.to_rect();
+        let outset_clip = outset_clip?.to_rect();
 
         let bounds = compute_nocheck_cubic_bounds(points)?;
         if !geometric_overlap(&outset_clip, &bounds) {
@@ -507,7 +507,7 @@ fn hair_cubic(
     Some(())
 }
 
-fn compute_nocheck_cubic_bounds(points: &[Point; 4]) -> Option<Bounds> {
+fn compute_nocheck_cubic_bounds(points: &[Point; 4]) -> Option<Rect> {
     debug_assert!(points[0].is_finite());
     debug_assert!(points[1].is_finite());
     debug_assert!(points[2].is_finite());
@@ -521,7 +521,7 @@ fn compute_nocheck_cubic_bounds(points: &[Point; 4]) -> Option<Bounds> {
         max = max.max(pair);
     }
 
-    Bounds::from_ltrb(min.x(), min.y(), max.x(), max.y())
+    Rect::from_ltrb(min.x(), min.y(), max.x(), max.y())
 }
 
 // The off-curve points are "inside" the limits of the on-curve points.

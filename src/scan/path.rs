@@ -6,7 +6,7 @@
 
 use std::convert::TryFrom;
 
-use crate::{Path, IntRect, FillType, LengthU32, Bounds, ScreenIntRect};
+use crate::{Path, IntRect, FillType, LengthU32, Rect, ScreenIntRect};
 
 use crate::blitter::Blitter;
 use crate::edge::{Edge, LineEdge};
@@ -41,7 +41,7 @@ pub fn fill_path(
 // edges will fit inside the clip's bounds. The scan-converter introduces slight numeric errors
 // due to accumulated += of the slope, so this function is used to return a conservatively large
 // int-bounds, and thus we will only disable clipping if we're sure the edges will stay in-bounds.
-fn conservative_round_to_int(src: &Bounds) -> Option<IntRect> {
+fn conservative_round_to_int(src: &Rect) -> Option<IntRect> {
     IntRect::from_xywh(
         round_down_to_int(src.left()),
         round_down_to_int(src.top()),

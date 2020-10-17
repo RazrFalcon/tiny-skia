@@ -6,11 +6,10 @@
 
 // This module is closer to SkDraw than SkCanvas.
 
-use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, PathStroker, NormalizedF32, Color};
-use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillType, Rect, SpreadMode};
+use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, PathStroker, NormalizedF32, Color, Rect};
+use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillType, SpreadMode};
 
 use crate::painter::Painter;
-use crate::safe_geom_ext::TransformExt;
 use crate::scalar::Scalar;
 
 
@@ -262,25 +261,24 @@ impl Canvas {
             force_hq_pipeline: false, // Pattern will use hq anyway.
         };
 
-        self.fill_rect_impl(&rect, &paint)
+        self.fill_rect_impl(rect, &paint)
     }
 
     /// Fills a rectangle.
     ///
     /// If there is no transform - uses `Painter::fill_rect`.
     /// Otherwise, it is just a `Canvas::fill_path` with a rectangular path.
-    pub fn fill_rect(&mut self, rect: &Rect, paint: &Paint) {
+    pub fn fill_rect(&mut self, rect: Rect, paint: &Paint) {
         self.fill_rect_impl(rect, paint);
     }
 
     #[inline(always)]
-    fn fill_rect_impl(&mut self, rect: &Rect, paint: &Paint) -> Option<()> {
+    fn fill_rect_impl(&mut self, rect: Rect, paint: &Paint) -> Option<()> {
         // TODO: allow translate too
         if self.transform.is_identity() {
             self.pixmap.fill_rect(rect, paint)
         } else {
-            let bounds = rect.to_bounds()?;
-            let path = PathBuilder::from_bounds(bounds);
+            let path = PathBuilder::from_rect(rect);
             self.fill_path_impl(&path, paint, FillType::Winding)
         }
     }

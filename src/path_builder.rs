@@ -6,9 +6,8 @@
 
 // NOTE: this is not SkPathBuilder, but rather a reimplementation of SkPath.
 
-use crate::{Point, Bounds, Path, Rect};
+use crate::{Point, Rect, Path};
 
-use crate::safe_geom_ext::BoundsExt;
 use crate::path_geometry;
 use crate::path::PathVerb;
 use crate::scalar::{Scalar, SCALAR_ROOT_2_OVER_2};
@@ -62,14 +61,14 @@ impl PathBuilder {
         }
     }
 
-    /// Creates a new `Path` from `Bounds`.
+    /// Creates a new `Path` from `Rect`.
     ///
-    /// Never fails since `Bounds` is always valid.
+    /// Never fails since `Rect` is always valid.
     ///
     /// Segments are created clockwise: TopLeft -> TopRight -> BottomRight -> BottomLeft
     ///
     /// The contour is closed.
-    pub fn from_bounds(bounds: Bounds) -> Path {
+    pub fn from_rect(rect: Rect) -> Path {
         let verbs = vec![
             PathVerb::Move,
             PathVerb::Line,
@@ -79,14 +78,14 @@ impl PathBuilder {
         ];
 
         let points = vec![
-            Point::from_xy(bounds.left(), bounds.top()),
-            Point::from_xy(bounds.right(), bounds.top()),
-            Point::from_xy(bounds.right(), bounds.bottom()),
-            Point::from_xy(bounds.left(), bounds.bottom()),
+            Point::from_xy(rect.left(), rect.top()),
+            Point::from_xy(rect.right(), rect.top()),
+            Point::from_xy(rect.right(), rect.bottom()),
+            Point::from_xy(rect.left(), rect.bottom()),
         ];
 
         Path {
-            bounds,
+            bounds: rect,
             verbs,
             points,
         }
@@ -373,7 +372,7 @@ impl PathBuilder {
             return None;
         }
 
-        let bounds = Bounds::from_points(&self.points)?;
+        let bounds = Rect::from_points(&self.points)?;
 
         Some(Path {
             bounds,

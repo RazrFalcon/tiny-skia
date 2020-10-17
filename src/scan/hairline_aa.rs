@@ -7,12 +7,12 @@
 use std::convert::TryFrom;
 use std::num::NonZeroU16;
 
-use crate::{Rect, IntRect, ScreenIntRect, AlphaU8, LengthU32, Path, LineCap, Point, Bounds};
+use crate::{IntRect, ScreenIntRect, AlphaU8, LengthU32, Path, LineCap, Point, Rect};
 
 use crate::blitter::Blitter;
 use crate::fixed_point::{fdot6, fdot8, fdot16, FDot6, FDot8, FDot16};
 use crate::line_clipper;
-use crate::safe_geom_ext::{BoundsExt, LENGTH_U32_ONE, IntRectExt};
+use crate::math::LENGTH_U32_ONE;
 
 #[derive(Copy, Clone, Debug)]
 struct FixedRect {
@@ -230,7 +230,7 @@ pub fn stroke_path(
 
 fn anti_hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut dyn Blitter) -> Option<()> {
     let max = 32767.0;
-    let fixed_bounds = Bounds::from_ltrb(-max, -max, max, max)?;
+    let fixed_bounds = Rect::from_ltrb(-max, -max, max, max)?;
 
     let clip_bounds = if let Some(clip) = clip {
         // We perform integral clipping later on, but we do a scalar clip first
@@ -241,7 +241,7 @@ fn anti_hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &
         // clipper. To make the numerics safer, we outset by a whole pixel,
         // since the 1/2 pixel boundary is important to the antihair blitter,
         // we don't want to risk numerical fate by chopping on that edge.
-        clip.to_rect().to_bounds()?.outset(1.0, 1.0)
+        clip.to_rect().outset(1.0, 1.0)
     } else {
         None
     };

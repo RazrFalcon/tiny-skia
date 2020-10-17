@@ -63,7 +63,7 @@ fn int_rect() {
 
     let rect = Rect::from_xywh(10.0, 15.0, 80.0, 70.0).unwrap();
 
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/int-rect.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -78,7 +78,7 @@ fn float_rect() {
 
     let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
 
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -94,7 +94,7 @@ fn int_rect_aa() {
 
     let rect = Rect::from_xywh(10.0, 15.0, 80.0, 70.0).unwrap();
 
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/int-rect-aa.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -110,7 +110,7 @@ fn float_rect_aa() {
 
     let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
 
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-aa.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -127,7 +127,7 @@ fn float_rect_aa_highp() {
 
     let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
 
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-aa-highp.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -141,7 +141,7 @@ fn tiny_float_rect() {
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let rect = Rect::from_xywh(1.3, 1.4, 0.5, 0.6).unwrap();
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     assert_eq!(
         canvas.pixmap.pixels(),
@@ -170,7 +170,7 @@ fn tiny_float_rect_aa() {
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(1.3, 1.4, 0.5, 0.6).unwrap();
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     assert_eq!(
         canvas.pixmap.pixels(),
@@ -199,7 +199,7 @@ fn float_rect_clip_top_left_aa() {
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(-10.3, -20.4, 100.5, 70.2).unwrap();
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-clip-top-left-aa.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -214,7 +214,7 @@ fn float_rect_clip_top_right_aa() {
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(60.3, -20.4, 100.5, 70.2).unwrap();
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-clip-top-right-aa.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -229,7 +229,7 @@ fn float_rect_clip_bottom_right_aa() {
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(60.3, 40.4, 100.5, 70.2).unwrap();
-    canvas.fill_rect(&rect, &paint);
+    canvas.fill_rect(rect, &paint);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-clip-bottom-right-aa.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -364,7 +364,7 @@ fn memset2d() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 90.0, 90.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 90.0, 90.0).unwrap());
     canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/memset2d.png").unwrap();
@@ -379,7 +379,7 @@ fn memset2d_out_of_bounds() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(50.0, 50.0, 120.0, 120.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(50.0, 50.0, 120.0, 120.0).unwrap());
     canvas.fill_path(&path, &paint, FillType::Winding);
 
     let expected = Pixmap::load_png("tests/images/fill/memset2d-2.png").unwrap();

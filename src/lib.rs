@@ -23,6 +23,7 @@
 mod alpha_runs;
 mod blend_mode;
 mod blitter;
+mod rect;
 mod canvas;
 mod color;
 mod edge;
@@ -30,6 +31,8 @@ mod edge_builder;
 mod edge_clipper;
 mod fixed_point;
 mod floating_point;
+mod int_rect;
+mod int_size;
 mod line_clipper;
 mod math;
 mod painter;
@@ -37,28 +40,37 @@ mod path;
 mod path_builder;
 mod path_geometry;
 mod path_ops;
-mod pixmap;
 mod pipeline;
-mod safe_geom_ext;
+mod pixmap;
 mod scalar;
 mod scan;
+mod screen_int_rect;
 mod shaders;
 mod stroker;
+mod transform;
 mod wide;
 
-pub use safe_geom::*;
-
-pub use num_ext::NormalizedF32;
+pub use num_ext::*;
 
 pub use blend_mode::BlendMode;
+pub use rect::Rect;
 pub use canvas::{Canvas, PixmapPaint};
 pub use color::{ALPHA_U8_TRANSPARENT, ALPHA_U8_OPAQUE, ALPHA_TRANSPARENT, ALPHA_OPAQUE};
 pub use color::{Color, ColorU8, PremultipliedColor, PremultipliedColorU8, AlphaU8};
+pub use int_rect::IntRect;
+pub use int_size::IntSize;
 pub use painter::{Paint, FillType};
 pub use path::{Path, PathSegment, PathSegmentsIter};
 pub use path_builder::PathBuilder;
 pub use pixmap::Pixmap;
 pub use point::Point;
+pub use screen_int_rect::ScreenIntRect;
 pub use shaders::{GradientStop, SpreadMode, FilterQuality};
 pub use shaders::{Shader, LinearGradient, RadialGradient, Pattern};
 pub use stroker::{LineCap, LineJoin, Stroke, PathStroker};
+pub use transform::Transform;
+
+/// An integer length that is guarantee to be > 0
+pub type LengthU32 = std::num::NonZeroU32;
+/// A float length that is guarantee to be > 0
+pub type LengthF32 = NonZeroPositiveF32;

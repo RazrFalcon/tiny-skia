@@ -10,7 +10,7 @@ fn fill_rect() {
     paint.anti_alias = true;
 
     canvas.transform(1.2, 0.3, -0.7, 0.8, 12.0, 15.3);
-    canvas.fill_rect(&Rect::from_xywh(20.3, 10.4, 50.5, 30.2).unwrap(), &paint);
+    canvas.fill_rect(Rect::from_xywh(20.3, 10.4, 50.5, 30.2).unwrap(), &paint);
 
     let expected = Pixmap::load_png("tests/images/canvas/fill-rect.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -27,7 +27,7 @@ fn draw_pixmap() {
         let mut paint = Paint::default();
         paint.set_color_rgba8(50, 127, 150, 200);
         let rect = Rect::from_xywh(0.0, 50.0, 100.0, 50.0).unwrap();
-        canvas.fill_rect(&rect, &paint);
+        canvas.fill_rect(rect, &paint);
         canvas.pixmap
     };
 

@@ -13,7 +13,7 @@ fn line() {
     pb.line_to(30.0, 40.0);
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(10.0, 20.0, 30.0, 40.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(10.0, 20.0, 30.0, 40.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(10.0, 20.0)),
         PathSegment::LineTo(Point::from_xy(30.0, 40.0)),
@@ -21,7 +21,7 @@ fn line() {
 
     assert_eq!(format!("{:?}", path),
                "Path { segments: \"M 10 20 L 30 40\", \
-                bounds: Bounds { left: 10, top: 20, right: 30, bottom: 40 } }");
+                bounds: Rect { left: 10, top: 20, right: 30, bottom: 40 } }");
 }
 
 #[test]
@@ -30,7 +30,7 @@ fn no_move_before_line() {
     pb.line_to(30.0, 40.0);
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(0.0, 0.0, 30.0, 40.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(0.0, 0.0, 30.0, 40.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
        PathSegment::MoveTo(Point::from_xy(0.0, 0.0)),
        PathSegment::LineTo(Point::from_xy(30.0, 40.0)),
@@ -43,7 +43,7 @@ fn no_move_before_quad() {
     pb.quad_to(40.0, 30.0, 60.0, 75.0);
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(0.0, 0.0, 60.0, 75.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(0.0, 0.0, 60.0, 75.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
        PathSegment::MoveTo(Point::from_xy(0.0, 0.0)),
        PathSegment::QuadTo(Point::from_xy(40.0, 30.0), Point::from_xy(60.0, 75.0)),
@@ -56,7 +56,7 @@ fn no_move_before_cubic() {
     pb.cubic_to(40.0, 30.0, 60.0, 75.0, 33.0, 66.0);
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(0.0, 0.0, 60.0, 75.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(0.0, 0.0, 60.0, 75.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(0.0, 0.0)),
         PathSegment::CubicTo(Point::from_xy(40.0, 30.0), Point::from_xy(60.0, 75.0), Point::from_xy(33.0, 66.0)),
@@ -80,7 +80,7 @@ fn double_close() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(10.0, 10.0, 20.0, 20.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(10.0, 10.0, 20.0, 20.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(10.0, 10.0)),
         PathSegment::LineTo(Point::from_xy(20.0, 10.0)),
@@ -105,7 +105,7 @@ fn double_move_to_2() {
     pb.line_to(30.0, 40.0);
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(20.0, 10.0, 30.0, 40.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(20.0, 10.0, 30.0, 40.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(20.0, 10.0)),
         PathSegment::LineTo(Point::from_xy(30.0, 40.0)),
@@ -121,7 +121,7 @@ fn two_contours() {
     pb.line_to(300.0, 400.0);
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(10.0, 20.0, 300.0, 400.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(10.0, 20.0, 300.0, 400.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(10.0, 20.0)),
         PathSegment::LineTo(Point::from_xy(30.0, 40.0)),
@@ -141,7 +141,7 @@ fn two_closed_contours() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(10.0, 20.0, 300.0, 400.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(10.0, 20.0, 300.0, 400.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(10.0, 20.0)),
         PathSegment::LineTo(Point::from_xy(30.0, 40.0)),
@@ -161,7 +161,7 @@ fn line_after_close() {
     pb.line_to(20.0, 20.0);
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(10.0, 20.0, 30.0, 40.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(10.0, 20.0, 30.0, 40.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(10.0, 20.0)),
         PathSegment::LineTo(Point::from_xy(30.0, 40.0)),
@@ -178,7 +178,7 @@ fn hor_line() {
     pb.line_to(20.0, 10.0);
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(10.0, 10.0, 20.0, 10.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(10.0, 10.0, 20.0, 10.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(10.0, 10.0)),
         PathSegment::LineTo(Point::from_xy(20.0, 10.0)),
@@ -192,7 +192,7 @@ fn ver_line() {
     pb.line_to(10.0, 20.0);
     let path = pb.finish().unwrap();
 
-    assert_eq!(path.bounds(), Bounds::from_ltrb(10.0, 10.0, 10.0, 20.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_ltrb(10.0, 10.0, 10.0, 20.0).unwrap());
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(10.0, 10.0)),
         PathSegment::LineTo(Point::from_xy(10.0, 20.0)),

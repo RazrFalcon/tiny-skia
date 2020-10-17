@@ -16,7 +16,7 @@ fn two_stops_linear_pad_lq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -40,7 +40,7 @@ fn two_stops_linear_repeat_lq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -64,7 +64,7 @@ fn two_stops_linear_reflect_lq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -90,7 +90,7 @@ fn three_stops_evenly_spaced_lq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -115,7 +115,7 @@ fn two_stops_unevenly_spaced_lq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -140,7 +140,7 @@ fn two_stops_linear_pad_hq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -165,7 +165,7 @@ fn two_stops_linear_repeat_hq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -190,7 +190,7 @@ fn two_stops_linear_reflect_hq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -217,7 +217,7 @@ fn three_stops_evenly_spaced_hq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -243,7 +243,7 @@ fn two_stops_unevenly_spaced_hq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -271,7 +271,7 @@ fn well_behaved_radial() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -296,7 +296,7 @@ fn focal_on_circle_radial() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -321,7 +321,7 @@ fn conical_greater_radial() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -346,7 +346,7 @@ fn simple_radial_lq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -372,7 +372,7 @@ fn simple_radial_hq() {
         Transform::identity(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -398,7 +398,7 @@ fn simple_radial_with_ts_hq() {
         Transform::from_row(2.0, 0.3, -0.7, 1.2, 10.5, -12.3).unwrap(),
     ).unwrap();
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 

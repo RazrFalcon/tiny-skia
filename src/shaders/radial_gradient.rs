@@ -7,7 +7,6 @@
 use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 
 use crate::pipeline;
-use crate::safe_geom_ext::TransformExt;
 use crate::scalar::Scalar;
 use crate::shaders::StageRec;
 use crate::wide::u32x4;

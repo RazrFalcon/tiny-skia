@@ -33,7 +33,7 @@ fn pad_nearest() {
         Transform::identity(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -55,7 +55,7 @@ fn repeat_nearest() {
         Transform::identity(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -77,7 +77,7 @@ fn reflect_nearest() {
         Transform::identity(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -102,7 +102,7 @@ fn pad_bicubic() {
         Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -125,7 +125,7 @@ fn repeat_bicubic() {
         Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -148,7 +148,7 @@ fn reflect_bicubic() {
         Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -170,7 +170,7 @@ fn filter_nearest_no_ts() {
         Transform::identity(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -192,7 +192,7 @@ fn filter_nearest() {
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -214,7 +214,7 @@ fn filter_bilinear() {
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 
@@ -236,7 +236,7 @@ fn filter_bicubic() {
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
-    let path = PathBuilder::from_bounds(Bounds::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
     canvas.fill_path(&path, &paint, FillType::Winding);
 

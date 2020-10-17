@@ -4,9 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, PathBuilder, Bounds, Transform, Stroke, PathStroker};
+use crate::{Point, PathBuilder, Rect, Transform, Stroke, PathStroker};
 
-use crate::safe_geom_ext::{BoundsExt, TransformExt};
 use crate::scalar::SCALAR_MAX;
 
 
@@ -36,7 +35,7 @@ pub enum PathVerb {
 pub struct Path {
     pub(crate) verbs: Vec<PathVerb>,
     pub(crate) points: Vec<Point>,
-    pub(crate) bounds: Bounds,
+    pub(crate) bounds: Rect,
 }
 
 impl Path {
@@ -53,7 +52,7 @@ impl Path {
     /// Returns the bounds of the path's points.
     ///
     /// The value is already calculated.
-    pub fn bounds(&self) -> Bounds {
+    pub fn bounds(&self) -> Rect {
         self.bounds
     }
 
@@ -68,7 +67,7 @@ impl Path {
         ts.map_points(&mut self.points);
 
         // Update bounds.
-        self.bounds = Bounds::from_points(&self.points)?;
+        self.bounds = Rect::from_points(&self.points)?;
 
         Some(self)
     }

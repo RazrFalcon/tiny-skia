@@ -36,3 +36,27 @@ impl SaturateCast<f64> for i32 {
         x as i32
     }
 }
+
+
+pub trait SaturateRound<T>: SaturateCast<T> {
+    fn saturate_floor(n: T) -> Self;
+    fn saturate_ceil(n: T) -> Self;
+    fn saturate_round(n: T) -> Self;
+}
+
+impl SaturateRound<f32> for i32 {
+    #[inline]
+    fn saturate_floor(x: f32) -> Self {
+        Self::saturate_from(x.floor())
+    }
+
+    #[inline]
+    fn saturate_ceil(x: f32) -> Self {
+        Self::saturate_from(x.ceil())
+    }
+
+    #[inline]
+    fn saturate_round(x: f32) -> Self {
+        Self::saturate_from(x.floor() + 0.5)
+    }
+}

@@ -6,7 +6,6 @@
 
 use crate::{Shader, Transform, Pixmap, SpreadMode, NormalizedF32};
 
-use crate::safe_geom_ext::TransformExt;
 use crate::shaders::StageRec;
 use crate::pipeline;
 
