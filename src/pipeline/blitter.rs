@@ -66,12 +66,9 @@ impl<'a> RasterPipelineBlitter<'a> {
                     pipeline: &mut shader_pipeline,
                 };
 
-                if shader.push_stages(rec) {
-                    RasterPipelineBlitter::new_inner(paint, shader_pipeline, is_opaque,
-                                                     is_constant, pixmap)
-                } else {
-                    None
-                }
+                shader.push_stages(rec)?;
+                RasterPipelineBlitter::new_inner(paint, shader_pipeline, is_opaque,
+                                                 is_constant, pixmap)
             }
         }
     }

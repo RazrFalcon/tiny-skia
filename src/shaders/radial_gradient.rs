@@ -143,7 +143,7 @@ impl RadialGradient {
         }
     }
 
-    pub(crate) fn push_stages(&self, rec: StageRec) -> bool {
+    pub(crate) fn push_stages(&self, rec: StageRec) -> Option<()> {
         self.base.push_stages(rec, &|rec, post_p| {
             if let Some(focal_data) = self.focal_data {
                 // Unlike, we have only the Focal radial gradient type.
@@ -174,6 +174,6 @@ impl RadialGradient {
             } else {
                 rec.pipeline.push(pipeline::Stage::XYToRadius);
             }
-        }).is_some()
+        })
     }
 }

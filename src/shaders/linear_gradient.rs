@@ -68,8 +68,8 @@ impl LinearGradient {
         self.base.colors_are_opaque
     }
 
-    pub(crate) fn push_stages(&self, rec: StageRec) -> bool {
-        self.base.push_stages(rec, &|_, _| {}).is_some()
+    pub(crate) fn push_stages(&self, rec: StageRec) -> Option<()> {
+        self.base.push_stages(rec, &|_, _| {})
     }
 }
 
