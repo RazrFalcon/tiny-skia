@@ -756,6 +756,8 @@ fn lerp(from: u16x16, to: u16x16, t: u16x16) -> u16x16 {
 fn split(v: &f32x16, lo: &mut u16x16, hi: &mut u16x16) {
     const U16X16_SIZEOF: usize = std::mem::size_of::<u16x16>();
 
+    // Should be perfectly safe.
+    // We're simply copying f32x16 (512bit) into two u16x16 (256 bit).
     unsafe {
         let v_data = v.0.as_ptr() as *mut u8;
         std::ptr::copy_nonoverlapping(
@@ -775,6 +777,8 @@ fn split(v: &f32x16, lo: &mut u16x16, hi: &mut u16x16) {
 fn join(lo: &u16x16, hi: &u16x16) -> f32x16 {
     const U16X16_SIZEOF: usize = std::mem::size_of::<u16x16>();
 
+    // Should be perfectly safe.
+    // We're simply copying two u16x16 (256 bit) into f32x16 (512bit).
     let mut v = f32x16::default();
     unsafe {
         let v_data = v.0.as_mut_ptr() as *mut u8;

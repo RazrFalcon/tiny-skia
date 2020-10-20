@@ -164,15 +164,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "memmap2"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9b70ca2a6103ac8b665dc150b142ef0e4e89df640c9e6cf295d189c3caebe5a"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "miniz_oxide"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -268,7 +259,6 @@ dependencies = [
  "arrayvec",
  "bytemuck",
  "float-cmp",
- "memmap2",
  "num-ext",
  "png 0.16.7",
  "wide",

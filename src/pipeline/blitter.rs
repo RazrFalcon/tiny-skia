@@ -233,19 +233,9 @@ impl Blitter for RasterPipelineBlitter<'_> {
     fn blit_rect(&mut self, rect: &ScreenIntRect) {
         if let Some(c) = self.memset2d_color {
             for y in 0..rect.height() {
-                // Cast pixmap data to color.
-                let mut addr = self.pixels_ctx.pixels.as_mut_ptr();
-
-                // Calculate pixel offset in bytes.
-                let offset = calc_pixel_offset(rect.x(), rect.y() + y, self.pixels_ctx.stride.get());
-                addr = unsafe { addr.add(offset) };
-
-                for _ in 0..rect.width() as usize {
-                    unsafe {
-                        *addr = c;
-                        addr = addr.add(1);
-                    }
-                }
+                let start = self.pixels_ctx.offset(rect.x() as usize, (rect.y() + y) as usize);
+                let end = start + rect.width() as usize;
+                self.pixels_ctx.pixels[start..end].iter_mut().for_each(|p| *p = c);
             }
 
             return;
@@ -314,12 +304,4 @@ impl Blitter for RasterPipelineBlitter<'_> {
 
         self.blit_mask_rp.as_ref().unwrap().run(clip);
     }
-}
-
-fn calc_pixel_offset(x: u32, y: u32, stride: u32) -> usize {
-    calc_pixel_offset_usize(x as usize, y as usize, stride as usize)
-}
-
-fn calc_pixel_offset_usize(x: usize, y: usize, stride: usize) -> usize {
-    y * stride + x
 }

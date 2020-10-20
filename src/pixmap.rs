@@ -106,24 +106,12 @@ impl Pixmap {
 
     /// Returns a slice of pixels.
     pub fn pixels(&self) -> &[PremultipliedColorU8] {
-        #[allow(clippy::cast_ptr_alignment)]
-        unsafe {
-            std::slice::from_raw_parts(
-                self.data.as_ptr() as *const PremultipliedColorU8,
-                self.data.len() / BYTES_PER_PIXEL,
-            )
-        }
+        bytemuck::cast_slice(self.data())
     }
 
     /// Returns a mutable slice of pixels.
     pub fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
-        #[allow(clippy::cast_ptr_alignment)]
-        unsafe {
-            std::slice::from_raw_parts_mut(
-                self.data.as_ptr() as *mut PremultipliedColorU8,
-                self.data.len() / BYTES_PER_PIXEL,
-            )
-        }
+        bytemuck::cast_slice_mut(self.data_mut())
     }
 
     /// Fills the entire pixmap with a specified color.
@@ -227,8 +215,7 @@ impl Pixmap {
         // `png::Decoder` is generic over input, which means that it will instance
         // two copies: one for `&[]` and one for `File`. Which will simply bloat the code.
         // Therefore we're using only one type for input.
-        let file = std::fs::File::open(path)?;
-        let data = unsafe { &memmap2::MmapOptions::new().map(&file)? };
+        let data = std::fs::read(path)?;
         Self::decode_png(&data)
     }
 

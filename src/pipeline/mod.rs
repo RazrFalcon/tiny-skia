@@ -4,6 +4,95 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/*!
+A raster pipeline implementation.
+
+Despite having a lot of changes compared to `SkRasterPipeline`,
+the core principles are the same:
+
+1. A pipeline consists of stages.
+1. Each stage can have an optional context.
+1. Each stage has a high precision implementation. See `highp.rs`.
+1. Some stages have a low precision (lowp) implementation. See `lowp.rs`.
+1. Each stage calls the "next" stage after its done.
+1. During pipeline "compilation", if **all** stages have a lowp implementation,
+   the lowp pipeline will be used. Otherwise, the highp variant will be used.
+1. The pipeline "compilation" produces a list of `void` pointer pairs (aka program),
+   were the first pointer is a stage function pointer and the second one is an optional context.
+   The last pointer is a pointer to the "return" function,
+   which simply stops the execution of the pipeline.
+   So the program can look like this: `[fn, ctx, fn, fn, fn, ctx, ret_fn]`.
+
+A simple illustration:
+
+```ignore
+type StageFn = fn(program: *const *const c_void);
+
+fn start(program: *const *const c_void) {
+    let next: StageFn = unsafe { *program.cast() };
+    next(program);
+}
+
+fn stage1(program: *const *const c_void) {
+    // This stage has a context.
+    let ctx: &SomeT = unsafe { &*(*program.add(1)).cast() };
+
+    // Do stuff...
+
+    unsafe {
+        let next: StageFn = *program.add(2).cast(); // advance by 2, because of ctx
+        next(program.add(2));
+    }
+}
+
+fn stage2(program: *const *const c_void) {
+    // This stage has no context.
+
+    // Do stuff...
+
+    unsafe {
+        let next: StageFn = *program.add(1).cast(); // advance by 1, because no ctx
+        next(program.add(1));
+    }
+}
+
+fn just_return(_: *const *const c_void) {
+    // stops the execution
+}
+
+// Were the `program` can look like: `[*stage1, *SomeT, *stage2, *just_return]`
+```
+
+This implementation is a bit tricky, but it gives the maximum performance.
+A simple and straightforward implementation using traits and loops, like:
+
+```ignore
+trait StageTrait {
+    fn apply(&mut self, pixels: &mut [Pixel]);
+}
+
+let stages: Vec<&mut dyn StageTrait>;
+for stage in stages {
+    stage.apply(pixels);
+}
+```
+
+will be at least 20-30% slower. Not really sure why.
+
+The main problem with function pointers approach, is that there is no way
+we can have a list of random data and safely cast it without any overhead.
+Therefore we have to really on unsafe. A stage function simply "knows" that
+there are enough pointers left in the `program`.
+
+Moreover, since this module is all about performance, any kind of branching is
+strictly forbidden. All stage functions must not use `if`, `match` or loops.
+There are still some exceptions, which are basically an imperfect implementations
+and should be optimized out in the future.
+
+Despite all the above, we still have a fully checked pixels access.
+Only program pointers casting (to fn and ctx) and data types mutations are unsafe.
+*/
+
 use std::ffi::c_void;
 use std::rc::Rc;
 
@@ -168,6 +257,7 @@ pub struct GatherCtx {
 impl GatherCtx {
     #[inline(always)]
     pub fn gather(&self, index: u32x8) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
+        // TODO: remove unsafe
         let pixels = unsafe { std::slice::from_raw_parts(self.pixels, self.pixels_len) };
         let index: [u32; 8] = index.into();
         [
@@ -490,8 +580,8 @@ impl RasterPipelineBuilder {
 }
 
 pub struct RasterPipeline {
-    program: ArrayVec<[*const c_void; MAX_STAGES]>,
-    tail_program: ArrayVec<[*const c_void; MAX_STAGES]>,
+    program: ArrayVec<[*const c_void; MAX_STAGES * 2]>, // 2x because we have fn + ?ctx.
+    tail_program: ArrayVec<[*const c_void; MAX_STAGES * 2]>,
     is_highp: bool,
 }
 
@@ -511,6 +601,8 @@ impl RasterPipeline {
 }
 
 
+// We cannot guarantee that `unsafe` in this trait is actually safe.
+// Our only choice is to run tests under address sanitizer, which we do.
 trait BasePipeline {
     fn program(&self) -> *const *const c_void;
     fn set_program(&mut self, p: *const *const c_void);

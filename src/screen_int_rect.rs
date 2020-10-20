@@ -185,7 +185,7 @@ impl ScreenIntRect {
     /// Converts into a `IntRect`.
     #[inline]
     pub fn to_int_rect(&self) -> IntRect {
-        // Everything is already checked by constructor.
+        // Everything is already checked by constructors.
         unsafe {
             IntRect::from_xywh_unchecked(
                 self.x as i32,
@@ -218,53 +218,48 @@ mod tests {
 
     #[test]
     fn tests() {
-        unsafe {
-            assert_eq!(ScreenIntRect::from_xywh(0, 0, 0, 0), None);
-            assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, 0), None);
-            assert_eq!(ScreenIntRect::from_xywh(0, 0, 0, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, 0, 0), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, 0), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, 0, 1), None);
 
-            assert_eq!(ScreenIntRect::from_xywh(0, 0, std::u32::MAX, std::u32::MAX), None);
-            assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, std::u32::MAX), None);
-            assert_eq!(ScreenIntRect::from_xywh(0, 0, std::u32::MAX, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, std::u32::MAX, std::u32::MAX), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, std::u32::MAX), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, std::u32::MAX, 1), None);
 
-            assert_eq!(ScreenIntRect::from_xywh(std::u32::MAX, 0, 1, 1), None);
-            assert_eq!(ScreenIntRect::from_xywh(0, std::u32::MAX, 1, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(std::u32::MAX, 0, 1, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, std::u32::MAX, 1, 1), None);
 
-            assert_eq!(ScreenIntRect::from_xywh(std::u32::MAX, std::u32::MAX, std::u32::MAX, std::u32::MAX), None);
+        assert_eq!(ScreenIntRect::from_xywh(std::u32::MAX, std::u32::MAX, std::u32::MAX, std::u32::MAX), None);
 
-            assert_eq!(ScreenIntRect::from_xywh(1, 2, 3, 4),
-                       Some(ScreenIntRect::from_xywh_unchecked(1, 2, 3, 4)));
+        let r = ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap();
+        assert_eq!(r.x(), 1);
+        assert_eq!(r.y(), 2);
+        assert_eq!(r.width(), 3);
+        assert_eq!(r.height(), 4);
+        assert_eq!(r.right(), 4);
+        assert_eq!(r.bottom(), 6);
+        assert_eq!(r.size(), IntSize::from_wh(3, 4).unwrap());
+        // assert_eq!(r.to_rect(), Rect::from_xywh_unchecked(1.0, 2.0, 3.0, 4.0));
 
-            let r = ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap();
-            assert_eq!(r.x(), 1);
-            assert_eq!(r.y(), 2);
-            assert_eq!(r.width(), 3);
-            assert_eq!(r.height(), 4);
-            assert_eq!(r.right(), 4);
-            assert_eq!(r.bottom(), 6);
-            assert_eq!(r.size(), IntSize::from_unchecked_wh(3, 4));
-            // assert_eq!(r.to_rect(), Rect::from_xywh_unchecked(1.0, 2.0, 3.0, 4.0));
+        {
+            // No intersection.
+            let r1 = ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap();
+            let r2 = ScreenIntRect::from_xywh(11, 12, 13, 14).unwrap();
+            assert_eq!(r1.intersect(&r2), None);
+        }
 
-            {
-                // No intersection.
-                let r1 = ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap();
-                let r2 = ScreenIntRect::from_xywh(11, 12, 13, 14).unwrap();
-                assert_eq!(r1.intersect(&r2), None);
-            }
+        {
+            // Second inside the first one.
+            let r1 = ScreenIntRect::from_xywh(1, 2, 30, 40).unwrap();
+            let r2 = ScreenIntRect::from_xywh(11, 12, 13, 14).unwrap();
+            assert_eq!(r1.intersect(&r2), ScreenIntRect::from_xywh(11, 12, 13, 14));
+        }
 
-            {
-                // Second inside the first one.
-                let r1 = ScreenIntRect::from_xywh(1, 2, 30, 40).unwrap();
-                let r2 = ScreenIntRect::from_xywh(11, 12, 13, 14).unwrap();
-                assert_eq!(r1.intersect(&r2), ScreenIntRect::from_xywh(11, 12, 13, 14));
-            }
-
-            {
-                // Partial overlap.
-                let r1 = ScreenIntRect::from_xywh(1, 2, 30, 40).unwrap();
-                let r2 = ScreenIntRect::from_xywh(11, 12, 50, 60).unwrap();
-                assert_eq!(r1.intersect(&r2), ScreenIntRect::from_xywh(11, 12, 20, 30));
-            }
+        {
+            // Partial overlap.
+            let r1 = ScreenIntRect::from_xywh(1, 2, 30, 40).unwrap();
+            let r2 = ScreenIntRect::from_xywh(11, 12, 50, 60).unwrap();
+            assert_eq!(r1.intersect(&r2), ScreenIntRect::from_xywh(11, 12, 20, 30));
         }
     }
 }

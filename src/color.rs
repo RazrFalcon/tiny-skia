@@ -101,6 +101,9 @@ impl std::fmt::Debug for ColorU8 {
 #[derive(Copy, Clone, PartialEq)]
 pub struct PremultipliedColorU8(u32);
 
+unsafe impl bytemuck::Zeroable for PremultipliedColorU8 {}
+unsafe impl bytemuck::Pod for PremultipliedColorU8 {}
+
 impl PremultipliedColorU8 {
     /// A transparent color.
     pub const TRANSPARENT: Self = PremultipliedColorU8::from_rgba_unchecked(0, 0, 0, 0);
@@ -393,11 +396,13 @@ impl PremultipliedColor {
 
     /// Returns a demultiplied color.
     pub fn demultiply(&self) -> Color {
-        unsafe {
-            let a = self.a.get();
-            if a == 0.0 {
-                Color::TRANSPARENT
-            } else {
+        let a = self.a.get();
+        if a == 0.0 {
+            Color::TRANSPARENT
+        } else {
+            // Skip 0..1 bounds checking since we're already in a 0..1 range
+            // and we cannot exceed it.
+            unsafe {
                 Color {
                     r: NormalizedF32::new_unchecked(self.r.get() / a),
                     g: NormalizedF32::new_unchecked(self.g.get() / a),
@@ -417,6 +422,7 @@ impl PremultipliedColor {
 
 #[inline]
 fn normalize_u8(n: u8) -> NormalizedF32 {
+    // Cannot fail, because `n` is in 0..255 range.
     unsafe {
         NormalizedF32::new_unchecked(n as f32 / 255.0)
     }

@@ -16,7 +16,6 @@ arrayref = "0.3.6"
 arrayvec = "0.5.1"
 bytemuck = "1.4.1"
 float-cmp = { version = "0.8", default-features = false, features = ["std"] }
-memmap2 = { version = "0.1", optional = true }
 num-ext = { git = "https://github.com/RazrFalcon/num-ext", rev = "109f01a" }
 png = { version = "0.16.6", optional = true }
 wide = { git = "https://github.com/Lokathor/wide", rev = "cee7b6f", features = ["std"] }
@@ -25,4 +24,4 @@ wide = { git = "https://github.com/Lokathor/wide", rev = "cee7b6f", features = [
 default = ["png-format"]
 
 # Allows loading and saving `Pixmap` as PNG.
-png-format = ["png", "memmap2"]
+png-format = ["png"]

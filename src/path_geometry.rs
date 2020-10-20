@@ -22,11 +22,12 @@ mod private {
     impl TValue {
         // Just a random, valid numbers to init the array.
         // Will be overwritten anyway.
+        // Perfectly safe.
         pub const ANY: Self = unsafe { TValue(FiniteF32::new_unchecked(0.5)) };
 
         pub fn new(n: f32) -> Option<Self> {
             if n > 0.0 && n < 1.0 {
-                // `n` is guarantee to be finite after the bounds check
+                // `n` is guarantee to be finite after the bounds check.
                 unsafe { Some(TValue(FiniteF32::new_unchecked(n))) }
             } else {
                 None
@@ -35,7 +36,7 @@ mod private {
 
         pub fn new_bounded(n: f32) -> Self {
             let n = n.bound(std::f32::EPSILON, 1.0 - std::f32::EPSILON);
-            // `n` is guarantee to be finite after clamping
+            // `n` is guarantee to be finite after clamping.
             debug_assert!(n.is_finite());
             unsafe { TValue(FiniteF32::new_unchecked(n)) }
         }

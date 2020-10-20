@@ -8,6 +8,7 @@ use crate::{FiniteF32, NonZeroF32, Point};
 
 use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
 
+// FiniteF32::default() is not `const` yet.
 const FINITE_ZERO: FiniteF32 = unsafe { FiniteF32::new_unchecked(0.0) };
 const NONZERO_ONE: NonZeroF32 = unsafe { NonZeroF32::new_unchecked(1.0) };
 
@@ -644,22 +645,22 @@ mod tests {
 
     #[test]
     fn transform() {
-        unsafe {
-            assert_eq!(Transform::identity(),
-                       Transform::from_row_unchecked(1.0, 0.0, 0.0, 1.0, 0.0, 0.0));
+        assert_eq!(Transform::identity(),
+                   Transform::from_row(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).unwrap());
 
+        unsafe {
             assert_eq!(Transform::from_row(1.0, 2.0, 3.0, 4.0, 5.0, 6.0).unwrap(),
                        Transform::from_row_unchecked(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
-
-            assert_eq!(Transform::from_scale(1.0, 2.0).unwrap(),
-                       Transform::from_row_unchecked(1.0, 0.0, 0.0, 2.0, 0.0, 0.0));
-
-            assert_eq!(Transform::from_skew(2.0, 3.0).unwrap(),
-                       Transform::from_row_unchecked(1.0, 3.0, 2.0, 1.0, 0.0, 0.0));
-
-            assert_eq!(Transform::from_translate(5.0, 6.0).unwrap(),
-                       Transform::from_row_unchecked(1.0, 0.0, 0.0, 1.0, 5.0, 6.0));
         }
+
+        assert_eq!(Transform::from_scale(1.0, 2.0).unwrap(),
+                   Transform::from_row(1.0, 0.0, 0.0, 2.0, 0.0, 0.0).unwrap());
+
+        assert_eq!(Transform::from_skew(2.0, 3.0).unwrap(),
+                   Transform::from_row(1.0, 3.0, 2.0, 1.0, 0.0, 0.0).unwrap());
+
+        assert_eq!(Transform::from_translate(5.0, 6.0).unwrap(),
+                   Transform::from_row(1.0, 0.0, 0.0, 1.0, 5.0, 6.0).unwrap());
 
         assert_eq!(Transform::from_scale(0.0, 0.0), None);
         assert_eq!(Transform::from_scale(1.0, 0.0), None);

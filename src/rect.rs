@@ -158,6 +158,7 @@ impl Rect {
     /// Returns rect's width.
     #[inline]
     pub fn width_safe(&self) -> FiniteF32 {
+        // No overflow is guaranteed by constructors.
         unsafe {
             FiniteF32::new_unchecked(self.right.get() - self.left.get())
         }
@@ -166,6 +167,7 @@ impl Rect {
     /// Returns rect's height.
     #[inline]
     pub fn height_safe(&self) -> FiniteF32 {
+        // No overflow is guaranteed by constructors.
         unsafe {
             FiniteF32::new_unchecked(self.bottom.get() - self.top.get())
         }
@@ -296,29 +298,29 @@ mod tests {
 
     #[test]
     fn tests() {
-        unsafe {
-            assert_eq!(Rect::from_ltrb(10.0, 10.0, 5.0, 10.0), None);
-            assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, 5.0), None);
-            assert_eq!(Rect::from_ltrb(std::f32::NAN, 10.0, 10.0, 10.0), None);
-            assert_eq!(Rect::from_ltrb(10.0, std::f32::NAN, 10.0, 10.0), None);
-            assert_eq!(Rect::from_ltrb(10.0, 10.0, std::f32::NAN, 10.0), None);
-            assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, std::f32::NAN), None);
-            assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, std::f32::INFINITY), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, 5.0, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, 5.0), None);
+        assert_eq!(Rect::from_ltrb(std::f32::NAN, 10.0, 10.0, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, std::f32::NAN, 10.0, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, std::f32::NAN, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, std::f32::NAN), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, std::f32::INFINITY), None);
 
+        unsafe {
             assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, 10.0),
                        Some(Rect::from_ltrb_unchecked(10.0, 10.0, 10.0, 10.0)));
-
-            let rect = Rect::from_ltrb(10.0, 20.0, 30.0, 40.0).unwrap();
-            assert_eq!(rect.left(), 10.0);
-            assert_eq!(rect.top(), 20.0);
-            assert_eq!(rect.right(), 30.0);
-            assert_eq!(rect.bottom(), 40.0);
-            assert_eq!(rect.width(), 20.0);
-            assert_eq!(rect.height(), 20.0);
-
-            let rect = Rect::from_ltrb(-30.0, 20.0, -10.0, 40.0).unwrap();
-            assert_eq!(rect.width(), 20.0);
-            assert_eq!(rect.height(), 20.0);
         }
+
+        let rect = Rect::from_ltrb(10.0, 20.0, 30.0, 40.0).unwrap();
+        assert_eq!(rect.left(), 10.0);
+        assert_eq!(rect.top(), 20.0);
+        assert_eq!(rect.right(), 30.0);
+        assert_eq!(rect.bottom(), 40.0);
+        assert_eq!(rect.width(), 20.0);
+        assert_eq!(rect.height(), 20.0);
+
+        let rect = Rect::from_ltrb(-30.0, 20.0, -10.0, 40.0).unwrap();
+        assert_eq!(rect.width(), 20.0);
+        assert_eq!(rect.height(), 20.0);
     }
 }
