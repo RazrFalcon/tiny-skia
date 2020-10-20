@@ -106,14 +106,6 @@ pub struct PixelsCtx<'a> {
 
 impl PixelsCtx<'_> {
     #[inline(always)]
-    pub fn from_program(program: *const *const c_void) -> &'static mut Self {
-        // We have to cast `*const` to `*mut` first, because Rust doesn't allow
-        // modifying `PixelsCtx::pixels` via `&PixelsCtx`.
-        // Even though that `PixelsCtx::pixels` is actually mutable.
-        unsafe { &mut *(*program.add(1) as *mut c_void).cast() }
-    }
-
-    #[inline(always)]
     fn offset(&self, dx: usize, dy: usize) -> usize {
         self.stride.get() as usize * dy + dx
     }
@@ -511,6 +503,34 @@ impl RasterPipeline {
         } else {
             lowp::start(self.program.as_ptr(), self.tail_program.as_ptr(), rect);
         }
+    }
+}
+
+
+trait BasePipeline {
+    fn program(&self) -> *const *const c_void;
+    fn set_program(&mut self, p: *const *const c_void);
+
+    #[inline(always)]
+    fn next_stage(&mut self, offset: usize) {
+        unsafe {
+            self.set_program(self.program().add(offset));
+
+            let next: fn(&mut Self) = *self.program().cast();
+            next(self);
+        }
+    }
+
+    #[inline(always)]
+    fn stage_ctx<T>(&self) -> &'static T {
+        unsafe { &*(*self.program().add(1)).cast() }
+    }
+
+    #[inline(always)]
+    fn stage_ctx_mut<T>(&mut self) -> &'static mut T {
+        // We have to cast `*const` to `*mut` first.
+        // TODO: this is logically incorrect since we're changing the mutability.
+        unsafe { &mut *(*self.program().add(1) as *mut c_void).cast() }
     }
 }
 
