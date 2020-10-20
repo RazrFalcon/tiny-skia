@@ -65,7 +65,6 @@ impl<'a> Pattern<'a> {
         let ctx = pipeline::GatherCtx {
             pixels: self.pixmap.pixels().as_ptr(),
             pixels_len: self.pixmap.pixels().len(),
-            stride: self.pixmap.size().width_safe(),
             width: self.pixmap.size().width_safe(),
             height: self.pixmap.size().height_safe(),
         };

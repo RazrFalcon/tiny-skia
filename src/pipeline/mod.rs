@@ -249,7 +249,6 @@ pub struct GatherCtx {
     // The access is still bound checked.
     pub pixels: *const PremultipliedColorU8,
     pub pixels_len: usize,
-    pub stride: LengthU32,
     pub width: LengthU32,
     pub height: LengthU32,
 }

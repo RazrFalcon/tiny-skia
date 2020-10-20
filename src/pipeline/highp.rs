@@ -276,7 +276,7 @@ fn gather_ix(ctx: &super::GatherCtx, mut x: f32x8, mut y: f32x8) -> u32x8 {
     x = x.max(f32x8::default()).min(f32x8::splat(w));
     y = y.max(f32x8::default()).min(f32x8::splat(h));
 
-    (y.trunc_int() * i32x8::splat(ctx.stride.get() as i32) + x.trunc_int()).to_u32x8_bitcast()
+    (y.trunc_int() * i32x8::splat(ctx.width.get() as i32) + x.trunc_int()).to_u32x8_bitcast()
 }
 
 #[inline(always)]
