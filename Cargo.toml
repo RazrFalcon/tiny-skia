@@ -19,7 +19,7 @@ float-cmp = { version = "0.8", default-features = false, features = ["std"] }
 memmap2 = { version = "0.1", optional = true }
 num-ext = { git = "https://github.com/RazrFalcon/num-ext", rev = "109f01a" }
 png = { version = "0.16.6", optional = true }
-wide = { version = "0.6.1", features = ["std"] }
+wide = { git = "https://github.com/Lokathor/wide", rev = "cee7b6f", features = ["std"] }
 
 [features]
 default = ["png-format"]

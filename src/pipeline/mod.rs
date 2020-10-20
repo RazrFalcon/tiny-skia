@@ -14,7 +14,7 @@ use crate::{PremultipliedColor, PremultipliedColorU8};
 
 pub use blitter::RasterPipelineBlitter;
 
-use crate::wide::u32x4;
+use crate::wide::u32x8;
 
 mod blitter;
 mod lowp;
@@ -167,14 +167,18 @@ pub struct GatherCtx {
 
 impl GatherCtx {
     #[inline(always)]
-    pub fn gather(&self, index: u32x4) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
+    pub fn gather(&self, index: u32x8) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
         let pixels = unsafe { std::slice::from_raw_parts(self.pixels, self.pixels_len) };
-        let index: [u32; 4] = index.into();
+        let index: [u32; 8] = index.into();
         [
             pixels[index[0] as usize],
             pixels[index[1] as usize],
             pixels[index[2] as usize],
             pixels[index[3] as usize],
+            pixels[index[4] as usize],
+            pixels[index[5] as usize],
+            pixels[index[6] as usize],
+            pixels[index[7] as usize],
         ]
     }
 }
@@ -267,7 +271,7 @@ impl Context for GradientCtx {}
 #[derive(Copy, Clone, Debug)]
 pub struct TwoPointConicalGradientCtx {
     // This context is used only in highp, where we use Tx4.
-    pub mask: u32x4,
+    pub mask: u32x8,
     pub p0: f32,
 }
 

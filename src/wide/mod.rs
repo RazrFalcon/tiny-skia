@@ -13,7 +13,7 @@
 // The only exception is U16x16, were we have to force inlining,
 // otherwise the performance will be horrible.
 
-pub use wide::{f32x4, i32x4, u32x4};
+pub use wide::{f32x4, i32x4, u32x4, f32x8, i32x8, u32x8};
 
 mod u16x16_t;
 mod f32x2_t;
@@ -86,6 +86,69 @@ impl I32x4Ext for i32x4 {
     }
 
     fn to_f32x4_bitcast(self) -> f32x4 {
+        bytemuck::cast(self)
+    }
+}
+
+
+pub trait F32x8Ext {
+    fn floor(self) -> Self;
+    fn fract(self) -> Self;
+    fn normalize(self) -> Self;
+    fn to_i32x8_bitcast(self) -> i32x8;
+    fn to_u32x8_bitcast(self) -> u32x8;
+}
+
+impl F32x8Ext for f32x8 {
+    fn floor(self) -> Self {
+        use wide::CmpGt;
+        let roundtrip = self.trunc_int().round_float();
+        roundtrip - roundtrip.cmp_gt(self).blend(f32x8::splat(1.0), f32x8::default())
+    }
+
+    fn fract(self) -> Self {
+        self - self.floor()
+    }
+
+    fn normalize(self) -> Self {
+        self.max(f32x8::default()).min(f32x8::splat(1.0))
+    }
+
+    fn to_i32x8_bitcast(self) -> i32x8 {
+        bytemuck::cast(self)
+    }
+
+    fn to_u32x8_bitcast(self) -> u32x8 {
+        bytemuck::cast(self)
+    }
+}
+
+pub trait U32x8Ext {
+    fn to_i32x8_bitcast(self) -> i32x8;
+    fn to_f32x8_bitcast(self) -> f32x8;
+}
+
+impl U32x8Ext for u32x8 {
+    fn to_i32x8_bitcast(self) -> i32x8 {
+        bytemuck::cast(self)
+    }
+
+    fn to_f32x8_bitcast(self) -> f32x8 {
+        bytemuck::cast(self)
+    }
+}
+
+pub trait I32x8Ext {
+    fn to_u32x8_bitcast(self) -> u32x8;
+    fn to_f32x8_bitcast(self) -> f32x8;
+}
+
+impl I32x8Ext for i32x8 {
+    fn to_u32x8_bitcast(self) -> u32x8 {
+        bytemuck::cast(self)
+    }
+
+    fn to_f32x8_bitcast(self) -> f32x8 {
         bytemuck::cast(self)
     }
 }

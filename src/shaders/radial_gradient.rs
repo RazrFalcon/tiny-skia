@@ -9,7 +9,7 @@ use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 use crate::pipeline;
 use crate::scalar::Scalar;
 use crate::shaders::StageRec;
-use crate::wide::u32x4;
+use crate::wide::u32x8;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 
 #[derive(Copy, Clone, Debug)]
@@ -149,7 +149,7 @@ impl RadialGradient {
                 // Unlike, we have only the Focal radial gradient type.
 
                 let ctx = pipeline::TwoPointConicalGradientCtx {
-                    mask: u32x4::default(),
+                    mask: u32x8::default(),
                     p0: 1.0 / focal_data.r1,
                 };
 

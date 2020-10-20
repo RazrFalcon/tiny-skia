@@ -282,9 +282,8 @@ checksum = "0685c84d5d54d1c26f7d3eb96cd41550adb97baed141a761cf335d3d33bcd0ae"
 
 [[package]]
 name = "wide"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87f9148cb9829070e2244578eb7704d096b82bd8819c309564e075de71ef1a1f"
+version = "0.6.2-alpha.0"
+source = "git+https://github.com/Lokathor/wide?rev=cee7b6f#cee7b6f6cd7008a01a000f93f6710120c97162d5"
 dependencies = [
  "bytemuck",
  "safe_arch",

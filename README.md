@@ -15,7 +15,7 @@ with a focus on a rendering quality, speed and binary size.
 
 The main motivation behind this library is to have a small, high-quality 2D rendering
 library that can be used by [resvg]. And the choice is rather limited.
-You basically have to choose between cairo, Qt and Skia. And all of them are
+You basically have to choose between [cairo], Qt and Skia. And all of them are
 relatively bloated, hard to compile and distribute. Not to mention that none of them
 is written in Rust.
 
@@ -32,41 +32,37 @@ uses an obscure build system (`gn`) which still uses Python2
 and doesn't really support 32bit targets.
 
 `tiny-skia` tries to be small, simple and easy to build.
+Currently, it has around 12 KLOC and compiles in less than 5s on a modern CPU.
 
 ## Performance
 
-Does `tiny-skia` as fast as [Skia]? The short answer is no. The longer one is: it depends.
+Currently, `tiny-skia` is 20-100% slower than Skia.
+Which is still faster than [cairo] and [raqote].
 
 The heart of Skia's CPU rendering is
 [SkRasterPipeline](https://github.com/google/skia/blob/master/src/opts/SkRasterPipeline_opts.h).
 And this is an extremely optimized piece of code.
 But to be a bit pedantic, it's not really a C++ code. It relies on clang's
-non-standard vector extensions, which means that you must build it with clang.
+non-standard vector extensions, which means that it works only with clang.
 You can actually build it with gcc/msvc, but it will simply ignore all the optimizations
-and become 15-30 *times* slower! Which makes it kinda useless. And `tiny-skia`
-is way closer to a clang version.
-
-Also, `SkRasterPipeline` supports AVX2 instructions, which provide 256-bits wide types.
-This makes common operations almost 2x faster, compared to a generic SSE2/128-bits one.
-Which is no surprise.<br>
-The problem is that Skia doesn't support dynamic CPU detection.
-So by enabling AVX2 you're making the resulting binary non-portable,
-since you need a Haswell processor or newer.<br>
-Right now, `tiny-skia` directly supports only SSE2 instructions
-and relies on autovectorization for newer one.
+and become 15-30 *times* slower! Which makes it kinda useless.
 
 Skia also supports ARM NEON instructions, which are unavailable in a stable Rust at the moment.
-Therefore a default scalar implementation will be used instead on ARM and other non-x86 targets.
+Therefore a fallback scalar implementation will be used instead on ARM and other non-x86 targets.
+So if you're targeting ARM, you better stick with Skia.
 
-Accounting all above, `tiny-skia` is 20-100% slower than "a Skia built for a generic x86_64 CPU".
-Which still makes if faster than `cairo` in many cases.
+Also note, that neither Skia or `tiny-skia` are supporting dynamic CPU detection,
+so by enabling newer instructions you're making the resulting binary non-portable.
 
-We can technically use the `SkRasterPipeline` directly, to achive the same performance as Skia has.
-But it means that we have to complicate our build process quite a lot.
-Mainly because we have to use only clang.
-So having a pure Rust library, even a bit slower one, is still a good trade off.
+Essentially, you will get a decent performance on x86 targets by default.
+But if you are looking for an even better performance, you should compile your application
+with `RUSTFLAGS="-Ctarget-cpu=haswell"` env variables to enable AVX instructions.
 
 You can find more information in [benches/README.md](./benches/README.md).
+
+## Rendering quality
+
+Unless there is a bug, `tiny-skia` must produce exactly the same results as Skia.
 
 ## API overview
 
@@ -163,7 +159,7 @@ Therefore we have to compromise or even rewrite some parts from scratch.
 
 ## Alternatives
 
-Right now, the only pure Rust alternative is [raqote](https://github.com/jrmuizel/raqote).
+Right now, the only pure Rust alternative is [raqote].
 
 - It doesn't support high-quality antialiasing (hairline stroking in particular).
 - It's very slow (see [benchmarks](./benches/README.md)).
@@ -179,4 +175,6 @@ The project relies on some unsafe code.
 The same as used by [Skia]: [New BSD License](./LICENSE)
 
 [Skia]: https://skia.org/
+[cairo]: https://www.cairographics.org/
+[raqote]: https://github.com/jrmuizel/raqote
 [resvg]: https://github.com/RazrFalcon/resvg
