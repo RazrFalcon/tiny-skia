@@ -1088,7 +1088,7 @@ pub fn chop_mono_cubic_at_y(src: &[Point; 4], y: f32, dst: &mut [Point; 7]) -> b
 }
 
 fn cubic_dchop_at_intercept(src: &[Point; 4], intercept: f32, is_vertical: bool, dst: &mut [Point; 7]) -> bool {
-    use crate::path_ops::{cubic64::Cubic64, point64::Point64, line_cubic_intersections};
+    use crate::path64::{cubic64::Cubic64, point64::Point64, line_cubic_intersections};
 
     let src = [
         Point64::from_point(src[0]),

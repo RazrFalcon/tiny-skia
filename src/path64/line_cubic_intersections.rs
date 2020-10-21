@@ -70,9 +70,9 @@ For horizontal lines:
        e t^3 + 3 f t^3 - 3 g t^3 + h t^3
 */
 
-use crate::path_ops::cubic64::{self, Cubic64};
-use crate::path_ops::Scalar64;
-use crate::path_ops::point64::SearchAxis;
+use super::Scalar64;
+use super::cubic64::{self, Cubic64};
+use super::point64::SearchAxis;
 
 pub fn horizontal_intersect(cubic: &Cubic64, axis_intercept: f64, roots: &mut [f64; 3]) -> usize {
     let (a, b, c, mut d) = cubic64::coefficients(&cubic.as_f64_slice()[1..]);
