@@ -29,11 +29,11 @@ fn main() {
     stroke.width = 20.0;
 
     canvas.transform(1.5, 0.3, 1.7, 3.5, -130.0, 50.0);
-    canvas.stroke_path(&path, &paint, stroke);
+    canvas.stroke_path(&path, &paint, &stroke);
 
     canvas.scale(1.0, -1.0);
     canvas.translate(480.0, 858.0);
-    canvas.stroke_path(&path, &paint, stroke);
+    canvas.stroke_path(&path, &paint, &stroke);
 
     canvas.pixmap.save_png("image.png").unwrap();
 }

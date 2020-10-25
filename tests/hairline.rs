@@ -16,7 +16,7 @@ fn draw_line(x0: f32, y0: f32, x1: f32, y1: f32, anti_alias: bool, width: f32, l
     let mut stroke = Stroke::default();
     stroke.width = width;
     stroke.line_cap = line_cap;
-    canvas.stroke_path(&path, &paint, stroke);
+    canvas.stroke_path(&path, &paint, &stroke);
 
     canvas.pixmap
 }
@@ -97,7 +97,7 @@ fn draw_quad(anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
     let mut stroke = Stroke::default();
     stroke.width = width;
     stroke.line_cap = line_cap;
-    canvas.stroke_path(&path, &paint, stroke);
+    canvas.stroke_path(&path, &paint, &stroke);
 
     canvas.pixmap
 }
@@ -136,7 +136,7 @@ fn draw_cubic(points: &[f32; 8],anti_alias: bool, width: f32, line_cap: LineCap)
     let mut stroke = Stroke::default();
     stroke.width = width;
     stroke.line_cap = line_cap;
-    canvas.stroke_path(&path, &paint, stroke);
+    canvas.stroke_path(&path, &paint, &stroke);
 
     canvas.pixmap
 }

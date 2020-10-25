@@ -167,6 +167,10 @@ impl PathBuilder {
         self.points.push(Point::from_xy(x, y));
     }
 
+    pub(crate) fn quad_to_pt(&mut self, p1: Point, p: Point) {
+        self.quad_to(p1.x, p1.y, p.x, p.y);
+    }
+
     // We do not support conic segments, but Skia still relies on them from time to time.
     // This method will simply convert the input data into quad segments.
     pub(crate) fn conic_to(&mut self, x1: f32, y1: f32, x: f32, y: f32, weight: f32) {
@@ -214,6 +218,10 @@ impl PathBuilder {
         self.points.push(Point::from_xy(x1, y1));
         self.points.push(Point::from_xy(x2, y2));
         self.points.push(Point::from_xy(x, y));
+    }
+
+    pub(crate) fn cubic_to_pt(&mut self, p1: Point, p2: Point, p: Point) {
+        self.cubic_to(p1.x, p1.y, p2.x, p2.y, p.x, p.y);
     }
 
     /// Closes the current contour.

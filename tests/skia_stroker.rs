@@ -20,7 +20,7 @@ fn quad_stroker_one_off() {
     let mut stroke = Stroke::default();
     stroke.width = 164.683548;
 
-    assert!(path.stroke(stroke).is_some());
+    assert!(path.stroke(&stroke, 1.0).is_some());
 }
 
 #[test]
@@ -35,5 +35,5 @@ fn cubic_stroker_one_off() {
     let mut stroke = Stroke::default();
     stroke.width = 42.835968;
 
-    assert!(path.stroke(stroke).is_some());
+    assert!(path.stroke(&stroke, 1.0).is_some());
 }

@@ -31,6 +31,7 @@ pub enum PathVerb {
 /// - Each contour starts with a MoveTo.
 /// - No duplicated Move.
 /// - No duplicated Close.
+/// - Zero-length contours are allowed.
 #[derive(Clone, PartialEq)]
 pub struct Path {
     pub(crate) verbs: Vec<PathVerb>,
@@ -78,17 +79,20 @@ impl Path {
     ///
     /// ```ignore
     /// let mut stroker = PathStroker::new();
-    /// stroker.stroke(self, stroke);
+    /// stroker.stroke(self, stroke, resolution_scale);
     /// ```
+    ///
+    /// A `resolution_scale` can be calculated using `PathStroker::compute_resolution_scale`.
+    /// Or you can simply set it to `1.0`.
     ///
     /// Returns `None` when:
     ///
     /// - `width` <= 0 or Nan/inf
     /// - `miter_limit` < 4 or Nan/inf
     /// - produced stroke has invalid bounds
-    pub fn stroke(&self, stroke: Stroke) -> Option<Self> {
+    pub fn stroke(&self, stroke: &Stroke, resolution_scale: f32) -> Option<Self> {
         let mut stroker = PathStroker::new();
-        stroker.stroke(self, stroke, &Transform::identity())
+        stroker.stroke(self, stroke, resolution_scale)
     }
 
     /// Sometimes in the drawing pipeline, we have to perform math on path coordinates, even after

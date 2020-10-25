@@ -84,7 +84,7 @@ Shape filling by overwritting original pixels. No blending.
 
 Fills a rectangle with a solid solid color.
 
-| Mode/Library          | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
+| Test/Library          | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
 | --------------------- | -------------: | ------------: | ---------: | --------: | ---------: | ---------: |
 | basic                 |        699,878 |       499,512 |    711,992 |   348,918 |    203,921 |  3,672,295 |
 | with AA               |        744,711 |       541,858 |    735,547 |   371,368 |    192,178 |  2,087,047 |
@@ -100,7 +100,7 @@ Strangely, Skia is pretty slow in this task. Not sure why.
 
 Filling the whole canvas with a color.
 
-| Mode/Library         | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
+| Test/Library         | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
 | -------------------- | -------------: | ------------: | ---------: | --------: | ---------: | ---------: |
 | fill                 |         64,213 |        64,916 |  1,112,417 |   554,113 |    285,316 |     46,560 |
 

@@ -127,6 +127,11 @@ impl Point {
         set_point_length(self, x, y, length, &mut None)
     }
 
+    /// Returns the Euclidean distance from origin.
+    pub(crate) fn distance(&self, other: Point) -> f32 {
+        (*self - other).length()
+    }
+
     /// Returns the dot product of two points.
     pub(crate) fn dot(&self, other: Point) -> f32 {
         self.x * other.x + self.y * other.y

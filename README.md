@@ -96,7 +96,7 @@ The core ideas are that almost everything is stateless, immutable and valid.
 - [x] `Path` stroking
 - [x] `Path` hairline stroking
 - [x] Anti-aliased `Path` hairline stroking
-- [ ] Stroke dashing
+- [x] Stroke dashing
 - [x] Gradients (linear and radial)
 - [x] `Pixmap`s blending (image on image rendering)
 - [x] Patterns

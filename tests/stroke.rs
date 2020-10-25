@@ -12,7 +12,7 @@ fn zero_len_subpath_butt_cap() {
     stroke.line_cap = LineCap::Butt;
 
     // A zero-len subpath with a butt line cap produces nothing.
-    assert_eq!(path.stroke(stroke), None);
+    assert_eq!(path.stroke(&stroke, 1.0), None);
 }
 
 #[test]
@@ -27,7 +27,7 @@ fn zero_len_subpath_round_cap() {
     stroke.line_cap = LineCap::Round;
 
     // A zero-len subpath with a round line cap produces a circle.
-    let stroke_path = path.stroke(stroke).unwrap();
+    let stroke_path = path.stroke(&stroke, 1.0).unwrap();
 
     // Skia sure spams a lot...
     let expected = {
@@ -62,7 +62,7 @@ fn zero_len_subpath_square_cap() {
     stroke.line_cap = LineCap::Square;
 
     // A zero-len subpath with a round line cap produces a circle.
-    let stroke_path = path.stroke(stroke).unwrap();
+    let stroke_path = path.stroke(&stroke, 1.0).unwrap();
 
     let expected = {
         let mut pb = PathBuilder::new();
@@ -90,7 +90,7 @@ fn auto_close() {
     let path = pb.finish().unwrap();
 
     let stroke = Stroke::default();
-    let stroke_path = path.stroke(stroke).unwrap();
+    let stroke_path = path.stroke(&stroke, 1.0).unwrap();
 
     let mut iter = stroke_path.segments();
     iter.set_auto_close(true);
@@ -119,7 +119,7 @@ fn auto_close() {
 fn circle() {
     let path = PathBuilder::from_circle(100.0, 100.0, 50.0).unwrap();
     let stroke = Stroke::default();
-    let stroke_path = path.stroke(stroke).unwrap();
+    let stroke_path = path.stroke(&stroke, 1.0).unwrap();
 
     let mut iter = stroke_path.segments();
     assert_eq!(iter.next().unwrap(), PathSegment::new_move_to(150.5, 100.0));
@@ -172,7 +172,7 @@ fn round_cap_join() {
     stroke.width = 30.0;
     stroke.line_cap = LineCap::Round;
     stroke.line_join = LineJoin::Round;
-    let stroke_path = path.stroke(stroke).unwrap();
+    let stroke_path = path.stroke(&stroke, 1.0).unwrap();
 
     let mut iter = stroke_path.segments();
     assert_eq!(iter.next().unwrap(), PathSegment::new_move_to(176.65611, 43.44233));

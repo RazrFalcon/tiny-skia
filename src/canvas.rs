@@ -181,15 +181,28 @@ impl Canvas {
     ///    `Canvas` will reuse this allocation during subsequent strokes.
     /// 2. If a stroke width is thinner than 1px (after applying the transformation),
     ///    we will use hairline stroking, which doesn't involve a separate path allocation.
-    pub fn stroke_path(&mut self, path: &Path, paint: &Paint, stroke: Stroke) {
+    ///
+    /// Also, if a `stroke` has a dash array, then path will be converted into
+    /// a dashed path first and then stroked. Which means a yet another allocation.
+    pub fn stroke_path(&mut self, path: &Path, paint: &Paint, stroke: &Stroke) {
         self.stroke_path_impl(path, paint, stroke);
     }
 
     #[inline(always)]
-    fn stroke_path_impl(&mut self, path: &Path, paint: &Paint, stroke: Stroke) -> Option<()> {
+    fn stroke_path_impl(&mut self, path: &Path, paint: &Paint, stroke: &Stroke) -> Option<()> {
         if stroke.width < 0.0 {
             return None;
         }
+
+        let res_scale = PathStroker::compute_resolution_scale(&self.transform);
+
+        let dash_path;
+        let path = if let Some(ref dash) = stroke.dash {
+            dash_path = crate::dash::dash(path, dash, res_scale)?;
+            &dash_path
+        } else {
+            path
+        };
 
         if let Some(coverage) = treat_as_hairline(&paint, stroke, &self.transform) {
             let mut paint = paint.clone();
@@ -211,9 +224,9 @@ impl Canvas {
             self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap)
         } else {
             let mut stroked_path = if let Some(stroked_path) = self.stroked_path.take() {
-                self.stroker.stroke_to(&path, stroke, &self.transform, stroked_path)
+                self.stroker.stroke_to(&path, stroke, res_scale, stroked_path)
             } else {
-                self.stroker.stroke(&path, stroke, &self.transform)
+                self.stroker.stroke(&path, stroke, res_scale)
             }?;
             stroked_path = stroked_path.transform(&self.transform)?;
             self.stroked_path = Some(stroked_path);
@@ -284,7 +297,18 @@ impl Canvas {
     }
 }
 
-fn treat_as_hairline(paint: &Paint, stroke: Stroke, ts: &Transform) -> Option<f32> {
+fn treat_as_hairline(paint: &Paint, stroke: &Stroke, ts: &Transform) -> Option<f32> {
+    #[inline]
+    fn fast_len(p: Point) -> f32 {
+        let mut x = p.x.abs();
+        let mut y = p.y.abs();
+        if x < y {
+            std::mem::swap(&mut x, &mut y);
+        }
+
+        x + y.half()
+    }
+
     debug_assert!(stroke.width >= 0.0);
 
     if stroke.width == 0.0 {
@@ -313,15 +337,4 @@ fn treat_as_hairline(paint: &Paint, stroke: Stroke, ts: &Transform) -> Option<f3
     }
 
     None
-}
-
-#[inline]
-fn fast_len(p: Point) -> f32 {
-    let mut x = p.x.abs();
-    let mut y = p.y.abs();
-    if x < y {
-        std::mem::swap(&mut x, &mut y);
-    }
-
-    x + y.half()
 }

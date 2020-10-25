@@ -19,7 +19,7 @@ fn cubic_1() {
     let mut stroke = Stroke::default();
     stroke.width = 0.394537568;
 
-    assert!(path.stroke(stroke).is_none());
+    assert!(path.stroke(&stroke, 1.0).is_none());
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn cubic_2() {
     let mut stroke = Stroke::default();
     stroke.width = 0.394537568;
 
-    assert!(path.stroke(stroke).is_some());
+    assert!(path.stroke(&stroke, 1.0).is_some());
 }
 
 // TODO: test_strokerect
@@ -60,5 +60,5 @@ fn big() {
     let mut stroke = Stroke::default();
     stroke.width = 1.49679073e+10;
 
-    assert!(path.stroke(stroke).is_some());
+    assert!(path.stroke(&stroke, 1.0).is_some());
 }

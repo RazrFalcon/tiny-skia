@@ -1,4 +1,4 @@
-use crate::{Path, Point, PathBuilder, Transform, PathSegment, PathSegmentsIter};
+use crate::{Path, Point, PathBuilder, Transform, PathSegment, PathSegmentsIter, StrokeDash};
 use crate::{NormalizedF32, NonZeroPositiveF32};
 
 use crate::path_geometry;
@@ -24,7 +24,7 @@ impl<'a> SwappableBuilders<'a> {
 
 
 /// Stroke properties.
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Stroke {
     /// A stroke thickness.
     ///
@@ -49,6 +49,11 @@ pub struct Stroke {
     ///
     /// Default: Miter
     pub line_join: LineJoin,
+
+    /// A stroke dashing properties.
+    ///
+    /// Default: None
+    pub dash: Option<StrokeDash>,
 }
 
 impl Default for Stroke {
@@ -59,6 +64,7 @@ impl Default for Stroke {
             miter_limit: 4.0,
             line_cap: LineCap::default(),
             line_join: LineJoin::default(),
+            dash: None,
         }
     }
 }
@@ -254,17 +260,39 @@ impl PathStroker {
         }
     }
 
+    /// Computes a resolution scale.
+    ///
+    /// Resolution scale is the "intended" resolution for the output. Default is 1.0.
+    ///
+    /// Larger values (res > 1) indicate that the result should be more precise, since it will
+    /// be zoomed up, and small errors will be magnified.
+    ///
+    /// Smaller values (0 < res < 1) indicate that the result can be less precise, since it will
+    /// be zoomed down, and small errors may be invisible.
+    pub fn compute_resolution_scale(ts: &Transform) -> f32 {
+        let (sx, ky, kx, sy, _,  _) = ts.get_row();
+        let sx = Point::from_xy(sx, kx).length();
+        let sy = Point::from_xy(ky, sy).length();
+        if sx.is_finite() && sy.is_finite() {
+            let scale = sx.max(sy);
+            if scale > 0.0 {
+                return scale;
+            }
+        }
+
+        1.0
+    }
+
     /// Stokes the path.
     ///
     /// Can be called multiple times to reuse allocated buffers.
     pub fn stroke(
         &mut self,
         path: &Path,
-        stroke: Stroke,
-        transform: &Transform,
+        stroke: &Stroke,
+        res_scale: f32,
     ) -> Option<Path> {
         let width = NonZeroPositiveF32::new(stroke.width)?;
-        let res_scale = compute_res_scale(transform);
         self.stroke_inner(path, width, stroke.miter_limit, stroke.line_cap, stroke.line_join, res_scale)
     }
 
@@ -274,12 +302,12 @@ impl PathStroker {
     pub fn stroke_to(
         &mut self,
         path: &Path,
-        stroke: Stroke,
-        transform: &Transform,
+        stroke: &Stroke,
+        res_scale: f32,
         out_path: Path,
     ) -> Option<Path> {
         self.outer = out_path.clear();
-        self.stroke(path, stroke, transform)
+        self.stroke(path, stroke, res_scale)
     }
 
     fn stroke_inner(
@@ -573,14 +601,7 @@ impl PathStroker {
         }
 
         if let Some(cusp) = path_geometry::find_cubic_cusp(&cubic) {
-            let mut cusp_loc = Point::default();
-            path_geometry::eval_cubic_at(
-                &cubic,
-                cusp.to_normalized(),
-                Some(&mut cusp_loc),
-                None,
-                None,
-            );
+            let cusp_loc = path_geometry::eval_cubic_pos_at(&cubic, cusp.to_normalized());
             self.cusper.push_circle(cusp_loc.x, cusp_loc.y, self.radius);
         }
 
@@ -688,8 +709,8 @@ impl PathStroker {
         on_pt: &mut Point,
         tangent: Option<&mut Point>,
     ) {
-        let mut dxy = Point::zero();
-        path_geometry::eval_cubic_at(cubic, t, Some(t_pt), Some(&mut dxy), None);
+        *t_pt = path_geometry::eval_cubic_pos_at(cubic, t);
+        let mut dxy = path_geometry::eval_cubic_tangent_at(cubic, t);
 
         let mut chopped = [Point::zero(); 7];
         if dxy.x == 0.0 && dxy.y == 0.0 {
@@ -1064,8 +1085,9 @@ impl PathStroker {
         on_p: &mut Point,
         tangent: Option<&mut Point>,
     ) {
-        let mut dxy = Point::zero();
-        path_geometry::eval_quad_at2(quad, t, tp, &mut dxy);
+        *tp = path_geometry::eval_quad_at(quad, t);
+        let mut dxy = path_geometry::eval_quad_tangent_at(quad, t);
+
         if dxy.is_zero() {
             dxy = quad[2] - quad[0];
         }
@@ -1746,13 +1768,7 @@ fn check_cubic_linear(
             continue;
         }
 
-        path_geometry::eval_cubic_at(
-            cubic,
-            t.to_normalized(),
-            Some(&mut reduction[r_count]),
-            None,
-            None,
-        );
+        reduction[r_count] = path_geometry::eval_cubic_pos_at(cubic, t.to_normalized());
         if reduction[r_count] != cubic[0] && reduction[r_count] != cubic[3] {
             r_count += 1;
         }
@@ -1823,18 +1839,4 @@ fn cubic_in_line(cubic: &[Point; 4]) -> bool {
 
     pt_to_line(cubic[mid1], cubic[outer1], cubic[outer2]) <= line_slop &&
     pt_to_line(cubic[mid2], cubic[outer1], cubic[outer2]) <= line_slop
-}
-
-fn compute_res_scale(ts: &Transform) -> f32 {
-    let (sx, ky, kx, sy, _,  _) = ts.get_row();
-    let sx = Point::from_xy(sx, kx).length();
-    let sy = Point::from_xy(ky, sy).length();
-    if sx.is_finite() && sy.is_finite() {
-        let scale = sx.max(sy);
-        if scale > 0.0 {
-            return scale;
-        }
-    }
-
-    1.0
 }

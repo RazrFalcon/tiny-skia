@@ -25,6 +25,8 @@ mod private {
         // Perfectly safe.
         pub const ANY: Self = unsafe { TValue(FiniteF32::new_unchecked(0.5)) };
 
+        pub const HALF: Self = unsafe { TValue(FiniteF32::new_unchecked(0.5)) };
+
         pub fn new(n: f32) -> Option<Self> {
             if n > 0.0 && n < 1.0 {
                 // `n` is guarantee to be finite after the bounds check.
@@ -322,7 +324,7 @@ pub fn find_unit_quad_roots(a: f32, b: f32, c: f32, roots: &mut [TValue; 3]) -> 
 // even though the 2nd tValue looks < 1.0, after we renormalize it, we end
 // up with 1.0, hence the need to check and just return the last cubic as
 // a degenerate clump of 4 points in the same place.
-fn chop_cubic_at(src: &[Point; 4], t_values: &[TValue], dst: &mut [Point]) {
+pub fn chop_cubic_at(src: &[Point; 4], t_values: &[TValue], dst: &mut [Point]) {
     if t_values.is_empty() {
         // nothing to chop
         dst[0] = src[0];
@@ -472,13 +474,7 @@ pub fn eval_quad_at(src: &[Point; 3], t: NormalizedF32) -> Point {
     Point::from_f32x2(QuadCoeff::from_points(src).eval(f32x2::splat(t.get())))
 }
 
-/// Set pt to the point on the src quadratic specified by t.
-pub fn eval_quad_at2(src: &[Point; 3], t: NormalizedF32, pt: &mut Point, tangent: &mut Point) {
-    *pt = eval_quad_at(src, t);
-    *tangent = eval_quad_tangent_at(src, t);
-}
-
-fn eval_quad_tangent_at(src: &[Point; 3], tol: NormalizedF32) -> Point {
+pub fn eval_quad_tangent_at(src: &[Point; 3], tol: NormalizedF32) -> Point {
     // The derivative equation is 2(b - a +(a - 2b +c)t). This returns a
     // zero tangent vector when t is 0 or 1, and the control point is equal
     // to the end point. In this case, use the quad end points to compute the tangent.
@@ -629,38 +625,30 @@ fn scalar_cube_root(x: f32) -> f32 {
     x.powf(0.3333333)
 }
 
-pub fn eval_cubic_at(
-    src: &[Point; 4],
-    t: NormalizedF32,
-    loc: Option<&mut Point>,
-    tangent: Option<&mut Point>,
-    curvature: Option<&mut Point>,
-) {
-    if let Some(loc) = loc {
-        *loc = Point::from_f32x2(CubicCoeff::from_points(src).eval(f32x2::splat(t.get())));
-    }
+// This is SkEvalCubicAt split into three functions.
+pub fn eval_cubic_pos_at(src: &[Point; 4], t: NormalizedF32) -> Point {
+    Point::from_f32x2(CubicCoeff::from_points(src).eval(f32x2::splat(t.get())))
+}
 
-    if let Some(tangent) = tangent {
-        // The derivative equation returns a zero tangent vector when t is 0 or 1, and the
-        // adjacent control point is equal to the end point. In this case, use the
-        // next control point or the end points to compute the tangent.
-        if (t.get() == 0.0 && src[0] == src[1]) || (t.get() == 1.0 && src[2] == src[3]) {
-            if t.get() == 0.0 {
-                *tangent = src[2] - src[0];
-            } else {
-                *tangent = src[3] - src[1];
-            }
-
-            if tangent.x == 0.0 && tangent.y == 0.0 {
-                *tangent = src[3] - src[0];
-            }
+// This is SkEvalCubicAt split into three functions.
+pub fn eval_cubic_tangent_at(src: &[Point; 4], t: NormalizedF32) -> Point {
+    // The derivative equation returns a zero tangent vector when t is 0 or 1, and the
+    // adjacent control point is equal to the end point. In this case, use the
+    // next control point or the end points to compute the tangent.
+    if (t.get() == 0.0 && src[0] == src[1]) || (t.get() == 1.0 && src[2] == src[3]) {
+        let mut tangent = if t.get() == 0.0 {
+            src[2] - src[0]
         } else {
-            *tangent = eval_cubic_derivative(src, t);
-        }
-    }
+            src[3] - src[1]
+        };
 
-    if let Some(curvature) = curvature {
-        *curvature = eval_cubic_2nd_derivative(src, t);
+        if tangent.x == 0.0 && tangent.y == 0.0 {
+            tangent = src[3] - src[0];
+        }
+
+        tangent
+    } else {
+        eval_cubic_derivative(src, t)
     }
 }
 
@@ -677,17 +665,6 @@ fn eval_cubic_derivative(src: &[Point; 4], t: NormalizedF32) -> Point {
     };
 
     Point::from_f32x2(coeff.eval(f32x2::splat(t.get())))
-}
-
-fn eval_cubic_2nd_derivative(src: &[Point; 4], t: NormalizedF32) -> Point {
-    let p0 = src[0].to_f32x2();
-    let p1 = src[1].to_f32x2();
-    let p2 = src[2].to_f32x2();
-    let p3 = src[3].to_f32x2();
-    let a = p3 + f32x2::splat(3.0) * (p1 - p2) - p0;
-    let b = p2 - times_2(p1) + p0;
-
-    Point::from_f32x2(a * f32x2::splat(t.get()) + b)
 }
 
 // http://www.faculty.idc.ac.il/arik/quality/appendixA.html
@@ -1154,10 +1131,7 @@ mod tests {
             Point::from_xy(180.0, 155.0),
         ];
 
-        let mut loc = Point::zero();
-        let mut tangent = Point::zero();
-        eval_cubic_at(&src, NormalizedF32::ZERO, Some(&mut loc), Some(&mut tangent), None);
-        assert_eq!(loc, Point::from_xy(30.0, 40.0));
-        assert_eq!(tangent, Point::from_xy(141.0, 5.0));
+        assert_eq!(eval_cubic_pos_at(&src, NormalizedF32::ZERO), Point::from_xy(30.0, 40.0));
+        assert_eq!(eval_cubic_tangent_at(&src, NormalizedF32::ZERO), Point::from_xy(141.0, 5.0));
     }
 }
