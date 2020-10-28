@@ -71,12 +71,12 @@ pub struct RadialGradient {
 impl RadialGradient {
     /// Creates a new radial gradient shader.
     ///
-    /// Unlike Skia, doesn't return an empty or solid color shader on error.
-    /// Also, doesn't fallback to a single point radial gradient.
+    /// Returns `Shader::SolidColor` when:
+    /// - `points.len()` == 1
     ///
     /// Returns `None` when:
     ///
-    /// - `points.len()` < 2
+    /// - `points` is empty
     /// - `radius` <= 0
     /// - `transform` is not invertible
     pub fn new(
@@ -93,8 +93,12 @@ impl RadialGradient {
             return None;
         }
 
-        if points.len() < 2 {
+        if points.is_empty() {
             return None;
+        }
+
+        if points.len() == 1 {
+            return Some(Shader::SolidColor(points[0].color))
         }
 
         transform.invert()?;

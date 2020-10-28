@@ -22,8 +22,8 @@ pub const DEGENERATE_THRESHOLD: f32 = 1.0 / (1 << 15) as f32;
 #[allow(missing_docs)]
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct GradientStop {
-    position: NormalizedF32,
-    color: Color,
+    pub(crate) position: NormalizedF32,
+    pub(crate) color: Color,
 }
 
 impl GradientStop {
