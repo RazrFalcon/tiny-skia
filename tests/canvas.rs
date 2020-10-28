@@ -58,7 +58,7 @@ fn draw_pixmap_ts() {
         pb.line_to(50.0, 0.0);
         pb.close();
         let path = pb.finish().unwrap();
-        canvas.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillRule::Winding);
 
         canvas.pixmap
     };
@@ -91,7 +91,7 @@ fn draw_pixmap_opacity() {
         pb.line_to(50.0, 0.0);
         pb.close();
         let path = pb.finish().unwrap();
-        canvas.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillRule::Winding);
 
         canvas.pixmap
     };
@@ -101,7 +101,7 @@ fn draw_pixmap_opacity() {
 
     let mut paint = PixmapPaint::default();
     paint.quality = FilterQuality::Bicubic;
-    paint.opacity = NormalizedF32::new_bounded(0.5);
+    paint.opacity = 0.5;
 
     canvas.transform(1.2, 0.5, 0.5, 1.2, 0.0, 0.0);
     canvas.draw_pixmap(5, 10, &triangle, &paint);

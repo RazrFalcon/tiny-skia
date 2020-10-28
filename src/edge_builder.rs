@@ -4,12 +4,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, Path, ScreenIntRect};
+use crate::{Point, Path};
 
 use crate::edge::{Edge, LineEdge, QuadraticEdge, CubicEdge};
 use crate::edge_clipper::EdgeClipperIter;
-use crate::path_geometry;
 use crate::path::PathEdge;
+use crate::path_geometry;
+use crate::screen_int_rect::ScreenIntRect;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 enum Combine {

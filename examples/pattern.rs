@@ -13,13 +13,13 @@ fn main() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Bicubic,
-        NormalizedF32::ONE,
+        1.0,
         Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
     );
 
     let path = PathBuilder::from_circle(200.0, 200.0, 180.0).unwrap();
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 
@@ -40,7 +40,7 @@ fn crate_triangle() -> Pixmap {
     pb.close();
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     canvas.pixmap
 }

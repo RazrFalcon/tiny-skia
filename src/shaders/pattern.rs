@@ -4,7 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Shader, Transform, Pixmap, SpreadMode, NormalizedF32};
+use num_ext::NormalizedF32;
+
+use crate::{Shader, Transform, Pixmap, SpreadMode};
 
 use crate::shaders::StageRec;
 use crate::pipeline;
@@ -39,18 +41,20 @@ pub struct Pattern<'a> {
 
 impl<'a> Pattern<'a> {
     /// Creates a new pattern shader.
+    ///
+    /// `opacity` will be clamped to the 0..=1 range.
     pub fn new(
         pixmap: &'a Pixmap,
         spread_mode: SpreadMode,
         quality: FilterQuality,
-        opacity: NormalizedF32,
+        opacity: f32,
         transform: Transform,
     ) -> Shader {
         Shader::Pattern(Pattern {
             pixmap,
             spread_mode,
             quality,
-            opacity,
+            opacity: NormalizedF32::new_bounded(opacity),
             transform,
         })
     }

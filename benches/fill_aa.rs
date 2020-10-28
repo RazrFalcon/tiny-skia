@@ -19,7 +19,7 @@ fn fill_aa_tiny_skia(bencher: &mut Bencher) {
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillType::EvenOdd);
+        canvas.fill_path(&path, &paint, FillRule::EvenOdd);
     });
 }
 

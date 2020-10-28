@@ -220,7 +220,7 @@ fn spiral_tiny_skia(bencher: &mut Bencher) {
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        canvas.stroke_path(&path, &paint, Stroke::default());
+        canvas.stroke_path(&path, &paint, &Stroke::default());
     });
 }
 

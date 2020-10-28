@@ -14,7 +14,7 @@ fn crate_triangle() -> Pixmap {
     pb.close();
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     canvas.pixmap
 }
@@ -29,13 +29,13 @@ fn pad_nearest() {
         &triangle,
         SpreadMode::Pad,
         FilterQuality::Nearest,
-        NormalizedF32::ONE,
+        1.0,
         Transform::identity(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/pad-nearest.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -51,13 +51,13 @@ fn repeat_nearest() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Nearest,
-        NormalizedF32::ONE,
+        1.0,
         Transform::identity(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/repeat-nearest.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -73,13 +73,13 @@ fn reflect_nearest() {
         &triangle,
         SpreadMode::Reflect,
         FilterQuality::Nearest,
-        NormalizedF32::ONE,
+        1.0,
         Transform::identity(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/reflect-nearest.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -97,14 +97,14 @@ fn pad_bicubic() {
         &triangle,
         SpreadMode::Pad,
         FilterQuality::Bicubic,
-        NormalizedF32::ONE,
+        1.0,
         // Transform must be set, otherwise we will fallback to Nearest.
         Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/pad-bicubic.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -120,14 +120,14 @@ fn repeat_bicubic() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Bicubic,
-        NormalizedF32::ONE,
+        1.0,
         // Transform must be set, otherwise we will fallback to Nearest.
         Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/repeat-bicubic.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -143,14 +143,14 @@ fn reflect_bicubic() {
         &triangle,
         SpreadMode::Reflect,
         FilterQuality::Bicubic,
-        NormalizedF32::ONE,
+        1.0,
         // Transform must be set, otherwise we will fallback to Nearest.
         Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/reflect-bicubic.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -166,13 +166,13 @@ fn filter_nearest_no_ts() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Nearest,
-        NormalizedF32::ONE,
+        1.0,
         Transform::identity(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-nearest-no-ts.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -188,13 +188,13 @@ fn filter_nearest() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Nearest,
-        NormalizedF32::ONE,
+        1.0,
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-nearest.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -210,13 +210,13 @@ fn filter_bilinear() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Bilinear,
-        NormalizedF32::ONE,
+        1.0,
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-bilinear.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
@@ -232,13 +232,13 @@ fn filter_bicubic() {
         &triangle,
         SpreadMode::Repeat,
         FilterQuality::Bicubic,
-        NormalizedF32::ONE,
+        1.0,
         Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     let expected = Pixmap::load_png("tests/images/pattern/filter-bicubic.png").unwrap();
     assert_eq!(canvas.pixmap, expected);

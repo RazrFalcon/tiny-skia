@@ -6,13 +6,15 @@
 
 use std::ffi::c_void;
 
-use crate::{Paint, BlendMode, LengthU32, ScreenIntRect, Pixmap, PremultipliedColorU8, AlphaU8, Shader};
+use crate::{Paint, BlendMode, LengthU32, Pixmap, PremultipliedColorU8, Shader};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
+use crate::color::AlphaU8;
 use crate::math::LENGTH_U32_ONE;
 use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
+use crate::screen_int_rect::ScreenIntRect;
 use crate::shaders::StageRec;
 
 

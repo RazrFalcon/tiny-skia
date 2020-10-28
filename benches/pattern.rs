@@ -21,7 +21,7 @@ fn pattern_tiny_skia(
         pb.close();
         let path = pb.finish().unwrap();
 
-        canvas.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillRule::Winding);
 
         canvas.pixmap
     }
@@ -35,7 +35,7 @@ fn pattern_tiny_skia(
         &triangle,
         SpreadMode::Repeat,
         quality,
-        NormalizedF32::ONE,
+        1.0,
         ts,
     );
 
@@ -48,7 +48,7 @@ fn pattern_tiny_skia(
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillRule::Winding);
     });
 }
 

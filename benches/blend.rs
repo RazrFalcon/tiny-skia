@@ -33,10 +33,10 @@ fn fill_tiny_skia(blend_mode: tiny_skia::BlendMode, bencher: &mut Bencher) {
         pb.finish().unwrap()
     };
 
-    canvas.fill_path(&path1, &paint1, FillType::Winding);
+    canvas.fill_path(&path1, &paint1, FillRule::Winding);
 
     bencher.iter(|| {
-        canvas.fill_path(&path2, &paint2, FillType::Winding);
+        canvas.fill_path(&path2, &paint2, FillRule::Winding);
     });
 }
 

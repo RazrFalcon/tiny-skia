@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, PathBuilder, Rect, Transform, Stroke, PathStroker};
+use crate::{Point, PathBuilder, Rect, Transform};
 
 use crate::scalar::SCALAR_MAX;
 
@@ -71,28 +71,6 @@ impl Path {
         self.bounds = Rect::from_points(&self.points)?;
 
         Some(self)
-    }
-
-    /// Produces a stroked path.
-    ///
-    /// This just a shorthand for:
-    ///
-    /// ```ignore
-    /// let mut stroker = PathStroker::new();
-    /// stroker.stroke(self, stroke, resolution_scale);
-    /// ```
-    ///
-    /// A `resolution_scale` can be calculated using `PathStroker::compute_resolution_scale`.
-    /// Or you can simply set it to `1.0`.
-    ///
-    /// Returns `None` when:
-    ///
-    /// - `width` <= 0 or Nan/inf
-    /// - `miter_limit` < 4 or Nan/inf
-    /// - produced stroke has invalid bounds
-    pub fn stroke(&self, stroke: &Stroke, resolution_scale: f32) -> Option<Self> {
-        let mut stroker = PathStroker::new();
-        stroker.stroke(self, stroke, resolution_scale)
     }
 
     /// Sometimes in the drawing pipeline, we have to perform math on path coordinates, even after
@@ -189,33 +167,6 @@ pub enum PathSegment {
     QuadTo(Point, Point),
     CubicTo(Point, Point, Point),
     Close,
-}
-
-impl PathSegment {
-    /// Creates a new MoveTo segment from coordinates.
-    pub fn new_move_to(x: f32, y: f32) -> Self {
-        PathSegment::MoveTo(Point::from_xy(x, y))
-    }
-
-    /// Creates a new LineTo segment from coordinates.
-    pub fn new_line_to(x: f32, y: f32) -> Self {
-        PathSegment::LineTo(Point::from_xy(x, y))
-    }
-
-    /// Creates a new QuadTo segment from coordinates.
-    pub fn new_quad_to(x1: f32, y1: f32, x: f32, y: f32) -> Self {
-        PathSegment::QuadTo(Point::from_xy(x1, y1), Point::from_xy(x, y))
-    }
-
-    /// Creates a new CubicTo segment from coordinates.
-    pub fn new_cubic_to(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) -> Self {
-        PathSegment::CubicTo(Point::from_xy(x1, y1), Point::from_xy(x2, y2), Point::from_xy(x, y))
-    }
-
-    /// Creates a new Close segment from coordinates.
-    pub fn new_close() -> Self {
-        PathSegment::Close
-    }
 }
 
 

@@ -6,7 +6,7 @@
 
 use std::convert::TryFrom;
 
-use crate::{LengthU32, IntSize, IntRect, Rect};
+use crate::{LengthU32, IntRect, Rect};
 
 /// A screen `IntRect`.
 ///
@@ -48,21 +48,6 @@ impl ScreenIntRect {
         ScreenIntRect { x, y, width, height }
     }
 
-    /// Creates a new `ScreenIntRect` from x, y, width and height without checking them.
-    ///
-    /// # Safety
-    ///
-    /// `width` and `height` must be > 0.
-    #[inline]
-    pub const unsafe fn from_xywh_unchecked(x: u32, y: u32, width: u32, height: u32) -> Self {
-        ScreenIntRect {
-            x,
-            y,
-            width: LengthU32::new_unchecked(width),
-            height: LengthU32::new_unchecked(height),
-        }
-    }
-
     /// Returns rect's X position.
     #[inline]
     pub fn x(&self) -> u32 {
@@ -91,12 +76,6 @@ impl ScreenIntRect {
     #[inline]
     pub fn width_safe(&self) -> LengthU32 {
         self.width
-    }
-
-    /// Returns rect's height.
-    #[inline]
-    pub fn height_safe(&self) -> LengthU32 {
-        self.height
     }
 
     /// Returns rect's left edge.
@@ -129,28 +108,6 @@ impl ScreenIntRect {
         self.y + self.height.get()
     }
 
-    /// Returns rect's right edge.
-    ///
-    /// The right edge is at least 1.
-    #[inline]
-    pub fn right_safe(&self) -> LengthU32 {
-        // No overflow is guaranteed by constructors.
-        unsafe {
-            LengthU32::new_unchecked(self.x + self.width.get())
-        }
-    }
-
-    /// Returns rect's bottom edge.
-    ///
-    /// The bottom edge is at least 1.
-    #[inline]
-    pub fn bottom_safe(&self) -> LengthU32 {
-        // No overflow is guaranteed by constructors.
-        unsafe {
-            LengthU32::new_unchecked(self.y + self.height.get())
-        }
-    }
-
     /// Checks that the rect is completely includes `other` Rect.
     #[inline]
     pub fn contains(&self, other: &Self) -> bool {
@@ -158,28 +115,6 @@ impl ScreenIntRect {
         self.y <= other.y &&
         self.right() >= other.right() &&
         self.bottom() >= other.bottom()
-    }
-
-    /// Returns an intersection of two rectangles.
-    ///
-    /// Returns `None` otherwise.
-    pub fn intersect(&self, other: &Self) -> Option<Self> {
-        let left = self.x.max(other.x);
-        let top = self.y.max(other.y);
-
-        let right = self.right().min(other.right());
-        let bottom = self.bottom().min(other.bottom());
-
-        let w = right.checked_sub(left)?;
-        let h = bottom.checked_sub(top)?;
-
-        ScreenIntRect::from_xywh(left, top, w, h)
-    }
-
-    /// Returns rect's size.
-    #[inline]
-    pub fn size(&self) -> IntSize {
-        IntSize::from_wh_safe(self.width, self.height)
     }
 
     /// Converts into a `IntRect`.
@@ -238,28 +173,5 @@ mod tests {
         assert_eq!(r.height(), 4);
         assert_eq!(r.right(), 4);
         assert_eq!(r.bottom(), 6);
-        assert_eq!(r.size(), IntSize::from_wh(3, 4).unwrap());
-        // assert_eq!(r.to_rect(), Rect::from_xywh_unchecked(1.0, 2.0, 3.0, 4.0));
-
-        {
-            // No intersection.
-            let r1 = ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap();
-            let r2 = ScreenIntRect::from_xywh(11, 12, 13, 14).unwrap();
-            assert_eq!(r1.intersect(&r2), None);
-        }
-
-        {
-            // Second inside the first one.
-            let r1 = ScreenIntRect::from_xywh(1, 2, 30, 40).unwrap();
-            let r2 = ScreenIntRect::from_xywh(11, 12, 13, 14).unwrap();
-            assert_eq!(r1.intersect(&r2), ScreenIntRect::from_xywh(11, 12, 13, 14));
-        }
-
-        {
-            // Partial overlap.
-            let r1 = ScreenIntRect::from_xywh(1, 2, 30, 40).unwrap();
-            let r2 = ScreenIntRect::from_xywh(11, 12, 50, 60).unwrap();
-            assert_eq!(r1.intersect(&r2), ScreenIntRect::from_xywh(11, 12, 20, 30));
-        }
     }
 }

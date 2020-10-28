@@ -4,6 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use num_ext::NormalizedF32;
+
 mod gradient;
 mod linear_gradient;
 mod radial_gradient;
@@ -14,7 +16,7 @@ pub use linear_gradient::LinearGradient;
 pub use radial_gradient::RadialGradient;
 pub use pattern::{Pattern, FilterQuality};
 
-use crate::{Color, Transform, NormalizedF32};
+use crate::{Color, Transform};
 
 use crate::pipeline::{RasterPipelineBuilder, ContextStorage};
 
@@ -109,6 +111,8 @@ impl<'a> Shader<'a> {
 
     /// Shift shader's opacity.
     ///
+    /// `opacity` will be clamped to the 0..=1 range.
+    ///
     /// This is roughly the same as Skia's `SkPaint::setAlpha`.
     ///
     /// Unlike Skia, we do not support global alpha/opacity, which is in Skia
@@ -118,8 +122,8 @@ impl<'a> Shader<'a> {
     /// - For `SolidColor` this function will multiply `color.alpha` by `opacity`.
     /// - For gradients this function will multiply all colors by `opacity`.
     /// - For `Pattern` this function will multiply `Patter::opacity` by `opacity`.
-    pub fn apply_opacity(&mut self, opacity: NormalizedF32) {
-        match self {
+    pub fn apply_opacity(&mut self, opacity: f32) {
+        let opacity = NormalizedF32::new_bounded(opacity);        match self {
             Shader::SolidColor(ref mut c) => {
                 *c = c.mul_alpha(opacity).unwrap();
             }

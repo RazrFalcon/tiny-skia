@@ -6,11 +6,13 @@
 
 use std::convert::TryFrom;
 
-use crate::{Path, IntRect, FillType, LengthU32, ScreenIntRect, AlphaU8, Rect};
+use crate::{Path, IntRect, FillRule, LengthU32, Rect};
 
 use crate::alpha_runs::AlphaRuns;
 use crate::blitter::Blitter;
+use crate::color::AlphaU8;
 use crate::math::left_shift;
+use crate::screen_int_rect::ScreenIntRect;
 
 /// controls how much we super-sample (when we use that scan conversion)
 const SUPERSAMPLE_SHIFT: u32 = 2;
@@ -21,7 +23,7 @@ const MASK: u32  = SCALE - 1;
 
 pub fn fill_path(
     path: &Path,
-    fill_type: FillType,
+    fill_type: FillRule,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
@@ -80,7 +82,7 @@ fn overflows_short_shift(value: i32, shift: i32) -> i32 {
 
 fn fill_path_impl(
     path: &Path,
-    fill_type: FillType,
+    fill_type: FillRule,
     bounds: &IntRect,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,

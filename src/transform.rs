@@ -4,7 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{FiniteF32, NonZeroF32, Point};
+use num_ext::{FiniteF32, NonZeroF32};
+
+use crate::Point;
 
 use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
 
@@ -103,7 +105,7 @@ impl Transform {
     ///
     /// We are using column-major-column-vector matrix notation, therefore it's ky-kx, not kx-ky.
     #[inline]
-    pub fn from_row_safe(sx: NonZeroF32, ky: FiniteF32, kx: FiniteF32, sy: NonZeroF32, tx: FiniteF32, ty: FiniteF32) -> Self {
+    pub(crate) fn from_row_safe(sx: NonZeroF32, ky: FiniteF32, kx: FiniteF32, sy: NonZeroF32, tx: FiniteF32, ty: FiniteF32) -> Self {
         let mut m = Transform {
             sx, kx, tx,
             ky, sy, ty,
@@ -144,7 +146,7 @@ impl Transform {
 
     /// Creates a new translating Transform.
     #[inline]
-    pub fn from_translate_safe(tx: FiniteF32, ty: FiniteF32) -> Self {
+    pub(crate) fn from_translate_safe(tx: FiniteF32, ty: FiniteF32) -> Self {
         let flags = if tx != FINITE_ZERO || ty != FINITE_ZERO {
             TransformFlags::TRANSLATE
         } else {
@@ -173,7 +175,7 @@ impl Transform {
 
     /// Creates a new scaling Transform.
     #[inline]
-    pub fn from_scale_safe(sx: NonZeroF32, sy: NonZeroF32) -> Self {
+    pub(crate) fn from_scale_safe(sx: NonZeroF32, sy: NonZeroF32) -> Self {
         let flags = if sx != NONZERO_ONE || sy != NONZERO_ONE {
             TransformFlags::SCALE
         } else {
@@ -201,7 +203,7 @@ impl Transform {
 
     /// Creates a new skewing Transform.
     #[inline]
-    pub fn from_skew_safe(kx: FiniteF32, ky: FiniteF32) -> Self {
+    pub(crate) fn from_skew_safe(kx: FiniteF32, ky: FiniteF32) -> Self {
         let flags = if kx != FINITE_ZERO || ky != FINITE_ZERO {
             TransformFlags::SKEW
         } else {
@@ -221,22 +223,10 @@ impl Transform {
         (self.sx.get(), self.sy.get())
     }
 
-    /// Returns scale pair.
-    #[inline]
-    pub fn get_scale_safe(&self) -> (NonZeroF32, NonZeroF32) {
-        (self.sx, self.sy)
-    }
-
     /// Returns skew pair.
     #[inline]
     pub fn get_skew(&self) -> (f32, f32) {
         (self.kx.get(), self.ky.get())
-    }
-
-    /// Returns skew pair.
-    #[inline]
-    pub fn get_skew_safe(&self) -> (FiniteF32, FiniteF32) {
-        (self.kx, self.ky)
     }
 
     /// Returns translate pair.
@@ -245,22 +235,10 @@ impl Transform {
         (self.tx.get(), self.ty.get())
     }
 
-    /// Returns translate pair.
-    #[inline]
-    pub fn get_translate_safe(&self) -> (FiniteF32, FiniteF32) {
-        (self.tx, self.ty)
-    }
-
     /// Returns all values.
     #[inline]
     pub fn get_row(&self) -> (f32, f32, f32, f32, f32, f32) {
         (self.sx.get(), self.ky.get(), self.kx.get(), self.sy.get(), self.tx.get(), self.ty.get())
-    }
-
-    /// Returns all values.
-    #[inline]
-    pub fn get_row_safe(&self) -> (NonZeroF32, FiniteF32, FiniteF32, NonZeroF32, FiniteF32, FiniteF32) {
-        (self.sx, self.ky, self.kx, self.sy, self.tx, self.ty)
     }
 
     /// Checks that transform is identity.
@@ -445,7 +423,7 @@ impl Transform {
     }
 
     /// Returns an inverted transform.
-    pub fn invert(&self) -> Option<Self> {
+    pub(crate) fn invert(&self) -> Option<Self> {
         // Allow the trivial case to be inlined.
         if self.is_identity() {
             return Some(*self);

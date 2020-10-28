@@ -6,7 +6,9 @@
 
 use std::cmp;
 
-use crate::{FiniteF32, IntRect, Point};
+use num_ext::FiniteF32;
+
+use crate::{IntRect, Point};
 
 use crate::floating_point::SaturateRound;
 use crate::wide::f32x4;
@@ -119,65 +121,11 @@ impl Rect {
         self.bottom.get() - self.top.get()
     }
 
-    /// Returns the left edge.
-    #[inline]
-    pub fn left_safe(&self) -> FiniteF32 {
-        self.left
-    }
-
-    /// Returns the top edge.
-    #[inline]
-    pub fn top_safe(&self) -> FiniteF32 {
-        self.top
-    }
-
-    /// Returns the right edge.
-    #[inline]
-    pub fn right_safe(&self) -> FiniteF32 {
-        self.right
-    }
-
-    /// Returns the bottom edge.
-    #[inline]
-    pub fn bottom_safe(&self) -> FiniteF32 {
-        self.bottom
-    }
-
-    /// Returns rect's X position.
-    #[inline]
-    pub fn x_safe(&self) -> FiniteF32 {
-        self.left
-    }
-
-    /// Returns rect's Y position.
-    #[inline]
-    pub fn y_safe(&self) -> FiniteF32 {
-        self.top
-    }
-
-    /// Returns rect's width.
-    #[inline]
-    pub fn width_safe(&self) -> FiniteF32 {
-        // No overflow is guaranteed by constructors.
-        unsafe {
-            FiniteF32::new_unchecked(self.right.get() - self.left.get())
-        }
-    }
-
-    /// Returns rect's height.
-    #[inline]
-    pub fn height_safe(&self) -> FiniteF32 {
-        // No overflow is guaranteed by constructors.
-        unsafe {
-            FiniteF32::new_unchecked(self.bottom.get() - self.top.get())
-        }
-    }
-
     /// Converts into an `IntRect` by adding 0.5 and discarding the fractional portion.
     ///
     /// Width and height are guarantee to be >= 1.
     #[inline]
-    pub fn round(&self) -> IntRect {
+    pub(crate) fn round(&self) -> IntRect {
         IntRect::from_xywh(
             i32::saturate_round(self.x()),
             i32::saturate_round(self.y()),
@@ -190,7 +138,7 @@ impl Rect {
     ///
     /// Width and height are guarantee to be >= 1.
     #[inline]
-    pub fn round_out(&self) -> IntRect {
+    pub(crate) fn round_out(&self) -> IntRect {
         IntRect::from_xywh(
             i32::saturate_floor(self.x()),
             i32::saturate_floor(self.y()),
@@ -202,7 +150,7 @@ impl Rect {
     /// Returns an intersection of two rectangles.
     ///
     /// Returns `None` otherwise.
-    pub fn intersect(&self, other: &Self) -> Option<Self> {
+    pub(crate) fn intersect(&self, other: &Self) -> Option<Self> {
         let left = self.x().max(other.x());
         let top = self.y().max(other.y());
 
@@ -215,7 +163,7 @@ impl Rect {
     /// Creates a Rect from Point array.
     ///
     /// Returns None if count is zero or if Point array contains an infinity or NaN.
-    pub fn from_points(points: &[Point]) -> Option<Self> {
+    pub(crate) fn from_points(points: &[Point]) -> Option<Self> {
         if points.is_empty() {
             return None;
         }

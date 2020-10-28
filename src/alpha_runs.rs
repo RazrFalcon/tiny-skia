@@ -7,7 +7,8 @@
 use std::convert::TryFrom;
 use std::num::NonZeroU16;
 
-use crate::{LengthU32, AlphaU8};
+use crate::LengthU32;
+use crate::color::AlphaU8;
 
 pub type AlphaRun = Option<NonZeroU16>;
 

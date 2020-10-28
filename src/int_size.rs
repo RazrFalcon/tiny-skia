@@ -4,7 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{LengthU32, ScreenIntRect, IntRect};
+use crate::{LengthU32, IntRect};
+
+use crate::screen_int_rect::ScreenIntRect;
 
 /// An integer size.
 ///
@@ -27,25 +29,6 @@ impl IntSize {
         })
     }
 
-    /// Creates a new `IntSize` from valid width and height.
-    #[inline]
-    pub const fn from_wh_safe(width: LengthU32, height: LengthU32) -> Self {
-        IntSize { width, height }
-    }
-
-    /// Creates a new `IntSize` from width and height without checking them.
-    ///
-    /// # Safety
-    ///
-    /// `width` and `height` must be > 0.
-    #[inline]
-    pub const unsafe fn from_unchecked_wh(width: u32, height: u32) -> Self {
-        IntSize {
-            width: LengthU32::new_unchecked(width),
-            height: LengthU32::new_unchecked(height),
-        }
-    }
-
     /// Returns width.
     #[inline]
     pub fn width(&self) -> u32 {
@@ -60,20 +43,14 @@ impl IntSize {
 
     /// Returns width.
     #[inline]
-    pub fn width_safe(&self) -> LengthU32 {
+    pub(crate) fn width_safe(&self) -> LengthU32 {
         self.width
     }
 
     /// Returns height.
     #[inline]
-    pub fn height_safe(&self) -> LengthU32 {
+    pub(crate) fn height_safe(&self) -> LengthU32 {
         self.height
-    }
-
-    /// Returns width and height as a tuple.
-    #[inline]
-    pub fn dimensions(&self) -> (u32, u32) {
-        (self.width(), self.height())
     }
 
     /// Converts the current size into a `IntRect` at a provided position.
@@ -84,7 +61,7 @@ impl IntSize {
 
     /// Converts the current size into a `IntRect` at a provided position.
     #[inline]
-    pub fn to_screen_int_rect(&self, x: u32, y: u32) -> ScreenIntRect {
+    pub(crate) fn to_screen_int_rect(&self, x: u32, y: u32) -> ScreenIntRect {
         ScreenIntRect::from_xywh_safe(x, y, self.width, self.height)
     }
 }

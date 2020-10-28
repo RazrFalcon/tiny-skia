@@ -4,15 +4,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Point, NormalizedF32, Transform};
+use crate::{Point, Transform};
 
 use crate::floating_point::FLOAT_PI;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 use crate::wide::f32x2;
 
 mod private {
+    use num_ext::{FiniteF32, NormalizedF32};
     use crate::scalar::Scalar;
-    use crate::{FiniteF32, NormalizedF32};
 
     /// A finite f32 in (0,1) range.
     #[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
@@ -55,6 +55,7 @@ mod private {
 }
 pub use private::TValue;
 use crate::path_builder::PathDirection;
+use num_ext::NormalizedF32;
 
 
 /// use for : eval(t) == A * t^2 + B * t + C

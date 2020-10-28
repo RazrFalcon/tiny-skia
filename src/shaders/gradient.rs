@@ -4,7 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Color, Transform, NormalizedF32, SpreadMode};
+use num_ext::NormalizedF32;
+
+use crate::{Color, Transform, SpreadMode};
 
 use crate::pipeline::{EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
 use crate::pipeline::{self, RasterPipelineBuilder};
@@ -20,14 +22,14 @@ pub const DEGENERATE_THRESHOLD: f32 = 1.0 / (1 << 15) as f32;
 #[allow(missing_docs)]
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct GradientStop {
-    pub position: NormalizedF32,
-    pub color: Color,
+    position: NormalizedF32,
+    color: Color,
 }
 
 impl GradientStop {
     /// Creates a new gradient point.
     ///
-    /// `position` will be clamped to a 0..1 range.
+    /// `position` will be clamped to a 0..=1 range.
     #[inline]
     pub fn new(position: f32, color: Color) -> Self {
         GradientStop { position: NormalizedF32::new_bounded(position), color }

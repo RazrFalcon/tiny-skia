@@ -10,9 +10,10 @@ pub mod hairline_aa;
 pub mod hairline;
 
 
-use crate::{ScreenIntRect, IntRect, Rect};
+use crate::{IntRect, Rect};
 
 use crate::blitter::Blitter;
+use crate::screen_int_rect::ScreenIntRect;
 
 
 #[inline]

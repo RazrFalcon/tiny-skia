@@ -4,9 +4,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{LengthU32, ScreenIntRect, AlphaU8};
+use crate::LengthU32;
 
 use crate::alpha_runs::AlphaRun;
+use crate::color::AlphaU8;
+use crate::screen_int_rect::ScreenIntRect;
 
 /// Mask is used to describe alpha bitmaps.
 pub struct Mask {

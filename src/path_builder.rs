@@ -94,7 +94,7 @@ impl PathBuilder {
     /// Creates a new `Path` from a circle.
     ///
     /// Returns `None` when:
-    /// - `radius` == 0
+    /// - `radius` <= 0
     /// - any value is not finite or really large
     pub fn from_circle(cx: f32, cy: f32, radius: f32) -> Option<Path> {
         let mut b = PathBuilder::new();
@@ -102,8 +102,7 @@ impl PathBuilder {
         b.finish()
     }
 
-    /// Returns the current number of segments in the builder.
-    pub fn reserve(&mut self, additional_verbs: usize, additional_points: usize) {
+    pub(crate) fn reserve(&mut self, additional_verbs: usize, additional_points: usize) {
         self.verbs.reserve(additional_verbs);
         self.points.reserve(additional_points);
     }
@@ -146,8 +145,8 @@ impl PathBuilder {
 
     /// Adds a line from the last point.
     ///
-    /// - If Path is empty - adds Move(0, 0) first.
-    /// - If Path ends with Close - adds Move(last_x, last_y) first.
+    /// - If `Path` is empty - adds Move(0, 0) first.
+    /// - If `Path` ends with Close - adds Move(last_x, last_y) first.
     pub fn line_to(&mut self, x: f32, y: f32) {
         self.inject_move_to_if_needed();
 
@@ -157,8 +156,8 @@ impl PathBuilder {
 
     /// Adds a quad curve from the last point to `x`, `y`.
     ///
-    /// - If Path is empty - adds Move(0, 0) first.
-    /// - If Path ends with Close - adds Move(last_x, last_y) first.
+    /// - If `Path` is empty - adds Move(0, 0) first.
+    /// - If `Path` ends with Close - adds Move(last_x, last_y) first.
     pub fn quad_to(&mut self, x1: f32, y1: f32, x: f32, y: f32) {
         self.inject_move_to_if_needed();
 
@@ -209,8 +208,8 @@ impl PathBuilder {
 
     /// Adds a cubic curve from the last point to `x`, `y`.
     ///
-    /// - If Path is empty - adds Move(0, 0) first.
-    /// - If Path ends with Close - adds Move(last_x, last_y) first.
+    /// - If `Path` is empty - adds Move(0, 0) first.
+    /// - If `Path` ends with Close - adds Move(last_x, last_y) first.
     pub fn cubic_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) {
         self.inject_move_to_if_needed();
 
@@ -229,7 +228,7 @@ impl PathBuilder {
     /// A closed contour connects the first and the last Point
     /// with a line, forming a continuous loop.
     ///
-    /// Does nothing when Path is empty or already closed.
+    /// Does nothing when `Path` is empty or already closed.
     ///
     /// Open and closed contour will be filled the same way.
     /// Stroking an open contour will add LineCap at contour's start and end.
@@ -369,7 +368,7 @@ impl PathBuilder {
 
     /// Finishes the builder and returns a `Path`.
     ///
-    /// Returns `None` when `Path` is empty or has zero bounds.
+    /// Returns `None` when `Path` is empty or has invalid bounds.
     pub fn finish(self) -> Option<Path> {
         if self.is_empty() {
             return None;

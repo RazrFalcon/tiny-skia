@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::NormalizedF32;
+use num_ext::NormalizedF32;
 
 /// 8-bit type for an alpha value. 255 is 100% opaque, zero is 100% transparent.
 pub type AlphaU8 = u8;
@@ -110,7 +110,7 @@ impl PremultipliedColorU8 {
 
     /// Creates a new premultiplied color.
     ///
-    /// RGB components must be <= Alpha.
+    /// RGB components must be <= alpha.
     pub fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Option<Self> {
         if r <= a && g <= a && b <= a {
             Some(PremultipliedColorU8(pack_rgba(r, g, b, a)))
@@ -191,9 +191,11 @@ impl std::fmt::Debug for PremultipliedColorU8 {
 }
 
 
-/// RGBA color value, holding four floating point components.
+/// An RGBA color value, holding four floating point components.
 ///
-/// The container guarantees that all components are in a 0..=1 range.
+/// # Guarantees
+///
+/// - All values are in 0..=1 range.
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Color {
     r: NormalizedF32,
@@ -224,11 +226,6 @@ impl Color {
             b: NormalizedF32::new(b)?,
             a: NormalizedF32::new(a)?,
         })
-    }
-
-    /// Creates a new color from 4 components.
-    pub const fn from_rgba_safe(r: NormalizedF32, g: NormalizedF32, b: NormalizedF32, a: NormalizedF32) -> Self {
-        Color { r, g, b, a }
     }
 
     /// Creates a new color from 4 components.
@@ -272,26 +269,6 @@ impl Color {
         self.a.get()
     }
 
-    /// Returns color's red component.
-    pub fn red_safe(&self) -> NormalizedF32 {
-        self.r
-    }
-
-    /// Returns color's green component.
-    pub fn green_safe(&self) -> NormalizedF32 {
-        self.g
-    }
-
-    /// Returns color's blue component.
-    pub fn blue_safe(&self) -> NormalizedF32 {
-        self.b
-    }
-
-    /// Returns color's alpha component.
-    pub fn alpha_safe(&self) -> NormalizedF32 {
-        self.a
-    }
-
     pub(crate) fn mul_alpha(&self, alpha: NormalizedF32) -> Option<Self> {
         Color::from_rgba(self.red(), self.green(), self.blue(), self.alpha() * alpha.get())
     }
@@ -330,10 +307,12 @@ impl Color {
 }
 
 
-/// Premultiplied RGBA color value, holding four floating point components.
+/// A premultiplied RGBA color value, holding four floating point components.
 ///
-/// The container guarantees that all components are in a 0..=1 range.
-/// And RGB components are <= A.
+/// # Guarantees
+///
+/// - All values are in 0..=1 range.
+/// - RGB components are <= A.
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct PremultipliedColor {
     r: NormalizedF32,
@@ -372,26 +351,6 @@ impl PremultipliedColor {
     /// - The value is guarantee to be in a 0..=1 range.
     pub fn alpha(&self) -> f32 {
         self.a.get()
-    }
-
-    /// Returns color's red component.
-    pub fn red_safe(&self) -> NormalizedF32 {
-        self.r
-    }
-
-    /// Returns color's green component.
-    pub fn green_safe(&self) -> NormalizedF32 {
-        self.g
-    }
-
-    /// Returns color's blue component.
-    pub fn blue_safe(&self) -> NormalizedF32 {
-        self.b
-    }
-
-    /// Returns color's alpha component.
-    pub fn alpha_safe(&self) -> NormalizedF32 {
-        self.a
     }
 
     /// Returns a demultiplied color.

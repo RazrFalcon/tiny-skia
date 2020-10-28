@@ -7,12 +7,14 @@
 use std::convert::TryFrom;
 use std::num::NonZeroU16;
 
-use crate::{IntRect, ScreenIntRect, AlphaU8, LengthU32, Path, LineCap, Point, Rect};
+use crate::{IntRect, LengthU32, Path, LineCap, Point, Rect};
 
 use crate::blitter::Blitter;
+use crate::color::AlphaU8;
 use crate::fixed_point::{fdot6, fdot8, fdot16, FDot6, FDot8, FDot16};
 use crate::line_clipper;
 use crate::math::LENGTH_U32_ONE;
+use crate::screen_int_rect::ScreenIntRect;
 
 #[derive(Copy, Clone, Debug)]
 struct FixedRect {

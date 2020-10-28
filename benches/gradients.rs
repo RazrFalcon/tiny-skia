@@ -29,7 +29,7 @@ fn two_stops_linear_tiny_skia(
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillRule::Winding);
     });
 }
 
@@ -513,7 +513,7 @@ fn simple_radial_tiny_skia(bencher: &mut Bencher) {
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillRule::Winding);
     });
 }
 
@@ -659,7 +659,7 @@ fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillType::Winding);
+        canvas.fill_path(&path, &paint, FillRule::Winding);
     });
 }
 

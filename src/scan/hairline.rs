@@ -6,7 +6,7 @@
 
 use std::convert::TryInto;
 
-use crate::{Path, ScreenIntRect, LineCap, Point, PathSegment, Rect, IntRect};
+use crate::{Path, LineCap, Point, PathSegment, Rect, IntRect};
 
 use crate::blitter::Blitter;
 use crate::fixed_point::{fdot6, fdot16};
@@ -16,6 +16,7 @@ use crate::math::LENGTH_U32_ONE;
 use crate::path::PathVerb;
 use crate::path_geometry;
 use crate::scalar::Scalar;
+use crate::screen_int_rect::ScreenIntRect;
 use crate::wide::f32x2;
 
 pub type LineProc = fn(&[Point], Option<&ScreenIntRect>, &mut dyn Blitter) -> Option<()>;

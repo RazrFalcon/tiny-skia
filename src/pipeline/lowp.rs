@@ -28,10 +28,11 @@ we are still 40-60% behind Skia built for Haswell.
 
 use std::ffi::c_void;
 
-use crate::{ScreenIntRect, PremultipliedColorU8, Transform};
+use crate::{PremultipliedColorU8, Transform};
 
-use crate::wide::{f32x4, u16x16, f32x16};
 use crate::pipeline::BasePipeline;
+use crate::screen_int_rect::ScreenIntRect;
+use crate::wide::{f32x4, u16x16, f32x16};
 
 pub const STAGE_WIDTH: usize = 16;
 

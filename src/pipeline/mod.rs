@@ -97,12 +97,13 @@ use std::ffi::c_void;
 use std::rc::Rc;
 
 use arrayvec::ArrayVec;
+use num_ext::NormalizedF32;
 
-use crate::{ScreenIntRect, LengthU32, Transform, Color, NormalizedF32, SpreadMode};
-use crate::{PremultipliedColor, PremultipliedColorU8};
+use crate::{LengthU32, Transform, Color, SpreadMode, PremultipliedColor, PremultipliedColorU8};
 
 pub use blitter::RasterPipelineBlitter;
 
+use crate::screen_int_rect::ScreenIntRect;
 use crate::wide::u32x8;
 
 mod blitter;

@@ -224,7 +224,7 @@ fn draw_tiny_skia(aa: bool, bencher: &mut Bencher) {
     stroke.width = 0.5;
 
     bencher.iter(|| {
-        canvas.stroke_path(&path, &paint, stroke);
+        canvas.stroke_path(&path, &paint, &stroke);
     });
 }
 

@@ -25,7 +25,7 @@ fn main() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillType::Winding);
+    canvas.fill_path(&path, &paint, FillRule::Winding);
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 

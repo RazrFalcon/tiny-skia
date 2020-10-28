@@ -7,14 +7,16 @@
 use std::convert::TryFrom;
 use std::num::NonZeroUsize;
 
-use crate::{IntSize, Color};
+use crate::Color;
 
 use crate::color::PremultipliedColorU8;
+use crate::int_size::IntSize;
 
 #[cfg(feature = "png-format")]
 use crate::color::{premultiply_u8, ALPHA_U8_OPAQUE};
 
-const BYTES_PER_PIXEL: usize = 4;
+/// Number of bytes per pixel.
+pub const BYTES_PER_PIXEL: usize = 4;
 
 
 /// A container of premultiplied RGBA pixels.
@@ -71,7 +73,7 @@ impl Pixmap {
     }
 
     /// Returns pixmap's size.
-    pub fn size(&self) -> IntSize {
+    pub(crate) fn size(&self) -> IntSize {
         self.size
     }
 

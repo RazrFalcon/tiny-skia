@@ -13,19 +13,19 @@ use crate::pipeline::{ContextStorage, RasterPipelineBlitter};
 const MAX_DIM: u32 = 8192 - 1;
 
 
-/// A path filling type.
+/// A path filling rule.
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum FillType {
+pub enum FillRule {
     /// Specifies that "inside" is computed by a non-zero sum of signed edge crossings.
     Winding,
     /// Specifies that "inside" is computed by an odd number of edge crossings.
     EvenOdd,
 }
 
-impl Default for FillType {
+impl Default for FillRule {
     #[inline]
     fn default() -> Self {
-        FillType::Winding
+        FillRule::Winding
     }
 }
 
@@ -118,7 +118,7 @@ pub trait Painter {
     /// Draws a filled path onto the pixmap.
     ///
     /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
-    fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillType) -> Option<()>;
+    fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillRule) -> Option<()>;
 
     /// A path stroking with subpixel width.
     ///
@@ -153,7 +153,7 @@ impl Painter for Pixmap {
         }
     }
 
-    fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillType) -> Option<()> {
+    fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillRule) -> Option<()> {
         // This is sort of similar to SkDraw::drawPath
 
         // to_rect will fail when bounds' width/height is zero.

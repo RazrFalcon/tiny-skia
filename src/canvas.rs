@@ -6,11 +6,12 @@
 
 // This module is closer to SkDraw than SkCanvas.
 
-use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, PathStroker, NormalizedF32, Color, Rect};
-use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillType, SpreadMode};
+use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, Color, Rect};
+use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillRule, SpreadMode};
 
 use crate::painter::Painter;
 use crate::scalar::Scalar;
+use crate::stroker::PathStroker;
 
 
 /// Controls how a pixmap should be blended.
@@ -20,8 +21,10 @@ use crate::scalar::Scalar;
 pub struct PixmapPaint {
     /// Pixmap opacity.
     ///
+    /// Must be in 0..=1 range.
+    ///
     /// Default: 1.0
-    pub opacity: NormalizedF32,
+    pub opacity: f32,
 
     /// Pixmap blending mode.
     ///
@@ -38,7 +41,7 @@ impl Default for PixmapPaint {
     #[inline]
     fn default() -> Self {
         PixmapPaint {
-            opacity: NormalizedF32::ONE,
+            opacity: 1.0,
             blend_mode: BlendMode::default(),
             quality: FilterQuality::Nearest,
         }
@@ -152,12 +155,12 @@ impl Canvas {
     }
 
     /// Fills a path.
-    pub fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillType) {
+    pub fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillRule) {
         self.fill_path_impl(path, paint, fill_type);
     }
 
     #[inline(always)]
-    fn fill_path_impl(&mut self, path: &Path, paint: &Paint, fill_type: FillType) -> Option<()> {
+    fn fill_path_impl(&mut self, path: &Path, paint: &Paint, fill_type: FillRule) -> Option<()> {
         if !self.transform.is_identity() {
             let path = path.clone().transform(&self.transform)?;
 
@@ -214,7 +217,7 @@ impl Canvas {
                 // the new way seems fine, its just (a tiny bit) different.
                 let scale = (coverage * 256.0) as i32;
                 let new_alpha = (255 * scale) >> 8;
-                paint.shader.apply_opacity(NormalizedF32::new_bounded(new_alpha as f32 / 255.0));
+                paint.shader.apply_opacity(new_alpha as f32 / 255.0);
             }
 
             if self.transform.is_identity() {
@@ -236,9 +239,9 @@ impl Canvas {
                 let mut paint = paint.clone();
                 paint.shader.transform(&self.transform);
 
-                self.pixmap.fill_path(&path, &paint, FillType::Winding)
+                self.pixmap.fill_path(&path, &paint, FillRule::Winding)
             } else {
-                self.pixmap.fill_path(path, paint, FillType::Winding)
+                self.pixmap.fill_path(path, paint, FillRule::Winding)
             }
         }
     }
@@ -292,7 +295,7 @@ impl Canvas {
             self.pixmap.fill_rect(rect, paint)
         } else {
             let path = PathBuilder::from_rect(rect);
-            self.fill_path_impl(&path, paint, FillType::Winding)
+            self.fill_path_impl(&path, paint, FillRule::Winding)
         }
     }
 }

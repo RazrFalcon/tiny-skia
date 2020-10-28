@@ -1,5 +1,7 @@
 /*!
 `tiny-skia` is a tiny [Skia](https://skia.org/) subset ported to Rust.
+
+See the `examples/` directory for usage examples.
 */
 
 #![doc(html_root_url = "https://docs.rs/tiny-skia/0.2.0")]
@@ -51,28 +53,22 @@ mod stroker;
 mod transform;
 mod wide;
 
-pub use num_ext::*;
-
 pub use blend_mode::BlendMode;
 pub use canvas::{Canvas, PixmapPaint};
 pub use color::{ALPHA_U8_TRANSPARENT, ALPHA_U8_OPAQUE, ALPHA_TRANSPARENT, ALPHA_OPAQUE};
-pub use color::{Color, ColorU8, PremultipliedColor, PremultipliedColorU8, AlphaU8};
+pub use color::{Color, ColorU8, PremultipliedColor, PremultipliedColorU8};
 pub use dash::StrokeDash;
 pub use int_rect::IntRect;
-pub use int_size::IntSize;
-pub use painter::{Paint, FillType};
+pub use painter::{Paint, FillRule};
 pub use path::{Path, PathSegment, PathSegmentsIter};
 pub use path_builder::PathBuilder;
-pub use pixmap::Pixmap;
+pub use pixmap::{Pixmap, BYTES_PER_PIXEL};
 pub use point::Point;
 pub use rect::Rect;
-pub use screen_int_rect::ScreenIntRect;
 pub use shaders::{GradientStop, SpreadMode, FilterQuality};
 pub use shaders::{Shader, LinearGradient, RadialGradient, Pattern};
-pub use stroker::{LineCap, LineJoin, Stroke, PathStroker};
+pub use stroker::{LineCap, LineJoin, Stroke};
 pub use transform::Transform;
 
 /// An integer length that is guarantee to be > 0
-pub type LengthU32 = std::num::NonZeroU32;
-/// A float length that is guarantee to be > 0
-pub type LengthF32 = NonZeroPositiveF32;
+type LengthU32 = std::num::NonZeroU32;

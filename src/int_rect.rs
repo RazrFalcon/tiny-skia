@@ -6,7 +6,9 @@
 
 use std::convert::TryFrom;
 
-use crate::{LengthU32, IntSize, ScreenIntRect, Rect};
+use crate::{LengthU32, Rect};
+
+use crate::screen_int_rect::ScreenIntRect;
 
 /// An integer rectangle.
 ///
@@ -60,12 +62,6 @@ impl IntRect {
         IntRect::from_xywh(left, top, width, height)
     }
 
-    /// Returns rect's size.
-    #[inline]
-    pub fn size(&self) -> IntSize {
-        IntSize::from_wh_safe(self.width, self.height)
-    }
-
     /// Returns rect's X position.
     #[inline]
     pub fn x(&self) -> i32 {
@@ -88,18 +84,6 @@ impl IntRect {
     #[inline]
     pub fn height(&self) -> u32 {
         self.height.get()
-    }
-
-    /// Returns rect's width.
-    #[inline]
-    pub fn width_safe(&self) -> LengthU32 {
-        self.width
-    }
-
-    /// Returns rect's height.
-    #[inline]
-    pub fn height_safe(&self) -> LengthU32 {
-        self.height
     }
 
     /// Returns rect's left edge.
@@ -130,7 +114,7 @@ impl IntRect {
 
     /// Checks that the rect is completely includes `other` Rect.
     #[inline]
-    pub fn contains(&self, other: &Self) -> bool {
+    pub(crate) fn contains(&self, other: &Self) -> bool {
         self.x <= other.x &&
         self.y <= other.y &&
         self.right() >= other.right() &&
@@ -140,7 +124,7 @@ impl IntRect {
     /// Returns an intersection of two rectangles.
     ///
     /// Returns `None` otherwise.
-    pub fn intersect(&self, other: &Self) -> Option<Self> {
+    pub(crate) fn intersect(&self, other: &Self) -> Option<Self> {
         let left = self.x.max(other.x);
         let top = self.y.max(other.y);
 
@@ -154,7 +138,7 @@ impl IntRect {
     }
 
     /// Insets the rectangle.
-    pub fn inset(&self, dx: i32, dy: i32) -> Option<Self> {
+    pub(crate) fn inset(&self, dx: i32, dy: i32) -> Option<Self> {
         IntRect::from_ltrb(
             self.left() + dx,
             self.top() + dy,
@@ -164,7 +148,7 @@ impl IntRect {
     }
 
     /// Outsets the rectangle.
-    pub fn make_outset(&self, dx: i32, dy: i32) -> Option<Self> {
+    pub(crate) fn make_outset(&self, dx: i32, dy: i32) -> Option<Self> {
         IntRect::from_ltrb(
             self.left().saturating_sub(dx),
             self.top().saturating_sub(dy),
@@ -194,7 +178,7 @@ impl IntRect {
     /// - x >= 0
     /// - y >= 0
     #[inline]
-    pub fn to_screen_int_rect(&self) -> Option<ScreenIntRect> {
+    pub(crate) fn to_screen_int_rect(&self) -> Option<ScreenIntRect> {
         let x = u32::try_from(self.x).ok()?;
         let y = u32::try_from(self.y).ok()?;
         Some(ScreenIntRect::from_xywh_safe(x, y, self.width, self.height))
@@ -219,7 +203,6 @@ mod tests {
         assert_eq!(IntRect::from_xywh(0, std::i32::MAX, 1, 1), None);
 
         let r = IntRect::from_xywh(1, 2, 3, 4).unwrap();
-        assert_eq!(r.size(), IntSize::from_wh(3, 4).unwrap());
         assert_eq!(r.to_screen_int_rect().unwrap(), ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap());
 
         let r = IntRect::from_xywh(-1, -1, 3, 4).unwrap();

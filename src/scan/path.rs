@@ -6,17 +6,18 @@
 
 use std::convert::TryFrom;
 
-use crate::{Path, IntRect, FillType, LengthU32, Rect, ScreenIntRect};
+use crate::{Path, IntRect, FillRule, LengthU32, Rect};
 
 use crate::blitter::Blitter;
 use crate::edge::{Edge, LineEdge};
 use crate::edge_builder::{BasicEdgeBuilder, ShiftedIntRect};
 use crate::fixed_point::{fdot6, fdot16, FDot16};
 use crate::floating_point::SaturateCast;
+use crate::screen_int_rect::ScreenIntRect;
 
 pub fn fill_path(
     path: &Path,
-    fill_type: FillType,
+    fill_type: FillRule,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
@@ -81,7 +82,7 @@ fn round_up_to_int(x: f32) -> i32 {
 
 pub fn fill_path_impl(
     path: &Path,
-    fill_type: FillType,
+    fill_type: FillRule,
     clip_rect: &ScreenIntRect,
     mut start_y: i32,
     mut stop_y: i32,
@@ -152,7 +153,7 @@ pub fn fill_path_impl(
 
 // TODO: simplify!
 fn walk_edges(
-    fill_type: FillType,
+    fill_type: FillRule,
     start_y: u32,
     stop_y: u32,
     right_clip: u32,
@@ -160,7 +161,7 @@ fn walk_edges(
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
     let mut curr_y = start_y;
-    let winding_mask = if fill_type == FillType::EvenOdd { 1 } else { -1 };
+    let winding_mask = if fill_type == FillRule::EvenOdd { 1 } else { -1 };
 
     loop {
         let mut w = 0;

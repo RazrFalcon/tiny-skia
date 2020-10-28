@@ -36,7 +36,6 @@ impl From<(f32, f32)> for Point {
 }
 
 impl Point {
-    // TODO: should be finite?
     /// Creates a new `Point`.
     #[inline]
     pub fn from_xy(x: f32, y: f32) -> Self {
