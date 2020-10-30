@@ -198,4 +198,29 @@ impl AlphaRuns {
             alpha_offset += n;
         }
     }
+
+    /// Cut (at offset x in the buffer) a run into two shorter runs with
+    /// matching alpha values.
+    ///
+    /// Used by the RectClipBlitter to trim a RLE encoding to match the
+    /// clipping rectangle.
+    pub fn break_at(alpha: &mut [AlphaU8], runs: &mut [AlphaRun], mut x: i32) {
+        let mut alpha_i = 0;
+        let mut run_i = 0;
+        while x > 0 {
+            let n = runs[run_i].unwrap().get();
+            let n_usize = usize::from(n);
+            let n_i32 = i32::from(n);
+            if x < n_i32 {
+                alpha[alpha_i + x as usize] = alpha[alpha_i];
+                runs[0] = NonZeroU16::new(x as u16);
+                runs[x as usize] = NonZeroU16::new((n_i32 - x) as u16);
+                break;
+            }
+
+            run_i += n_usize;
+            alpha_i += n_usize;
+            x -= n_i32;
+        }
+    }
 }

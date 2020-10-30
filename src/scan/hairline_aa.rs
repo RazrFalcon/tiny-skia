@@ -9,6 +9,7 @@ use std::num::NonZeroU16;
 
 use crate::{IntRect, LengthU32, Path, LineCap, Point, Rect};
 
+use crate::alpha_runs::{AlphaRun, AlphaRuns};
 use crate::blitter::Blitter;
 use crate::color::AlphaU8;
 use crate::fixed_point::{fdot6, fdot8, fdot16, FDot6, FDot8, FDot16};
@@ -175,7 +176,7 @@ fn do_scanline(l: FDot8, top: i32, r: FDot8, alpha: AlphaU8, blitter: &mut dyn B
     let width = right - left;
     if let Some(width) = u32::try_from(width).ok().and_then(LengthU32::new) {
         if let Ok(left) = u32::try_from(left) {
-            call_hline_blitter(left, top, width, alpha, blitter);
+            call_hline_blitter(left, Some(top), width, alpha, blitter);
         }
     }
 
@@ -186,7 +187,7 @@ fn do_scanline(l: FDot8, top: i32, r: FDot8, alpha: AlphaU8, blitter: &mut dyn B
     }
 }
 
-fn call_hline_blitter(mut x: u32, y: u32, count: LengthU32, alpha: AlphaU8, blitter: &mut dyn Blitter) {
+fn call_hline_blitter(mut x: u32, y: Option<u32>, count: LengthU32, alpha: AlphaU8, blitter: &mut dyn Blitter) {
     const HLINE_STACK_BUFFER: usize = 100;
 
     let mut runs = [None; HLINE_STACK_BUFFER + 1];
@@ -209,10 +210,12 @@ fn call_hline_blitter(mut x: u32, y: u32, count: LengthU32, alpha: AlphaU8, blit
         debug_assert!(n <= std::u16::MAX as u32);
         runs[0] = NonZeroU16::new(n as u16);
         runs[n as usize] = None;
-        blitter.blit_anti_h(x, y, &aa, &runs);
+        if let Some(y) = y {
+            blitter.blit_anti_h(x, y, &mut aa, &mut runs);
+        }
         x += n;
 
-        if n > count || count == 0 {
+        if n >= count || count == 0 {
             break;
         }
 
@@ -286,7 +289,13 @@ fn anti_hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &
             }
 
             if !clip.to_int_rect().contains(&ir) {
-                do_anti_hairline(x0, y0, x1, y1, Some(clip), blitter);
+                let subclip = ir.intersect(&clip.to_int_rect())
+                    .and_then(|r| r.to_screen_int_rect());
+
+                if let Some(subclip) = subclip {
+                    do_anti_hairline(x0, y0, x1, y1, Some(subclip), blitter);
+                }
+
                 continue;
             }
 
@@ -312,7 +321,7 @@ fn do_anti_hairline(
     mut y0: FDot6,
     mut x1: FDot6,
     mut y1: FDot6,
-    clip_opt: Option<&ScreenIntRect>,
+    mut clip_opt: Option<ScreenIntRect>,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
     // check for integer NaN (0x80000000) which we can't handle (can't negate it)
@@ -387,7 +396,7 @@ fn do_anti_hairline(
             let clip = clip.to_int_rect();
 
             if istart >= clip.right() || istop <= clip.left() {
-                return None;
+                return Some(());
             }
 
             if istart < clip.left() {
@@ -408,7 +417,7 @@ fn do_anti_hairline(
 
             debug_assert!(istart <= istop);
             if istart == istop {
-                return None;
+                return Some(());
             }
 
             // now test if our Y values are completely inside the clip
@@ -428,7 +437,11 @@ fn do_anti_hairline(
             bottom += 1;
 
             if top >= clip.bottom() || bottom <= clip.top() {
-                return None;
+                return Some(());
+            }
+
+            if clip.top() <= top && clip.bottom() >= bottom {
+                clip_opt = None;
             }
         }
     } else {
@@ -515,8 +528,20 @@ fn do_anti_hairline(
             if left >= clip.right() || right <= clip.left() {
                 return Some(());
             }
+
+            if clip.left() <= left && clip.right() >= right {
+                clip_opt = None;
+            }
         }
     }
+
+    let mut clip_blitter;
+    let blitter = if let Some(clip) = clip_opt {
+        clip_blitter = RectClipBlitter { blitter, clip };
+        &mut clip_blitter
+    } else {
+        blitter
+    };
 
     // A bit ugly, but looks like this is the only way to have stack allocated object trait.
     let mut hline_blitter;
@@ -601,13 +626,13 @@ impl AntiHairBlitter for HLineAntiHairBlitter<'_> {
         // lower line
         let mut ma = fdot6::small_scale(a, mod64);
         if ma != 0 {
-            call_hline_blitter(x, y, LENGTH_U32_ONE, ma, self.0);
+            call_hline_blitter(x, Some(y), LENGTH_U32_ONE, ma, self.0);
         }
 
         // upper line
         ma = fdot6::small_scale(255 - a, mod64);
         if ma != 0 {
-            call_hline_blitter(x, y.max(1) - 1, LENGTH_U32_ONE, ma, self.0);
+            call_hline_blitter(x, y.checked_sub(1), LENGTH_U32_ONE, ma, self.0);
         }
 
         fy - fdot16::ONE / 2
@@ -627,13 +652,13 @@ impl AntiHairBlitter for HLineAntiHairBlitter<'_> {
 
         // lower line
         if a != 0 {
-            call_hline_blitter(x, y, count, a, self.0);
+            call_hline_blitter(x, Some(y), count, a, self.0);
         }
 
         // upper line
         a = 255 - a;
         if a != 0 {
-            call_hline_blitter(x, y.max(1) - 1, count, a, self.0);
+            call_hline_blitter(x, y.checked_sub(1), count, a, self.0);
         }
 
         fy - fdot16::ONE / 2
@@ -767,4 +792,93 @@ impl AntiHairBlitter for VertishAntiHairBlitter<'_> {
 
 fn i32_to_alpha(a: i32) -> u8 {
     (a & 0xFF) as u8
+}
+
+
+struct RectClipBlitter<'a> {
+    blitter: &'a mut dyn Blitter,
+    clip: ScreenIntRect,
+}
+
+impl Blitter for RectClipBlitter<'_> {
+    fn blit_anti_h(&mut self, x: u32, y: u32, mut antialias: &mut [AlphaU8], mut runs: &mut [AlphaRun]) {
+        fn y_in_rect(y: u32, rect: ScreenIntRect) -> bool {
+            (y - rect.top()) < rect.height()
+        }
+
+        if !y_in_rect(y, self.clip) || x >= self.clip.right() {
+            return;
+        }
+
+        let mut x0 = x;
+        let mut x1 = x + compute_anti_width(runs);
+
+        if x1 <= self.clip.left() {
+            return;
+        }
+
+        debug_assert!(x0 < x1);
+        if x0 < self.clip.left() {
+            let dx = self.clip.left() - x0;
+            AlphaRuns::break_at(antialias, runs, dx as i32);
+            antialias = &mut antialias[dx as usize..];
+            runs = &mut runs[dx as usize..];
+            x0 = self.clip.left();
+        }
+
+        debug_assert!(x0 < x1 && runs[(x1 - x0) as usize].is_none());
+        if x1 > self.clip.right() {
+            x1 = self.clip.right();
+            AlphaRuns::break_at(antialias, runs, (x1 - x0) as i32);
+            runs[(x1 - x0) as usize] = None;
+        }
+
+        debug_assert!(x0 < x1 && runs[(x1 - x0) as usize].is_none());
+        debug_assert!(compute_anti_width(runs) == x1 - x0);
+
+        self.blitter.blit_anti_h(x0, y, antialias, runs);
+    }
+
+    fn blit_v(&mut self, x: u32, y: u32, height: LengthU32, alpha: AlphaU8) {
+        fn x_in_rect(x: u32, rect: ScreenIntRect) -> bool {
+            (x - rect.left()) < rect.width()
+        }
+
+        if !x_in_rect(x, self.clip) {
+            return;
+        }
+
+        let mut y0 = y;
+        let mut y1 = y + height.get();
+
+        if y0 < self.clip.top() {
+            y0 = self.clip.top();
+        }
+
+        if y1 > self.clip.bottom() {
+            y1 = self.clip.bottom();
+        }
+
+        if y0 < y1 {
+            if let Some(h) = LengthU32::new(y1 - y0) {
+                self.blitter.blit_v(x, y0, h, alpha);
+            }
+        }
+    }
+}
+
+fn compute_anti_width(runs: &[AlphaRun]) -> u32 {
+    let mut i = 0;
+    let mut width = 0;
+    // TODO: turn [AlphaRun] into an iterator?
+    loop {
+        if let Some(count) = runs[i] {
+            width += u32::from(count.get());
+            i += usize::from(count.get());
+        } else {
+            break;
+        }
+    }
+
+    width
 }

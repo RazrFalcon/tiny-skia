@@ -142,7 +142,7 @@ impl Blitter for RasterPipelineBlitter<'_> {
         self.blit_rect(&r);
     }
 
-    fn blit_anti_h(&mut self, mut x: u32, y: u32, aa: &[AlphaU8], runs: &[AlphaRun]) {
+    fn blit_anti_h(&mut self, mut x: u32, y: u32, aa: &mut [AlphaU8], runs: &mut [AlphaRun]) {
         if self.blit_anti_h_rp.is_none() {
             let ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
             let curr_cov_ptr = &self.current_coverage as *const _ as *const c_void;

@@ -179,8 +179,8 @@ impl<'a> SuperBlitter<'a> {
                 self.base.real_blitter.blit_anti_h(
                     self.base.left,
                     u32::try_from(self.base.curr_iy).unwrap(),
-                    &self.runs.alpha,
-                    &self.runs.runs,
+                    &mut self.runs.alpha,
+                    &mut self.runs.runs,
                 );
                 self.runs.reset(self.base.width);
                 self.offset_x = 0;

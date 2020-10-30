@@ -81,6 +81,30 @@ fn clip_line_00() {
     assert_eq!(draw_line(-10.0, 10.0, 110.0, 70.0, false, 0.0, LineCap::Butt), expected);
 }
 
+#[test]
+fn clip_hline_top_aa() {
+    let expected = Pixmap::load_png("tests/images/hairline/clip-hline-top-aa.png").unwrap();
+    assert_eq!(draw_line(-1.0, 0.0, 101.0, 0.0, true, 1.0, LineCap::Butt), expected);
+}
+
+#[test]
+fn clip_hline_bottom_aa() {
+    let expected = Pixmap::load_png("tests/images/hairline/clip-hline-bottom-aa.png").unwrap();
+    assert_eq!(draw_line(-1.0, 100.0, 101.0, 100.0, true, 1.0, LineCap::Butt), expected);
+}
+
+#[test]
+fn clip_vline_left_aa() {
+    let expected = Pixmap::load_png("tests/images/hairline/clip-vline-left-aa.png").unwrap();
+    assert_eq!(draw_line(0.0, -1.0, 0.0, 101.0, true, 1.0, LineCap::Butt), expected);
+}
+
+#[test]
+fn clip_vline_right_aa() {
+    let expected = Pixmap::load_png("tests/images/hairline/clip-vline-right-aa.png").unwrap();
+    assert_eq!(draw_line(100.0, -1.0, 100.0, 101.0, true, 1.0, LineCap::Butt), expected);
+}
+
 fn draw_quad(anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
     let pixmap = Pixmap::new(200, 100).unwrap();
     let mut canvas = Canvas::from(pixmap);
