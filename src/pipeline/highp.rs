@@ -20,10 +20,11 @@ use std::ffi::c_void;
 
 use wide::{CmpEq, CmpLe, CmpGt, CmpGe, CmpNe};
 
-use crate::{ PremultipliedColorU8, Transform, SpreadMode};
+use crate::{PremultipliedColorU8, SpreadMode};
 
 use crate::pipeline::BasePipeline;
 use crate::screen_int_rect::ScreenIntRect;
+use crate::transform::TransformUnchecked;
 use crate::wide::{f32x8, i32x8, u32x8, F32x8Ext, I32x8Ext, U32x8Ext};
 
 pub const STAGE_WIDTH: usize = 8;
@@ -638,11 +639,10 @@ pub fn source_over_rgba_tail(p: &mut Pipeline) {
 }
 
 fn transform(p: &mut Pipeline) {
-    let ts: &Transform = p.stage_ctx();
-    let (sx, ky, kx, sy, tx, ty) = ts.get_row();
+    let ts: &TransformUnchecked = p.stage_ctx();
 
-    let tr = mad(p.r, f32x8::splat(sx), mad(p.g, f32x8::splat(kx), f32x8::splat(tx)));
-    let tg = mad(p.r, f32x8::splat(ky), mad(p.g, f32x8::splat(sy), f32x8::splat(ty)));
+    let tr = mad(p.r, f32x8::splat(ts.sx), mad(p.g, f32x8::splat(ts.kx), f32x8::splat(ts.tx)));
+    let tg = mad(p.r, f32x8::splat(ts.ky), mad(p.g, f32x8::splat(ts.sy), f32x8::splat(ts.ty)));
     p.r = tr;
     p.g = tg;
 

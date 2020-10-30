@@ -12,6 +12,7 @@ use crate::pipeline::{EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
 use crate::pipeline::{self, RasterPipelineBuilder};
 use crate::scalar::Scalar;
 use crate::shaders::StageRec;
+use crate::transform::TransformUnchecked;
 
 // The default SCALAR_NEARLY_ZERO threshold of .0024 is too big and causes regressions for svg
 // gradients defined in the wild.
@@ -42,7 +43,7 @@ pub struct Gradient {
     stops: Vec<GradientStop>,
     tile_mode: SpreadMode,
     pub(crate) transform: Transform,
-    points_to_unit: Transform,
+    points_to_unit: TransformUnchecked,
     pub(crate) colors_are_opaque: bool,
     has_uniform_stops: bool,
 }
@@ -52,7 +53,7 @@ impl Gradient {
         mut points: Vec<GradientStop>,
         tile_mode: SpreadMode,
         transform: Transform,
-        points_to_unit: Transform,
+        points_to_unit: TransformUnchecked,
     ) -> Self {
         debug_assert!(points.len() > 1);
 
@@ -112,8 +113,8 @@ impl Gradient {
 
         rec.pipeline.push(pipeline::Stage::SeedShader);
 
-        let mut ts = self.transform.invert()?;
-        ts = ts.post_concat(&self.points_to_unit)?;
+        let ts = self.transform.invert()?;
+        let ts = ts.to_unchecked().post_concat(&self.points_to_unit);
         rec.pipeline.push_transform(ts, rec.ctx_storage);
 
         push_stages(&mut rec, &mut post_pipeline);

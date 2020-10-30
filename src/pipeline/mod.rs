@@ -99,11 +99,12 @@ use std::rc::Rc;
 use arrayvec::ArrayVec;
 use num_ext::NormalizedF32;
 
-use crate::{LengthU32, Transform, Color, SpreadMode, PremultipliedColor, PremultipliedColorU8};
+use crate::{LengthU32, Color, SpreadMode, PremultipliedColor, PremultipliedColorU8};
 
 pub use blitter::RasterPipelineBlitter;
 
 use crate::screen_int_rect::ScreenIntRect;
+use crate::transform::TransformUnchecked;
 use crate::wide::u32x8;
 
 mod blitter;
@@ -377,7 +378,7 @@ pub struct TileCtx {
 impl Context for TileCtx {}
 
 
-impl Context for Transform {}
+impl Context for TransformUnchecked {}
 
 
 pub struct ContextStorage {
@@ -467,7 +468,7 @@ impl RasterPipelineBuilder {
         self.unchecked_push(stage, ctx);
     }
 
-    pub fn push_transform(&mut self, ts: Transform, ctx_storage: &mut ContextStorage) {
+    pub fn push_transform(&mut self, ts: TransformUnchecked, ctx_storage: &mut ContextStorage) {
         if !ts.is_identity() {
             let ctx = ctx_storage.push_context(ts);
             self.push_with_context(Stage::Transform, ctx);

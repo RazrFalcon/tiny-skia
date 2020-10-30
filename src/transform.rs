@@ -105,7 +105,14 @@ impl Transform {
     ///
     /// We are using column-major-column-vector matrix notation, therefore it's ky-kx, not kx-ky.
     #[inline]
-    pub(crate) fn from_row_safe(sx: NonZeroF32, ky: FiniteF32, kx: FiniteF32, sy: NonZeroF32, tx: FiniteF32, ty: FiniteF32) -> Self {
+    pub(crate) fn from_row_safe(
+        sx: NonZeroF32,
+        ky: FiniteF32,
+        kx: FiniteF32,
+        sy: NonZeroF32,
+        tx: FiniteF32,
+        ty: FiniteF32,
+    ) -> Self {
         let mut m = Transform {
             sx, kx, tx,
             ky, sy, ty,
@@ -374,21 +381,6 @@ impl Transform {
         Transform::from_row(cos, sin, -sin, cos, 0.0, 0.0)
     }
 
-    pub(crate) fn from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Option<Self> {
-        let cos_inv = 1.0 - cos;
-        Transform::from_row(
-            cos, sin, -sin, cos, sdot(sin, py, cos_inv, px), sdot(-sin, px, cos_inv, py)
-        )
-    }
-
-    pub(crate) fn from_poly_to_poly(src1: Point, src2: Point, dst1: Point, dst2: Point) -> Option<Self> {
-        let tmp = from_poly2(src1, src2);
-        let res = tmp.to_safe()?.invert()?.to_unchecked();
-        let tmp = from_poly2(dst1, dst2);
-        let ts = concat_unchecked(&tmp, &res);
-        ts.to_safe()
-    }
-
     pub(crate) fn map_points(&self, points: &mut [Point]) {
         if points.is_empty() {
             return;
@@ -432,7 +424,7 @@ impl Transform {
         invert(self)
     }
 
-    fn to_unchecked(&self) -> TransformUnchecked {
+    pub(crate) fn to_unchecked(&self) -> TransformUnchecked {
         let (sx, ky, kx, sy, tx, ty) = self.get_row();
         TransformUnchecked { sx, ky, kx, sy, tx, ty }
     }
@@ -468,23 +460,70 @@ impl std::fmt::Debug for Transform {
 
 // Some of the Skia code relies on the fact that Transform/Matrix can have any values.
 // In this cases we cannot use Transform.
+// More specifically is that sx/sy can be zero.
 #[derive(Copy, Clone, Debug)]
-pub(crate) struct TransformUnchecked {
-    sx: f32,
-    ky: f32,
-    kx: f32,
-    sy: f32,
-    tx: f32,
-    ty: f32,
+pub struct TransformUnchecked {
+    pub sx: f32,
+    pub ky: f32,
+    pub kx: f32,
+    pub sy: f32,
+    pub tx: f32,
+    pub ty: f32,
 }
 
 impl TransformUnchecked {
-    fn from_row(sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) -> Self {
+    pub fn from_translate(tx: f32, ty: f32) -> Self {
+        TransformUnchecked::from_row(1.0, 0.0, 0.0, 1.0, tx, ty)
+    }
+
+    pub fn from_row(sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) -> Self {
         TransformUnchecked { sx, ky, kx, sy, tx, ty }
     }
 
-    fn to_safe(&self) -> Option<Transform> {
+    pub fn from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Self {
+        let cos_inv = 1.0 - cos;
+        TransformUnchecked::from_row(
+            cos, sin, -sin, cos, sdot(sin, py, cos_inv, px), sdot(-sin, px, cos_inv, py)
+        )
+    }
+
+    pub fn from_poly_to_poly(src1: Point, src2: Point, dst1: Point, dst2: Point) -> Option<Self> {
+        let tmp = from_poly2(src1, src2);
+        let res = tmp.to_safe()?.invert()?.to_unchecked();
+        let tmp = from_poly2(dst1, dst2);
+        let ts = concat_unchecked(&tmp, &res);
+        Some(ts)
+    }
+
+    pub fn to_safe(&self) -> Option<Transform> {
         Transform::from_row(self.sx, self.ky, self.kx, self.sy, self.tx, self.ty)
+    }
+
+    pub fn is_identity(&self) -> bool {
+        self.sx == 1.0 &&
+        self.ky == 0.0 &&
+        self.kx == 0.0 &&
+        self.sy == 1.0 &&
+        self.tx == 0.0 &&
+        self.ty == 0.0
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn post_translate(&self, tx: f32, ty: f32) -> Self {
+        self.post_concat(&TransformUnchecked::from_translate(tx, ty))
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn post_scale(&self, sx: f32, sy: f32) -> Self {
+        self.post_concat(&TransformUnchecked::from_row(sx, 0.0, 0.0, sy, 0.0, 0.0))
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn post_concat(&self, other: &Self) -> Self {
+        concat_unchecked(other, self)
     }
 }
 
@@ -504,7 +543,7 @@ fn concat_unchecked(a: &TransformUnchecked, b: &TransformUnchecked) -> Transform
         mul_add_mul(a.sx, b.sx, a.kx, b.ky),
         mul_add_mul(a.ky, b.sx, a.sy, b.ky),
         mul_add_mul(a.sx, b.kx, a.kx, b.sy),
-        mul_add_mul(a.ky, b.sx, a.sy, b.sy),
+        mul_add_mul(a.ky, b.kx, a.sy, b.sy),
         mul_add_mul(a.sx, b.tx, a.kx, b.ty) + a.tx,
         mul_add_mul(a.ky, b.tx, a.sy, b.ty) + a.ty,
     )

@@ -28,10 +28,11 @@ we are still 40-60% behind Skia built for Haswell.
 
 use std::ffi::c_void;
 
-use crate::{PremultipliedColorU8, Transform};
+use crate::PremultipliedColorU8;
 
 use crate::pipeline::BasePipeline;
 use crate::screen_int_rect::ScreenIntRect;
+use crate::transform::TransformUnchecked;
 use crate::wide::{f32x4, u16x16, f32x16};
 
 pub const STAGE_WIDTH: usize = 16;
@@ -447,14 +448,13 @@ pub fn source_over_rgba_tail(p: &mut Pipeline) {
 }
 
 fn transform(p: &mut Pipeline) {
-    let ts: &Transform = p.stage_ctx();
-    let (sx, ky, kx, sy, tx, ty) = ts.get_row();
+    let ts: &TransformUnchecked = p.stage_ctx();
 
     let x = join(&p.r, &p.g);
     let y = join(&p.b, &p.a);
 
-    let nx = mad(x, f32x16::splat(sx), mad(y, f32x16::splat(kx), f32x16::splat(tx)));
-    let ny = mad(x, f32x16::splat(ky), mad(y, f32x16::splat(sy), f32x16::splat(ty)));
+    let nx = mad(x, f32x16::splat(ts.sx), mad(y, f32x16::splat(ts.kx), f32x16::splat(ts.tx)));
+    let ny = mad(x, f32x16::splat(ts.ky), mad(y, f32x16::splat(ts.sy), f32x16::splat(ts.ty)));
 
     split(&nx, &mut p.r, &mut p.g);
     split(&ny, &mut p.b, &mut p.a);

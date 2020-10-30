@@ -64,7 +64,7 @@ impl<'a> Pattern<'a> {
 
         rec.pipeline.push(pipeline::Stage::SeedShader);
 
-        rec.pipeline.push_transform(ts, rec.ctx_storage);
+        rec.pipeline.push_transform(ts.to_unchecked(), rec.ctx_storage);
 
         let ctx = pipeline::GatherCtx {
             pixels: self.pixmap.pixels().as_ptr(),

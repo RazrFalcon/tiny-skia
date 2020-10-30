@@ -9,6 +9,7 @@ use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 use crate::pipeline;
 use crate::scalar::Scalar;
 use crate::shaders::StageRec;
+use crate::transform::TransformUnchecked;
 use crate::wide::u32x8;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 
@@ -18,40 +19,19 @@ struct FocalData {
 }
 
 impl FocalData {
-    // The input r0, r1 are the radii when we map centers to {(0, 0), (1, 0)}.
-    // We'll post concat matrix with our transformation matrix that maps focal point to (0, 0).
-    fn new(r1: f32, ts: &mut Transform) -> Option<Self> {
-        // The following transformations are just to accelerate the shader computation by saving
-        // some arithmetic operations.
-
-        if is_focal_on_circle(r1) {
-            *ts = ts.post_scale(0.5, 0.5)?;
-        } else {
-            *ts = ts.post_scale(r1 / (r1 * r1 - 1.0), 1.0 / ((r1 * r1 - 1.0).abs()).sqrt())?;
-        }
-
-        Some(FocalData {
-            r1,
-        })
-    }
-
+    // Whether the focal point (0, 0) is on the end circle with center (1, 0) and radius r1. If
+    // this is true, it's as if an aircraft is flying at Mach 1 and all circles (soundwaves)
+    // will go through the focal point (aircraft). In our previous implementations, this was
+    // known as the edge case where the inside circle touches the outside circle (on the focal
+    // point). If we were to solve for t bruteforcely using a quadratic equation, this case
+    // implies that the quadratic equation degenerates to a linear equation.
     fn is_focal_on_circle(&self) -> bool {
-        is_focal_on_circle(self.r1)
+        (1.0 - self.r1).is_nearly_zero()
     }
 
     fn is_well_behaved(&self) -> bool {
         !self.is_focal_on_circle() && self.r1 > 1.0
     }
-}
-
-// Whether the focal point (0, 0) is on the end circle with center (1, 0) and radius r1. If
-// this is true, it's as if an aircraft is flying at Mach 1 and all circles (soundwaves)
-// will go through the focal point (aircraft). In our previous implementations, this was
-// known as the edge case where the inside circle touches the outside circle (on the focal
-// point). If we were to solve for t bruteforcely using a quadratic equation, this case
-// implies that the quadratic equation degenerates to a linear equation.
-fn is_focal_on_circle(r1: f32) -> bool {
-    (1.0 - r1).is_nearly_zero()
 }
 
 
@@ -115,8 +95,8 @@ impl RadialGradient {
             // or it is fully degenerate (startRadius == endRadius).
 
             let inv = radius.invert();
-            let mut ts = Transform::from_translate(-start.x, -start.y)?;
-            ts = ts.post_scale(inv, inv)?;
+            let mut ts = TransformUnchecked::from_translate(-start.x, -start.y);
+            ts = ts.post_scale(inv, inv);
 
             // We can treat this gradient as radial, which is faster. If we got here, we know
             // that endRadius is not equal to 0, so this produces a meaningful gradient
@@ -129,20 +109,29 @@ impl RadialGradient {
             }))
         } else {
             // From SkTwoPointConicalGradient::Create
-            let mut ts = Transform::from_poly_to_poly(
+            let mut ts = TransformUnchecked::from_poly_to_poly(
                 start, end,
                 Point::from_xy(0.0, 0.0), Point::from_xy(1.0, 0.0),
             )?;
 
             let d_center = (start - end).length();
-            let focal_data = Some(FocalData::new(radius / d_center, &mut ts)?);
+            let r1 = radius / d_center;
+            let focal_data = FocalData { r1 };
+
+            // The following transformations are just to accelerate the shader computation by saving
+            // some arithmetic operations.
+            if focal_data.is_focal_on_circle() {
+                ts = ts.post_scale(0.5, 0.5);
+            } else {
+                ts = ts.post_scale(r1 / (r1 * r1 - 1.0), 1.0 / ((r1 * r1 - 1.0).abs()).sqrt());
+            }
 
             Some(Shader::RadialGradient(RadialGradient {
                 base: Gradient::new(points, mode, transform, ts),
                 center1: start,
                 center2: end,
                 radius,
-                focal_data,
+                focal_data: Some(focal_data),
             }))
         }
     }
