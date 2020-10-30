@@ -19,6 +19,7 @@ pub use pattern::{Pattern, FilterQuality};
 use crate::{Color, Transform};
 
 use crate::pipeline::{RasterPipelineBuilder, ContextStorage};
+use crate::scalar::Scalar;
 
 
 /// A shader spreading mode.
@@ -109,7 +110,7 @@ impl<'a> Shader<'a> {
         }
     }
 
-    /// Shift shader's opacity.
+    /// Shifts shader's opacity.
     ///
     /// `opacity` will be clamped to the 0..=1 range.
     ///
@@ -123,9 +124,9 @@ impl<'a> Shader<'a> {
     /// - For gradients this function will multiply all colors by `opacity`.
     /// - For `Pattern` this function will multiply `Patter::opacity` by `opacity`.
     pub fn apply_opacity(&mut self, opacity: f32) {
-        let opacity = NormalizedF32::new_bounded(opacity);        match self {
+        match self {
             Shader::SolidColor(ref mut c) => {
-                *c = c.mul_alpha(opacity).unwrap();
+                c.apply_opacity(opacity);
             }
             Shader::LinearGradient(g) => {
                 g.base.apply_opacity(opacity);
@@ -134,7 +135,7 @@ impl<'a> Shader<'a> {
                 g.base.apply_opacity(opacity);
             }
             Shader::Pattern(ref mut p) => {
-                p.opacity = NormalizedF32::new(p.opacity.get() * opacity.get()).unwrap();
+                p.opacity = NormalizedF32::new(p.opacity.get() * opacity.bound(0.0, 1.0)).unwrap();
             }
         }
     }

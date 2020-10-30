@@ -6,6 +6,8 @@
 
 use num_ext::NormalizedF32;
 
+use crate::scalar::Scalar;
+
 /// 8-bit type for an alpha value. 255 is 100% opaque, zero is 100% transparent.
 pub type AlphaU8 = u8;
 
@@ -269,8 +271,42 @@ impl Color {
         self.a.get()
     }
 
-    pub(crate) fn mul_alpha(&self, alpha: NormalizedF32) -> Option<Self> {
-        Color::from_rgba(self.red(), self.green(), self.blue(), self.alpha() * alpha.get())
+    /// Sets the red component value.
+    ///
+    /// The new value will be clipped to the 0..=1 range.
+    pub fn set_red(&mut self, c: f32) {
+        self.r = NormalizedF32::new_bounded(c);
+    }
+
+    /// Sets the green component value.
+    ///
+    /// The new value will be clipped to the 0..=1 range.
+    pub fn set_green(&mut self, c: f32) {
+        self.g = NormalizedF32::new_bounded(c);
+    }
+
+    /// Sets the blue component value.
+    ///
+    /// The new value will be clipped to the 0..=1 range.
+    pub fn set_blue(&mut self, c: f32) {
+        self.b = NormalizedF32::new_bounded(c);
+    }
+
+    /// Sets the alpha component value.
+    ///
+    /// The new value will be clipped to the 0..=1 range.
+    pub fn set_alpha(&mut self, c: f32) {
+        self.a = NormalizedF32::new_bounded(c);
+    }
+
+    /// Shifts color's opacity.
+    ///
+    /// Essentially, multiplies color's alpha by opacity.
+    ///
+    /// `opacity` will be clamped to the 0..=1 range first.
+    /// The final alpha will also be clamped.
+    pub fn apply_opacity(&mut self, opacity: f32) {
+        self.a = NormalizedF32::new_bounded(self.a.get() * opacity.bound(0.0, 1.0));
     }
 
     /// Check that color is opaque.

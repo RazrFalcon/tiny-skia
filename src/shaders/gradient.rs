@@ -252,9 +252,9 @@ impl Gradient {
         Some(())
     }
 
-    pub fn apply_opacity(&mut self, opacity: NormalizedF32) {
+    pub fn apply_opacity(&mut self, opacity: f32) {
         for stop in &mut self.stops {
-            stop.color = stop.color.mul_alpha(opacity).unwrap();
+            stop.color.apply_opacity(opacity);
         }
     }
 }
