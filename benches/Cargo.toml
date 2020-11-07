@@ -59,6 +59,11 @@ path = "pattern.rs"
 harness = false
 
 [[bench]]
+name = "clip"
+path = "clip.rs"
+harness = false
+
+[[bench]]
 name = "png_io"
 path = "png_io.rs"
 harness = false

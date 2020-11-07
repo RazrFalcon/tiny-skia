@@ -6,8 +6,9 @@
 
 use crate::{Pixmap, Path, Color, BlendMode, Shader, LineCap, Rect};
 
-use crate::scan;
+use crate::clip::ClipMask;
 use crate::pipeline::{ContextStorage, RasterPipelineBlitter};
+use crate::scan;
 
 // 8K is 1 too big, since 8K << supersample == 32768 which is too big for Fixed.
 const MAX_DIM: u32 = 8192 - 1;
@@ -102,8 +103,7 @@ impl<'a> Paint<'a> {
 }
 
 
-/// Provides a low-level rendering API.
-pub trait Painter {
+impl Pixmap {
     /// Draws a filled rectangle onto the pixmap.
     ///
     /// This function is usually slower than filling a rectangular path,
@@ -113,26 +113,12 @@ pub trait Painter {
     /// Used mainly to render a pixmap onto a pixmap.
     ///
     /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
-    fn fill_rect(&mut self, rect: Rect, paint: &Paint) -> Option<()>;
-
-    /// Draws a filled path onto the pixmap.
-    ///
-    /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
-    fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillRule) -> Option<()>;
-
-    /// A path stroking with subpixel width.
-    ///
-    /// Should be used when stroke width is <= 1.0
-    /// This function doesn't even accept width, which should be regulated via opacity.
-    ///
-    /// See [`Canvas::stroke_path`] for details.
-    ///
-    /// [`Canvas::stroke_path`]: struct.Canvas.html#method.stroke_path
-    fn stroke_hairline(&mut self, path: &Path, paint: &Paint, line_cap: LineCap) -> Option<()>;
-}
-
-impl Painter for Pixmap {
-    fn fill_rect(&mut self, rect: Rect, paint: &Paint) -> Option<()> {
+    pub(crate) fn fill_rect(
+        &mut self,
+        rect: Rect,
+        paint: &Paint,
+        clip_mask: Option<&ClipMask>,
+    ) -> Option<()> {
         // TODO: ignore rects outside the pixmap
 
         // TODO: draw tiler
@@ -144,7 +130,7 @@ impl Painter for Pixmap {
         let clip = self.size().to_screen_int_rect(0, 0);
 
         let mut ctx_storage = ContextStorage::new();
-        let mut blitter = RasterPipelineBlitter::new(paint, &mut ctx_storage, self)?;
+        let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut ctx_storage, self)?;
 
         if paint.anti_alias {
             scan::fill_rect_aa(&rect, &clip, &mut blitter)
@@ -153,7 +139,16 @@ impl Painter for Pixmap {
         }
     }
 
-    fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillRule) -> Option<()> {
+    /// Draws a filled path onto the pixmap.
+    ///
+    /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
+    pub(crate) fn fill_path(
+        &mut self,
+        path: &Path,
+        paint: &Paint,
+        fill_type: FillRule,
+        clip_mask: Option<&ClipMask>,
+    ) -> Option<()> {
         // This is sort of similar to SkDraw::drawPath
 
         // to_rect will fail when bounds' width/height is zero.
@@ -174,23 +169,37 @@ impl Painter for Pixmap {
             return None;
         }
 
-        let clip = self.size().to_screen_int_rect(0, 0);
+        let clip_rect = self.size().to_screen_int_rect(0, 0);
 
         let mut ctx_storage = ContextStorage::new();
-        let mut blitter = RasterPipelineBlitter::new(paint, &mut ctx_storage, self)?;
+        let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut ctx_storage, self)?;
 
         if paint.anti_alias {
-            scan::path_aa::fill_path(path, fill_type, &clip, &mut blitter)
+            scan::path_aa::fill_path(path, fill_type, &clip_rect, &mut blitter)
         } else {
-            scan::path::fill_path(path, fill_type, &clip, &mut blitter)
+            scan::path::fill_path(path, fill_type, &clip_rect, &mut blitter)
         }
     }
 
-    fn stroke_hairline(&mut self, path: &Path, paint: &Paint, line_cap: LineCap) -> Option<()> {
+    /// A path stroking with subpixel width.
+    ///
+    /// Should be used when stroke width is <= 1.0
+    /// This function doesn't even accept width, which should be regulated via opacity.
+    ///
+    /// See [`Canvas::stroke_path`] for details.
+    ///
+    /// [`Canvas::stroke_path`]: struct.Canvas.html#method.stroke_path
+    pub(crate) fn stroke_hairline(
+        &mut self,
+        path: &Path,
+        paint: &Paint,
+        line_cap: LineCap,
+        clip_mask: Option<&ClipMask>,
+    ) -> Option<()> {
         let clip = self.size().to_screen_int_rect(0, 0);
 
         let mut ctx_storage = ContextStorage::new();
-        let mut blitter = RasterPipelineBlitter::new(paint, &mut ctx_storage, self)?;
+        let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut ctx_storage, self)?;
 
         if paint.anti_alias {
             scan::hairline_aa::stroke_path(path, line_cap, &clip, &mut blitter)

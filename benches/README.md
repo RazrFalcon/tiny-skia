@@ -160,6 +160,18 @@ Note that `raqote` doesn't support high quality filtering.
 
 And yes, cairo is really that slow. Not sure why.
 
+### clipping
+
+`clip.rs`
+
+| Test/Library   | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2 | Skia AVX | cairo   | raqote     |
+| -------------- | -------------: | ------------: | --------: | -------: | ------: | ---------: |
+| clip path      |      2,371,153 |     2,066,654 |   579,724 |  299,567 | 336,489 |  4,964,327 |
+| clip path AA   |      2,480,372 |     2,152,685 |   898,489 |  605,572 | 367,626 |  3,396,255 |
+
+`tiny-skia` uses just a simple alpha mask for clipping, while Skia has a very complicated,
+but way faster algorithm.
+
 ### png
 
 `png_io.rs`

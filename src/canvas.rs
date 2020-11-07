@@ -9,7 +9,7 @@
 use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, Color, Rect};
 use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillRule, SpreadMode};
 
-use crate::painter::Painter;
+use crate::clip::Clip;
 use crate::scalar::Scalar;
 use crate::stroker::PathStroker;
 
@@ -59,8 +59,12 @@ impl Default for PixmapPaint {
 pub struct Canvas {
     /// A pixmap owned by the canvas.
     pub pixmap: Pixmap,
+
     /// Canvas's transform.
     transform: Transform,
+
+    /// Canvas's clip region.
+    clip: Clip,
 
     /// A path stroker used to cache temporary stroking data.
     stroker: PathStroker,
@@ -73,6 +77,7 @@ impl From<Pixmap> for Canvas {
         Canvas {
             pixmap,
             transform: Transform::identity(),
+            clip: Clip::new(),
             stroker: PathStroker::new(),
             stroked_path: None,
         }
@@ -94,6 +99,7 @@ impl Canvas {
         Some(Canvas {
             pixmap: Pixmap::new(width, height)?,
             transform: Transform::identity(),
+            clip: Clip::new(),
             stroker: PathStroker::new(),
             stroked_path: None,
         })
@@ -149,6 +155,26 @@ impl Canvas {
         self.transform = Transform::identity();
     }
 
+    /// Sets a clip path.
+    ///
+    /// Consecutive calls will replace the previous value.
+    ///
+    /// Clipping is affected by the current transform.
+    pub fn set_clip_path(&mut self, path: &Path, fill_type: FillRule, anti_alias: bool) {
+        if !self.transform.is_identity() {
+            if let Some(ref path) = path.clone().transform(&self.transform) {
+                self.clip.set_path(path, self.pixmap.rect(), fill_type, anti_alias);
+            }
+        } else {
+            self.clip.set_path(path, self.pixmap.rect(), fill_type, anti_alias);
+        }
+    }
+
+    /// Resets the current clip.
+    pub fn reset_clip(&mut self) {
+        self.clip.clear();
+    }
+
     /// Fills the whole canvas with a color.
     pub fn fill_canvas(&mut self, color: Color) {
         self.pixmap.fill(color);
@@ -167,9 +193,9 @@ impl Canvas {
             let mut paint = paint.clone();
             paint.shader.transform(&self.transform);
 
-            self.pixmap.fill_path(&path, &paint, fill_type)
+            self.pixmap.fill_path(&path, &paint, fill_type, self.clip.as_ref())
         } else {
-            self.pixmap.fill_path(path, paint, fill_type)
+            self.pixmap.fill_path(path, paint, fill_type, self.clip.as_ref())
         }
     }
 
@@ -224,7 +250,7 @@ impl Canvas {
                 paint.shader.transform(&self.transform);
             }
 
-            self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap)
+            self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap, self.clip.as_ref())
         } else {
             let mut stroked_path = if let Some(stroked_path) = self.stroked_path.take() {
                 self.stroker.stroke_to(&path, stroke, res_scale, stroked_path)
@@ -239,9 +265,9 @@ impl Canvas {
                 let mut paint = paint.clone();
                 paint.shader.transform(&self.transform);
 
-                self.pixmap.fill_path(&path, &paint, FillRule::Winding)
+                self.pixmap.fill_path(&path, &paint, FillRule::Winding, self.clip.as_ref())
             } else {
-                self.pixmap.fill_path(path, paint, FillRule::Winding)
+                self.pixmap.fill_path(path, paint, FillRule::Winding, self.clip.as_ref())
             }
         }
     }
@@ -292,7 +318,7 @@ impl Canvas {
     fn fill_rect_impl(&mut self, rect: Rect, paint: &Paint) -> Option<()> {
         // TODO: allow translate too
         if self.transform.is_identity() {
-            self.pixmap.fill_rect(rect, paint)
+            self.pixmap.fill_rect(rect, paint, self.clip.as_ref())
         } else {
             let path = PathBuilder::from_rect(rect);
             self.fill_path_impl(&path, paint, FillRule::Winding)

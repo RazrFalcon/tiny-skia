@@ -26,6 +26,7 @@ mod alpha_runs;
 mod blend_mode;
 mod blitter;
 mod canvas;
+mod clip;
 mod color;
 mod dash;
 mod edge;

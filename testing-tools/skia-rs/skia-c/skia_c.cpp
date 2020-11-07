@@ -233,10 +233,15 @@ void skiac_canvas_reset_transform(skiac_canvas* c_canvas)
     CANVAS_CAST->resetMatrix();
 }
 
-void skiac_canvas_clip_rect(skiac_canvas* c_canvas, float x, float y, float w, float h)
+void skiac_canvas_clip_rect(skiac_canvas* c_canvas, float x, float y, float w, float h, bool aa)
 {
     auto rect = SkRect::MakeXYWH(x, y, w, h);
-    CANVAS_CAST->clipRect(rect, true);
+    CANVAS_CAST->clipRect(rect, aa);
+}
+
+void skiac_canvas_clip_path(skiac_canvas* c_canvas, skiac_path* c_path, bool aa)
+{
+    CANVAS_CAST->clipPath(*PATH_CAST, aa);
 }
 
 void skiac_canvas_save(skiac_canvas* c_canvas)

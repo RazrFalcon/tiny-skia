@@ -76,7 +76,8 @@ void skiac_canvas_draw_surface_rect(
     float x, float y, float w, float h,
     int filter_quality);
 void skiac_canvas_reset_transform(skiac_canvas* c_canvas);
-void skiac_canvas_clip_rect(skiac_canvas* c_canvas, float x, float y, float w, float h);
+void skiac_canvas_clip_rect(skiac_canvas* c_canvas, float x, float y, float w, float h, bool aa);
+void skiac_canvas_clip_path(skiac_canvas* c_canvas, skiac_path* c_path, bool aa);
 void skiac_canvas_save(skiac_canvas* c_canvas);
 void skiac_canvas_restore(skiac_canvas* c_canvas);
 

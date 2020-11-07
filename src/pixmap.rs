@@ -11,6 +11,7 @@ use crate::Color;
 
 use crate::color::PremultipliedColorU8;
 use crate::int_size::IntSize;
+use crate::screen_int_rect::ScreenIntRect;
 
 #[cfg(feature = "png-format")]
 use crate::color::{premultiply_u8, ALPHA_U8_OPAQUE};
@@ -75,6 +76,11 @@ impl Pixmap {
     /// Returns pixmap's size.
     pub(crate) fn size(&self) -> IntSize {
         self.size
+    }
+
+    /// Returns pixmap's rect.
+    pub(crate) fn rect(&self) -> ScreenIntRect {
+        self.size.to_screen_int_rect(0, 0)
     }
 
     /// Returns the internal data.

@@ -11,6 +11,7 @@ use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
+use crate::clip::ClipMask;
 use crate::color::AlphaU8;
 use crate::math::LENGTH_U32_ONE;
 use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
@@ -21,6 +22,7 @@ use crate::shaders::StageRec;
 pub struct RasterPipelineBlitter<'a> {
     blend_mode: BlendMode,
     shader_pipeline: RasterPipelineBuilder,
+    clip_mask: Option<pipeline::ClipMaskCtx<'a>>,
 
     // Always points to the top-left of `pixmap`.
     pixels_ctx: pipeline::PixelsCtx<'a>,
@@ -43,6 +45,7 @@ pub struct RasterPipelineBlitter<'a> {
 impl<'a> RasterPipelineBlitter<'a> {
     pub fn new(
         paint: &Paint,
+        clip_mask: Option<&'a ClipMask>,
         ctx_storage: &mut ContextStorage,
         pixmap: &'a mut Pixmap,
     ) -> Option<Self> {
@@ -57,7 +60,7 @@ impl<'a> RasterPipelineBlitter<'a> {
 
                 let is_constant = true;
                 RasterPipelineBlitter::new_inner(paint, shader_pipeline, color.is_opaque(),
-                                                 is_constant, pixmap)
+                                                 is_constant, clip_mask, pixmap)
             }
             shader => {
                 let is_opaque = shader.is_opaque();
@@ -70,7 +73,7 @@ impl<'a> RasterPipelineBlitter<'a> {
 
                 shader.push_stages(rec)?;
                 RasterPipelineBlitter::new_inner(paint, shader_pipeline, is_opaque,
-                                                 is_constant, pixmap)
+                                                 is_constant, clip_mask, pixmap)
             }
         }
     }
@@ -80,6 +83,7 @@ impl<'a> RasterPipelineBlitter<'a> {
         shader_pipeline: RasterPipelineBuilder,
         is_opaque: bool,
         is_constant: bool,
+        clip_mask: Option<&'a ClipMask>,
         pixmap: &'a mut Pixmap,
     ) -> Option<Self> {
         // Fast-reject.
@@ -122,9 +126,19 @@ impl<'a> RasterPipelineBlitter<'a> {
             pixels: pixmap.pixels_mut(),
         };
 
+        let clip_mask = if let Some(mask) = clip_mask {
+            Some(pipeline::ClipMaskCtx {
+                stride: mask.width,
+                data: &mask.data,
+            })
+        } else {
+            None
+        };
+
         Some(RasterPipelineBlitter {
             blend_mode,
             shader_pipeline,
+            clip_mask,
             pixels_ctx: img_ctx,
             mask_ctx: pipeline::MaskCtx::default(),
             memset2d_color,
@@ -163,6 +177,11 @@ impl Blitter for RasterPipelineBlitter<'_> {
                 }
 
                 p.push_with_context(pipeline::Stage::Lerp1Float, curr_cov_ptr);
+            }
+
+            if let Some(ref mask) = self.clip_mask {
+                let mask_ctx_ptr = mask as *const _ as *const c_void;
+                p.push_with_context(pipeline::Stage::MaskU8, mask_ctx_ptr);
             }
 
             p.push_with_context(pipeline::Stage::Store, ctx_ptr);
@@ -250,7 +269,7 @@ impl Blitter for RasterPipelineBlitter<'_> {
 
             let ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
 
-            if self.blend_mode == BlendMode::SourceOver {
+            if self.blend_mode == BlendMode::SourceOver && self.clip_mask.is_none() {
                 // TODO: ignore when dither_rate is non-zero
                 p.push_with_context(pipeline::Stage::SourceOverRgba, ctx_ptr);
             } else {
@@ -259,6 +278,11 @@ impl Blitter for RasterPipelineBlitter<'_> {
                     if let Some(blend_stage) = self.blend_mode.to_stage() {
                         p.push(blend_stage);
                     }
+                }
+
+                if let Some(ref mask) = self.clip_mask {
+                    let mask_ctx_ptr = mask as *const _ as *const c_void;
+                    p.push_with_context(pipeline::Stage::MaskU8, mask_ctx_ptr);
                 }
 
                 p.push_with_context(pipeline::Stage::Store, ctx_ptr);
@@ -297,6 +321,11 @@ impl Blitter for RasterPipelineBlitter<'_> {
                 }
 
                 p.push_with_context(pipeline::Stage::LerpU8, mask_ctx_ptr);
+            }
+
+            if let Some(ref mask) = self.clip_mask {
+                let mask_ctx_ptr = mask as *const _ as *const c_void;
+                p.push_with_context(pipeline::Stage::MaskU8, mask_ctx_ptr);
             }
 
             p.push_with_context(pipeline::Stage::Store, img_ctx_ptr);

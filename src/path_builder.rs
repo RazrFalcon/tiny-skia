@@ -93,6 +93,8 @@ impl PathBuilder {
 
     /// Creates a new `Path` from a circle.
     ///
+    /// The contour is closed and has a clock-wise direction.
+    ///
     /// Returns `None` when:
     /// - `radius` <= 0
     /// - any value is not finite or really large
@@ -272,6 +274,22 @@ impl PathBuilder {
         true
     }
 
+    /// Adds a rectangle contour.
+    ///
+    /// The contour is closed and has a clock-wise direction.
+    ///
+    /// Does nothing when:
+    /// - any value is not finite or really large
+    pub fn push_rect(&mut self, x: f32, y: f32, w: f32, h: f32) {
+        if let Some(rect) = Rect::from_xywh(x, y, w, h) {
+            self.move_to(rect.left(), rect.top());
+            self.line_to(rect.right(), rect.top());
+            self.line_to(rect.right(), rect.bottom());
+            self.line_to(rect.left(), rect.bottom());
+            self.close();
+        }
+    }
+
     fn push_oval(&mut self, oval: &Rect) {
         let cx = oval.left().half() + oval.right().half();
         let cy = oval.top().half() + oval.bottom().half();
@@ -298,7 +316,14 @@ impl PathBuilder {
         self.close();
     }
 
-    pub(crate) fn push_circle(&mut self, x: f32, y: f32, r: f32) {
+    /// Adds a circle contour.
+    ///
+    /// The contour is closed and has a clock-wise direction.
+    ///
+    /// Does nothing when:
+    /// - `radius` <= 0
+    /// - any value is not finite or really large
+    pub fn push_circle(&mut self, x: f32, y: f32, r: f32) {
         if let Some(r) = Rect::from_xywh(x - r, y - r, r + r, r + r) {
             self.push_oval(&r);
         }

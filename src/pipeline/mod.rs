@@ -128,6 +128,7 @@ pub enum Stage {
     LoadDestination,
     Store,
     Gather,
+    MaskU8,
     ScaleU8,
     LerpU8,
     Scale1Float,
@@ -243,6 +244,23 @@ impl MaskCtx {
 }
 
 impl Context for MaskCtx {}
+
+
+// TODO: merge with MaskCtx
+#[derive(Debug)]
+pub struct ClipMaskCtx<'a> {
+    pub data: &'a [u8],
+    pub stride: LengthU32,
+}
+
+impl ClipMaskCtx<'_> {
+    #[inline(always)]
+    fn offset(&self, dx: usize, dy: usize) -> usize {
+        self.stride.get() as usize * dy + dx
+    }
+}
+
+impl Context for ClipMaskCtx<'_> {}
 
 
 #[derive(Copy, Clone, Debug)]
@@ -535,6 +553,8 @@ impl RasterPipelineBuilder {
         } else {
             program.push(lowp::just_return as *const () as *const c_void);
         }
+
+        // TODO: trim to 100
 
         // I wasn't able to reproduce Skia's load_8888_/store_8888_ performance.
         // Skia uses fallthrough switch, which is probably the reason.

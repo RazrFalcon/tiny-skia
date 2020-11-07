@@ -79,6 +79,7 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     load_dst,
     store,
     null_fn, // Gather
+    mask_u8,
     scale_u8,
     lerp_u8,
     scale_1_float,
@@ -261,6 +262,24 @@ pub fn store(p: &mut Pipeline) {
 pub fn store_tail(p: &mut Pipeline) {
     let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
     store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, ctx.slice_at_xy(p.dx, p.dy));
+
+    p.next_stage(2);
+}
+
+fn mask_u8(p: &mut Pipeline) {
+    let ctx: &super::ClipMaskCtx = p.stage_ctx();
+
+    let offset = ctx.offset(p.dx, p.dy);
+
+    let mut c = u16x16::default();
+    for i in 0..p.tail {
+        c.0[i] = u16::from(ctx.data[offset + i]);
+    }
+
+    p.r = div255(p.r * c);
+    p.g = div255(p.g * c);
+    p.b = div255(p.b * c);
+    p.a = div255(p.a * c);
 
     p.next_stage(2);
 }

@@ -176,6 +176,13 @@ mod ffi {
         pub fn skiac_canvas_clip_rect(
             canvas: *mut skiac_canvas,
             x: f32, y: f32, w: f32, h: f32,
+            aa: bool,
+        );
+
+        pub fn skiac_canvas_clip_path(
+            canvas: *mut skiac_canvas,
+            path: *mut skiac_path,
+            aa: bool,
         );
 
         pub fn skiac_canvas_save(
@@ -742,8 +749,13 @@ impl Canvas {
     }
 
     #[inline]
-    pub fn set_clip_rect(&mut self, x: f32, y: f32, w: f32, h: f32) {
-        unsafe { ffi::skiac_canvas_clip_rect(self.0, x, y, w, h); }
+    pub fn set_clip_rect(&mut self, x: f32, y: f32, w: f32, h: f32, aa: bool) {
+        unsafe { ffi::skiac_canvas_clip_rect(self.0, x, y, w, h, aa); }
+    }
+
+    #[inline]
+    pub fn set_clip_path(&mut self, path: &Path, aa: bool) {
+        unsafe { ffi::skiac_canvas_clip_path(self.0, path.0, aa); }
     }
 
     #[inline]

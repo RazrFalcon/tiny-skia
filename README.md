@@ -32,7 +32,7 @@ uses an obscure build system (`gn`) which still uses Python2
 and doesn't really support 32bit targets.
 
 `tiny-skia` tries to be small, simple and easy to build.
-Currently, it has around 12 KLOC and compiles in less than 5s on a modern CPU.
+Currently, it has around 14 KLOC and compiles in less than 5s on a modern CPU.
 
 ## Performance
 
@@ -102,13 +102,12 @@ The core ideas are that almost everything is stateless, immutable and valid.
 - [x] Patterns
 - [x] Fill rect
 - [ ] Stroke rect
-- [ ] Rectangular clipping
+- [x] Clipping
+- [x] Anti-aliased clipping
 - [ ] Testing
 
 ### v0.3
 
-- [ ] Clipping
-- [ ] Anti-aliased clipping
 - [ ] Analytical anti-aliased `Path` filling
 - [ ] Dithering
 
@@ -143,8 +142,8 @@ Despite being a port, we still have a lot of changes even in the supported subse
   Unlike Skia, only `Pattern` is allowed to have opacity.
   In all other cases you should adjust colors opacity manually.
 - No bilinear + mipmap down-scaling support.
-- No bilinear filtering in low precision pipeline.
-- Low precision pipeline uses u16x16 instead of u16x8. And no SIMD (yet).
+- `tiny-skia` uses just a simple alpha mask for clipping, while Skia has a very complicated,
+but way faster algorithm.
 
 ## Notes about the port
 
