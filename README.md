@@ -84,7 +84,6 @@ The core ideas are that almost everything is stateless, immutable and valid.
   It can be transformed, but this function consumes the object.
 - All geometry types are always valid and immutable.
   You cannot create a negative `Size`.
-  You cannot create a `Transform` with a zero scale.
   And so on.
 - All types that store `f32` guarantee that it is finite.
 

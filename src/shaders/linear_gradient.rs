@@ -9,7 +9,6 @@ use crate::{Point, Shader, GradientStop, SpreadMode, Transform, Color};
 use crate::scalar::Scalar;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::shaders::StageRec;
-use crate::transform::TransformUnchecked;
 
 /// A linear gradient shader.
 #[derive(Clone, Debug)]
@@ -80,7 +79,7 @@ impl LinearGradient {
 
         transform.invert()?;
 
-        let unit_ts = points_to_unit_ts(start, end);
+        let unit_ts = points_to_unit_ts(start, end)?;
         Some(Shader::LinearGradient(LinearGradient {
             base: Gradient::new(points, mode, transform, unit_ts),
             start,
@@ -97,17 +96,17 @@ impl LinearGradient {
     }
 }
 
-fn points_to_unit_ts(start: Point, end: Point) -> TransformUnchecked {
+fn points_to_unit_ts(start: Point, end: Point) -> Option<Transform> {
     let mut vec = end - start;
     let mag = vec.length();
     let inv = if mag != 0.0 { mag.invert() } else { 0.0 };
 
     vec.scale(inv);
 
-    let mut ts = TransformUnchecked::from_sin_cos_at(-vec.y, vec.x, start.x, start.y);
-    ts = ts.post_translate(-start.x, -start.y);
-    ts = ts.post_scale(inv, inv);
-    ts
+    let mut ts = Transform::from_sin_cos_at(-vec.y, vec.x, start.x, start.y)?;
+    ts = ts.post_translate(-start.x, -start.y)?;
+    ts = ts.post_scale(inv, inv)?;
+    Some(ts)
 }
 
 fn average_gradient_color(points: &[GradientStop]) -> Color {

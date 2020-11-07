@@ -6,12 +6,12 @@
 
 use crate::Point;
 
-use crate::floating_point::{FiniteF32, NonZeroF32};
+use crate::floating_point::FiniteF32;
 use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
 
 // FiniteF32::default() is not `const` yet.
 const FINITE_ZERO: FiniteF32 = unsafe { FiniteF32::new_unchecked(0.0) };
-const NONZERO_ONE: NonZeroF32 = unsafe { NonZeroF32::new_unchecked(1.0) };
+const NONZERO_ONE: FiniteF32 = unsafe { FiniteF32::new_unchecked(1.0) };
 
 #[derive(Copy, Clone, PartialEq, Default)]
 struct TransformFlags(u8);
@@ -51,11 +51,10 @@ impl std::ops::BitOrAssign for TransformFlags {
 /// # Guarantees
 ///
 /// - All values are finite.
-/// - ScaleX and/or ScaleY are not zero.
 #[derive(Copy, Clone)]
 pub struct Transform {
-    sx: NonZeroF32, kx: FiniteF32,  tx: FiniteF32,
-    ky: FiniteF32,  sy: NonZeroF32, ty: FiniteF32,
+    sx: FiniteF32, kx: FiniteF32, tx: FiniteF32,
+    ky: FiniteF32, sy: FiniteF32, ty: FiniteF32,
     flags: TransformFlags,
 }
 
@@ -91,10 +90,10 @@ impl Transform {
     /// - `sx` and `sy` must not be zero.
     #[inline]
     pub fn from_row(sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) -> Option<Self> {
-        let sx = NonZeroF32::new(sx)?;
+        let sx = FiniteF32::new(sx)?;
         let ky = FiniteF32::new(ky)?;
         let kx = FiniteF32::new(kx)?;
-        let sy = NonZeroF32::new(sy)?;
+        let sy = FiniteF32::new(sy)?;
         let tx = FiniteF32::new(tx)?;
         let ty = FiniteF32::new(ty)?;
         Some(Transform::from_row_safe(sx, ky, kx, sy, tx, ty))
@@ -105,10 +104,10 @@ impl Transform {
     /// We are using column-major-column-vector matrix notation, therefore it's ky-kx, not kx-ky.
     #[inline]
     pub(crate) fn from_row_safe(
-        sx: NonZeroF32,
+        sx: FiniteF32,
         ky: FiniteF32,
         kx: FiniteF32,
-        sy: NonZeroF32,
+        sy: FiniteF32,
         tx: FiniteF32,
         ty: FiniteF32,
     ) -> Self {
@@ -129,10 +128,10 @@ impl Transform {
     /// - `sx` and `sy` must be non-zero.
     #[inline]
     pub unsafe fn from_row_unchecked(sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) -> Self {
-        let sx = NonZeroF32::new_unchecked(sx);
+        let sx = FiniteF32::new_unchecked(sx);
         let ky = FiniteF32::new_unchecked(ky);
         let kx = FiniteF32::new_unchecked(kx);
-        let sy = NonZeroF32::new_unchecked(sy);
+        let sy = FiniteF32::new_unchecked(sy);
         let tx = FiniteF32::new_unchecked(tx);
         let ty = FiniteF32::new_unchecked(ty);
         Transform::from_row_safe(sx, ky, kx, sy, tx, ty)
@@ -174,14 +173,14 @@ impl Transform {
     /// - `sx` and `sy` must not be zero.
     #[inline]
     pub fn from_scale(sx: f32, sy: f32) -> Option<Self> {
-        let sx = NonZeroF32::new(sx)?;
-        let sy = NonZeroF32::new(sy)?;
+        let sx = FiniteF32::new(sx)?;
+        let sy = FiniteF32::new(sy)?;
         Some(Transform::from_scale_safe(sx, sy))
     }
 
     /// Creates a new scaling Transform.
     #[inline]
-    pub(crate) fn from_scale_safe(sx: NonZeroF32, sy: NonZeroF32) -> Self {
+    pub(crate) fn from_scale_safe(sx: FiniteF32, sy: FiniteF32) -> Self {
         let flags = if sx != NONZERO_ONE || sy != NONZERO_ONE {
             TransformFlags::SCALE
         } else {
@@ -221,6 +220,20 @@ impl Transform {
             ky,              sy: NONZERO_ONE, ty: FINITE_ZERO,
             flags,
         }
+    }
+
+    pub(crate) fn from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Option<Self> {
+        let cos_inv = 1.0 - cos;
+        Transform::from_row(
+            cos, sin, -sin, cos, sdot(sin, py, cos_inv, px), sdot(-sin, px, cos_inv, py)
+        )
+    }
+
+    pub(crate) fn from_poly_to_poly(src1: Point, src2: Point, dst1: Point, dst2: Point) -> Option<Self> {
+        let tmp = from_poly2(src1, src2)?;
+        let res = tmp.invert()?;
+        let tmp = from_poly2(dst1, dst2)?;
+        concat(&tmp, &res)
     }
 
     /// Returns scale pair.
@@ -422,11 +435,6 @@ impl Transform {
 
         invert(self)
     }
-
-    pub(crate) fn to_unchecked(&self) -> TransformUnchecked {
-        let (sx, ky, kx, sy, tx, ty) = self.get_row();
-        TransformUnchecked { sx, ky, kx, sy, tx, ty }
-    }
 }
 
 impl std::cmp::PartialEq for Transform {
@@ -457,94 +465,14 @@ impl std::fmt::Debug for Transform {
     }
 }
 
-// Some of the Skia code relies on the fact that Transform/Matrix can have any values.
-// In this cases we cannot use Transform.
-// More specifically is that sx/sy can be zero.
-#[derive(Copy, Clone, Debug)]
-pub struct TransformUnchecked {
-    pub sx: f32,
-    pub ky: f32,
-    pub kx: f32,
-    pub sy: f32,
-    pub tx: f32,
-    pub ty: f32,
-}
-
-impl TransformUnchecked {
-    pub fn from_translate(tx: f32, ty: f32) -> Self {
-        TransformUnchecked::from_row(1.0, 0.0, 0.0, 1.0, tx, ty)
-    }
-
-    pub fn from_row(sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) -> Self {
-        TransformUnchecked { sx, ky, kx, sy, tx, ty }
-    }
-
-    pub fn from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Self {
-        let cos_inv = 1.0 - cos;
-        TransformUnchecked::from_row(
-            cos, sin, -sin, cos, sdot(sin, py, cos_inv, px), sdot(-sin, px, cos_inv, py)
-        )
-    }
-
-    pub fn from_poly_to_poly(src1: Point, src2: Point, dst1: Point, dst2: Point) -> Option<Self> {
-        let tmp = from_poly2(src1, src2);
-        let res = tmp.to_safe()?.invert()?.to_unchecked();
-        let tmp = from_poly2(dst1, dst2);
-        let ts = concat_unchecked(&tmp, &res);
-        Some(ts)
-    }
-
-    pub fn to_safe(&self) -> Option<Transform> {
-        Transform::from_row(self.sx, self.ky, self.kx, self.sy, self.tx, self.ty)
-    }
-
-    pub fn is_identity(&self) -> bool {
-        self.sx == 1.0 &&
-        self.ky == 0.0 &&
-        self.kx == 0.0 &&
-        self.sy == 1.0 &&
-        self.tx == 0.0 &&
-        self.ty == 0.0
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn post_translate(&self, tx: f32, ty: f32) -> Self {
-        self.post_concat(&TransformUnchecked::from_translate(tx, ty))
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn post_scale(&self, sx: f32, sy: f32) -> Self {
-        self.post_concat(&TransformUnchecked::from_row(sx, 0.0, 0.0, sy, 0.0, 0.0))
-    }
-
-    #[inline]
-    #[must_use]
-    pub fn post_concat(&self, other: &Self) -> Self {
-        concat_unchecked(other, self)
-    }
-}
-
-fn from_poly2(p0: Point, p1: Point) -> TransformUnchecked {
-    TransformUnchecked::from_row(
+fn from_poly2(p0: Point, p1: Point) -> Option<Transform> {
+    Transform::from_row(
         p1.y - p0.y,
         p0.x - p1.x,
         p1.x - p0.x,
         p1.y - p0.y,
         p0.x,
         p0.y,
-    )
-}
-
-fn concat_unchecked(a: &TransformUnchecked, b: &TransformUnchecked) -> TransformUnchecked {
-    TransformUnchecked::from_row(
-        mul_add_mul(a.sx, b.sx, a.kx, b.ky),
-        mul_add_mul(a.ky, b.sx, a.sy, b.ky),
-        mul_add_mul(a.sx, b.kx, a.kx, b.sy),
-        mul_add_mul(a.ky, b.kx, a.sy, b.sy),
-        mul_add_mul(a.sx, b.tx, a.kx, b.ty) + a.tx,
-        mul_add_mul(a.ky, b.tx, a.sy, b.ty) + a.ty,
     )
 }
 
@@ -677,10 +605,6 @@ mod tests {
 
         assert_eq!(Transform::from_translate(5.0, 6.0).unwrap(),
                    Transform::from_row(1.0, 0.0, 0.0, 1.0, 5.0, 6.0).unwrap());
-
-        assert_eq!(Transform::from_scale(0.0, 0.0), None);
-        assert_eq!(Transform::from_scale(1.0, 0.0), None);
-        assert_eq!(Transform::from_scale(0.0, 1.0), None);
 
         let ts = Transform::identity();
         assert_eq!(ts.is_identity(), true);

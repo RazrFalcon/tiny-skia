@@ -234,46 +234,6 @@ impl NormalizedF32 {
 impl_debug_display!(NormalizedF32);
 
 
-/// A float that is known not to equal zero.
-///
-/// Doesn't support NonNull memory layout optimization like `std` types.
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-#[repr(transparent)]
-pub struct NonZeroF32(FiniteF32);
-
-impl NonZeroF32 {
-    /// Creates a non-zero if the given value is not zero.
-    ///
-    /// Returns `None` for NaN and infinity.
-    #[inline]
-    pub fn new(n: f32) -> Option<Self> {
-        if n.is_finite() && n != 0.0 {
-            Some(NonZeroF32(FiniteF32(n)))
-        } else {
-            None
-        }
-    }
-
-    /// Creates a non-zero without checking the value.
-    ///
-    /// # Safety
-    ///
-    /// `n` must be finite and non-zero.
-    #[inline]
-    pub const unsafe fn new_unchecked(n: f32) -> Self {
-        NonZeroF32(FiniteF32(n))
-    }
-
-    /// Returns the value as a primitive type.
-    #[inline]
-    pub const fn get(&self) -> f32 {
-        self.0.get()
-    }
-}
-
-impl_debug_display!(NonZeroF32);
-
-
 /// A float that is known to be > 0.
 ///
 /// Doesn't support NonNull memory layout optimization like `std` types.
