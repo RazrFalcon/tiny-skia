@@ -63,6 +63,27 @@ impl SaturateRound<f32> for i32 {
     }
 }
 
+/// Return the float as a 2s compliment int. Just to be used to compare floats
+/// to each other or against positive float-bit-constants (like 0). This does
+/// not return the int equivalent of the float, just something cheaper for
+/// compares-only.
+pub fn f32_as_2s_compliment(x: f32) -> i32 {
+    sign_bit_to_2s_compliment(bytemuck::cast(x))
+}
+
+/// Convert a sign-bit int (i.e. float interpreted as int) into a 2s compliement
+/// int. This also converts -0 (0x80000000) to 0. Doing this to a float allows
+/// it to be compared using normal C operators (<, <=, etc.)
+fn sign_bit_to_2s_compliment(mut x: i32) -> i32 {
+    if x < 0 {
+        x &= 0x7FFFFFFF;
+        x = -x;
+    }
+
+    x
+}
+
+
 // f32 wrappers below were not part of Skia.
 
 

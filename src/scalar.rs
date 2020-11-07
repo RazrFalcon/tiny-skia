@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use float_cmp::ApproxEqUlps;
+use crate::floating_point::f32_as_2s_compliment;
 
 pub const SCALAR_MAX: f32           = 3.402823466e+38;
 pub const SCALAR_NEARLY_ZERO: f32   = 1.0 / (1 << 12) as f32;
@@ -59,7 +59,11 @@ impl Scalar for f32 {
 
     // From SkPathOpsTypes.
     fn almost_dequal_ulps(self, other: Self) -> bool {
-        self.approx_eq_ulps(&other, 16)
+        const ULPS_EPSILON: i32 = 16;
+        let a_bits = f32_as_2s_compliment(self);
+        let b_bits = f32_as_2s_compliment(other);
+        // Find the difference in ULPs.
+        a_bits < b_bits + ULPS_EPSILON && b_bits < a_bits + ULPS_EPSILON
     }
 }
 
