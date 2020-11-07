@@ -1,8 +1,7 @@
 use tiny_skia::*;
 
 fn draw_line(x0: f32, y0: f32, x1: f32, y1: f32, anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
-    let pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(100, 100).unwrap();
 
     let mut pb = PathBuilder::new();
     pb.move_to(x0, y0);
@@ -106,8 +105,7 @@ fn clip_vline_right_aa() {
 }
 
 fn draw_quad(anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
-    let pixmap = Pixmap::new(200, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(200, 100).unwrap();
 
     let mut pb = PathBuilder::new();
     pb.move_to(25.0, 80.0);
@@ -145,8 +143,7 @@ fn quad_width_00() {
 }
 
 fn draw_cubic(points: &[f32; 8], anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
-    let pixmap = Pixmap::new(200, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(200, 100).unwrap();
 
     let mut pb = PathBuilder::new();
     pb.move_to(points[0], points[1]);

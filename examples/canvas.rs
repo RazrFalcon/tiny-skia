@@ -1,8 +1,7 @@
 use tiny_skia::*;
 
 fn main() {
-    let pixmap = Pixmap::new(1000, 1000).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(1000, 1000).unwrap();
 
     let mut paint = Paint::default();
     paint.anti_alias = true;

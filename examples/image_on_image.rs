@@ -3,8 +3,7 @@ use tiny_skia::*;
 fn main() {
     let triangle = crate_triangle();
 
-    let pixmap = Pixmap::new(400, 400).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(400, 400).unwrap();
 
     let now = std::time::Instant::now();
 
@@ -20,8 +19,7 @@ fn main() {
 }
 
 fn crate_triangle() -> Pixmap {
-    let pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(200, 200).unwrap();
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);

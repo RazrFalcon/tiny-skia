@@ -128,8 +128,7 @@ fn fill_rect_aa_cairo(bencher: &mut Bencher) {
 fn fill_rect_aa_ts_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let pixmap = Pixmap::new(1000, 1000).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(1000, 1000).unwrap();
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);

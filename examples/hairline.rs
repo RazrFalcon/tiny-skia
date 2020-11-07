@@ -3,8 +3,7 @@ use tiny_skia::*;
 // This example demonstrates thin paths rendering.
 
 fn main() {
-    let pixmap = Pixmap::new(500, 500).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(500, 500).unwrap();
 
     let now = std::time::Instant::now();
 

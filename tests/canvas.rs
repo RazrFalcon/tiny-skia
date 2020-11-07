@@ -2,8 +2,7 @@ use tiny_skia::*;
 
 #[test]
 fn fill_rect() {
-    let pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(100, 100).unwrap();
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -31,8 +30,7 @@ fn draw_pixmap() {
         canvas.pixmap
     };
 
-    let pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(200, 200).unwrap();
 
     let mut paint = PixmapPaint::default();
     paint.quality = FilterQuality::Bicubic;
@@ -63,8 +61,7 @@ fn draw_pixmap_ts() {
         canvas.pixmap
     };
 
-    let pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(200, 200).unwrap();
 
     let mut paint = PixmapPaint::default();
     paint.quality = FilterQuality::Bicubic;
@@ -96,8 +93,7 @@ fn draw_pixmap_opacity() {
         canvas.pixmap
     };
 
-    let pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap);
+    let mut canvas = Canvas::new(200, 200).unwrap();
 
     let mut paint = PixmapPaint::default();
     paint.quality = FilterQuality::Bicubic;
