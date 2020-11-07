@@ -4,12 +4,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use num_ext::NormalizedF32;
-
 use crate::{Shader, Transform, Pixmap, SpreadMode};
 
-use crate::shaders::StageRec;
+use crate::floating_point::NormalizedF32;
 use crate::pipeline;
+use crate::shaders::StageRec;
 
 
 /// Controls how much filtering to be done when transforming images.

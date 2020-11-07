@@ -11,8 +11,8 @@ use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 use crate::wide::f32x2;
 
 mod private {
-    use num_ext::{FiniteF32, NormalizedF32};
     use crate::scalar::Scalar;
+    use crate::floating_point::{FiniteF32, NormalizedF32};
 
     /// A finite f32 in (0,1) range.
     #[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
@@ -55,7 +55,7 @@ mod private {
 }
 pub use private::TValue;
 use crate::path_builder::PathDirection;
-use num_ext::NormalizedF32;
+use crate::floating_point::NormalizedF32;
 
 
 /// use for : eval(t) == A * t^2 + B * t + C

@@ -4,8 +4,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use num_ext::NormalizedF32;
-
 mod gradient;
 mod linear_gradient;
 mod radial_gradient;
@@ -18,6 +16,7 @@ pub use pattern::{Pattern, FilterQuality};
 
 use crate::{Color, Transform};
 
+use crate::floating_point::NormalizedF32;
 use crate::pipeline::{RasterPipelineBuilder, ContextStorage};
 use crate::scalar::Scalar;
 

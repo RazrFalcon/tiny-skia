@@ -4,10 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use num_ext::{FiniteF32, NonZeroF32};
-
 use crate::Point;
 
+use crate::floating_point::{FiniteF32, NonZeroF32};
 use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
 
 // FiniteF32::default() is not `const` yet.

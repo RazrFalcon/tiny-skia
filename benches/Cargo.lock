@@ -173,11 +173,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-ext"
-version = "0.1.0"
-source = "git+https://github.com/RazrFalcon/num-ext?rev=109f01a#109f01a88755e5d7b1ab9276a85415aa7f426fba"
-
-[[package]]
 name = "num-traits"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -259,7 +254,6 @@ dependencies = [
  "arrayvec",
  "bytemuck",
  "float-cmp",
- "num-ext",
  "png 0.16.7",
  "wide",
 ]

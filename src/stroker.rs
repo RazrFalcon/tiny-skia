@@ -6,12 +6,11 @@
 
 // Based on SkStroke.cpp
 
-use num_ext::{NonZeroPositiveF32, NormalizedF32};
-
 use crate::{Path, Point, PathBuilder, Transform, PathSegment, PathSegmentsIter, StrokeDash};
 
-use crate::path_geometry;
+use crate::floating_point::{NormalizedF32, NonZeroPositiveF32};
 use crate::path_builder::PathDirection;
+use crate::path_geometry;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 
 

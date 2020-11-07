@@ -16,7 +16,6 @@ arrayref = "0.3"
 arrayvec = "0.5"
 bytemuck = "1.4"
 float-cmp = { version = "0.8", default-features = false, features = ["std"] }
-num-ext = { git = "https://github.com/RazrFalcon/num-ext", rev = "109f01a" }
 png = { version = "0.16", optional = true }
 wide = { version = "0.6.2", features = ["std"] }
 

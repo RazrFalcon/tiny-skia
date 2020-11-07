@@ -4,10 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use num_ext::NormalizedF32;
-
 use crate::{Color, Transform, SpreadMode};
 
+use crate::floating_point::NormalizedF32;
 use crate::pipeline::{EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
 use crate::pipeline::{self, RasterPipelineBuilder};
 use crate::scalar::Scalar;

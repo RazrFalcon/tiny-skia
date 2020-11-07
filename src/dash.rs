@@ -7,10 +7,10 @@
 // This module is a mix of SkDashPath, SkDashPathEffect, SkContourMeasure and SkPathMeasure.
 
 use arrayref::array_ref;
-use num_ext::{NormalizedF32, FiniteF32, NonZeroPositiveF32};
 
 use crate::{Path, PathSegment, PathSegmentsIter, Point, PathBuilder};
 
+use crate::floating_point::{NormalizedF32, NonZeroPositiveF32, FiniteF32};
 use crate::path::PathVerb;
 use crate::path_geometry;
 use crate::scalar::Scalar;

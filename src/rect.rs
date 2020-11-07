@@ -6,11 +6,9 @@
 
 use std::cmp;
 
-use num_ext::FiniteF32;
-
 use crate::{IntRect, Point};
 
-use crate::floating_point::SaturateRound;
+use crate::floating_point::{SaturateRound, FiniteF32};
 use crate::wide::f32x4;
 
 /// A rectangle defined by left, top, right and bottom edges.

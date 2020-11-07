@@ -4,8 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use num_ext::NormalizedF32;
-
+use crate::floating_point::NormalizedF32;
 use crate::scalar::Scalar;
 
 /// 8-bit type for an alpha value. 255 is 100% opaque, zero is 100% transparent.
