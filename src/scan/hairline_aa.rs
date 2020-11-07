@@ -865,6 +865,28 @@ impl Blitter for RectClipBlitter<'_> {
             }
         }
     }
+
+    fn blit_anti_h2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8) {
+        self.blit_anti_h(
+            x, y,
+            &mut [alpha0, alpha1],
+            &mut [NonZeroU16::new(1), NonZeroU16::new(1), None],
+        );
+    }
+
+    fn blit_anti_v2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8) {
+        self.blit_anti_h(
+            x, y,
+            &mut [alpha0],
+            &mut [NonZeroU16::new(1), None],
+        );
+
+        self.blit_anti_h(
+            x, y + 1,
+            &mut [alpha1],
+            &mut [NonZeroU16::new(1), None],
+        );
+    }
 }
 
 fn compute_anti_width(runs: &[AlphaRun]) -> u32 {

@@ -144,7 +144,7 @@ fn quad_width_00() {
     assert_eq!(draw_quad(false, 0.0, LineCap::Butt), expected);
 }
 
-fn draw_cubic(points: &[f32; 8],anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
+fn draw_cubic(points: &[f32; 8], anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
     let pixmap = Pixmap::new(200, 100).unwrap();
     let mut canvas = Canvas::from(pixmap);
 
@@ -218,4 +218,22 @@ fn clip_cubic_05_aa() {
 fn clip_cubic_00() {
     let expected = Pixmap::load_png("tests/images/hairline/clip-cubic-00.png").unwrap();
     assert_eq!(draw_cubic(&[-25.0, 80.0, 55.0, 25.0, 155.0, 75.0, 175.0, 20.0], false, 0.0, LineCap::Butt), expected);
+}
+
+#[test]
+fn clipped_circle_aa() {
+    let mut canvas = Canvas::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+
+    let mut stroke = Stroke::default();
+    stroke.width = 0.5;
+
+    let path = PathBuilder::from_circle(50.0, 50.0, 55.0).unwrap();
+    canvas.stroke_path(&path, &paint, &stroke);
+
+    let expected = Pixmap::load_png("tests/images/hairline/clipped-circle-aa.png").unwrap();
+    assert_eq!(canvas.pixmap, expected);
 }
