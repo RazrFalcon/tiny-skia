@@ -244,7 +244,6 @@ fn transform() {
     ]);
 }
 
-
 #[test]
 fn invalid_transform() {
     let mut pb = PathBuilder::new();
@@ -254,4 +253,14 @@ fn invalid_transform() {
 
     // will produce infinity
     assert_eq!(path.transform(&Transform::from_scale(std::f32::MAX, std::f32::MAX).unwrap()), None);
+}
+
+#[test]
+fn circle() {
+    assert!(PathBuilder::from_circle(250.0, 250.0, 300.0).is_some()); // Must not panic.
+}
+
+#[test]
+fn large_circle() {
+    assert!(PathBuilder::from_circle(250.0, 250.0, 2000.0).is_some()); // Must not panic.
 }

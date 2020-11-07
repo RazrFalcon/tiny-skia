@@ -796,7 +796,7 @@ impl Conic {
         }
 
         // Limit the number of suggested quads to approximate a conic
-        const MAX_CONIC_TO_QUAD_POW2: usize = 5;
+        const MAX_CONIC_TO_QUAD_POW2: usize = 4;
 
         // "High order approximation of conic sections by quadratic splines"
         // by Michael Floater, 1993
@@ -1037,7 +1037,7 @@ fn between(a: f32, b: f32, c: f32) -> bool {
 
 
 pub struct AutoConicToQuads {
-    pub points: [Point; 18],
+    pub points: [Point; 64],
     pub len: u8, // the number of quads
 }
 
@@ -1047,7 +1047,7 @@ impl AutoConicToQuads {
     pub fn compute(pt0: Point, pt1: Point, pt2: Point, weight: f32) -> Option<Self> {
         let conic = Conic::new(pt0, pt1, pt2, weight);
         let pow2 = conic.compute_quad_pow2(Self::TOLERANCE)?;
-        let mut points = [Point::zero(); 18];
+        let mut points = [Point::zero(); 64];
         let len = conic.chop_into_quads_pow2(pow2, &mut points);
         Some(AutoConicToQuads {
             points,
