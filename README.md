@@ -9,6 +9,11 @@
 The goal is to provide an absolute minimal, CPU only, 2D rendering library for the Rust ecosystem,
 with a focus on a rendering quality, speed and binary size.
 
+And while `tiny-skia` is definitely tiny, it support all the common 2D operations
+like: filling and stroking a shape with a solid color, gradient or pattern;
+stroke dashing; clipping; images blending; PNG load/save.
+The main missing feature is text rendering (see #1).
+
 **Note:** this is not a Skia replacement and never will be. It's more of a research project.
 
 ## Motivation
@@ -37,7 +42,7 @@ Currently, it has around 14 KLOC and compiles in less than 5s on a modern CPU.
 ## Performance
 
 Currently, `tiny-skia` is 20-100% slower than Skia.
-Which is still faster than [cairo] and [raqote].
+Which is still faster than [cairo] and [raqote] in many cases.
 
 The heart of Skia's CPU rendering is
 [SkRasterPipeline](https://github.com/google/skia/blob/master/src/opts/SkRasterPipeline_opts.h).
@@ -72,7 +77,7 @@ The core ideas are that almost everything is stateless, immutable and valid.
 
 - `Canvas` provides a fairly spartan and low-level API.
   We don't have a `draw_path` method. Instead, there are `fill_path` and `stroke_path`.
-- `Canvas` contains a single state: world transform.
+- `Canvas` contains just two states: world transform and clip path.
   We don't have save/restore functionality.
 - The only truly mutable type is `Pixmap`, which is our raster image.
 - `Path` cannot be modified after creation.
@@ -82,41 +87,6 @@ The core ideas are that almost everything is stateless, immutable and valid.
   You cannot create a `Transform` with a zero scale.
   And so on.
 - All types that store `f32` guarantee that it is finite.
-
-## Roadmap
-
-### v0.2
-
-- [x] Foundation: `Pixmap`, `Canvas`, `Path`, geometry primitives, etc.
-- [x] Port `SkRasterPipeline` to Rust.
-- [x] PNG load/save
-- [x] Blending modes
-- [x] `Path` filling
-- [x] Anti-aliased `Path` filling
-- [x] `Path` stroking
-- [x] `Path` hairline stroking
-- [x] Anti-aliased `Path` hairline stroking
-- [x] Stroke dashing
-- [x] Gradients (linear and radial)
-- [x] `Pixmap`s blending (image on image rendering)
-- [x] Patterns
-- [x] Fill rect
-- [ ] Stroke rect
-- [x] Clipping
-- [x] Anti-aliased clipping
-- [ ] Testing
-
-### v0.3
-
-- [ ] Analytical anti-aliased `Path` filling
-- [ ] Dithering
-
-### v0.N
-
-- Linear color space.
-- Move `Path` and most of Bézier math into separate crates. Preferably into existing one
-
-PS: we start from 0.2, because 0.1 was just a bindings.
 
 ## Out of scope
 
