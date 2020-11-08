@@ -155,6 +155,15 @@ impl Canvas {
         self.transform = Transform::identity();
     }
 
+    /// Sets a clip rectangle.
+    ///
+    /// Consecutive calls will replace the previous value.
+    ///
+    /// Clipping is affected by the current transform.
+    pub fn set_clip_rect(&mut self, rect: Rect, anti_alias: bool) {
+        self.set_clip_path(&PathBuilder::from_rect(rect), FillRule::Winding, anti_alias);
+    }
+
     /// Sets a clip path.
     ///
     /// Consecutive calls will replace the previous value.
