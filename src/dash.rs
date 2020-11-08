@@ -95,7 +95,7 @@ fn adjust_dash_offset(mut offset: f32, len: f32) -> f32 {
     if offset < 0.0 {
         offset = -offset;
         if offset > len {
-            offset = offset % len;
+            offset %= len;
         }
 
         offset = len - offset;
@@ -377,7 +377,8 @@ impl ContourMeasure {
             stop_d = self.length;
         }
 
-        if !(start_d <= stop_d) { // catch NaN values as well
+        if !(start_d <= stop_d) {
+            // catch NaN values as well
             return None;
         }
 

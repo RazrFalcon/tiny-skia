@@ -90,6 +90,7 @@ fn hair_line_rgn(
             }
 
             let slope = fdot16::div(dy, dx);
+            #[allow(clippy::precedence)]
             let mut start_y = fdot6::to_fdot16(y0) + (slope * ((32 - x0) & 63) >> 6);
 
             debug_assert!(ix0 < ix1);
@@ -121,6 +122,7 @@ fn hair_line_rgn(
             }
 
             let slope = fdot16::div(dx, dy);
+            #[allow(clippy::precedence)]
             let mut start_x = fdot6::to_fdot16(x0) + (slope * ((32 - y0) & 63) >> 6);
 
             debug_assert!(iy0 < iy1);

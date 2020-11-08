@@ -42,6 +42,7 @@ impl<'a> Pattern<'a> {
     /// Creates a new pattern shader.
     ///
     /// `opacity` will be clamped to the 0..=1 range.
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         pixmap: &'a Pixmap,
         spread_mode: SpreadMode,

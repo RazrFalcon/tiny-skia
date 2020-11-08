@@ -30,6 +30,7 @@ impl LinearGradient {
     /// - `points` is empty
     /// - `start` == `end`
     /// - `transform` is not invertible
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         start: Point,
         end: Point,

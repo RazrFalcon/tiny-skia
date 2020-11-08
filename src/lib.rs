@@ -10,13 +10,16 @@ See the `examples/` directory for usage examples.
 #![warn(missing_debug_implementations)]
 
 #![allow(clippy::approx_constant)]
+#![allow(clippy::clone_on_copy)]
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::comparison_chain)]
+#![allow(clippy::eq_op)]
 #![allow(clippy::excessive_precision)]
 #![allow(clippy::float_cmp)]
 #![allow(clippy::identity_op)]
 #![allow(clippy::many_single_char_names)]
 #![allow(clippy::needless_range_loop)]
+#![allow(clippy::neg_cmp_op_on_partial_ord)]
 #![allow(clippy::too_many_arguments)]
 
 // Must be first, because of macro scope rules.

@@ -908,14 +908,9 @@ impl Blitter for RectClipBlitter<'_> {
 fn compute_anti_width(runs: &[AlphaRun]) -> u32 {
     let mut i = 0;
     let mut width = 0;
-    // TODO: turn [AlphaRun] into an iterator?
-    loop {
-        if let Some(count) = runs[i] {
-            width += u32::from(count.get());
-            i += usize::from(count.get());
-        } else {
-            break;
-        }
+    while let Some(count) = runs[i] {
+        width += u32::from(count.get());
+        i += usize::from(count.get());
     }
 
     width
