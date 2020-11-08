@@ -116,7 +116,7 @@ impl<'a> RasterPipelineBlitter<'a> {
         };
 
         // Clear is just a transparent color memset.
-        if blend_mode == BlendMode::Clear {
+        if blend_mode == BlendMode::Clear && !paint.anti_alias {
             blend_mode = BlendMode::Source;
             memset2d_color = Some(PremultipliedColorU8::TRANSPARENT);
         }

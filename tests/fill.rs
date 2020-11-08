@@ -549,3 +549,24 @@ fn aa_endless_loop() {
     // Must not loop.
     canvas.fill_path(&path, &paint, FillRule::Winding);
 }
+
+#[test]
+fn clear_aa() {
+    let mut canvas = Canvas::new(100, 100).unwrap();
+
+    canvas.fill_canvas(Color::from_rgba8(50, 127, 150, 200));
+
+    // Make sure that Clear with AA doesn't fallback to memset.
+    let mut paint = Paint::default();
+    paint.anti_alias = true;
+    paint.blend_mode = BlendMode::Clear;
+
+    canvas.fill_path(
+        &PathBuilder::from_circle(50.0, 50.0, 40.0).unwrap(),
+        &paint,
+        FillRule::Winding,
+    );
+
+    let expected = Pixmap::load_png("tests/images/fill/clear-aa.png").unwrap();
+    assert_eq!(canvas.pixmap, expected);
+}
