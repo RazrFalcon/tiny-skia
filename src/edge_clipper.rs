@@ -49,7 +49,12 @@ impl EdgeClipper {
 
     fn clip_line(mut self, p0: Point, p1: Point) -> Option<ClippedEdges> {
         let mut points = [Point::zero(); line_clipper::MAX_POINTS];
-        let points = line_clipper::clip(&[p0, p1], &self.clip, self.can_cull_to_the_right, &mut points);
+        let points = line_clipper::clip(
+            &[p0, p1],
+            &self.clip,
+            self.can_cull_to_the_right,
+            &mut points,
+        );
         if !points.is_empty() {
             for i in 0..points.len()-1 {
                 self.push_line(points[i], points[i + 1]);

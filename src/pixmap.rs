@@ -242,7 +242,8 @@ impl Pixmap {
         // due to rounding. So we stick with this method for now.
         for pixel in tmp_pixmap.pixels_mut() {
             let c = pixel.demultiply();
-            *pixel = PremultipliedColorU8::from_rgba_unchecked(c.red(), c.green(), c.blue(), c.alpha());
+            *pixel = PremultipliedColorU8::from_rgba_unchecked(
+                c.red(), c.green(), c.blue(), c.alpha());
         }
 
         let mut data = Vec::new();

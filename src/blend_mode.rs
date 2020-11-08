@@ -86,13 +86,13 @@ impl BlendMode {
         //
         // This function is a finer-grained breakdown of SkBlendMode_SupportsCoverageAsAlpha().
         matches!(self,
-            BlendMode::Destination |            // d              --> no sa term, ok!
-            BlendMode::DestinationOver |        // d + s*inv(da)  --> no sa term, ok!
-            BlendMode::Plus |                   // clamp(s+d)     --> no sa term, ok!
-            BlendMode::DestinationOut |         // d * inv(sa)
-            BlendMode::SourceAtop |             // s*da + d*inv(sa)
-            BlendMode::SourceOver |             // s + d*inv(sa)
-            BlendMode::Xor             // s*inv(da) + d*inv(sa)
+            BlendMode::Destination |        // d              --> no sa term, ok!
+            BlendMode::DestinationOver |    // d + s*inv(da)  --> no sa term, ok!
+            BlendMode::Plus |               // clamp(s+d)     --> no sa term, ok!
+            BlendMode::DestinationOut |     // d * inv(sa)
+            BlendMode::SourceAtop |         // s*da + d*inv(sa)
+            BlendMode::SourceOver |         // s + d*inv(sa)
+            BlendMode::Xor                  // s*inv(da) + d*inv(sa)
         )
     }
 

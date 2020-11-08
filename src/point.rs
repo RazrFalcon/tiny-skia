@@ -186,7 +186,13 @@ impl Point {
 //
 // If we underflow, we return false. If we overflow, we compute again using
 // doubles, which is much slower (3x in a desktop test) but will not overflow.
-fn set_point_length(pt: &mut Point, mut x: f32, mut y: f32, length: f32, orig_length: &mut Option<f32>) -> bool {
+fn set_point_length(
+    pt: &mut Point,
+    mut x: f32,
+    mut y: f32,
+    length: f32,
+    orig_length: &mut Option<f32>,
+) -> bool {
     // our mag2 step overflowed to infinity, so use doubles instead.
     // much slower, but needed when x or y are very large, other wise we
     // divide by inf. and return (0,0) vector.

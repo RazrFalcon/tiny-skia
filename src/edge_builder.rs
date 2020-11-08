@@ -69,7 +69,11 @@ impl BasicEdgeBuilder {
 
     // Skia returns a linked list here, but it's a nightmare to use in Rust,
     // so we're mimicking it with Vec.
-    pub fn build_edges(path: &Path, clip: Option<&ShiftedIntRect>, clip_shift: i32) -> Option<Vec<Edge>> {
+    pub fn build_edges(
+        path: &Path,
+        clip: Option<&ShiftedIntRect>,
+        clip_shift: i32,
+    ) -> Option<Vec<Edge>> {
         // If we're convex, then we need both edges, even if the right edge is past the clip.
         // let can_cull_to_the_right = !path.isConvex();
         let can_cull_to_the_right = false; // TODO: this
@@ -87,7 +91,12 @@ impl BasicEdgeBuilder {
     }
 
     // TODO: build_poly
-    pub fn build(&mut self, path: &Path, clip: Option<&ShiftedIntRect>, can_cull_to_the_right: bool) -> Option<()> {
+    pub fn build(
+        &mut self,
+        path: &Path,
+        clip: Option<&ShiftedIntRect>,
+        can_cull_to_the_right: bool,
+    ) -> Option<()> {
         if let Some(ref clip) = clip {
             let clip = clip.recover().to_rect();
             for edges in EdgeClipperIter::new(path, clip, can_cull_to_the_right) {
@@ -108,7 +117,9 @@ impl BasicEdgeBuilder {
                             self.push_quad(&[p0, p1, p2])
                         }
                         PathEdge::CubicTo(p0, p1, p2, p3) => {
-                            if !p0.is_finite() || !p1.is_finite() || !p2.is_finite() || !p3.is_finite() {
+                            if !p0.is_finite() || !p1.is_finite() ||
+                               !p2.is_finite() || !p3.is_finite()
+                            {
                                 return None;
                             }
 

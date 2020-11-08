@@ -12,7 +12,8 @@ with a focus on a rendering quality, speed and binary size.
 And while `tiny-skia` is definitely tiny, it support all the common 2D operations
 like: filling and stroking a shape with a solid color, gradient or pattern;
 stroke dashing; clipping; images blending; PNG load/save.
-The main missing feature is text rendering (see #1).
+The main missing feature is text rendering
+(see [#1](https://github.com/RazrFalcon/tiny-skia/issues/1)).
 
 **Note:** this is not a Skia replacement and never will be. It's more of a research project.
 

@@ -187,7 +187,13 @@ fn do_scanline(l: FDot8, top: i32, r: FDot8, alpha: AlphaU8, blitter: &mut dyn B
     }
 }
 
-fn call_hline_blitter(mut x: u32, y: Option<u32>, count: LengthU32, alpha: AlphaU8, blitter: &mut dyn Blitter) {
+fn call_hline_blitter(
+    mut x: u32,
+    y: Option<u32>,
+    count: LengthU32,
+    alpha: AlphaU8,
+    blitter: &mut dyn Blitter,
+) {
     const HLINE_STACK_BUFFER: usize = 100;
 
     let mut runs = [None; HLINE_STACK_BUFFER + 1];
@@ -233,7 +239,11 @@ pub fn stroke_path(
     super::hairline::stroke_path_impl(path, line_cap, clip, anti_hair_line_rgn, blitter)
 }
 
-fn anti_hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut dyn Blitter) -> Option<()> {
+fn anti_hair_line_rgn(
+    points: &[Point],
+    clip: Option<&ScreenIntRect>,
+    blitter: &mut dyn Blitter,
+) -> Option<()> {
     let max = 32767.0;
     let fixed_bounds = Rect::from_ltrb(-max, -max, max, max)?;
 
@@ -801,7 +811,13 @@ struct RectClipBlitter<'a> {
 }
 
 impl Blitter for RectClipBlitter<'_> {
-    fn blit_anti_h(&mut self, x: u32, y: u32, mut antialias: &mut [AlphaU8], mut runs: &mut [AlphaRun]) {
+    fn blit_anti_h(
+        &mut self,
+        x: u32,
+        y: u32,
+        mut antialias: &mut [AlphaU8],
+        mut runs: &mut [AlphaRun],
+    ) {
         fn y_in_rect(y: u32, rect: ScreenIntRect) -> bool {
             (y - rect.top()) < rect.height()
         }

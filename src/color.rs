@@ -432,7 +432,12 @@ const fn pack_rgba(r: u8, g: u8, b: u8, a: u8) -> u32 {
     ((a as u32) << 24) | ((b as u32) << 16) | ((g as u32) << 8) | ((r as u32) << 0)
 }
 
-fn color_f32_to_u8(r: NormalizedF32, g: NormalizedF32, b: NormalizedF32, a: NormalizedF32) -> [u8; 4] {
+fn color_f32_to_u8(
+    r: NormalizedF32,
+    g: NormalizedF32,
+    b: NormalizedF32,
+    a: NormalizedF32,
+) -> [u8; 4] {
     [
         (r.get() * 255.0 + 0.5) as u8,
         (g.get() * 255.0 + 0.5) as u8,

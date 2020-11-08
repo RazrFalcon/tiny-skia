@@ -690,7 +690,8 @@ fn reflect_y(p: &mut Pipeline) {
 fn exclusive_reflect(v: f32x8, limit: f32, inv_limit: f32) -> f32x8 {
     let limit = f32x8::splat(limit);
     let inv_limit = f32x8::splat(inv_limit);
-    ((v - limit) - (limit + limit) * ((v - limit) * (inv_limit * f32x8::splat(0.5))).floor() - limit).abs()
+    ((v - limit) - (limit + limit)
+        * ((v - limit) * (inv_limit * f32x8::splat(0.5))).floor() - limit).abs()
 }
 
 fn repeat_x(p: &mut Pipeline) {
@@ -752,7 +753,18 @@ fn bicubic(p: &mut Pipeline) {
 #[inline(always)]
 fn bicubic_near(t: f32x8) -> f32x8 {
     // 1/18 + 9/18t + 27/18t^2 - 21/18t^3 == t ( t ( -21/18t + 27/18) + 9/18) + 1/18
-    mad(t, mad(t, mad(f32x8::splat(-21.0/18.0), t, f32x8::splat(27.0/18.0)), f32x8::splat(9.0/18.0)), f32x8::splat(1.0/18.0))
+    mad(
+        t,
+        mad(t,
+            mad(
+                f32x8::splat(-21.0/18.0),
+                t,
+                f32x8::splat(27.0/18.0),
+            ),
+            f32x8::splat(9.0/18.0),
+        ),
+        f32x8::splat(1.0/18.0),
+    )
 }
 
 #[inline(always)]

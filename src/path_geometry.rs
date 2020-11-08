@@ -479,7 +479,9 @@ pub fn eval_quad_tangent_at(src: &[Point; 3], tol: NormalizedF32) -> Point {
     // The derivative equation is 2(b - a +(a - 2b +c)t). This returns a
     // zero tangent vector when t is 0 or 1, and the control point is equal
     // to the end point. In this case, use the quad end points to compute the tangent.
-    if (tol == NormalizedF32::ZERO && src[0] == src[1]) || (tol == NormalizedF32::ONE && src[1] == src[2]) {
+    if (tol == NormalizedF32::ZERO && src[0] == src[1]) ||
+       (tol == NormalizedF32::ONE && src[1] == src[2])
+    {
         return src[2] - src[0];
     }
 
@@ -504,7 +506,10 @@ pub fn eval_quad_tangent_at(src: &[Point; 3], tol: NormalizedF32) -> Point {
 // F'' = 6Ct + 6B
 //
 // F' dot F'' -> CCt^3 + 3BCt^2 + (2BB + CA)t + AB
-pub fn find_cubic_max_curvature<'a>(src: &[Point; 4], t_values: &'a mut [TValue; 3]) -> &'a [TValue] {
+pub fn find_cubic_max_curvature<'a>(
+    src: &[Point; 4],
+    t_values: &'a mut [TValue; 3],
+) -> &'a [TValue] {
     let raw_src = points_to_f32s!(src, 4);
 
     let mut coeff_x = formulate_f1_dot_f2(raw_src);
@@ -856,8 +861,11 @@ impl Conic {
             let w_d = self.weight as f64;
             let w_2 = w_d * 2.0;
             let scale_half = 1.0 / (1.0 + w_d) * 0.5;
-            m_pt.x = ((self.points[0].x as f64 + w_2 * self.points[1].x as f64 + self.points[2].x as f64) * scale_half) as f32;
-            m_pt.y = ((self.points[0].y as f64 + w_2 * self.points[1].y as f64 + self.points[2].y as f64) * scale_half) as f32;
+            m_pt.x = ((self.points[0].x as f64 + w_2 * self.points[1].x as f64
+                + self.points[2].x as f64) * scale_half) as f32;
+
+            m_pt.y = ((self.points[0].y as f64 + w_2 * self.points[1].y as f64
+                + self.points[2].y as f64) * scale_half) as f32;
         }
 
         (
@@ -1000,7 +1008,11 @@ fn subdivide<'a>(src: &Conic, mut points: &'a mut [Point], mut level: u8) -> &'a
             let mid_y = dst.0.points[2].y;
             if !between(start_y, mid_y, end_y) {
                 // If the computed midpoint is outside the ends, move it to the closer one.
-                let closer_y = if (mid_y - start_y).abs() < (mid_y - end_y).abs() { start_y } else { end_y };
+                let closer_y = if (mid_y - start_y).abs() < (mid_y - end_y).abs() {
+                    start_y
+                } else {
+                    end_y
+                };
                 dst.0.points[2].y = closer_y;
                 dst.1.points[0].y = closer_y;
             }
@@ -1065,7 +1077,12 @@ pub fn chop_mono_cubic_at_y(src: &[Point; 4], y: f32, dst: &mut [Point; 7]) -> b
     cubic_dchop_at_intercept(src, y, false, dst)
 }
 
-fn cubic_dchop_at_intercept(src: &[Point; 4], intercept: f32, is_vertical: bool, dst: &mut [Point; 7]) -> bool {
+fn cubic_dchop_at_intercept(
+    src: &[Point; 4],
+    intercept: f32,
+    is_vertical: bool,
+    dst: &mut [Point; 7],
+) -> bool {
     use crate::path64::{cubic64::Cubic64, point64::Point64, line_cubic_intersections};
 
     let src = [

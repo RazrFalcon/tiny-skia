@@ -14,7 +14,7 @@ use crate::path_geometry;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 
 
-struct SwappableBuilders<'a, > {
+struct SwappableBuilders<'a> {
     inner: &'a mut PathBuilder,
     outer: &'a mut PathBuilder,
 }
@@ -2077,10 +2077,12 @@ mod tests {
     #[test]
     fn cubic_1() {
         let mut pb = PathBuilder::new();
-        pb.move_to( 51.0161362, 1511.52478);
-        pb.cubic_to(51.0161362, 1511.52478,
-                    51.0161362, 1511.52478,
-                    51.0161362, 1511.52478);
+        pb.move_to(51.0161362, 1511.52478);
+        pb.cubic_to(
+            51.0161362, 1511.52478,
+            51.0161362, 1511.52478,
+            51.0161362, 1511.52478,
+        );
         let path = pb.finish().unwrap();
 
         let mut stroke = Stroke::default();
@@ -2093,14 +2095,12 @@ mod tests {
     #[test]
     fn cubic_2() {
         let mut pb = PathBuilder::new();
-        // 51.0161362, 1511.52478
-        pb.move_to(f32::from_bits(0x424c1086), f32::from_bits(0x44bcf0cb));
-        // 51.0160980, 1511.52478
-        // 51.0163651, 1511.52478
-        // 51.0166969, 1511.52466
-        pb.cubic_to(f32::from_bits(0x424c107c), f32::from_bits(0x44bcf0cb),
-                    f32::from_bits(0x424c10c2), f32::from_bits(0x44bcf0cb),
-                    f32::from_bits(0x424c1119), f32::from_bits(0x44bcf0ca));
+        pb.move_to(f32::from_bits(0x424c1086), f32::from_bits(0x44bcf0cb)); // 51.0161362, 1511.52478
+        pb.cubic_to(
+            f32::from_bits(0x424c107c), f32::from_bits(0x44bcf0cb), // 51.0160980, 1511.52478
+            f32::from_bits(0x424c10c2), f32::from_bits(0x44bcf0cb), // 51.0163651, 1511.52478
+            f32::from_bits(0x424c1119), f32::from_bits(0x44bcf0ca), // 51.0166969, 1511.52466
+        );
         let path = pb.finish().unwrap();
 
         let mut stroke = Stroke::default();
@@ -2135,8 +2135,10 @@ mod tests {
     fn quad_stroker_one_off() {
         let mut pb = PathBuilder::new();
         pb.move_to(f32::from_bits(0x43c99223), f32::from_bits(0x42b7417e));
-        pb.quad_to(f32::from_bits(0x4285d839), f32::from_bits(0x43ed6645),
-                   f32::from_bits(0x43c941c8), f32::from_bits(0x42b3ace3));
+        pb.quad_to(
+            f32::from_bits(0x4285d839), f32::from_bits(0x43ed6645),
+            f32::from_bits(0x43c941c8), f32::from_bits(0x42b3ace3),
+        );
         let path = pb.finish().unwrap();
 
         let mut stroke = Stroke::default();
@@ -2150,9 +2152,11 @@ mod tests {
     fn cubic_stroker_one_off() {
         let mut pb = PathBuilder::new();
         pb.move_to(f32::from_bits(0x433f5370), f32::from_bits(0x43d1f4b3));
-        pb.cubic_to(f32::from_bits(0x4331cb76), f32::from_bits(0x43ea3340),
-                    f32::from_bits(0x4388f498), f32::from_bits(0x42f7f08d),
-                    f32::from_bits(0x43f1cd32), f32::from_bits(0x42802ec1));
+        pb.cubic_to(
+            f32::from_bits(0x4331cb76), f32::from_bits(0x43ea3340),
+            f32::from_bits(0x4388f498), f32::from_bits(0x42f7f08d),
+            f32::from_bits(0x43f1cd32), f32::from_bits(0x42802ec1),
+        );
         let path = pb.finish().unwrap();
 
         let mut stroke = Stroke::default();

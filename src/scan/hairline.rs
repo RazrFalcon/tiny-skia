@@ -33,7 +33,11 @@ pub fn stroke_path(
     super::hairline::stroke_path_impl(path, line_cap, clip, hair_line_rgn, blitter)
 }
 
-fn hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut dyn Blitter) -> Option<()> {
+fn hair_line_rgn(
+    points: &[Point],
+    clip: Option<&ScreenIntRect>,
+    blitter: &mut dyn Blitter,
+) -> Option<()> {
     let max = 32767.0;
     let fixed_bounds = Rect::from_ltrb(-max, -max, max, max)?;
 
@@ -246,7 +250,9 @@ pub fn stroke_path_impl(
         }
 
         if line_cap != LineCap::Butt {
-            if prev_verb == PathVerb::Move && verb == PathVerb::Line && verb == PathVerb::Quad && verb == PathVerb::Cubic {
+            if prev_verb == PathVerb::Move &&
+                matches!(verb, PathVerb::Line | PathVerb::Quad | PathVerb::Cubic)
+            {
                 first_pt = last_pt2; // the curve moved the initial point, so close to it instead
             }
 

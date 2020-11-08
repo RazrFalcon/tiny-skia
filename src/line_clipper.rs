@@ -21,7 +21,12 @@ pub const MAX_POINTS: usize = 4;
 /// 1st segment: lines[0]..lines[1]
 /// 2nd segment: lines[1]..lines[2]
 /// 3rd segment: lines[2]..lines[3]
-pub fn clip<'a>(src: &[Point; 2], clip: &Rect, can_cull_to_the_right: bool, points: &'a mut [Point; MAX_POINTS]) -> &'a [Point] {
+pub fn clip<'a>(
+    src: &[Point; 2],
+    clip: &Rect,
+    can_cull_to_the_right: bool,
+    points: &'a mut [Point; MAX_POINTS],
+) -> &'a [Point] {
     let (mut index0, mut index1) = if src[0].y < src[1].y { (0, 1) } else { (1, 0) };
 
     // Check if we're completely clipped out in Y (above or below)
@@ -90,7 +95,10 @@ pub fn clip<'a>(src: &[Point; 2], clip: &Rect, can_cull_to_the_right: bool, poin
         if tmp[index0].x < clip.left() {
             result_storage[offset] = Point::from_xy(clip.left(), tmp[index0].y);
             offset += 1;
-            result_storage[offset] = Point::from_xy(clip.left(), sect_clamp_with_vertical(&tmp, clip.left()));
+            result_storage[offset] = Point::from_xy(
+                clip.left(),
+                sect_clamp_with_vertical(&tmp, clip.left()),
+            );
             debug_assert!(is_between_unsorted(result_storage[offset].y, tmp[0].y, tmp[1].y));
         } else {
             result_storage[offset] = tmp[index0];
@@ -98,7 +106,10 @@ pub fn clip<'a>(src: &[Point; 2], clip: &Rect, can_cull_to_the_right: bool, poin
         offset += 1;
 
         if tmp[index1].x > clip.right() {
-            result_storage[offset] = Point::from_xy(clip.right(), sect_clamp_with_vertical(&tmp, clip.right()));
+            result_storage[offset] = Point::from_xy(
+                clip.right(),
+                sect_clamp_with_vertical(&tmp, clip.right()),
+            );
             debug_assert!(is_between_unsorted(result_storage[offset].y, tmp[0].y, tmp[1].y));
             offset += 1;
             result_storage[offset] = Point::from_xy(clip.right(), tmp[index1].y);

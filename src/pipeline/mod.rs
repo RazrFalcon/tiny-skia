@@ -208,12 +208,20 @@ impl PixelsCtx<'_> {
     }
 
     #[inline(always)]
-    pub fn slice4_at_xy(&mut self, dx: usize, dy: usize) -> &mut [PremultipliedColorU8; highp::STAGE_WIDTH] {
+    pub fn slice4_at_xy(
+        &mut self,
+        dx: usize,
+        dy: usize,
+    ) -> &mut [PremultipliedColorU8; highp::STAGE_WIDTH] {
         arrayref::array_mut_ref!(self.pixels, self.offset(dx, dy), highp::STAGE_WIDTH)
     }
 
     #[inline(always)]
-    pub fn slice16_at_xy(&mut self, dx: usize, dy: usize) -> &mut [PremultipliedColorU8; lowp::STAGE_WIDTH] {
+    pub fn slice16_at_xy(
+        &mut self,
+        dx: usize,
+        dy: usize,
+    ) -> &mut [PremultipliedColorU8; lowp::STAGE_WIDTH] {
         arrayref::array_mut_ref!(self.pixels, self.offset(dx, dy), lowp::STAGE_WIDTH)
     }
 }
@@ -553,8 +561,6 @@ impl RasterPipelineBuilder {
             program.push(lowp::just_return as *const () as *const c_void);
         }
 
-        // TODO: trim to 100
-
         // I wasn't able to reproduce Skia's load_8888_/store_8888_ performance.
         // Skia uses fallthrough switch, which is probably the reason.
         // In Rust, any branching in load/store code drastically affects the performance.
@@ -562,32 +568,28 @@ impl RasterPipelineBuilder {
         // While the only difference is the load/store methods.
         let mut tail_program = program.clone();
         if is_highp {
-            if let Some(idx) = tail_program.iter().position(|fun| *fun == highp::fn_ptr(highp::load_dst)) {
-                tail_program[idx] = highp::fn_ptr(highp::load_dst_tail);
-            }
-
-            if let Some(idx) = tail_program.iter().position(|fun| *fun == highp::fn_ptr(highp::store)) {
-                tail_program[idx] = highp::fn_ptr(highp::store_tail);
-            }
-
-            // SourceOverRgba calls load/store manually, without the pipeline,
-            // therefore we have to switch it too.
-            if let Some(idx) = tail_program.iter().position(|fun| *fun == highp::fn_ptr(highp::source_over_rgba)) {
-                tail_program[idx] = highp::fn_ptr(highp::source_over_rgba_tail);
+            for fun in &mut tail_program {
+                if *fun == highp::fn_ptr(highp::load_dst) {
+                    *fun = highp::fn_ptr(highp::load_dst_tail);
+                } else if *fun == highp::fn_ptr(highp::store) {
+                    *fun = highp::fn_ptr(highp::store_tail);
+                } else if *fun == highp::fn_ptr(highp::source_over_rgba) {
+                    // SourceOverRgba calls load/store manually, without the pipeline,
+                    // therefore we have to switch it too.
+                    *fun = highp::fn_ptr(highp::source_over_rgba_tail);
+                }
             }
         } else {
-            if let Some(idx) = tail_program.iter().position(|fun| *fun == lowp::fn_ptr(lowp::load_dst)) {
-                tail_program[idx] = lowp::fn_ptr(lowp::load_dst_tail);
-            }
-
-            if let Some(idx) = tail_program.iter().position(|fun| *fun == lowp::fn_ptr(lowp::store)) {
-                tail_program[idx] = lowp::fn_ptr(lowp::store_tail);
-            }
-
-            // SourceOverRgba calls load/store manually, without the pipeline,
-            // therefore we have to switch it too.
-            if let Some(idx) = tail_program.iter().position(|fun| *fun == lowp::fn_ptr(lowp::source_over_rgba)) {
-                tail_program[idx] = lowp::fn_ptr(lowp::source_over_rgba_tail);
+            for fun in &mut tail_program {
+                if *fun == lowp::fn_ptr(lowp::load_dst) {
+                    *fun = lowp::fn_ptr(lowp::load_dst_tail);
+                } else if *fun == lowp::fn_ptr(lowp::store) {
+                    *fun = lowp::fn_ptr(lowp::store_tail);
+                } else if *fun == lowp::fn_ptr(lowp::source_over_rgba) {
+                    // SourceOverRgba calls load/store manually, without the pipeline,
+                    // therefore we have to switch it too.
+                    *fun = lowp::fn_ptr(lowp::source_over_rgba_tail);
+                }
             }
         }
 

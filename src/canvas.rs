@@ -280,7 +280,13 @@ impl Canvas {
     }
 
     #[inline(always)]
-    fn draw_pixmap_impl(&mut self, x: i32, y: i32, pixmap: &Pixmap, paint: &PixmapPaint) -> Option<()> {
+    fn draw_pixmap_impl(
+        &mut self,
+        x: i32,
+        y: i32,
+        pixmap: &Pixmap,
+        paint: &PixmapPaint,
+    ) -> Option<()> {
         let rect = pixmap.size().to_int_rect(x, y).to_rect();
 
         // TODO: SkSpriteBlitter

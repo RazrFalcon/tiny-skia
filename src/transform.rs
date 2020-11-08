@@ -229,7 +229,12 @@ impl Transform {
         )
     }
 
-    pub(crate) fn from_poly_to_poly(src1: Point, src2: Point, dst1: Point, dst2: Point) -> Option<Self> {
+    pub(crate) fn from_poly_to_poly(
+        src1: Point,
+        src2: Point,
+        dst1: Point,
+        dst2: Point,
+    ) -> Option<Self> {
         let tmp = from_poly2(src1, src2)?;
         let res = tmp.invert()?;
         let tmp = from_poly2(dst1, dst2)?;
