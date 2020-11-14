@@ -6,7 +6,7 @@
 
 // This module is closer to SkDraw than SkCanvas.
 
-use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, Color, Rect};
+use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, Rect};
 use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillRule, SpreadMode};
 
 use crate::clip::Clip;
@@ -184,11 +184,6 @@ impl Canvas {
     /// Resets the current clip.
     pub fn reset_clip(&mut self) {
         self.clip.clear();
-    }
-
-    /// Fills the whole canvas with a color.
-    pub fn fill_canvas(&mut self, color: Color) {
-        self.pixmap.fill(color);
     }
 
     /// Fills a path.
