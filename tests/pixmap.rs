@@ -58,3 +58,11 @@ fn clone_rect_out_of_bound() {
     assert!(canvas.pixmap.clone_rect(IntRect::from_xywh(10, 250, 80, 90).unwrap()).is_none());
     assert!(canvas.pixmap.clone_rect(IntRect::from_xywh(10, -250, 80, 90).unwrap()).is_none());
 }
+
+#[test]
+fn fill() {
+    let c = Color::from_rgba8(50, 100, 150, 200);
+    let mut pixmap = Pixmap::new(10, 10).unwrap();
+    pixmap.fill(c);
+    assert_eq!(pixmap.pixel(1, 1).unwrap(), c.premultiply().to_color_u8());
+}

@@ -386,14 +386,6 @@ fn memset2d_out_of_bounds() {
     assert_eq!(canvas.pixmap, expected);
 }
 
-#[test]
-fn fill_pixmap() {
-    let mut canvas = Canvas::new(10, 10).unwrap();
-    let c = Color::from_rgba8(50, 100, 150, 200);
-    canvas.fill_canvas(c);
-    assert_eq!(canvas.pixmap.pixel(1, 1).unwrap(), c.premultiply().to_color_u8());
-}
-
 // Not sure how to properly test anti-aliasing,
 // so for now simply check that it actually applied.
 #[test]
@@ -554,7 +546,7 @@ fn aa_endless_loop() {
 fn clear_aa() {
     let mut canvas = Canvas::new(100, 100).unwrap();
 
-    canvas.fill_canvas(Color::from_rgba8(50, 127, 150, 200));
+    canvas.pixmap.fill(Color::from_rgba8(50, 127, 150, 200));
 
     // Make sure that Clear with AA doesn't fallback to memset.
     let mut paint = Paint::default();

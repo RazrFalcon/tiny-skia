@@ -671,7 +671,7 @@ mod blend_tests {
             #[test]
             fn $name() {
                 let mut canvas = Canvas::new(1, 1).unwrap();
-                canvas.fill_canvas(Color::from_rgba8(50, 127, 150, 200));
+                canvas.pixmap.fill(Color::from_rgba8(50, 127, 150, 200));
 
                 let img_ctx = PixelsCtx {
                     stride: canvas.pixmap.size().width_safe(),
