@@ -129,6 +129,8 @@ impl Canvas {
         }
     }
 
+    // TODO: overload?
+
     /// Applies an affine transformation to the canvas.
     #[inline]
     pub fn apply_transform(&mut self, ts: &Transform) {

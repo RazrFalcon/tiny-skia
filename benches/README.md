@@ -187,6 +187,7 @@ premultiplying/demultiplying code to check how much overhead it adds.
 
 RGB (without alpha) is slower, since we have to decode an image into a RGB buffer,
 then transform it into a RGBA buffer.
+Waiting for [image-png/#239](https://github.com/image-rs/image-png/issues/239).
 
 ## Running benchmarks
 

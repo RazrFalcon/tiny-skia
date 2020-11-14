@@ -7,7 +7,7 @@
 use std::convert::TryFrom;
 use std::num::NonZeroUsize;
 
-use crate::Color;
+use crate::{Color, IntRect};
 
 use crate::color::PremultipliedColorU8;
 use crate::int_size::IntSize;
@@ -120,6 +120,33 @@ impl Pixmap {
     /// Returns a mutable slice of pixels.
     pub fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
         bytemuck::cast_slice_mut(self.data_mut())
+    }
+
+    // TODO: add rows() iterator
+
+    /// Returns a copy of the pixmap that intersects the `rect`.
+    ///
+    /// Returns `None` when `Pixmap`'s rect doesn't contain `rect`.
+    pub fn clone_rect(&self, rect: IntRect) -> Option<Self> {
+        // TODO: to ScreenIntRect?
+
+        let rect = self.rect().to_int_rect().intersect(&rect)?;
+        let mut new = Pixmap::new(rect.width(), rect.height())?;
+        {
+            let old_pixels = self.pixels();
+            let new_pixels = new.pixels_mut();
+
+            // TODO: optimize
+            for y in 0..rect.height() {
+                for x in 0..rect.width() {
+                    let old_idx = (y + rect.y() as u32) * self.width() + (x + rect.x() as u32);
+                    let new_idx = y * rect.width() + x;
+                    new_pixels[new_idx as usize] = old_pixels[old_idx as usize];
+                }
+            }
+        }
+
+        Some(new)
     }
 
     /// Fills the entire pixmap with a specified color.
