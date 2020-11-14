@@ -570,3 +570,22 @@ fn clear_aa() {
     let expected = Pixmap::load_png("tests/images/fill/clear-aa.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
 }
+
+#[test]
+fn line_curve() {
+    let mut canvas = Canvas::new(200, 200).unwrap();
+
+    let mut paint = Paint::default();
+    paint.anti_alias = true;
+
+    let path = {
+        let mut pb = PathBuilder::new();
+        pb.move_to(100.0, 20.0);
+        pb.cubic_to(100.0, 40.0, 100.0, 160.0, 100.0, 180.0); // Just a line.
+        pb.finish().unwrap()
+    };
+
+    canvas.fill_path(&path, &paint, FillRule::Winding);
+
+    // Must not panic.
+}

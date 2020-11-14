@@ -81,11 +81,9 @@ impl BasicEdgeBuilder {
         let mut builder = BasicEdgeBuilder::new(clip_shift);
         builder.build(path, clip, can_cull_to_the_right)?;
 
-        if builder.edges.is_empty() {
+        if builder.edges.len() < 2 {
             return None;
         }
-
-        debug_assert!(builder.edges.len() != 1);
 
         Some(builder.edges)
     }
