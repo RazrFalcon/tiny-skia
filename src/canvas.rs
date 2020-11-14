@@ -257,11 +257,14 @@ impl Canvas {
                 paint.shader.apply_opacity(new_alpha as f32 / 255.0);
             }
 
-            if self.transform.is_identity() {
+            if !self.transform.is_identity() {
                 paint.shader.transform(&self.transform);
-            }
 
-            self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap, self.clip.as_ref())
+                let path = path.clone().transform(&self.transform)?;
+                self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap, self.clip.as_ref())
+            } else {
+                self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap, self.clip.as_ref())
+            }
         } else {
             let mut stroked_path = if let Some(stroked_path) = self.stroked_path.take() {
                 self.stroker.stroke_to(&path, stroke, res_scale, stroked_path)
