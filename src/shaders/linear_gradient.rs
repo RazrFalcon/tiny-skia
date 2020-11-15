@@ -22,28 +22,28 @@ impl LinearGradient {
     /// Creates a new linear gradient shader.
     ///
     /// Returns `Shader::SolidColor` when:
-    /// - `points.len()` == 1
+    /// - `stops.len()` == 1
     /// - `start` and `end` are very close
     ///
     /// Returns `None` when:
     ///
-    /// - `points` is empty
+    /// - `stops` is empty
     /// - `start` == `end`
     /// - `transform` is not invertible
     #[allow(clippy::new_ret_no_self)]
     pub fn new(
         start: Point,
         end: Point,
-        points: Vec<GradientStop>,
+        stops: Vec<GradientStop>,
         mode: SpreadMode,
         transform: Transform,
     ) -> Option<Shader<'static>> {
-        if points.is_empty() {
+        if stops.is_empty() {
             return None;
         }
 
-        if points.len() == 1 {
-            return Some(Shader::SolidColor(points[0].color))
+        if stops.len() == 1 {
+            return Some(Shader::SolidColor(stops[0].color))
         }
 
         let length = (end - start).length();
@@ -67,13 +67,13 @@ impl LinearGradient {
                     // Depending on how the gradient shape degenerates,
                     // there may be a more specialized fallback representation
                     // for the factories to use, but this is a reasonable default.
-                    return Some(Shader::SolidColor(points.last().unwrap().color));
+                    return Some(Shader::SolidColor(stops.last().unwrap().color));
                 }
                 SpreadMode::Reflect | SpreadMode::Repeat => {
                     // repeat and mirror are treated the same: the border colors are never visible,
                     // but approximate the final color as infinite repetitions of the colors, so
                     // it can be represented as the average color of the gradient.
-                    return Some(Shader::SolidColor(average_gradient_color(&points)));
+                    return Some(Shader::SolidColor(average_gradient_color(&stops)));
                 }
             }
         }
@@ -82,7 +82,7 @@ impl LinearGradient {
 
         let unit_ts = points_to_unit_ts(start, end)?;
         Some(Shader::LinearGradient(LinearGradient {
-            base: Gradient::new(points, mode, transform, unit_ts),
+            base: Gradient::new(stops, mode, transform, unit_ts),
             start,
             end,
         }))

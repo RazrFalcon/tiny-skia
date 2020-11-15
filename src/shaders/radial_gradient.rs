@@ -51,11 +51,11 @@ impl RadialGradient {
     /// Creates a new radial gradient shader.
     ///
     /// Returns `Shader::SolidColor` when:
-    /// - `points.len()` == 1
+    /// - `stops.len()` == 1
     ///
     /// Returns `None` when:
     ///
-    /// - `points` is empty
+    /// - `stops` is empty
     /// - `radius` <= 0
     /// - `transform` is not invertible
     #[allow(clippy::new_ret_no_self)]
@@ -63,7 +63,7 @@ impl RadialGradient {
         start: Point,
         end: Point,
         radius: f32,
-        points: Vec<GradientStop>,
+        stops: Vec<GradientStop>,
         mode: SpreadMode,
         transform: Transform,
     ) -> Option<Shader<'static>> {
@@ -73,12 +73,12 @@ impl RadialGradient {
             return None;
         }
 
-        if points.is_empty() {
+        if stops.is_empty() {
             return None;
         }
 
-        if points.len() == 1 {
-            return Some(Shader::SolidColor(points[0].color))
+        if stops.len() == 1 {
+            return Some(Shader::SolidColor(stops[0].color))
         }
 
         transform.invert()?;
@@ -101,7 +101,7 @@ impl RadialGradient {
             // We can treat this gradient as radial, which is faster. If we got here, we know
             // that endRadius is not equal to 0, so this produces a meaningful gradient
             Some(Shader::RadialGradient(RadialGradient {
-                base: Gradient::new(points, mode, transform, ts),
+                base: Gradient::new(stops, mode, transform, ts),
                 center1: start,
                 center2: end,
                 radius,
@@ -127,7 +127,7 @@ impl RadialGradient {
             }
 
             Some(Shader::RadialGradient(RadialGradient {
-                base: Gradient::new(points, mode, transform, ts),
+                base: Gradient::new(stops, mode, transform, ts),
                 center1: start,
                 center2: end,
                 radius,

@@ -48,52 +48,52 @@ pub struct Gradient {
 
 impl Gradient {
     pub fn new(
-        mut points: Vec<GradientStop>,
+        mut stops: Vec<GradientStop>,
         tile_mode: SpreadMode,
         transform: Transform,
         points_to_unit: Transform,
     ) -> Self {
-        debug_assert!(points.len() > 1);
+        debug_assert!(stops.len() > 1);
 
         // Note: we let the caller skip the first and/or last position.
         // i.e. pos[0] = 0.3, pos[1] = 0.7
         // In these cases, we insert dummy entries to ensure that the final data
         // will be bracketed by [0, 1].
         // i.e. our_pos[0] = 0, our_pos[1] = 0.3, our_pos[2] = 0.7, our_pos[3] = 1
-        let dummy_first = points[0].position.get() != 0.0;
-        let dummy_last = points[points.len() - 1].position.get() != 1.0;
+        let dummy_first = stops[0].position.get() != 0.0;
+        let dummy_last = stops[stops.len() - 1].position.get() != 1.0;
 
         // Now copy over the colors, adding the dummies as needed.
         if dummy_first {
-            points.insert(0, GradientStop::new(0.0, points[0].color));
+            stops.insert(0, GradientStop::new(0.0, stops[0].color));
         }
 
         if dummy_last {
-            points.push(GradientStop::new(1.0, points[points.len() - 1].color));
+            stops.push(GradientStop::new(1.0, stops[stops.len() - 1].color));
         }
 
-        let colors_are_opaque = points.iter().all(|p| p.color.is_opaque());
+        let colors_are_opaque = stops.iter().all(|p| p.color.is_opaque());
 
         // Pin the last value to 1.0, and make sure positions are monotonic.
         let start_index = if dummy_first { 0 } else { 1 };
         let mut prev = 0.0;
         let mut has_uniform_stops = true;
-        let uniform_step = points[start_index].position.get() - prev;
-        for i in start_index..points.len() {
-            let curr = if i + 1 == points.len() {
+        let uniform_step = stops[start_index].position.get() - prev;
+        for i in start_index..stops.len() {
+            let curr = if i + 1 == stops.len() {
                 // The last one must be zero.
                 1.0
             } else {
-                points[i].position.get().bound(prev, 1.0)
+                stops[i].position.get().bound(prev, 1.0)
             };
 
             has_uniform_stops &= uniform_step.is_nearly_equal(curr - prev);
-            points[i].position = NormalizedF32::new_bounded(curr);
+            stops[i].position = NormalizedF32::new_bounded(curr);
             prev = curr;
         }
 
         Gradient {
-            stops: points,
+            stops,
             tile_mode,
             transform,
             points_to_unit,
