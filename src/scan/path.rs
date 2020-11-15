@@ -164,7 +164,7 @@ fn walk_edges(
     let winding_mask = if fill_type == FillRule::EvenOdd { 1 } else { -1 };
 
     loop {
-        let mut w = 0;
+        let mut w = 0i32;
         let mut left = 0u32;
         let mut prev_x = edges[0].x;
 
@@ -179,7 +179,7 @@ fn walk_edges(
                 left = x;
             }
 
-            w += edges[curr_idx].winding;
+            w += i32::from(edges[curr_idx].winding);
 
             if (w & winding_mask) == 0 {
                 // we finished an interval
