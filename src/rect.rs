@@ -123,7 +123,7 @@ impl Rect {
     ///
     /// Width and height are guarantee to be >= 1.
     #[inline]
-    pub(crate) fn round(&self) -> IntRect {
+    pub fn round(&self) -> IntRect {
         IntRect::from_xywh(
             i32::saturate_round(self.x()),
             i32::saturate_round(self.y()),

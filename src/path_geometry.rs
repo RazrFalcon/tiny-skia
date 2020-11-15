@@ -424,14 +424,25 @@ pub fn chop_cubic_at_max_curvature(
     t_values: &mut [TValue; 3],
     dst: &mut [Point],
 ) -> usize {
-    let roots = find_cubic_max_curvature(src, t_values);
-    if roots.is_empty() {
-        dst[0..4].copy_from_slice(src);
-    } else {
-        chop_cubic_at(src, roots, dst);
+    let mut roots = [NormalizedF32::ZERO; 3];
+    let roots = find_cubic_max_curvature(src, &mut roots);
+
+    // Throw out values not inside 0..1.
+    let mut count = 0;
+    for root in roots {
+        if 0.0 < root.get() && root.get() < 1.0 {
+            t_values[count] = TValue::new_bounded(root.get());
+            count += 1;
+        }
     }
 
-    roots.len() + 1
+    if count == 0 {
+        dst[0..4].copy_from_slice(src);
+    } else {
+        chop_cubic_at(src, &t_values[0..count], dst);
+    }
+
+    count + 1
 }
 
 // F(t)    = a (1 - t) ^ 2 + 2 b t (1 - t) + c t ^ 2
@@ -508,8 +519,8 @@ pub fn eval_quad_tangent_at(src: &[Point; 3], tol: NormalizedF32) -> Point {
 // F' dot F'' -> CCt^3 + 3BCt^2 + (2BB + CA)t + AB
 pub fn find_cubic_max_curvature<'a>(
     src: &[Point; 4],
-    t_values: &'a mut [TValue; 3],
-) -> &'a [TValue] {
+    t_values: &'a mut [NormalizedF32; 3],
+) -> &'a [NormalizedF32] {
     let raw_src = points_to_f32s!(src, 4);
 
     let mut coeff_x = formulate_f1_dot_f2(raw_src);
@@ -551,10 +562,16 @@ fn formulate_f1_dot_f2(src: &[f32]) -> [f32; 4] {
 ///
 /// Eliminates repeated roots (so that all t_values are distinct, and are always
 /// in increasing order.
-fn solve_cubic_poly(coeff: &[f32; 4], t_values: &mut [TValue; 3]) -> usize {
+fn solve_cubic_poly(coeff: &[f32; 4], t_values: &mut [NormalizedF32; 3]) -> usize {
     if coeff[0].is_nearly_zero() {
         // we're just a quadratic
-        return find_unit_quad_roots(coeff[1], coeff[2], coeff[3], t_values);
+        let mut tmp_t = new_t_values();
+        let count = find_unit_quad_roots(coeff[1], coeff[2], coeff[3], &mut tmp_t);
+        for i in 0..count {
+            t_values[i] = tmp_t[i].to_normalized();
+        }
+
+        return count;
     }
 
     debug_assert!(coeff[0] != 0.0);
@@ -576,9 +593,9 @@ fn solve_cubic_poly(coeff: &[f32; 4], t_values: &mut [TValue; 3]) -> usize {
         let theta = (r / q3.sqrt()).bound(-1.0, 1.0).acos();
         let neg2_root_q = -2.0 * q.sqrt();
 
-        t_values[0] = TValue::new_bounded(neg2_root_q * (theta / 3.0).cos() - adiv3);
-        t_values[1] = TValue::new_bounded(neg2_root_q * ((theta + 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
-        t_values[2] = TValue::new_bounded(neg2_root_q * ((theta - 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
+        t_values[0] = NormalizedF32::new_bounded(neg2_root_q * (theta / 3.0).cos() - adiv3);
+        t_values[1] = NormalizedF32::new_bounded(neg2_root_q * ((theta + 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
+        t_values[2] = NormalizedF32::new_bounded(neg2_root_q * ((theta - 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
 
         // now sort the roots
         sort_array3(t_values);
@@ -594,12 +611,12 @@ fn solve_cubic_poly(coeff: &[f32; 4], t_values: &mut [TValue; 3]) -> usize {
             a += q / a;
         }
 
-        t_values[0] = TValue::new_bounded(a - adiv3);
+        t_values[0] = NormalizedF32::new_bounded(a - adiv3);
         1
     }
 }
 
-fn sort_array3(array: &mut [TValue; 3]) {
+fn sort_array3(array: &mut [NormalizedF32; 3]) {
     if array[0] > array[1] {
         array.swap(0, 1);
     }
@@ -613,7 +630,7 @@ fn sort_array3(array: &mut [TValue; 3]) {
     }
 }
 
-fn collapse_duplicates3(array: &mut [TValue; 3]) -> usize {
+fn collapse_duplicates3(array: &mut [NormalizedF32; 3]) -> usize {
     let mut len = 3;
 
     if array[1] == array[2] {
@@ -725,19 +742,24 @@ pub fn find_cubic_cusp(src: &[Point; 4]) -> Option<TValue> {
 
     // Cubics may have multiple points of maximum curvature, although at most only
     // one is a cusp.
-    let mut t_values = new_t_values();
+    let mut t_values = [NormalizedF32::ZERO; 3];
     let max_curvature = find_cubic_max_curvature(src, &mut t_values);
     for test_t in max_curvature {
+        if 0.0 >= test_t.get() || test_t.get() >= 1.0 {
+            // no need to consider max curvature on the end
+            continue;
+        }
+
         // A cusp is at the max curvature, and also has a derivative close to zero.
         // Choose the 'close to zero' meaning by comparing the derivative length
         // with the overall cubic size.
-        let d_pt = eval_cubic_derivative(src, test_t.to_normalized());
+        let d_pt = eval_cubic_derivative(src, *test_t);
         let d_pt_magnitude = d_pt.length_sqd();
         let precision = calc_cubic_precision(src);
         if d_pt_magnitude < precision {
             // All three max curvature t values may be close to the cusp;
             // return the first one.
-            return Some(*test_t);
+            return Some(TValue::new_bounded(test_t.get()));
         }
     }
 
@@ -1151,5 +1173,24 @@ mod tests {
 
         assert_eq!(eval_cubic_pos_at(&src, NormalizedF32::ZERO), Point::from_xy(30.0, 40.0));
         assert_eq!(eval_cubic_tangent_at(&src, NormalizedF32::ZERO), Point::from_xy(141.0, 5.0));
+    }
+
+    #[test]
+    fn find_cubic_max_curvature_1() {
+        let src = [
+            Point::from_xy(20.0, 160.0),
+            Point::from_xy(20.0001, 160.0),
+            Point::from_xy(160.0, 20.0),
+            Point::from_xy(160.0001, 20.0),
+        ];
+
+        let mut t_values = [NormalizedF32::ZERO; 3];
+        let t_values = find_cubic_max_curvature(&src, &mut t_values);
+
+        assert_eq!(&t_values, &[
+            NormalizedF32::ZERO,
+            NormalizedF32::new_bounded(0.5),
+            NormalizedF32::ONE,
+        ]);
     }
 }

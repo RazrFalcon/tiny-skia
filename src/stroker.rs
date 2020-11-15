@@ -1767,7 +1767,7 @@ fn check_cubic_linear(
         return ReductionType::Quad;
     }
 
-    let mut t_values = path_geometry::new_t_values();
+    let mut t_values = [NormalizedF32::ZERO; 3];
     let t_values = path_geometry::find_cubic_max_curvature(cubic, &mut t_values);
     let mut r_count = 0;
     // Now loop over the t-values, and reject any that evaluate to either end-point
@@ -1776,7 +1776,7 @@ fn check_cubic_linear(
             continue;
         }
 
-        reduction[r_count] = path_geometry::eval_cubic_pos_at(cubic, t.to_normalized());
+        reduction[r_count] = path_geometry::eval_cubic_pos_at(cubic, *t);
         if reduction[r_count] != cubic[0] && reduction[r_count] != cubic[3] {
             r_count += 1;
         }

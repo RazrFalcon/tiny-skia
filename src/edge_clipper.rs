@@ -8,9 +8,9 @@ use arrayvec::ArrayVec;
 
 use crate::{Path, Point, Rect};
 
-use crate::path_geometry;
 use crate::line_clipper;
 use crate::path::{PathEdge, PathEdgeIter};
+use crate::path_geometry;
 use crate::scalar::SCALAR_MAX;
 
 // This is a fail-safe `arr[n..n+3].try_into().unwrap()` alternative.
