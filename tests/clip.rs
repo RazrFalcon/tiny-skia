@@ -81,3 +81,30 @@ fn stroke() {
     let expected = Pixmap::load_png("tests/images/clip/stroke.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
 }
+
+// Make sure we're clipping only source and not source and destination
+#[test]
+fn skip_dest() {
+    let mut canvas = Canvas::new(100, 100).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    canvas.fill_path(
+        &PathBuilder::from_rect(Rect::from_xywh(5.0, 5.0, 60.0, 60.0).unwrap()),
+        &paint,
+        FillRule::Winding,
+    );
+
+    let mut canvas2 = Canvas::new(200, 200).unwrap();
+    canvas2.fill_path(
+        &PathBuilder::from_rect(Rect::from_xywh(35.0, 35.0, 60.0, 60.0).unwrap()),
+        &paint,
+        FillRule::Winding,
+    );
+
+    canvas.set_clip_rect(Rect::from_xywh(40.0, 40.0, 40.0, 40.0).unwrap(), true);
+    canvas.draw_pixmap(0, 0, &canvas2.pixmap, &PixmapPaint::default());
+
+    let expected = Pixmap::load_png("tests/images/clip/skip-dest.png").unwrap();
+    assert_eq!(canvas.pixmap, expected);
+}

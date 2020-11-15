@@ -164,6 +164,12 @@ impl Blitter for RasterPipelineBlitter<'_> {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(self.shader_pipeline.is_force_hq_pipeline());
             p.extend(&self.shader_pipeline);
+
+            if let Some(ref mask) = self.clip_mask {
+                let mask_ctx_ptr = mask as *const _ as *const c_void;
+                p.push_with_context(pipeline::Stage::MaskU8, mask_ctx_ptr);
+            }
+
             if self.blend_mode.should_pre_scale_coverage() {
                 p.push_with_context(pipeline::Stage::Scale1Float, curr_cov_ptr);
                 p.push_with_context(pipeline::Stage::LoadDestination, ctx_ptr);
@@ -177,11 +183,6 @@ impl Blitter for RasterPipelineBlitter<'_> {
                 }
 
                 p.push_with_context(pipeline::Stage::Lerp1Float, curr_cov_ptr);
-            }
-
-            if let Some(ref mask) = self.clip_mask {
-                let mask_ctx_ptr = mask as *const _ as *const c_void;
-                p.push_with_context(pipeline::Stage::MaskU8, mask_ctx_ptr);
             }
 
             p.push_with_context(pipeline::Stage::Store, ctx_ptr);
@@ -267,6 +268,11 @@ impl Blitter for RasterPipelineBlitter<'_> {
             p.set_force_hq_pipeline(self.shader_pipeline.is_force_hq_pipeline());
             p.extend(&self.shader_pipeline);
 
+            if let Some(ref mask) = self.clip_mask {
+                let mask_ctx_ptr = mask as *const _ as *const c_void;
+                p.push_with_context(pipeline::Stage::MaskU8, mask_ctx_ptr);
+            }
+
             let ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
 
             if self.blend_mode == BlendMode::SourceOver && self.clip_mask.is_none() {
@@ -278,11 +284,6 @@ impl Blitter for RasterPipelineBlitter<'_> {
                     if let Some(blend_stage) = self.blend_mode.to_stage() {
                         p.push(blend_stage);
                     }
-                }
-
-                if let Some(ref mask) = self.clip_mask {
-                    let mask_ctx_ptr = mask as *const _ as *const c_void;
-                    p.push_with_context(pipeline::Stage::MaskU8, mask_ctx_ptr);
                 }
 
                 p.push_with_context(pipeline::Stage::Store, ctx_ptr);
@@ -308,6 +309,12 @@ impl Blitter for RasterPipelineBlitter<'_> {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(self.shader_pipeline.is_force_hq_pipeline());
             p.extend(&self.shader_pipeline);
+
+            if let Some(ref mask) = self.clip_mask {
+                let mask_ctx_ptr = mask as *const _ as *const c_void;
+                p.push_with_context(pipeline::Stage::MaskU8, mask_ctx_ptr);
+            }
+
             if self.blend_mode.should_pre_scale_coverage() {
                 p.push_with_context(pipeline::Stage::ScaleU8, mask_ctx_ptr);
                 p.push_with_context(pipeline::Stage::LoadDestination, img_ctx_ptr);
@@ -321,11 +328,6 @@ impl Blitter for RasterPipelineBlitter<'_> {
                 }
 
                 p.push_with_context(pipeline::Stage::LerpU8, mask_ctx_ptr);
-            }
-
-            if let Some(ref mask) = self.clip_mask {
-                let mask_ctx_ptr = mask as *const _ as *const c_void;
-                p.push_with_context(pipeline::Stage::MaskU8, mask_ctx_ptr);
             }
 
             p.push_with_context(pipeline::Stage::Store, img_ctx_ptr);
