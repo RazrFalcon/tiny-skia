@@ -6,7 +6,7 @@ fn fill_all_tiny_skia(bencher: &mut Bencher) {
     let mut canvas = Canvas::new(1000, 1000).unwrap();
     let c = Color::from_rgba8(50, 100, 150, 200);
     bencher.iter(|| {
-        canvas.fill_canvas(c);
+        canvas.pixmap.fill(c);
     });
 }
 

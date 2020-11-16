@@ -38,7 +38,8 @@ uses an obscure build system (`gn`) which still uses Python2
 and doesn't really support 32bit targets.
 
 `tiny-skia` tries to be small, simple and easy to build.
-Currently, it has around 14 KLOC and compiles in less than 5s on a modern CPU.
+Currently, it has around 14 KLOC, compiles in less than 5s on a modern CPU
+and adds around 200KiB to your binary.
 
 ## Performance
 
