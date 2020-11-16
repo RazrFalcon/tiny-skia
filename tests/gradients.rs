@@ -405,3 +405,31 @@ fn simple_radial_with_ts_hq() {
     let expected = Pixmap::load_png("tests/images/gradients/simple-radial-with-ts-hq.png").unwrap();
     assert_eq!(canvas.pixmap, expected);
 }
+
+// Gradient doesn't add the Premultiply stage when all stops are opaque.
+// But it checks colors only on creation, so we have to recheck them after calling `apply_opacity`.
+#[test]
+fn global_opacity() {
+    let mut canvas = Canvas::new(200, 200).unwrap();
+
+    let mut paint = Paint::default();
+    paint.shader = RadialGradient::new(
+        Point::from_xy(100.0, 100.0),
+        Point::from_xy(100.0, 100.0),
+        100.0,
+        vec![
+            GradientStop::new(0.25, Color::from_rgba8(50, 127, 150, 255)), // no opacity here
+            GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 255)), // no opacity here
+        ],
+        SpreadMode::Pad,
+        Transform::identity(),
+    ).unwrap();
+    paint.shader.apply_opacity(0.5);
+
+    let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
+
+    canvas.fill_path(&path, &paint, FillRule::Winding);
+
+    let expected = Pixmap::load_png("tests/images/gradients/global-opacity.png").unwrap();
+    assert_eq!(canvas.pixmap, expected);
+}

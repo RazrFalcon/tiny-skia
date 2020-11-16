@@ -254,5 +254,7 @@ impl Gradient {
         for stop in &mut self.stops {
             stop.color.apply_opacity(opacity);
         }
+
+        self.colors_are_opaque = self.stops.iter().all(|p| p.color.is_opaque());
     }
 }
