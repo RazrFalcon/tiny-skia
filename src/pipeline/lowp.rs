@@ -275,6 +275,10 @@ fn mask_u8(p: &mut Pipeline) {
         c.0[i] = u16::from(ctx.data[offset + i]);
     }
 
+    if c == u16x16::default() {
+        return;
+    }
+
     p.r = div255(p.r * c);
     p.g = div255(p.g * c);
     p.b = div255(p.b * c);

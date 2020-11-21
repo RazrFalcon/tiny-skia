@@ -11,7 +11,7 @@
 // but without the inlining the performance is plummeting.
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, PartialEq, Default, Debug)]
 pub struct u16x16(pub [u16; 16]);
 
 macro_rules! impl_u16x16_op {

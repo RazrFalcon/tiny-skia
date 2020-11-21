@@ -303,6 +303,10 @@ fn mask_u8(p: &mut Pipeline) {
     }
     let c = f32x8::from(c) / f32x8::splat(255.0);
 
+    if c == f32x8::default() {
+        return;
+    }
+
     p.r *= c;
     p.g *= c;
     p.b *= c;

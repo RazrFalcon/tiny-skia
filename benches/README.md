@@ -166,8 +166,8 @@ And yes, cairo is really that slow. Not sure why.
 
 | Test/Library   | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2 | Skia AVX | cairo   | raqote     |
 | -------------- | -------------: | ------------: | --------: | -------: | ------: | ---------: |
-| clip path      |      2,371,153 |     2,066,654 |   579,724 |  299,567 | 336,489 |  3,659,506 |
-| clip path AA   |      2,480,372 |     2,152,685 |   898,489 |  605,572 | 367,626 |  3,198,439 |
+| clip path      |      1,877,630 |     1,689,522 |   579,724 |  299,567 | 336,489 |  3,659,506 |
+| clip path AA   |      1,991,065 |     1,786,616 |   898,489 |  605,572 | 367,626 |  3,198,439 |
 
 `tiny-skia` uses just a simple alpha mask for clipping, while Skia has a very complicated,
 but way faster algorithm.
