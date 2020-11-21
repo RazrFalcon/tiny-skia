@@ -10,7 +10,6 @@ A high precision raster pipeline implementation.
 Unlike lowp, this one implements all stages.
 
 Just like Skia, this pipeline is implemented using f32x8.
-Skia also supports F32x8 on modern CPUs, but we're not at the moment.
 
 For some reason, we are almost 2x slower. Maybe because Skia uses clang's vector extensions
 and we're using a manual implementation.

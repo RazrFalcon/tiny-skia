@@ -210,7 +210,7 @@ impl Canvas {
     /// Stroking is implemented using two separate algorithms:
     ///
     /// 1. If a stroke width is wider than 1px (after applying the transformation),
-    ///    a path will be converted into a stroked path and then filled using `Painter::fill_path`.
+    ///    a path will be converted into a stroked path and then filled using `Canvas::fill_path`.
     ///    Which means that we have to allocate a separate `Path`, that can be 2-3x larger
     ///    then the original path.
     ///    `Canvas` will reuse this allocation during subsequent strokes.
@@ -323,8 +323,13 @@ impl Canvas {
 
     /// Fills a rectangle.
     ///
-    /// If there is no transform - uses `Painter::fill_rect`.
-    /// Otherwise, it is just a `Canvas::fill_path` with a rectangular path.
+    /// This function is usually slower than filling a rectangular path,
+    /// but it produces better results. Mainly it doesn't suffer from weird
+    /// clipping of horizontal/vertical edges.
+    ///
+    /// Used mainly to render a pixmap onto a pixmap.
+    ///
+    /// Fallbacks to `Canvas::fill_path` when `Canvas` has a transform.
     pub fn fill_rect(&mut self, rect: Rect, paint: &Paint) {
         self.fill_rect_impl(rect, paint);
     }
