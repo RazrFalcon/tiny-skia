@@ -4,3 +4,4 @@ Cargo.lock
 .idea
 *.iml
 /image.png
+/image-shm.png

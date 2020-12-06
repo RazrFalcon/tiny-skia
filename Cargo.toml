@@ -23,3 +23,8 @@ default = ["png-format"]
 
 # Allows loading and saving `Pixmap` as PNG.
 png-format = ["png"]
+
+[dev-dependencies]
+memmap = "0.7"
+tempfile = "3.1"
+nix = "0.19"
