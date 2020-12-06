@@ -1,7 +1,8 @@
 use tiny_skia::*;
 
 fn main() {
-    let mut canvas = Canvas::new(500, 500).unwrap();
+    let mut pixmap = Pixmap::new(500, 500).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let now = std::time::Instant::now();
 
@@ -27,5 +28,5 @@ fn main() {
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 
-    canvas.pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("image.png").unwrap();
 }

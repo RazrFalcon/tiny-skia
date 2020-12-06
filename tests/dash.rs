@@ -2,7 +2,8 @@ use tiny_skia::*;
 
 #[test]
 fn line() {
-    let mut canvas = Canvas::new(100, 100).unwrap();
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 20.0);
@@ -19,12 +20,13 @@ fn line() {
     canvas.stroke_path(&path, &paint, &stroke);
 
     let expected = Pixmap::load_png("tests/images/dash/line.png").unwrap();
-    assert_eq!(canvas.pixmap, expected);
+    assert_eq!(pixmap, expected);
 }
 
 #[test]
 fn quad() {
-    let mut canvas = Canvas::new(100, 100).unwrap();
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 20.0);
@@ -41,12 +43,13 @@ fn quad() {
     canvas.stroke_path(&path, &paint, &stroke);
 
     let expected = Pixmap::load_png("tests/images/dash/quad.png").unwrap();
-    assert_eq!(canvas.pixmap, expected);
+    assert_eq!(pixmap, expected);
 }
 
 #[test]
 fn cubic() {
-    let mut canvas = Canvas::new(100, 100).unwrap();
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 20.0);
@@ -63,12 +66,13 @@ fn cubic() {
     canvas.stroke_path(&path, &paint, &stroke);
 
     let expected = Pixmap::load_png("tests/images/dash/cubic.png").unwrap();
-    assert_eq!(canvas.pixmap, expected);
+    assert_eq!(pixmap, expected);
 }
 
 #[test]
 fn hairline() {
-    let mut canvas = Canvas::new(100, 100).unwrap();
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 20.0);
@@ -86,12 +90,13 @@ fn hairline() {
     canvas.stroke_path(&path, &paint, &stroke);
 
     let expected = Pixmap::load_png("tests/images/dash/hairline.png").unwrap();
-    assert_eq!(canvas.pixmap, expected);
+    assert_eq!(pixmap, expected);
 }
 
 #[test]
 fn complex() {
-    let mut canvas = Canvas::new(200, 200).unwrap();
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(28.7, 23.9);
@@ -115,12 +120,13 @@ fn complex() {
     canvas.stroke_path(&path, &paint, &stroke);
 
     let expected = Pixmap::load_png("tests/images/dash/complex.png").unwrap();
-    assert_eq!(canvas.pixmap, expected);
+    assert_eq!(pixmap, expected);
 }
 
 #[test]
 fn multi_subpaths() {
-    let mut canvas = Canvas::new(200, 200).unwrap();
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(49.0, 76.0);
@@ -145,12 +151,13 @@ fn multi_subpaths() {
     canvas.stroke_path(&path, &paint, &stroke);
 
     let expected = Pixmap::load_png("tests/images/dash/multi_subpaths.png").unwrap();
-    assert_eq!(canvas.pixmap, expected);
+    assert_eq!(pixmap, expected);
 }
 
 #[test]
 fn closed() {
-    let mut canvas = Canvas::new(100, 100).unwrap();
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(22.0, 22.0);
@@ -170,5 +177,5 @@ fn closed() {
     canvas.stroke_path(&path, &paint, &stroke);
 
     let expected = Pixmap::load_png("tests/images/dash/closed.png").unwrap();
-    assert_eq!(canvas.pixmap, expected);
+    assert_eq!(pixmap, expected);
 }

@@ -66,7 +66,7 @@ pub use int_rect::IntRect;
 pub use painter::{Paint, FillRule};
 pub use path::{Path, PathSegment, PathSegmentsIter};
 pub use path_builder::PathBuilder;
-pub use pixmap::{Pixmap, BYTES_PER_PIXEL};
+pub use pixmap::{Pixmap, PixmapRef, PixmapMut, BYTES_PER_PIXEL};
 pub use point::Point;
 pub use rect::Rect;
 pub use shaders::{GradientStop, SpreadMode, FilterQuality};

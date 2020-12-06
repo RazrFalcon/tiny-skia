@@ -3,10 +3,10 @@ use bencher::{benchmark_group, benchmark_main, Bencher};
 fn fill_all_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut canvas = Canvas::new(1000, 1000).unwrap();
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
     let c = Color::from_rgba8(50, 100, 150, 200);
     bencher.iter(|| {
-        canvas.pixmap.fill(c);
+        pixmap.fill(c);
     });
 }
 

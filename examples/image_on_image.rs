@@ -3,7 +3,8 @@ use tiny_skia::*;
 fn main() {
     let triangle = crate_triangle();
 
-    let mut canvas = Canvas::new(400, 400).unwrap();
+    let mut pixmap = Pixmap::new(400, 400).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let now = std::time::Instant::now();
 
@@ -11,15 +12,16 @@ fn main() {
     paint.quality = FilterQuality::Bicubic;
 
     canvas.transform(1.2, 0.5, 0.5, 1.2, 0.0, 0.0);
-    canvas.draw_pixmap(20, 20, &triangle, &paint);
+    canvas.draw_pixmap(20, 20, triangle.as_ref(), &paint);
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 
-    canvas.pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("image.png").unwrap();
 }
 
 fn crate_triangle() -> Pixmap {
-    let mut canvas = Canvas::new(200, 200).unwrap();
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -38,5 +40,5 @@ fn crate_triangle() -> Pixmap {
     paint.set_color_rgba8(200, 0, 0, 220);
     canvas.stroke_path(&path, &paint, &stroke); // TODO: stroke_rect
 
-    canvas.pixmap
+    pixmap
 }

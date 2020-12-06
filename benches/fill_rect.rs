@@ -3,7 +3,8 @@ use bencher::{benchmark_group, benchmark_main, Bencher};
 fn fill_rect_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut canvas = Canvas::new(1000, 1000).unwrap();
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -64,7 +65,8 @@ fn fill_rect_cairo(bencher: &mut Bencher) {
 fn fill_rect_aa_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut canvas = Canvas::new(1000, 1000).unwrap();
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -128,7 +130,8 @@ fn fill_rect_aa_cairo(bencher: &mut Bencher) {
 fn fill_rect_aa_ts_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut canvas = Canvas::new(1000, 1000).unwrap();
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);

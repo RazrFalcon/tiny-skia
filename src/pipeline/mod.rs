@@ -664,19 +664,18 @@ mod blend_tests {
     // due rounding.
 
     use super::*;
-    use crate::{Canvas, Color, PremultipliedColorU8, BlendMode};
+    use crate::{Pixmap, Color, PremultipliedColorU8, BlendMode};
 
     macro_rules! test_blend {
         ($name:ident, $mode:expr, $is_highp:expr, $r:expr, $g:expr, $b:expr, $a:expr) => {
             #[test]
             fn $name() {
-                let mut canvas = Canvas::new(1, 1).unwrap();
-                canvas.pixmap.fill(Color::from_rgba8(50, 127, 150, 200));
+            let mut pixmap = Pixmap::new(1, 1).unwrap();
+                pixmap.fill(Color::from_rgba8(50, 127, 150, 200));
 
-                let img_ctx = PixelsCtx {
-                    stride: canvas.pixmap.size().width_safe(),
-                    pixels: canvas.pixmap.pixels_mut(),
-                };
+                let stride = pixmap.size().width_safe();
+                let mut pixels = pixmap.as_mut();
+                let img_ctx = PixelsCtx { stride, pixels: pixels.pixels_mut() };
                 let img_ctx = &img_ctx as *const _ as *const c_void;
 
                 let mut ctx_storage = ContextStorage::new();
@@ -691,12 +690,12 @@ mod blend_tests {
                 p.push($mode.to_stage().unwrap());
                 p.push_with_context(Stage::Store, img_ctx);
                 let p = p.compile();
-                p.run(&canvas.pixmap.size().to_screen_int_rect(0, 0));
+                p.run(&pixmap.size().to_screen_int_rect(0, 0));
 
                 assert_eq!(p.is_highp, $is_highp);
 
                 assert_eq!(
-                    canvas.pixmap.pixel(0, 0).unwrap(),
+                    pixmap.as_ref().pixel(0, 0).unwrap(),
                     PremultipliedColorU8::from_rgba($r, $g, $b, $a).unwrap()
                 );
             }

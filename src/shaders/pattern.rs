@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Shader, Transform, Pixmap, SpreadMode};
+use crate::{Shader, Transform, PixmapRef, SpreadMode};
 
 use crate::floating_point::NormalizedF32;
 use crate::pipeline;
@@ -31,7 +31,7 @@ pub enum FilterQuality {
 /// mipmap generation, which adds too much complexity.
 #[derive(Clone, Debug)]
 pub struct Pattern<'a> {
-    pixmap: &'a Pixmap,
+    pixmap: PixmapRef<'a>,
     quality: FilterQuality,
     spread_mode: SpreadMode,
     pub(crate) opacity: NormalizedF32,
@@ -44,7 +44,7 @@ impl<'a> Pattern<'a> {
     /// `opacity` will be clamped to the 0..=1 range.
     #[allow(clippy::new_ret_no_self)]
     pub fn new(
-        pixmap: &'a Pixmap,
+        pixmap: PixmapRef<'a>,
         spread_mode: SpreadMode,
         quality: FilterQuality,
         opacity: f32,

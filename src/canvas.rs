@@ -6,7 +6,7 @@
 
 // This module is closer to SkDraw than SkCanvas.
 
-use crate::{Pixmap, Transform, Path, Paint, Stroke, Point, Rect};
+use crate::{PixmapRef, PixmapMut, Transform, Path, Paint, Stroke, Point, Rect};
 use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillRule, SpreadMode};
 
 use crate::clip::Clip;
@@ -55,10 +55,9 @@ impl Default for PixmapPaint {
 /// Which means that a drawing command will simply be ignored in case of an error
 /// and a caller has no way of checking it.
 #[allow(missing_debug_implementations)]
-#[derive(Clone)]
-pub struct Canvas {
-    /// A pixmap owned by the canvas.
-    pub pixmap: Pixmap,
+pub struct Canvas<'a> {
+    /// A pixmap used by the canvas.
+    pixmap: PixmapMut<'a>,
 
     /// Canvas's transform.
     transform: Transform,
@@ -71,9 +70,9 @@ pub struct Canvas {
     stroked_path: Option<Path>,
 }
 
-impl From<Pixmap> for Canvas {
+impl<'a> From<PixmapMut<'a>> for Canvas<'a> {
     #[inline]
-    fn from(pixmap: Pixmap) -> Self {
+    fn from(pixmap: PixmapMut<'a>) -> Self {
         Canvas {
             pixmap,
             transform: Transform::identity(),
@@ -84,25 +83,11 @@ impl From<Pixmap> for Canvas {
     }
 }
 
-impl Canvas {
-    /// Creates a new canvas.
-    ///
-    /// A canvas is filled with transparent black by default, aka (0, 0, 0, 0).
-    ///
-    /// Allocates a new pixmap. Use `Canvas::from(pixmap)` to reuse an existing one.
-    ///
-    /// Zero size in an error.
-    ///
-    /// Pixmap's width is limited by i32::MAX/4.
+impl<'a> Canvas<'a> {
+    /// Returns an underlying pixmap.
     #[inline]
-    pub fn new(width: u32, height: u32) -> Option<Self> {
-        Some(Canvas {
-            pixmap: Pixmap::new(width, height)?,
-            transform: Transform::identity(),
-            clip: Clip::new(),
-            stroker: PathStroker::new(),
-            stroked_path: None,
-        })
+    pub fn pixmap(&mut self) -> &mut PixmapMut<'a> {
+        &mut self.pixmap
     }
 
     /// Translates the canvas.
@@ -284,7 +269,7 @@ impl Canvas {
     /// Draws a `Pixmap` on top of the current `Pixmap`.
     ///
     /// We basically filling a rectangle with a `pixmap` pattern.
-    pub fn draw_pixmap(&mut self, x: i32, y: i32, pixmap: &Pixmap, paint: &PixmapPaint) {
+    pub fn draw_pixmap(&mut self, x: i32, y: i32, pixmap: PixmapRef, paint: &PixmapPaint) {
         self.draw_pixmap_impl(x, y, pixmap, paint);
     }
 
@@ -293,7 +278,7 @@ impl Canvas {
         &mut self,
         x: i32,
         y: i32,
-        pixmap: &Pixmap,
+        pixmap: PixmapRef,
         paint: &PixmapPaint,
     ) -> Option<()> {
         let rect = pixmap.size().to_int_rect(x, y).to_rect();
@@ -307,7 +292,7 @@ impl Canvas {
 
         let paint = Paint {
             shader: Pattern::new(
-                &pixmap,
+                pixmap,
                 SpreadMode::Pad, // Pad, otherwise we will get weird borders overlap.
                 paint.quality,
                 paint.opacity,

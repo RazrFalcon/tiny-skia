@@ -206,7 +206,8 @@ const CURVES: &[f32] = &[
 fn spiral_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut canvas = Canvas::new(1000, 1000).unwrap();
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);

@@ -3,14 +3,15 @@ use tiny_skia::*;
 fn main() {
     let triangle = crate_triangle();
 
-    let mut canvas = Canvas::new(400, 400).unwrap();
+    let mut pixmap = Pixmap::new(400, 400).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let now = std::time::Instant::now();
 
     let mut paint = Paint::default();
     paint.anti_alias = true;
     paint.shader = Pattern::new(
-        &triangle,
+        triangle.as_ref(),
         SpreadMode::Repeat,
         FilterQuality::Bicubic,
         1.0,
@@ -23,11 +24,12 @@ fn main() {
 
     println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
 
-    canvas.pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("image.png").unwrap();
 }
 
 fn crate_triangle() -> Pixmap {
-    let mut canvas = Canvas::new(20, 20).unwrap();
+    let mut pixmap = Pixmap::new(20, 20).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -42,5 +44,5 @@ fn crate_triangle() -> Pixmap {
 
     canvas.fill_path(&path, &paint, FillRule::Winding);
 
-    canvas.pixmap
+    pixmap
 }

@@ -20,7 +20,7 @@ use crate::color::{premultiply_u8, ALPHA_U8_OPAQUE};
 pub const BYTES_PER_PIXEL: usize = 4;
 
 
-/// A container of premultiplied RGBA pixels.
+/// A container that owns premultiplied RGBA pixels.
 ///
 /// The data is not aligned, therefore width == stride.
 #[derive(Clone, PartialEq)]
@@ -61,100 +61,6 @@ impl Pixmap {
             data,
             size,
         })
-    }
-
-    /// Returns pixmap's width.
-    pub fn width(&self) -> u32 {
-        self.size.width()
-    }
-
-    /// Returns pixmap's height.
-    pub fn height(&self) -> u32 {
-        self.size.height()
-    }
-
-    /// Returns pixmap's size.
-    pub(crate) fn size(&self) -> IntSize {
-        self.size
-    }
-
-    /// Returns pixmap's rect.
-    pub(crate) fn rect(&self) -> ScreenIntRect {
-        self.size.to_screen_int_rect(0, 0)
-    }
-
-    /// Returns the internal data.
-    ///
-    /// Bytes are ordered as RGBA.
-    pub fn data(&self) -> &[u8] {
-        self.data.as_slice()
-    }
-
-    /// Returns the mutable internal data.
-    ///
-    /// Bytes are ordered as RGBA.
-    pub fn data_mut(&mut self) -> &mut [u8] {
-        self.data.as_mut_slice()
-    }
-
-    /// Consumes the internal data.
-    ///
-    /// Bytes are ordered as RGBA.
-    pub fn take(self) -> Vec<u8> {
-        self.data
-    }
-
-    /// Returns a pixel color.
-    ///
-    /// Returns `None` when position is out of bounds.
-    pub fn pixel(&self, x: u32, y: u32) -> Option<PremultipliedColorU8> {
-        let idx = self.width().checked_mul(y)?.checked_add(x)?;
-        self.pixels().get(idx as usize).cloned()
-    }
-
-    /// Returns a slice of pixels.
-    pub fn pixels(&self) -> &[PremultipliedColorU8] {
-        bytemuck::cast_slice(self.data())
-    }
-
-    /// Returns a mutable slice of pixels.
-    pub fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
-        bytemuck::cast_slice_mut(self.data_mut())
-    }
-
-    // TODO: add rows() iterator
-
-    /// Returns a copy of the pixmap that intersects the `rect`.
-    ///
-    /// Returns `None` when `Pixmap`'s rect doesn't contain `rect`.
-    pub fn clone_rect(&self, rect: IntRect) -> Option<Self> {
-        // TODO: to ScreenIntRect?
-
-        let rect = self.rect().to_int_rect().intersect(&rect)?;
-        let mut new = Pixmap::new(rect.width(), rect.height())?;
-        {
-            let old_pixels = self.pixels();
-            let new_pixels = new.pixels_mut();
-
-            // TODO: optimize
-            for y in 0..rect.height() {
-                for x in 0..rect.width() {
-                    let old_idx = (y + rect.y() as u32) * self.width() + (x + rect.x() as u32);
-                    let new_idx = y * rect.width() + x;
-                    new_pixels[new_idx as usize] = old_pixels[old_idx as usize];
-                }
-            }
-        }
-
-        Some(new)
-    }
-
-    /// Fills the entire pixmap with a specified color.
-    pub fn fill(&mut self, color: Color) {
-        let c = color.premultiply().to_color_u8();
-        for p in self.pixels_mut() {
-            *p = c;
-        }
     }
 
     /// Decodes a PNG data into a `Pixmap`.
@@ -267,7 +173,7 @@ impl Pixmap {
         //
         // RasterPipeline is 15% faster here, but produces slightly different results
         // due to rounding. So we stick with this method for now.
-        for pixel in tmp_pixmap.pixels_mut() {
+        for pixel in tmp_pixmap.as_mut().pixels_mut() {
             let c = pixel.demultiply();
             *pixel = PremultipliedColorU8::from_rgba_unchecked(
                 c.red(), c.green(), c.blue(), c.alpha());
@@ -279,7 +185,7 @@ impl Pixmap {
             encoder.set_color(png::ColorType::RGBA);
             encoder.set_depth(png::BitDepth::Eight);
             let mut writer = encoder.write_header()?;
-            writer.write_image_data(tmp_pixmap.data())?;
+            writer.write_image_data(&tmp_pixmap.data)?;
         }
 
         Ok(data)
@@ -292,11 +198,304 @@ impl Pixmap {
         std::fs::write(path, data)?;
         Ok(())
     }
+
+    /// Returns a container that references Pixmap's data.
+    pub fn as_ref(&self) -> PixmapRef {
+        PixmapRef {
+            data: &self.data,
+            size: self.size,
+        }
+    }
+
+    /// Returns a container that references Pixmap's data.
+    pub fn as_mut(&mut self) -> PixmapMut {
+        PixmapMut {
+            data: &mut self.data,
+            size: self.size,
+        }
+    }
+
+    /// Returns pixmap's width.
+    pub fn width(&self) -> u32 {
+        self.size.width()
+    }
+
+    /// Returns pixmap's height.
+    pub fn height(&self) -> u32 {
+        self.size.height()
+    }
+
+    /// Returns pixmap's size.
+    #[allow(dead_code)]
+    pub(crate) fn size(&self) -> IntSize {
+        self.size
+    }
+
+    // /// Returns pixmap's rect.
+    // pub(crate) fn rect(&self) -> ScreenIntRect {
+    //     self.size.to_screen_int_rect(0, 0)
+    // }
+
+    /// Fills the entire pixmap with a specified color.
+    pub fn fill(&mut self, color: Color) {
+        let c = color.premultiply().to_color_u8();
+        for p in self.as_mut().pixels_mut() {
+            *p = c;
+        }
+    }
+
+    /// Returns the internal data.
+    ///
+    /// Bytes are ordered as RGBA.
+    pub fn data(&self) -> &[u8] {
+        self.data.as_slice()
+    }
+
+    /// Returns the mutable internal data.
+    ///
+    /// Bytes are ordered as RGBA.
+    pub fn data_mut(&mut self) -> &mut [u8] {
+        self.data.as_mut_slice()
+    }
+
+    /// Returns a pixel color.
+    ///
+    /// Returns `None` when position is out of bounds.
+    pub fn pixel(&self, x: u32, y: u32) -> Option<PremultipliedColorU8> {
+        let idx = self.width().checked_mul(y)?.checked_add(x)?;
+        self.pixels().get(idx as usize).cloned()
+    }
+
+    /// Returns a mutable slice of pixels.
+    pub fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
+        bytemuck::cast_slice_mut(self.data_mut())
+    }
+
+    /// Returns a slice of pixels.
+    pub fn pixels(&self) -> &[PremultipliedColorU8] {
+        bytemuck::cast_slice(self.data())
+    }
+
+    /// Consumes the internal data.
+    ///
+    /// Bytes are ordered as RGBA.
+    pub fn take(self) -> Vec<u8> {
+        self.data
+    }
+
+    /// Returns a copy of the pixmap that intersects the `rect`.
+    ///
+    /// Returns `None` when `Pixmap`'s rect doesn't contain `rect`.
+    pub fn clone_rect(&self, rect: IntRect) -> Option<Pixmap> {
+        self.as_ref().clone_rect(rect)
+    }
 }
 
 impl std::fmt::Debug for Pixmap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Pixmap")
+            .field("data", &"...")
+            .field("width", &self.size.width())
+            .field("height", &self.size.height())
+            .finish()
+    }
+}
+
+
+/// A container that references premultiplied RGBA pixels.
+///
+/// Can be created from `Pixmap` or from a user provided data.
+///
+/// The data is not aligned, therefore width == stride.
+#[derive(Clone, Copy, PartialEq)]
+pub struct PixmapRef<'a> {
+    data: &'a [u8],
+    size: IntSize,
+}
+
+impl<'a> PixmapRef<'a> {
+    /// Creates a new `PixmapRef` from bytes.
+    ///
+    /// The size must be at least `size.width() * size.height() * BYTES_PER_PIXEL`.
+    ///
+    /// The `data` is assumed to have premultiplied RGBA pixels (byteorder: ABGR).
+    pub fn from_bytes(data: &'a [u8], size: IntSize) -> Option<Self> {
+        let data_len = data_len_for_size(size)?;
+        if data.len() < data_len {
+            return None;
+        }
+
+        Some(PixmapRef {
+            data,
+            size,
+        })
+    }
+
+    /// Creates a new `Pixmap` from the current data.
+    ///
+    /// Clones the underlying data.
+    pub fn to_owned(&self) -> Pixmap {
+        Pixmap {
+            data: self.data.to_vec(),
+            size: self.size,
+        }
+    }
+
+    /// Returns pixmap's width.
+    pub fn width(&self) -> u32 {
+        self.size.width()
+    }
+
+    /// Returns pixmap's height.
+    pub fn height(&self) -> u32 {
+        self.size.height()
+    }
+
+    /// Returns pixmap's size.
+    pub(crate) fn size(&self) -> IntSize {
+        self.size
+    }
+
+    /// Returns pixmap's rect.
+    pub(crate) fn rect(&self) -> ScreenIntRect {
+        self.size.to_screen_int_rect(0, 0)
+    }
+
+    /// Returns the internal data.
+    ///
+    /// Bytes are ordered as RGBA.
+    pub fn data(&self) -> &[u8] {
+        self.data
+    }
+
+    /// Returns a pixel color.
+    ///
+    /// Returns `None` when position is out of bounds.
+    pub fn pixel(&self, x: u32, y: u32) -> Option<PremultipliedColorU8> {
+        let idx = self.width().checked_mul(y)?.checked_add(x)?;
+        self.pixels().get(idx as usize).cloned()
+    }
+
+    /// Returns a slice of pixels.
+    pub fn pixels(&self) -> &[PremultipliedColorU8] {
+        bytemuck::cast_slice(self.data())
+    }
+
+    // TODO: add rows() iterator
+
+    /// Returns a copy of the pixmap that intersects the `rect`.
+    ///
+    /// Returns `None` when `Pixmap`'s rect doesn't contain `rect`.
+    pub fn clone_rect(&self, rect: IntRect) -> Option<Pixmap> {
+        // TODO: to ScreenIntRect?
+
+        let rect = self.rect().to_int_rect().intersect(&rect)?;
+        let mut new = Pixmap::new(rect.width(), rect.height())?;
+        {
+            let old_pixels = self.pixels();
+            let mut new_mut = new.as_mut();
+            let new_pixels = new_mut.pixels_mut();
+
+            // TODO: optimize
+            for y in 0..rect.height() {
+                for x in 0..rect.width() {
+                    let old_idx = (y + rect.y() as u32) * self.width() + (x + rect.x() as u32);
+                    let new_idx = y * rect.width() + x;
+                    new_pixels[new_idx as usize] = old_pixels[old_idx as usize];
+                }
+            }
+        }
+
+        Some(new)
+    }
+}
+
+impl std::fmt::Debug for PixmapRef<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PixmapRef")
+            .field("data", &"...")
+            .field("width", &self.size.width())
+            .field("height", &self.size.height())
+            .finish()
+    }
+}
+
+
+/// A container that references mutable premultiplied RGBA pixels.
+///
+/// Can be created from `Pixmap` or from a user provided data.
+///
+/// The data is not aligned, therefore width == stride.
+#[derive(PartialEq)]
+pub struct PixmapMut<'a> {
+    data: &'a mut [u8],
+    size: IntSize,
+}
+
+impl<'a> PixmapMut<'a> {
+    /// Creates a new `PixmapMut` from bytes.
+    ///
+    /// The size must be at least `size.width() * size.height() * BYTES_PER_PIXEL`.
+    ///
+    /// The `data` is assumed to have premultiplied RGBA pixels (byteorder: ABGR).
+    pub fn from_bytes(data: &'a mut [u8], size: IntSize) -> Option<Self> {
+        let data_len = data_len_for_size(size)?;
+        if data.len() < data_len {
+            return None;
+        }
+
+        Some(PixmapMut {
+            data,
+            size,
+        })
+    }
+
+    /// Creates a new `Pixmap` from the current data.
+    ///
+    /// Clones the underlying data.
+    pub fn to_owned(&self) -> Pixmap {
+        Pixmap {
+            data: self.data.to_vec(),
+            size: self.size,
+        }
+    }
+
+    /// Returns pixmap's width.
+    pub fn width(&self) -> u32 {
+        self.size.width()
+    }
+
+    /// Returns pixmap's height.
+    pub fn height(&self) -> u32 {
+        self.size.height()
+    }
+
+    /// Returns pixmap's size.
+    pub(crate) fn size(&self) -> IntSize {
+        self.size
+    }
+
+    /// Returns pixmap's rect.
+    pub(crate) fn rect(&self) -> ScreenIntRect {
+        self.size.to_screen_int_rect(0, 0)
+    }
+
+    /// Returns the mutable internal data.
+    ///
+    /// Bytes are ordered as RGBA.
+    pub fn data_mut(&mut self) -> &mut [u8] {
+        self.data
+    }
+
+    /// Returns a mutable slice of pixels.
+    pub fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
+        bytemuck::cast_slice_mut(self.data_mut())
+    }
+}
+
+impl std::fmt::Debug for PixmapMut<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PixmapMut")
             .field("data", &"...")
             .field("width", &self.size.width())
             .field("height", &self.size.height())
@@ -314,7 +513,7 @@ fn min_row_bytes(size: IntSize) -> Option<NonZeroUsize> {
     NonZeroUsize::new(w as usize)
 }
 
-/// Returns storage required by pixel array.
+/// Returns storage size required by pixel array.
 fn compute_data_len(size: IntSize, row_bytes: usize) -> Option<usize> {
     let h = size.height().checked_sub(1)?;
     let h = (h as usize).checked_mul(row_bytes)?;

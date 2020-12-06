@@ -6,7 +6,7 @@
 
 use std::ffi::c_void;
 
-use crate::{Paint, BlendMode, LengthU32, Pixmap, PremultipliedColorU8, Shader};
+use crate::{Paint, BlendMode, LengthU32, PixmapMut, PremultipliedColorU8, Shader};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
@@ -47,7 +47,7 @@ impl<'a> RasterPipelineBlitter<'a> {
         paint: &Paint,
         clip_mask: Option<&'a ClipMask>,
         ctx_storage: &mut ContextStorage,
-        pixmap: &'a mut Pixmap,
+        pixmap: &'a mut PixmapMut,
     ) -> Option<Self> {
         let mut shader_pipeline = RasterPipelineBuilder::new();
         shader_pipeline.force_hq_pipeline = paint.force_hq_pipeline;
@@ -84,7 +84,7 @@ impl<'a> RasterPipelineBlitter<'a> {
         is_opaque: bool,
         is_constant: bool,
         clip_mask: Option<&'a ClipMask>,
-        pixmap: &'a mut Pixmap,
+        pixmap: &'a mut PixmapMut,
     ) -> Option<Self> {
         // Fast-reject.
         // This is basically SkInterpretXfermode().

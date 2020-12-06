@@ -15,7 +15,8 @@ fn do_clip_tiny_skia(aa: bool, bencher: &mut Bencher) {
 
     let path = tiny_skia::PathBuilder::from_rect(Rect::from_xywh(0.0, 0.0, 1000.0, 1000.0).unwrap());
 
-    let mut canvas = Canvas::new(1000, 1000).unwrap();
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
     bencher.iter(|| {
         canvas.set_transform(Transform::from_row(1.0, -0.5, 0.0, 1.0, 0.0, 300.0).unwrap());
         canvas.set_clip_path(&clip_path, FillRule::EvenOdd, aa);

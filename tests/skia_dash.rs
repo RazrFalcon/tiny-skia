@@ -26,7 +26,8 @@ fn crbug_124652() {
 // due to single precision rounding.
 #[test]
 fn infinite_dash() {
-    let mut canvas = Canvas::new(100, 100).unwrap();
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(0.0, 5.0);

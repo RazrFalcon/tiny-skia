@@ -8,7 +8,8 @@ fn two_stops_linear_tiny_skia(
 ) {
     use tiny_skia::*;
 
-    let mut canvas = Canvas::new(1000, 1000).unwrap();
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.force_hq_pipeline = hq;
@@ -489,7 +490,8 @@ fn three_stops_linear_even_cairo(bencher: &mut Bencher) {
 fn simple_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut canvas = Canvas::new(1000, 1000).unwrap();
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
@@ -635,7 +637,8 @@ fn simple_radial_cairo(bencher: &mut Bencher) {
 fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut canvas = Canvas::new(1000, 1000).unwrap();
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(

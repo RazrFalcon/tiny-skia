@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Pixmap, Path, Color, BlendMode, Shader, LineCap, Rect};
+use crate::{PixmapMut, Path, Color, BlendMode, Shader, LineCap, Rect};
 
 use crate::clip::ClipMask;
 use crate::pipeline::{ContextStorage, RasterPipelineBlitter};
@@ -103,7 +103,7 @@ impl<'a> Paint<'a> {
 }
 
 
-impl Pixmap {
+impl<'a> PixmapMut<'a> {
     /// Draws a filled rectangle onto the pixmap.
     ///
     /// This function is usually slower than filling a rectangular path,
