@@ -19,17 +19,64 @@ use crate::color::{premultiply_u8, ALPHA_U8_OPAQUE};
 /// Number of bytes per pixel.
 pub const BYTES_PER_PIXEL: usize = 4;
 
+/// Actual data underlying a Pixmap.
+///
+/// Comes in two variants:
+/// - `Owned`: The pixmap owns the Vec<u8> to which it draws. Use `Pixmap::new` to create a pixmap that uses this variant.
+/// - `Ref`: The pixmap is backed by a user-provided slice of memory. Use `Pixmap::from_data`.
+#[derive(PartialEq)]
+enum PixmapData<'a> {
+    Owned(Vec<u8>),
+    Ref(&'a mut [u8])
+}
+
+/// Cloning PixmapData always produces an owned variant.
+impl Clone for PixmapData<'_> {
+    fn clone(&self) -> Self {
+        match self {
+            PixmapData::Owned(vec) => PixmapData::Owned(vec.clone()),
+            PixmapData::Ref(slice) => PixmapData::Owned(slice.to_vec())
+        }
+    }
+}
+
+impl PixmapData<'_> {
+    #[inline]
+    fn as_slice(&self) -> &[u8] {
+        match self {
+            PixmapData::Owned(vec) => vec.as_slice(),
+            PixmapData::Ref(slice) => slice
+        }
+    }
+
+    #[inline]
+    fn as_mut_slice(&mut self) -> &mut [u8] {
+        match self {
+            PixmapData::Owned(vec) => vec.as_mut_slice(),
+            PixmapData::Ref(slice) => slice
+        }
+    }
+
+    /// For owned variant, returns the underlying vector.
+    /// For unowned variant, returns a copy of the slice in a new vector.
+    fn take_vec(self) -> Vec<u8> {
+        match self {
+            PixmapData::Owned(vec) => vec,
+            PixmapData::Ref(slice) => slice.to_vec()
+        }
+    }
+}
 
 /// A container of premultiplied RGBA pixels.
 ///
 /// The data is not aligned, therefore width == stride.
 #[derive(Clone, PartialEq)]
-pub struct Pixmap {
-    data: Vec<u8>,
+pub struct Pixmap<'a> {
+    data: PixmapData<'a>,
     size: IntSize,
 }
 
-impl Pixmap {
+impl<'a> Pixmap<'a> {
     /// Allocates a new pixmap.
     ///
     /// A pixmap is filled with transparent black by default, aka (0, 0, 0, 0).
@@ -45,7 +92,31 @@ impl Pixmap {
         // We have to wait for https://github.com/rust-lang/rust/issues/48043
 
         Some(Pixmap {
-            data: vec![0; data_len],
+            data: PixmapData::Owned(vec![0; data_len]),
+            size,
+        })
+    }
+
+    /// Constructs a new pixmap from user-allocated data.
+    ///
+    /// The given `data` slice must have the correct size, i.e. `width * height * 4`.
+    ///
+    /// In most cases you will want to use `Pixmap::new` instead.
+    ///
+    /// However, there are some situations where you may want to manage the data yourself:
+    /// - To draw to a framebuffer, or otherwise special memory region
+    /// - To draw onto a shared memory region (see the `shm_{client,server}` examples)
+    /// - When mixing tiny-skia with other drawing libraries.
+    ///
+    pub fn from_data(width: u32, height: u32, data: &'a mut [u8]) -> Option<Self> {
+        let size = IntSize::from_wh(width, height)?;
+        let data_len = data_len_for_size(size)?;
+        if data.len() != data_len {
+            return None;
+        }
+
+        Some(Pixmap {
+            data: PixmapData::Ref::<'a>(data),
             size,
         })
     }
@@ -58,7 +129,7 @@ impl Pixmap {
         }
 
         Some(Pixmap {
-            data,
+            data: PixmapData::Owned(data),
             size,
         })
     }
@@ -100,8 +171,10 @@ impl Pixmap {
     /// Consumes the internal data.
     ///
     /// Bytes are ordered as RGBA.
+    ///
+    /// NOTE: if the pixmap was created with `Pixmap::from_data` this will produce a new Vec<u8> containing a copy of the internal data.
     pub fn take(self) -> Vec<u8> {
-        self.data
+        self.data.take_vec()
     }
 
     /// Returns a pixel color.
@@ -294,7 +367,7 @@ impl Pixmap {
     }
 }
 
-impl std::fmt::Debug for Pixmap {
+impl std::fmt::Debug for Pixmap<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Pixmap")
             .field("data", &"...")

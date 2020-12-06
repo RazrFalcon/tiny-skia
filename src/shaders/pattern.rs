@@ -31,7 +31,7 @@ pub enum FilterQuality {
 /// mipmap generation, which adds too much complexity.
 #[derive(Clone, Debug)]
 pub struct Pattern<'a> {
-    pixmap: &'a Pixmap,
+    pixmap: &'a Pixmap<'a>,
     quality: FilterQuality,
     spread_mode: SpreadMode,
     pub(crate) opacity: NormalizedF32,
@@ -49,8 +49,8 @@ impl<'a> Pattern<'a> {
         quality: FilterQuality,
         opacity: f32,
         transform: Transform,
-    ) -> Shader {
-        Shader::Pattern(Pattern {
+    ) -> Shader<'a> {
+        Shader::Pattern(Pattern::<'a> {
             pixmap,
             spread_mode,
             quality,

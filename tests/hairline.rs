@@ -1,6 +1,6 @@
 use tiny_skia::*;
 
-fn draw_line(x0: f32, y0: f32, x1: f32, y1: f32, anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
+fn draw_line(x0: f32, y0: f32, x1: f32, y1: f32, anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap<'static> {
     let mut canvas = Canvas::new(100, 100).unwrap();
 
     let mut pb = PathBuilder::new();
@@ -104,7 +104,7 @@ fn clip_vline_right_aa() {
     assert_eq!(draw_line(100.0, -1.0, 100.0, 101.0, true, 1.0, LineCap::Butt), expected);
 }
 
-fn draw_quad(anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
+fn draw_quad(anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap<'static> {
     let mut canvas = Canvas::new(200, 100).unwrap();
 
     let mut pb = PathBuilder::new();

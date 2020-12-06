@@ -66,3 +66,18 @@ fn fill() {
     pixmap.fill(c);
     assert_eq!(pixmap.pixel(1, 1).unwrap(), c.premultiply().to_color_u8());
 }
+
+#[test]
+fn unowned_pixmap() {
+    let c = Color::from_rgba8(50, 100, 150, 200);
+    let mut data = vec![0; 10*10*4];
+    {
+        // Create a pixmap and fill with color:
+        let mut pixmap = Pixmap::from_data(10, 10, data.as_mut_slice()).unwrap();
+        pixmap.fill(c);
+    }
+
+    // Create another pixmap, backed by the same data, and verify it has the right color:
+    let pixmap = Pixmap::from_data(10, 10, data.as_mut_slice()).unwrap();
+    assert_eq!(pixmap.pixel(1, 1).unwrap(), c.premultiply().to_color_u8())
+}

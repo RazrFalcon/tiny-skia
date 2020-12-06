@@ -56,9 +56,9 @@ impl Default for PixmapPaint {
 /// and a caller has no way of checking it.
 #[allow(missing_debug_implementations)]
 #[derive(Clone)]
-pub struct Canvas {
+pub struct Canvas<'a> {
     /// A pixmap owned by the canvas.
-    pub pixmap: Pixmap,
+    pub pixmap: Pixmap<'a>,
 
     /// Canvas's transform.
     transform: Transform,
@@ -71,9 +71,9 @@ pub struct Canvas {
     stroked_path: Option<Path>,
 }
 
-impl From<Pixmap> for Canvas {
+impl<'a> From<Pixmap<'a>> for Canvas<'a> {
     #[inline]
-    fn from(pixmap: Pixmap) -> Self {
+    fn from(pixmap: Pixmap<'a>) -> Self {
         Canvas {
             pixmap,
             transform: Transform::identity(),
@@ -84,7 +84,7 @@ impl From<Pixmap> for Canvas {
     }
 }
 
-impl Canvas {
+impl Canvas<'_> {
     /// Creates a new canvas.
     ///
     /// A canvas is filled with transparent black by default, aka (0, 0, 0, 0).

@@ -103,7 +103,7 @@ impl<'a> Paint<'a> {
 }
 
 
-impl Pixmap {
+impl Pixmap<'_> {
     /// Draws a filled rectangle onto the pixmap.
     ///
     /// This function is usually slower than filling a rectangular path,

@@ -18,7 +18,7 @@ fn main() {
     canvas.pixmap.save_png("image.png").unwrap();
 }
 
-fn crate_triangle() -> Pixmap {
+fn crate_triangle() -> Pixmap<'static> {
     let mut canvas = Canvas::new(200, 200).unwrap();
 
     let mut paint = Paint::default();
