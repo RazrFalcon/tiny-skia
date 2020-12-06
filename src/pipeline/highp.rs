@@ -316,7 +316,7 @@ fn mask_u8(p: &mut Pipeline) {
 }
 
 fn scale_u8(p: &mut Pipeline) {
-    let ctx: &super::MaskCtx = p.stage_ctx();
+    let ctx: &super::AAMaskCtx = p.stage_ctx();
 
     // Load u8xTail and cast it to f32x4.
     let data = ctx.copy_at_xy(p.dx, p.dy, p.tail);
@@ -332,7 +332,7 @@ fn scale_u8(p: &mut Pipeline) {
 }
 
 fn lerp_u8(p: &mut Pipeline) {
-    let ctx: &super::MaskCtx = p.stage_ctx();
+    let ctx: &super::AAMaskCtx = p.stage_ctx();
 
     // Load u8xTail and cast it to f32x4.
     let data = ctx.copy_at_xy(p.dx, p.dy, p.tail);

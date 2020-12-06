@@ -28,7 +28,7 @@ pub struct RasterPipelineBlitter<'a> {
     pixels_ctx: pipeline::PixelsCtx<'a>,
 
     // Updated each call to blit_mask().
-    mask_ctx: pipeline::MaskCtx,
+    aa_mask_ctx: pipeline::AAMaskCtx,
 
     memset2d_color: Option<PremultipliedColorU8>,
 
@@ -140,7 +140,7 @@ impl<'a> RasterPipelineBlitter<'a> {
             shader_pipeline,
             clip_mask,
             pixels_ctx: img_ctx,
-            mask_ctx: pipeline::MaskCtx::default(),
+            aa_mask_ctx: pipeline::AAMaskCtx::default(),
             memset2d_color,
             blit_anti_h_rp: None,
             blit_rect_rp: None,
@@ -296,7 +296,7 @@ impl Blitter for RasterPipelineBlitter<'_> {
     }
 
     fn blit_mask(&mut self, mask: &Mask, clip: &ScreenIntRect) {
-        self.mask_ctx = pipeline::MaskCtx {
+        self.aa_mask_ctx = pipeline::AAMaskCtx {
             pixels: mask.image,
             stride: mask.row_bytes,
             shift: (mask.bounds.left() + mask.bounds.top() * mask.row_bytes) as usize,
@@ -304,7 +304,7 @@ impl Blitter for RasterPipelineBlitter<'_> {
 
         if self.blit_mask_rp.is_none() {
             let img_ctx_ptr = &self.pixels_ctx as *const _ as *const c_void;
-            let mask_ctx_ptr = &self.mask_ctx as *const _ as *const c_void;
+            let mask_ctx_ptr = &self.aa_mask_ctx as *const _ as *const c_void;
 
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(self.shader_pipeline.is_force_hq_pipeline());

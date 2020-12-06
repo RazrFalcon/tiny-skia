@@ -230,13 +230,13 @@ impl Context for PixelsCtx<'_> {}
 
 
 #[derive(Default, Debug)]
-pub struct MaskCtx {
+pub struct AAMaskCtx {
     pub pixels: [u8; 2],
     pub stride: u32, // can be zero
     pub shift: usize, // mask offset/position in pixmap coordinates
 }
 
-impl MaskCtx {
+impl AAMaskCtx {
     #[inline(always)]
     pub fn copy_at_xy(&self, dx: usize, dy: usize, tail: usize) -> [u8; 2] {
         let offset = (self.stride as usize * dy + dx) - self.shift;
@@ -250,7 +250,7 @@ impl MaskCtx {
     }
 }
 
-impl Context for MaskCtx {}
+impl Context for AAMaskCtx {}
 
 
 // TODO: merge with MaskCtx
