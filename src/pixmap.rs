@@ -317,9 +317,11 @@ impl<'a> PixmapRef<'a> {
     /// Creates a new `PixmapRef` from bytes.
     ///
     /// The size must be at least `size.width() * size.height() * BYTES_PER_PIXEL`.
+    /// Zero size in an error. Width is limited by i32::MAX/4.
     ///
     /// The `data` is assumed to have premultiplied RGBA pixels (byteorder: ABGR).
-    pub fn from_bytes(data: &'a [u8], size: IntSize) -> Option<Self> {
+    pub fn from_bytes(data: &'a [u8], width: u32, height: u32) -> Option<Self> {
+        let size = IntSize::from_wh(width, height)?;
         let data_len = data_len_for_size(size)?;
         if data.len() < data_len {
             return None;
@@ -436,9 +438,11 @@ impl<'a> PixmapMut<'a> {
     /// Creates a new `PixmapMut` from bytes.
     ///
     /// The size must be at least `size.width() * size.height() * BYTES_PER_PIXEL`.
+    /// Zero size in an error. Width is limited by i32::MAX/4.
     ///
     /// The `data` is assumed to have premultiplied RGBA pixels (byteorder: ABGR).
-    pub fn from_bytes(data: &'a mut [u8], size: IntSize) -> Option<Self> {
+    pub fn from_bytes(data: &'a mut [u8], width: u32, height: u32) -> Option<Self> {
+        let size = IntSize::from_wh(width, height)?;
         let data_len = data_len_for_size(size)?;
         if data.len() < data_len {
             return None;
