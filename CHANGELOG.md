@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## 0.3.0 - 2020-12-20
 ### Added
 - `PixmapRef` and `PixmapMut`, that can be created from `Pixmap` or from raw data.
 - `Canvas::set_clip_mask`, `Canvas::get_clip_mask`, `Canvas::take_clip_mask`.
@@ -29,4 +31,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.2.0...v0.3.0
