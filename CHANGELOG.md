@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Canvas::draw_pixmap` and `Pattern::new` accept `PixmapRef` instead of `&Pixmap` now.
 - Improve clipping performance.
 
+### Fixed
+- Panic when path is drawn slightly past the `Pixmap` bounds.
+
 ### Removed
 - `Canvas::new`
 

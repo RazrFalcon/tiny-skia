@@ -249,6 +249,23 @@ fn float_rect_clip_bottom_right_aa() {
 }
 
 #[test]
+fn int_rect_with_ts_clip_right() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+
+    let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
+    let transform = Transform::from_row(1.0, 0.0, 0.0, 1.0, 0.5, 0.5).unwrap();
+    canvas.set_transform(transform);
+    canvas.fill_rect(rect, &paint);
+
+    let expected = Pixmap::load_png("tests/images/fill/int-rect-with-ts-clip-right.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
 fn open_polygon() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
     let mut canvas = Canvas::from(pixmap.as_mut());
