@@ -3,8 +3,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Unlike Skia, we're using just a simple 1bit alpha mask for clipping.
-
 use crate::{Path, LengthU32, FillRule};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
@@ -14,32 +12,39 @@ use crate::math::LENGTH_U32_ONE;
 use crate::color::AlphaU8;
 use crate::alpha_runs::AlphaRun;
 
-#[derive(Clone)]
-pub struct ClipMask {
+#[derive(Clone, Debug)]
+pub struct ClipMaskData {
     pub data: Vec<u8>,
     pub width: LengthU32,
 }
 
-#[derive(Clone)]
-pub struct Clip {
-    mask: ClipMask,
+
+/// A clipping mask.
+///
+/// Unlike Skia, we're using just a simple 8bit alpha mask.
+/// It's way slower, but times easier to implement.
+#[derive(Clone, Debug)]
+pub struct ClipMask {
+    mask: ClipMaskData,
 }
 
-impl Clip {
+impl ClipMask {
+    /// Creates a new, empty mask.
     pub fn new() -> Self {
-        Clip {
-            mask: ClipMask {
+        ClipMask {
+            mask: ClipMaskData {
                 data: Vec::new(),
                 width: LENGTH_U32_ONE,
             },
         }
     }
 
+    /// Checks that mask is empty.
     pub fn is_empty(&self) -> bool {
         self.mask.data.is_empty()
     }
 
-    pub fn as_ref(&self) -> Option<&ClipMask> {
+    pub(crate) fn as_ref(&self) -> Option<&ClipMaskData> {
         if self.is_empty() {
             None
         } else {
@@ -47,6 +52,9 @@ impl Clip {
         }
     }
 
+    /// Sets the current clipping path.
+    ///
+    /// Not additive. Overwrites the previous data.
     pub fn set_path(
         &mut self,
         path: &Path,
@@ -69,6 +77,9 @@ impl Clip {
         }
     }
 
+    /// Clears the mask.
+    ///
+    /// Internal memory buffer is not deallocated.
     pub fn clear(&mut self) {
         // Clear the mask, but keep the allocation.
         self.mask.data.clear();
@@ -76,7 +87,7 @@ impl Clip {
 }
 
 
-struct ClipBuilder<'a>(&'a mut ClipMask);
+struct ClipBuilder<'a>(&'a mut ClipMaskData);
 
 impl Blitter for ClipBuilder<'_> {
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32) {
@@ -88,7 +99,7 @@ impl Blitter for ClipBuilder<'_> {
 }
 
 
-struct ClipBuilderAA<'a>(&'a mut ClipMask);
+struct ClipBuilderAA<'a>(&'a mut ClipMaskData);
 
 impl Blitter for ClipBuilderAA<'_> {
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32) {

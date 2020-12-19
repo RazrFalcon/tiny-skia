@@ -59,6 +59,7 @@ mod wide;
 
 pub use blend_mode::BlendMode;
 pub use canvas::{Canvas, PixmapPaint};
+pub use clip::ClipMask;
 pub use color::{ALPHA_U8_TRANSPARENT, ALPHA_U8_OPAQUE, ALPHA_TRANSPARENT, ALPHA_OPAQUE};
 pub use color::{Color, ColorU8, PremultipliedColor, PremultipliedColorU8};
 pub use dash::StrokeDash;

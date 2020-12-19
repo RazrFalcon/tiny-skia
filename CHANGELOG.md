@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `PixmapRef` and `PixmapMut`, that can be created from `Pixmap` or from raw data.
+- `Canvas::set_clip_mask`, `Canvas::get_clip_mask`, `Canvas::take_clip_mask`.
 
 ### Changed
 - `Canvas` no longer owns a `Pixmap`.
 - `Canvas::draw_pixmap` and `Pattern::new` accept `PixmapRef` instead of `&Pixmap` now.
 - Improve clipping performance.
+- The internal `ClipMask` type become public.
 
 ### Fixed
 - Panic when path is drawn slightly past the `Pixmap` bounds.

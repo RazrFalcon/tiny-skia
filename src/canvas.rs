@@ -9,7 +9,7 @@
 use crate::{PixmapRef, PixmapMut, Transform, Path, Paint, Stroke, Point, Rect};
 use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillRule, SpreadMode};
 
-use crate::clip::Clip;
+use crate::clip::ClipMask;
 use crate::scalar::Scalar;
 use crate::stroker::PathStroker;
 
@@ -63,7 +63,7 @@ pub struct Canvas<'a> {
     transform: Transform,
 
     /// Canvas's clip region.
-    clip: Clip,
+    clip: ClipMask,
 
     /// A path stroker used to cache temporary stroking data.
     stroker: PathStroker,
@@ -76,7 +76,7 @@ impl<'a> From<PixmapMut<'a>> for Canvas<'a> {
         Canvas {
             pixmap,
             transform: Transform::identity(),
-            clip: Clip::new(),
+            clip: ClipMask::new(),
             stroker: PathStroker::new(),
             stroked_path: None,
         }
@@ -164,6 +164,23 @@ impl<'a> Canvas<'a> {
         } else {
             self.clip.set_path(path, self.pixmap.rect(), fill_type, anti_alias);
         }
+    }
+
+    /// Sets the current clip mask.
+    ///
+    /// This is a low-level alternative to `set_clip_rect` and `set_clip_path`.
+    pub fn set_clip_mask(&mut self, clip: ClipMask) {
+        self.clip = clip;
+    }
+
+    /// Returns a reference to the current clip mask.
+    pub fn get_clip_mask(&self) -> &ClipMask {
+        &self.clip
+    }
+
+    /// Takes the current clip mask.
+    pub fn take_clip_mask(&mut self) -> ClipMask {
+        std::mem::replace(&mut self.clip, ClipMask::new())
     }
 
     /// Resets the current clip.

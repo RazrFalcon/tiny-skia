@@ -6,7 +6,7 @@
 
 use crate::{PixmapMut, Path, Color, BlendMode, Shader, LineCap, Rect};
 
-use crate::clip::ClipMask;
+use crate::clip::ClipMaskData;
 use crate::pipeline::{ContextStorage, RasterPipelineBlitter};
 use crate::scan;
 
@@ -117,7 +117,7 @@ impl<'a> PixmapMut<'a> {
         &mut self,
         rect: Rect,
         paint: &Paint,
-        clip_mask: Option<&ClipMask>,
+        clip_mask: Option<&ClipMaskData>,
     ) -> Option<()> {
         // TODO: ignore rects outside the pixmap
 
@@ -147,7 +147,7 @@ impl<'a> PixmapMut<'a> {
         path: &Path,
         paint: &Paint,
         fill_type: FillRule,
-        clip_mask: Option<&ClipMask>,
+        clip_mask: Option<&ClipMaskData>,
     ) -> Option<()> {
         // This is sort of similar to SkDraw::drawPath
 
@@ -194,7 +194,7 @@ impl<'a> PixmapMut<'a> {
         path: &Path,
         paint: &Paint,
         line_cap: LineCap,
-        clip_mask: Option<&ClipMask>,
+        clip_mask: Option<&ClipMaskData>,
     ) -> Option<()> {
         let clip = self.size().to_screen_int_rect(0, 0);
 

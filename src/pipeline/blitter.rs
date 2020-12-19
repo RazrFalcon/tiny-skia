@@ -11,7 +11,7 @@ use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
-use crate::clip::ClipMask;
+use crate::clip::ClipMaskData;
 use crate::color::AlphaU8;
 use crate::math::LENGTH_U32_ONE;
 use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder, ContextStorage};
@@ -45,7 +45,7 @@ pub struct RasterPipelineBlitter<'a> {
 impl<'a> RasterPipelineBlitter<'a> {
     pub fn new(
         paint: &Paint,
-        clip_mask: Option<&'a ClipMask>,
+        clip_mask: Option<&'a ClipMaskData>,
         ctx_storage: &mut ContextStorage,
         pixmap: &'a mut PixmapMut,
     ) -> Option<Self> {
@@ -83,7 +83,7 @@ impl<'a> RasterPipelineBlitter<'a> {
         shader_pipeline: RasterPipelineBuilder,
         is_opaque: bool,
         is_constant: bool,
-        clip_mask: Option<&'a ClipMask>,
+        clip_mask: Option<&'a ClipMaskData>,
         pixmap: &'a mut PixmapMut,
     ) -> Option<Self> {
         // Fast-reject.
