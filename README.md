@@ -34,8 +34,7 @@ It consists of 370 KLOC without dependencies (around 7 MLOC with dependencies)
 and requires around 4-8 GiB of disk space to be built from sources.
 And the final binary is 3-8 MiB big, depending on enabled features.
 Not to mention that it requires `clang` and no other compiler,
-uses an obscure build system (`gn`) which still uses Python2
-and doesn't really support 32bit targets.
+uses an obscure build system (`gn`) which still uses Python2.
 
 `tiny-skia` tries to be small, simple and easy to build.
 Currently, it has around 14 KLOC, compiles in less than 5s on a modern CPU
