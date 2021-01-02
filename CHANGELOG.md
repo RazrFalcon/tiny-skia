@@ -6,11 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## 0.4.0 - 2021-01-02
+## [0.4.0] - 2021-01-02
 ### Changed
 - Remove almost all `unsafe`. No performance changes.
 
-## 0.3.0 - 2020-12-20
+## [0.3.0] - 2020-12-20
 ### Added
 - `PixmapRef` and `PixmapMut`, that can be created from `Pixmap` or from raw data.
 - `Canvas::set_clip_mask`, `Canvas::get_clip_mask`, `Canvas::take_clip_mask`.
