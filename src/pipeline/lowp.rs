@@ -113,10 +113,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     null_fn, // Luminosity
     source_over_rgba,
     transform,
-    null_fn, // ReflectX
-    null_fn, // ReflectY
-    null_fn, // RepeatX
-    null_fn, // RepeatY
+    null_fn, // Reflect
+    null_fn, // Repeat
     null_fn, // Bilinear
     null_fn, // Bicubic
     pad_x1,

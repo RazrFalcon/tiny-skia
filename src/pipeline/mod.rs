@@ -109,10 +109,8 @@ pub enum Stage {
     Luminosity,
     SourceOverRgba,
     Transform,
-    ReflectX, // TODO: join with ReflectY
-    ReflectY,
-    RepeatX,  // TODO: join with RepeatX
-    RepeatY,
+    Reflect,
+    Repeat,
     Bilinear,
     Bicubic,
     PadX1,

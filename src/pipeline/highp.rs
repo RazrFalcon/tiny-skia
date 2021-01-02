@@ -105,10 +105,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     luminosity,
     source_over_rgba,
     transform,
-    reflect_x,
-    reflect_y,
-    repeat_x,
-    repeat_y,
+    reflect,
+    repeat,
     bilinear,
     bicubic,
     pad_x1,
@@ -671,14 +669,10 @@ fn transform(p: &mut Pipeline) {
 // The gather stages will hard clamp the output of these stages to [0,limit)...
 // we just need to do the basic repeat or mirroring.
 
-fn reflect_x(p: &mut Pipeline) {
+fn reflect(p: &mut Pipeline) {
     let ctx = &p.ctx.limit_x;
     p.r = exclusive_reflect(p.r, ctx.scale, ctx.inv_scale);
 
-    p.next_stage();
-}
-
-fn reflect_y(p: &mut Pipeline) {
     let ctx = &p.ctx.limit_y;
     p.g = exclusive_reflect(p.g, ctx.scale, ctx.inv_scale);
 
@@ -693,14 +687,10 @@ fn exclusive_reflect(v: f32x8, limit: f32, inv_limit: f32) -> f32x8 {
         * ((v - limit) * (inv_limit * f32x8::splat(0.5))).floor() - limit).abs()
 }
 
-fn repeat_x(p: &mut Pipeline) {
+fn repeat(p: &mut Pipeline) {
     let ctx = &p.ctx.limit_x;
     p.r = exclusive_repeat(p.r, ctx.scale, ctx.inv_scale);
 
-    p.next_stage();
-}
-
-fn repeat_y(p: &mut Pipeline) {
     let ctx = &p.ctx.limit_y;
     p.g = exclusive_repeat(p.g, ctx.scale, ctx.inv_scale);
 

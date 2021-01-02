@@ -98,14 +98,8 @@ impl<'a> Pattern<'a> {
 
                 match self.spread_mode {
                     SpreadMode::Pad => { /* The gather() stage will clamp for us. */ }
-                    SpreadMode::Repeat => {
-                        p.push(pipeline::Stage::RepeatX);
-                        p.push(pipeline::Stage::RepeatY);
-                    }
-                    SpreadMode::Reflect => {
-                        p.push(pipeline::Stage::ReflectX);
-                        p.push(pipeline::Stage::ReflectY);
-                    }
+                    SpreadMode::Repeat => p.push(pipeline::Stage::Repeat),
+                    SpreadMode::Reflect => p.push(pipeline::Stage::Reflect),
                 }
 
                 p.push(pipeline::Stage::Gather);
