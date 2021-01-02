@@ -848,8 +848,6 @@ fn sample(
 
 #[inline(always)]
 fn tile(v: f32x8, mode: SpreadMode, limit: f32, inv_limit: f32) -> f32x8 {
-    // This match make this function almost 2x slower when building with `-Ctarget-cpu=haswell`.
-    // TODO: optimize
     match mode {
         SpreadMode::Pad => v,
         SpreadMode::Repeat => exclusive_repeat(v, limit, inv_limit),

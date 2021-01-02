@@ -242,7 +242,7 @@ checksum = "e39674047b1748e8bf4865142772a6637bd32d8b4b27e3c2248dd122f637808b"
 
 [[package]]
 name = "tiny-skia"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "arrayref",
  "arrayvec",
