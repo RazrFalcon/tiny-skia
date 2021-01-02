@@ -10,52 +10,8 @@ use crate::floating_point::FLOAT_PI;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 use crate::wide::f32x2;
 
-mod private {
-    use crate::scalar::Scalar;
-    use crate::floating_point::{FiniteF32, NormalizedF32};
-
-    /// A finite f32 in (0,1) range.
-    #[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
-    #[repr(transparent)]
-    pub struct TValue(FiniteF32);
-
-    impl TValue {
-        // Just a random, valid numbers to init the array.
-        // Will be overwritten anyway.
-        // Perfectly safe.
-        pub const ANY: Self = unsafe { TValue(FiniteF32::new_unchecked(0.5)) };
-
-        pub const HALF: Self = unsafe { TValue(FiniteF32::new_unchecked(0.5)) };
-
-        pub fn new(n: f32) -> Option<Self> {
-            if n > 0.0 && n < 1.0 {
-                // `n` is guarantee to be finite after the bounds check.
-                unsafe { Some(TValue(FiniteF32::new_unchecked(n))) }
-            } else {
-                None
-            }
-        }
-
-        pub fn new_bounded(n: f32) -> Self {
-            let n = n.bound(std::f32::EPSILON, 1.0 - std::f32::EPSILON);
-            // `n` is guarantee to be finite after clamping.
-            debug_assert!(n.is_finite());
-            unsafe { TValue(FiniteF32::new_unchecked(n)) }
-        }
-
-        pub fn get(self) -> f32 {
-            self.0.get()
-        }
-
-        pub fn to_normalized(self) -> NormalizedF32 {
-            // TValue is (0,1), while NormalizedF32 is [0,1], so it will always fit.
-            unsafe { NormalizedF32::new_unchecked(self.0.get()) }
-        }
-    }
-}
-pub use private::TValue;
 use crate::path_builder::PathDirection;
-use crate::floating_point::NormalizedF32;
+use crate::floating_point::{NormalizedF32, NormalizedF32Exclusive};
 
 
 /// use for : eval(t) == A * t^2 + B * t + C
@@ -114,8 +70,8 @@ impl CubicCoeff {
 
 
 // TODO: to a custom type?
-pub fn new_t_values() -> [TValue; 3] {
-    [TValue::ANY, TValue::ANY, TValue::ANY]
+pub fn new_t_values() -> [NormalizedF32Exclusive; 3] {
+    [NormalizedF32Exclusive::ANY, NormalizedF32Exclusive::ANY, NormalizedF32Exclusive::ANY]
 }
 
 // TODO: return custom type
@@ -189,7 +145,7 @@ fn is_not_monotonic(a: f32, b: f32, c: f32) -> bool {
     ab == 0.0 || bc < 0.0
 }
 
-pub fn chop_quad_at(src: &[Point], t: TValue, dst: &mut [Point; 5]) {
+pub fn chop_quad_at(src: &[Point], t: NormalizedF32Exclusive, dst: &mut [Point; 5]) {
     let p0 = src[0].to_f32x2();
     let p1 = src[1].to_f32x2();
     let p2 = src[2].to_f32x2();
@@ -256,7 +212,7 @@ pub fn chop_cubic_at_y_extrema(src: &[Point; 4], dst: &mut [Point; 10]) -> usize
 // B = 6(a - 2b + c)
 // C = 3(b - a)
 // Solve for t, keeping only those that fit between 0 < t < 1
-fn find_cubic_extrema(a: f32, b: f32, c: f32, d: f32, t_values: &mut [TValue; 3]) -> &[TValue] {
+fn find_cubic_extrema(a: f32, b: f32, c: f32, d: f32, t_values: &mut [NormalizedF32Exclusive; 3]) -> &[NormalizedF32Exclusive] {
     // we divide A,B,C by 3 to simplify
     let na = d - a + 3.0 * (b - c);
     let nb = 2.0 * (a - b - b + c);
@@ -271,7 +227,7 @@ fn find_cubic_extrema(a: f32, b: f32, c: f32, d: f32, t_values: &mut [TValue; 3]
 /// Q = -1/2 (B + sign(B) sqrt[B*B - 4*A*C])
 /// x1 = Q / A
 /// x2 = C / Q
-pub fn find_unit_quad_roots(a: f32, b: f32, c: f32, roots: &mut [TValue; 3]) -> usize {
+pub fn find_unit_quad_roots(a: f32, b: f32, c: f32, roots: &mut [NormalizedF32Exclusive; 3]) -> usize {
     if a == 0.0 {
         if let Some(r) = valid_unit_divide(-c, b) {
             roots[0] = r;
@@ -319,13 +275,13 @@ pub fn find_unit_quad_roots(a: f32, b: f32, c: f32, roots: &mut [TValue; 3]) -> 
 // http://code.google.com/p/skia/issues/detail?id=32
 //
 // This test code would fail when we didn't check the return result of
-// valid_unit_divide in SkChopCubicAt(... tValues[], int roots). The reason is
+// valid_unit_divide in SkChopCubicAt(... NormalizedF32Exclusives[], int roots). The reason is
 // that after the first chop, the parameters to valid_unit_divide are equal
 // (thanks to finite float precision and rounding in the subtracts). Thus
-// even though the 2nd tValue looks < 1.0, after we renormalize it, we end
+// even though the 2nd NormalizedF32Exclusive looks < 1.0, after we renormalize it, we end
 // up with 1.0, hence the need to check and just return the last cubic as
 // a degenerate clump of 4 points in the same place.
-pub fn chop_cubic_at(src: &[Point; 4], t_values: &[TValue], dst: &mut [Point]) {
+pub fn chop_cubic_at(src: &[Point; 4], t_values: &[NormalizedF32Exclusive], dst: &mut [Point]) {
     if t_values.is_empty() {
         // nothing to chop
         dst[0] = src[0];
@@ -374,7 +330,7 @@ pub fn chop_cubic_at(src: &[Point; 4], t_values: &[TValue], dst: &mut [Point]) {
     }
 }
 
-pub fn chop_cubic_at2(src: &[Point; 4], t: TValue, dst: &mut [Point]) {
+pub fn chop_cubic_at2(src: &[Point; 4], t: NormalizedF32Exclusive, dst: &mut [Point]) {
     let p0 = src[0].to_f32x2();
     let p1 = src[1].to_f32x2();
     let p2 = src[2].to_f32x2();
@@ -397,7 +353,7 @@ pub fn chop_cubic_at2(src: &[Point; 4], t: TValue, dst: &mut [Point]) {
     dst[6] = Point::from_f32x2(p3);
 }
 
-fn valid_unit_divide(mut numer: f32, mut denom: f32) -> Option<TValue> {
+fn valid_unit_divide(mut numer: f32, mut denom: f32) -> Option<NormalizedF32Exclusive> {
     if numer < 0.0 {
         numer = -numer;
         denom = -denom;
@@ -408,7 +364,7 @@ fn valid_unit_divide(mut numer: f32, mut denom: f32) -> Option<TValue> {
     }
 
     let r = numer / denom;
-    TValue::new(r)
+    NormalizedF32Exclusive::new(r)
 }
 
 fn interp(v0: f32x2, v1: f32x2, t: f32x2) -> f32x2 {
@@ -421,7 +377,7 @@ fn times_2(value: f32x2) -> f32x2 {
 
 pub fn chop_cubic_at_max_curvature(
     src: &[Point; 4],
-    t_values: &mut [TValue; 3],
+    t_values: &mut [NormalizedF32Exclusive; 3],
     dst: &mut [Point],
 ) -> usize {
     let mut roots = [NormalizedF32::ZERO; 3];
@@ -431,7 +387,7 @@ pub fn chop_cubic_at_max_curvature(
     let mut count = 0;
     for root in roots {
         if 0.0 < root.get() && root.get() < 1.0 {
-            t_values[count] = TValue::new_bounded(root.get());
+            t_values[count] = NormalizedF32Exclusive::new_bounded(root.get());
             count += 1;
         }
     }
@@ -521,10 +477,8 @@ pub fn find_cubic_max_curvature<'a>(
     src: &[Point; 4],
     t_values: &'a mut [NormalizedF32; 3],
 ) -> &'a [NormalizedF32] {
-    let raw_src = points_to_f32s!(src, 4);
-
-    let mut coeff_x = formulate_f1_dot_f2(raw_src);
-    let coeff_y = formulate_f1_dot_f2(&raw_src[1..]);
+    let mut coeff_x = formulate_f1_dot_f2(&[src[0].x, src[1].x, src[2].x, src[3].x]);
+    let coeff_y = formulate_f1_dot_f2(&[src[0].y, src[1].y, src[2].y, src[3].y]);
 
     for i in 0..4 {
         coeff_x[i] += coeff_y[i];
@@ -544,10 +498,10 @@ pub fn find_cubic_max_curvature<'a>(
 // F'' = 6Ct + 6B
 //
 // F' dot F'' -> CCt^3 + 3BCt^2 + (2BB + CA)t + AB
-fn formulate_f1_dot_f2(src: &[f32]) -> [f32; 4] {
-    let a = src[2] - src[0];
-    let b = src[4] - 2.0 * src[2] + src[0];
-    let c = src[6] + 3.0 * (src[2] - src[4]) - src[0];
+fn formulate_f1_dot_f2(src: &[f32; 4]) -> [f32; 4] {
+    let a = src[1] - src[0];
+    let b = src[2] - 2.0 * src[1] + src[0];
+    let c = src[3] + 3.0 * (src[1] - src[2]) - src[0];
 
     [
         c * c,
@@ -700,7 +654,7 @@ fn eval_cubic_derivative(src: &[Point; 4], t: NormalizedF32) -> Point {
 // B = c - 2b + a
 // C = d - 3c + 3b - a
 // (BxCy - ByCx)t^2 + (AxCy - AyCx)t + AxBy - AyBx == 0
-pub fn find_cubic_inflections<'a>(src: &[Point; 4], t_values: &'a mut [TValue; 3]) -> &'a [TValue] {
+pub fn find_cubic_inflections<'a>(src: &[Point; 4], t_values: &'a mut [NormalizedF32Exclusive; 3]) -> &'a [NormalizedF32Exclusive] {
     let ax = src[1].x - src[0].x;
     let ay = src[1].y - src[0].y;
     let bx = src[2].x - 2.0 * src[1].x + src[0].x;
@@ -721,7 +675,7 @@ pub fn find_cubic_inflections<'a>(src: &[Point; 4], t_values: &'a mut [TValue; 3
 // Return location (in t) of cubic cusp, if there is one.
 // Note that classify cubic code does not reliably return all cusp'd cubics, so
 // it is not called here.
-pub fn find_cubic_cusp(src: &[Point; 4]) -> Option<TValue> {
+pub fn find_cubic_cusp(src: &[Point; 4]) -> Option<NormalizedF32Exclusive> {
     // When the adjacent control point matches the end point, it behaves as if
     // the cubic has a cusp: there's a point of max curvature where the derivative
     // goes to zero. Ideally, this would be where t is zero or one, but math
@@ -759,7 +713,7 @@ pub fn find_cubic_cusp(src: &[Point; 4]) -> Option<TValue> {
         if d_pt_magnitude < precision {
             // All three max curvature t values may be close to the cusp;
             // return the first one.
-            return Some(TValue::new_bounded(test_t.get()));
+            return Some(NormalizedF32Exclusive::new_bounded(test_t.get()));
         }
     }
 

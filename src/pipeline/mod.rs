@@ -11,57 +11,16 @@ Despite having a lot of changes compared to `SkRasterPipeline`,
 the core principles are the same:
 
 1. A pipeline consists of stages.
-1. Each stage can have an optional context.
+1. A pipeline has a global context shared by all stages.
+   Unlike Skia, were each stage has it's own, possibly shared, context.
 1. Each stage has a high precision implementation. See `highp.rs`.
-1. Some stages have a low precision (lowp) implementation. See `lowp.rs`.
+1. Some stages have a low precision implementation. See `lowp.rs`.
 1. Each stage calls the "next" stage after its done.
 1. During pipeline "compilation", if **all** stages have a lowp implementation,
    the lowp pipeline will be used. Otherwise, the highp variant will be used.
-1. The pipeline "compilation" produces a list of `void` pointer pairs (aka program),
-   were the first pointer is a stage function pointer and the second one is an optional context.
+1. The pipeline "compilation" produces a list of function pointer.
    The last pointer is a pointer to the "return" function,
    which simply stops the execution of the pipeline.
-   So the program can look like this: `[fn, ctx, fn, fn, fn, ctx, ret_fn]`.
-
-A simple illustration:
-
-```ignore
-type StageFn = fn(program: *const *const c_void);
-
-fn start(program: *const *const c_void) {
-    let next: StageFn = unsafe { *program.cast() };
-    next(program);
-}
-
-fn stage1(program: *const *const c_void) {
-    // This stage has a context.
-    let ctx: &SomeT = unsafe { &*(*program.add(1)).cast() };
-
-    // Do stuff...
-
-    unsafe {
-        let next: StageFn = *program.add(2).cast(); // advance by 2, because of ctx
-        next(program.add(2));
-    }
-}
-
-fn stage2(program: *const *const c_void) {
-    // This stage has no context.
-
-    // Do stuff...
-
-    unsafe {
-        let next: StageFn = *program.add(1).cast(); // advance by 1, because no ctx
-        next(program.add(1));
-    }
-}
-
-fn just_return(_: *const *const c_void) {
-    // stops the execution
-}
-
-// Were the `program` can look like: `[*stage1, *SomeT, *stage2, *just_return]`
-```
 
 This implementation is a bit tricky, but it gives the maximum performance.
 A simple and straightforward implementation using traits and loops, like:
@@ -79,30 +38,21 @@ for stage in stages {
 
 will be at least 20-30% slower. Not really sure why.
 
-The main problem with function pointers approach, is that there is no way
-we can have a list of random data and safely cast it without any overhead.
-Therefore we have to really on unsafe. A stage function simply "knows" that
-there are enough pointers left in the `program`.
-
-Moreover, since this module is all about performance, any kind of branching is
+Also, since this module is all about performance, any kind of branching is
 strictly forbidden. All stage functions must not use `if`, `match` or loops.
 There are still some exceptions, which are basically an imperfect implementations
 and should be optimized out in the future.
-
-Despite all the above, we still have a fully checked pixels access.
-Only program pointers casting (to fn and ctx) and data types mutations are unsafe.
 */
-
-use std::ffi::c_void;
-use std::rc::Rc;
 
 use arrayvec::ArrayVec;
 
-use crate::{LengthU32, Color, SpreadMode, PremultipliedColor, PremultipliedColorU8, Transform};
+use crate::{LengthU32, Color, SpreadMode, PremultipliedColor, PremultipliedColorU8};
+use crate::{Transform, PixmapRef, PixmapMut};
 
 pub use blitter::RasterPipelineBlitter;
 
 use crate::floating_point::NormalizedF32;
+use crate::math::LENGTH_U32_ONE;
 use crate::screen_int_rect::ScreenIntRect;
 use crate::wide::u32x8;
 
@@ -110,9 +60,7 @@ mod blitter;
 mod lowp;
 mod highp;
 
-
 const MAX_STAGES: usize = 32; // More than enough.
-
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
@@ -161,9 +109,9 @@ pub enum Stage {
     Luminosity,
     SourceOverRgba,
     Transform,
-    ReflectX,
+    ReflectX, // TODO: join with ReflectY
     ReflectY,
-    RepeatX,
+    RepeatX,  // TODO: join with RepeatX
     RepeatY,
     Bilinear,
     Bicubic,
@@ -183,50 +131,54 @@ pub enum Stage {
 pub const STAGES_COUNT: usize = Stage::ApplyVectorMask as usize + 1;
 
 
-pub trait Context: std::fmt::Debug {}
-
-
-impl Context for f32 {}
-
-
-#[derive(Debug)]
-pub struct PixelsCtx<'a> {
-    pub pixels: &'a mut [PremultipliedColorU8],
-    pub stride: LengthU32,
+impl<'a> PixmapRef<'a> {
+    #[inline(always)]
+    pub(crate) fn gather(&self, index: u32x8) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
+        let index: [u32; 8] = index.into();
+        let pixels = self.pixels();
+        [
+            pixels[index[0] as usize],
+            pixels[index[1] as usize],
+            pixels[index[2] as usize],
+            pixels[index[3] as usize],
+            pixels[index[4] as usize],
+            pixels[index[5] as usize],
+            pixels[index[6] as usize],
+            pixels[index[7] as usize],
+        ]
+    }
 }
 
-impl PixelsCtx<'_> {
+impl<'a> PixmapMut<'a> {
     #[inline(always)]
-    fn offset(&self, dx: usize, dy: usize) -> usize {
-        self.stride.get() as usize * dy + dx
+    pub(crate) fn offset(&self, dx: usize, dy: usize) -> usize {
+        self.width() as usize * dy + dx
     }
 
     #[inline(always)]
-    pub fn slice_at_xy(&mut self, dx: usize, dy: usize) -> &mut [PremultipliedColorU8] {
+    pub(crate) fn slice_at_xy(&mut self, dx: usize, dy: usize) -> &mut [PremultipliedColorU8] {
         let offset = self.offset(dx, dy);
-        &mut self.pixels[offset..]
+        &mut self.pixels_mut()[offset..]
     }
 
     #[inline(always)]
-    pub fn slice4_at_xy(
+    pub(crate) fn slice4_at_xy(
         &mut self,
         dx: usize,
         dy: usize,
     ) -> &mut [PremultipliedColorU8; highp::STAGE_WIDTH] {
-        arrayref::array_mut_ref!(self.pixels, self.offset(dx, dy), highp::STAGE_WIDTH)
+        arrayref::array_mut_ref!(self.pixels_mut(), self.offset(dx, dy), highp::STAGE_WIDTH)
     }
 
     #[inline(always)]
-    pub fn slice16_at_xy(
+    pub(crate) fn slice16_at_xy(
         &mut self,
         dx: usize,
         dy: usize,
     ) -> &mut [PremultipliedColorU8; lowp::STAGE_WIDTH] {
-        arrayref::array_mut_ref!(self.pixels, self.offset(dx, dy), lowp::STAGE_WIDTH)
+        arrayref::array_mut_ref!(self.pixels_mut(), self.offset(dx, dy), lowp::STAGE_WIDTH)
     }
 }
-
-impl Context for PixelsCtx<'_> {}
 
 
 #[derive(Default, Debug)]
@@ -250,14 +202,20 @@ impl AAMaskCtx {
     }
 }
 
-impl Context for AAMaskCtx {}
 
-
-// TODO: merge with MaskCtx
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct ClipMaskCtx<'a> {
     pub data: &'a [u8],
     pub stride: LengthU32,
+}
+
+impl Default for ClipMaskCtx<'_> {
+    fn default() -> Self {
+        ClipMaskCtx {
+            data: &[],
+            stride: LENGTH_U32_ONE,
+        }
+    }
 }
 
 impl ClipMaskCtx<'_> {
@@ -267,53 +225,30 @@ impl ClipMaskCtx<'_> {
     }
 }
 
-impl Context for ClipMaskCtx<'_> {}
 
-
-#[derive(Copy, Clone, Debug)]
-pub struct GatherCtx {
-    // We have to use a pointer to bypass lifetime restrictions.
-    // The access is still bound checked.
-    pub pixels: *const PremultipliedColorU8,
-    pub pixels_len: usize,
-    pub width: LengthU32,
-    pub height: LengthU32,
+#[derive(Default)]
+pub struct Context {
+    pub current_coverage: f32,
+    pub sampler: SamplerCtx,
+    pub uniform_color: UniformColorCtx,
+    pub evenly_spaced_2_stop_gradient: EvenlySpaced2StopGradientCtx,
+    pub gradient: GradientCtx,
+    pub two_point_conical_gradient: TwoPointConicalGradientCtx,
+    pub limit_x: TileCtx,
+    pub limit_y: TileCtx,
+    pub transform: Transform,
 }
 
-impl GatherCtx {
-    #[inline(always)]
-    pub fn gather(&self, index: u32x8) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
-        // TODO: remove unsafe
-        let pixels = unsafe { std::slice::from_raw_parts(self.pixels, self.pixels_len) };
-        let index: [u32; 8] = index.into();
-        [
-            pixels[index[0] as usize],
-            pixels[index[1] as usize],
-            pixels[index[2] as usize],
-            pixels[index[3] as usize],
-            pixels[index[4] as usize],
-            pixels[index[5] as usize],
-            pixels[index[6] as usize],
-            pixels[index[7] as usize],
-        ]
-    }
-}
 
-impl Context for GatherCtx {}
-
-
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SamplerCtx {
-    pub gather: GatherCtx,
     pub spread_mode: SpreadMode,
     pub inv_width: f32,
     pub inv_height: f32,
 }
 
-impl Context for SamplerCtx {}
 
-
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct UniformColorCtx {
     pub r: f32,
     pub g: f32,
@@ -321,8 +256,6 @@ pub struct UniformColorCtx {
     pub a: f32,
     pub rgba: [u16; 4], // [0,255] in a 16-bit lane.
 }
-
-impl Context for UniformColorCtx {}
 
 
 // A gradient color is an unpremultiplied RGBA not in a 0..1 range.
@@ -353,13 +286,11 @@ impl From<Color> for GradientColor {
 }
 
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct EvenlySpaced2StopGradientCtx {
     pub factor: GradientColor,
     pub bias: GradientColor,
 }
-
-impl Context for EvenlySpaced2StopGradientCtx {}
 
 
 #[derive(Clone, Default, Debug)]
@@ -381,44 +312,52 @@ impl GradientCtx {
     }
 }
 
-impl Context for GradientCtx {}
 
-
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct TwoPointConicalGradientCtx {
     // This context is used only in highp, where we use Tx4.
     pub mask: u32x8,
     pub p0: f32,
 }
 
-impl Context for TwoPointConicalGradientCtx {}
 
-
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct TileCtx {
     pub scale: f32,
     pub inv_scale: f32, // cache of 1/scale
 }
 
-impl Context for TileCtx {}
-
-
-impl Context for Transform {}
-
-
-pub struct ContextStorage {
-    // We have to use Rc because Box doesn't provide as_pts method.
-    items: ArrayVec<[Rc<dyn Context>; MAX_STAGES]>,
+pub struct RasterPipelineBuilder {
+    stages: ArrayVec<[Stage; MAX_STAGES]>,
+    force_hq_pipeline: bool,
+    pub ctx: Context,
 }
 
-impl ContextStorage {
+impl RasterPipelineBuilder {
     pub fn new() -> Self {
-        ContextStorage {
-            items: ArrayVec::new(),
+        RasterPipelineBuilder {
+            stages: ArrayVec::new(),
+            force_hq_pipeline: false,
+            ctx: Context::default(),
         }
     }
 
-    pub fn create_uniform_color_context(&mut self, c: PremultipliedColor) -> *const c_void {
+    pub fn set_force_hq_pipeline(&mut self, hq: bool) {
+        self.force_hq_pipeline = hq;
+    }
+
+    pub fn push(&mut self, stage: Stage) {
+        self.stages.push(stage);
+    }
+
+    pub fn push_transform(&mut self, ts: Transform) {
+        if !ts.is_identity() {
+            self.stages.push(Stage::Transform);
+            self.ctx.transform = ts;
+        }
+    }
+
+    pub fn push_uniform_color(&mut self, c: PremultipliedColor) {
         let r = c.red();
         let g = c.green();
         let b = c.blue();
@@ -435,220 +374,131 @@ impl ContextStorage {
             rgba,
         };
 
-        self.push_context(ctx)
+        self.stages.push(Stage::UniformColor);
+        self.ctx.uniform_color = ctx;
     }
 
-    pub fn push_context<T: Context + 'static>(&mut self, t: T) -> *const c_void {
-        let rc = Rc::new(t);
-        let ptr = Rc::as_ptr(&rc) as *const c_void;
-        self.items.push(rc);
-        ptr
-    }
-}
-
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug)]
-struct StageList {
-    stage: Stage,
-    ctx: *const c_void,
-}
-
-pub struct RasterPipelineBuilder {
-    stages: ArrayVec<[StageList; MAX_STAGES]>,
-    slots_needed: usize,
-    force_hq_pipeline: bool,
-}
-
-impl RasterPipelineBuilder {
-    pub fn new() -> Self {
-        RasterPipelineBuilder {
-            stages: ArrayVec::new(),
-            slots_needed: 1, // We always need one extra slot for just_return().
-            force_hq_pipeline: false,
-        }
-    }
-
-    pub fn is_force_hq_pipeline(&self) -> bool {
-        self.force_hq_pipeline
-    }
-
-    pub fn set_force_hq_pipeline(&mut self, hq: bool) {
-        self.force_hq_pipeline = hq;
-    }
-
-    pub fn len(&self) -> usize {
-        self.stages.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    pub fn push(&mut self, stage: Stage) {
-        self.unchecked_push(stage, std::ptr::null_mut());
-    }
-
-    pub fn push_with_context(&mut self, stage: Stage, ctx: *const c_void) {
-        self.unchecked_push(stage, ctx);
-    }
-
-    pub fn push_transform(&mut self, ts: Transform, ctx_storage: &mut ContextStorage) {
-        if !ts.is_identity() {
-            let ctx = ctx_storage.push_context(ts);
-            self.push_with_context(Stage::Transform, ctx);
-        }
-    }
-
-    fn unchecked_push(&mut self, stage: Stage, ctx: *const c_void) {
-        self.stages.push(StageList {
-            stage,
-            ctx,
-        });
-
-        self.slots_needed += if ctx.is_null() { 1 } else { 2 };
-    }
-
-    pub fn extend(&mut self, other: &Self) {
-        if !other.is_empty() {
-            self.stages.try_extend_from_slice(&other.stages).unwrap();
-            self.slots_needed += other.slots_needed - 1; // Don't double count just_return().
-        }
-    }
-
-    pub fn compile(&self) -> RasterPipeline {
+    pub fn compile(self) -> RasterPipeline {
         if self.stages.is_empty() {
             return RasterPipeline {
-                program: ArrayVec::new(),
-                tail_program: ArrayVec::new(),
-                is_highp: false,
+                kind: RasterPipelineKind::High {
+                    functions: ArrayVec::new(),
+                    tail_functions: ArrayVec::new(),
+                },
+                ctx: Context::default(),
             };
         }
 
-        let mut program = ArrayVec::new();
+        let is_lowp_compatible = self.stages.iter()
+            .all(|stage| !lowp::fn_ptr_eq(lowp::STAGES[*stage as usize], lowp::null_fn));
 
-        let mut is_highp = self.force_hq_pipeline;
-        if !self.force_hq_pipeline {
-            for stage in &self.stages {
-                let stage_fn = lowp::STAGES[stage.stage as usize];
-                if !lowp::fn_ptr_eq(stage_fn, lowp::null_fn) {
-                    program.push(lowp::fn_ptr(stage_fn));
+        if self.force_hq_pipeline || !is_lowp_compatible {
+            let mut functions: ArrayVec<_> = self.stages.iter()
+                .map(|stage| highp::STAGES[*stage as usize] as highp::StageFn)
+                .collect();
+            functions.push(highp::just_return as highp::StageFn);
 
-                    if !stage.ctx.is_null() {
-                        program.push(stage.ctx);
-                    }
-                } else {
-                    is_highp = true;
-                    break;
-                }
-            }
-        }
-
-        if is_highp {
-            program.clear();
-
-            for stage in &self.stages {
-                let stage_fn = highp::STAGES[stage.stage as usize];
-                program.push(highp::fn_ptr(stage_fn));
-
-                if !stage.ctx.is_null() {
-                    program.push(stage.ctx);
-                }
-            }
-
-            program.push(highp::just_return as *const () as *const c_void);
-        } else {
-            program.push(lowp::just_return as *const () as *const c_void);
-        }
-
-        // I wasn't able to reproduce Skia's load_8888_/store_8888_ performance.
-        // Skia uses fallthrough switch, which is probably the reason.
-        // In Rust, any branching in load/store code drastically affects the performance.
-        // So instead, we're using two "programs": one for "full stages" and one for "tail stages".
-        // While the only difference is the load/store methods.
-        let mut tail_program = program.clone();
-        if is_highp {
-            for fun in &mut tail_program {
-                if *fun == highp::fn_ptr(highp::load_dst) {
-                    *fun = highp::fn_ptr(highp::load_dst_tail);
-                } else if *fun == highp::fn_ptr(highp::store) {
-                    *fun = highp::fn_ptr(highp::store_tail);
-                } else if *fun == highp::fn_ptr(highp::source_over_rgba) {
+            // I wasn't able to reproduce Skia's load_8888_/store_8888_ performance.
+            // Skia uses fallthrough switch, which is probably the reason.
+            // In Rust, any branching in load/store code drastically affects the performance.
+            // So instead, we're using two "programs": one for "full stages" and one for "tail stages".
+            // While the only difference is the load/store methods.
+            let mut tail_functions = functions.clone();
+            for fun in &mut tail_functions {
+                if highp::fn_ptr(*fun) == highp::fn_ptr(highp::load_dst) {
+                    *fun = highp::load_dst_tail as highp::StageFn;
+                } else if highp::fn_ptr(*fun) == highp::fn_ptr(highp::store) {
+                    *fun = highp::store_tail as highp::StageFn;
+                } else if highp::fn_ptr(*fun) == highp::fn_ptr(highp::source_over_rgba) {
                     // SourceOverRgba calls load/store manually, without the pipeline,
                     // therefore we have to switch it too.
-                    *fun = highp::fn_ptr(highp::source_over_rgba_tail);
+                    *fun = highp::source_over_rgba_tail as highp::StageFn;
                 }
+            }
+
+            RasterPipeline {
+                kind: RasterPipelineKind::High { functions, tail_functions },
+                ctx: self.ctx,
             }
         } else {
-            for fun in &mut tail_program {
-                if *fun == lowp::fn_ptr(lowp::load_dst) {
-                    *fun = lowp::fn_ptr(lowp::load_dst_tail);
-                } else if *fun == lowp::fn_ptr(lowp::store) {
-                    *fun = lowp::fn_ptr(lowp::store_tail);
-                } else if *fun == lowp::fn_ptr(lowp::source_over_rgba) {
+            let mut functions: ArrayVec<_> = self.stages.iter()
+                .map(|stage| lowp::STAGES[*stage as usize] as lowp::StageFn)
+                .collect();
+            functions.push(lowp::just_return as lowp::StageFn);
+
+            // See above.
+            let mut tail_functions = functions.clone();
+            for fun in &mut tail_functions {
+                if lowp::fn_ptr(*fun) == lowp::fn_ptr(lowp::load_dst) {
+                    *fun = lowp::load_dst_tail as lowp::StageFn;
+                } else if lowp::fn_ptr(*fun) == lowp::fn_ptr(lowp::store) {
+                    *fun = lowp::store_tail as lowp::StageFn;
+                } else if lowp::fn_ptr(*fun) == lowp::fn_ptr(lowp::source_over_rgba) {
                     // SourceOverRgba calls load/store manually, without the pipeline,
                     // therefore we have to switch it too.
-                    *fun = lowp::fn_ptr(lowp::source_over_rgba_tail);
+                    *fun = lowp::source_over_rgba_tail as lowp::StageFn;
                 }
             }
-        }
 
-        RasterPipeline {
-            program,
-            tail_program,
-            is_highp,
+            RasterPipeline {
+                kind: RasterPipelineKind::Low { functions, tail_functions },
+                ctx: self.ctx,
+            }
         }
     }
+}
+
+pub enum RasterPipelineKind {
+    High {
+        functions: ArrayVec<[highp::StageFn; MAX_STAGES]>,
+        tail_functions: ArrayVec<[highp::StageFn; MAX_STAGES]>,
+    },
+    Low {
+        functions: ArrayVec<[lowp::StageFn; MAX_STAGES]>,
+        tail_functions: ArrayVec<[lowp::StageFn; MAX_STAGES]>,
+    },
 }
 
 pub struct RasterPipeline {
-    program: ArrayVec<[*const c_void; MAX_STAGES * 2]>, // 2x because we have fn + ?ctx.
-    tail_program: ArrayVec<[*const c_void; MAX_STAGES * 2]>,
-    is_highp: bool,
+    kind: RasterPipelineKind,
+    pub ctx: Context,
 }
 
 impl RasterPipeline {
-    pub fn run(&self, rect: &ScreenIntRect) {
-        // Pipeline can be empty.
-        if self.program.is_empty() {
-            return;
+    pub fn run(
+        &mut self,
+        rect: &ScreenIntRect,
+        mask_ctx: AAMaskCtx,
+        clip_mask_ctx: ClipMaskCtx,
+        pixmap_src: PixmapRef,
+        pixmap_dst: &mut PixmapMut,
+    ) {
+        match self.kind {
+            RasterPipelineKind::High { ref functions, ref tail_functions } => {
+                highp::start(
+                    functions.as_slice(),
+                    tail_functions.as_slice(),
+                    rect,
+                    mask_ctx,
+                    clip_mask_ctx,
+                    &mut self.ctx,
+                    pixmap_src,
+                    pixmap_dst,
+                );
+            }
+            RasterPipelineKind::Low { ref functions, ref tail_functions } => {
+                lowp::start(
+                    functions.as_slice(),
+                    tail_functions.as_slice(),
+                    rect,
+                    mask_ctx,
+                    clip_mask_ctx,
+                    &mut self.ctx,
+                    // lowp doesn't support pattern, so no `pixmap_src` for it.
+                    pixmap_dst,
+                );
+            }
         }
-
-        if self.is_highp {
-            highp::start(self.program.as_ptr(), self.tail_program.as_ptr(), rect);
-        } else {
-            lowp::start(self.program.as_ptr(), self.tail_program.as_ptr(), rect);
-        }
-    }
-}
-
-
-// We cannot guarantee that `unsafe` in this trait is actually safe.
-// Our only choice is to run tests under address sanitizer, which we do.
-trait BasePipeline {
-    fn program(&self) -> *const *const c_void;
-    fn set_program(&mut self, p: *const *const c_void);
-
-    #[inline(always)]
-    fn next_stage(&mut self, offset: usize) {
-        unsafe {
-            self.set_program(self.program().add(offset));
-
-            let next: fn(&mut Self) = *self.program().cast();
-            next(self);
-        }
-    }
-
-    #[inline(always)]
-    fn stage_ctx<T>(&self) -> &'static T {
-        unsafe { &*(*self.program().add(1)).cast() }
-    }
-
-    #[inline(always)]
-    fn stage_ctx_mut<T>(&mut self) -> &'static mut T {
-        // We have to cast `*const` to `*mut` first.
-        // TODO: this is logically incorrect since we're changing the mutability.
-        unsafe { &mut *(*self.program().add(1) as *mut c_void).cast() }
     }
 }
 
@@ -670,29 +520,21 @@ mod blend_tests {
         ($name:ident, $mode:expr, $is_highp:expr, $r:expr, $g:expr, $b:expr, $a:expr) => {
             #[test]
             fn $name() {
-            let mut pixmap = Pixmap::new(1, 1).unwrap();
+                let mut pixmap = Pixmap::new(1, 1).unwrap();
                 pixmap.fill(Color::from_rgba8(50, 127, 150, 200));
 
-                let stride = pixmap.size().width_safe();
-                let mut pixels = pixmap.as_mut();
-                let img_ctx = PixelsCtx { stride, pixels: pixels.pixels_mut() };
-                let img_ctx = &img_ctx as *const _ as *const c_void;
-
-                let mut ctx_storage = ContextStorage::new();
-                let color_ctx = ctx_storage.create_uniform_color_context(
-                    Color::from_rgba8(220, 140, 75, 180).premultiply(),
-                );
+                let pixmap_src = PixmapRef::from_bytes(&[0, 0, 0, 0], 1, 1).unwrap();
 
                 let mut p = RasterPipelineBuilder::new();
                 p.set_force_hq_pipeline($is_highp);
-                p.push_with_context(Stage::UniformColor, color_ctx);
-                p.push_with_context(Stage::LoadDestination, img_ctx);
+                p.push_uniform_color(Color::from_rgba8(220, 140, 75, 180).premultiply());
+                p.push(Stage::LoadDestination);
                 p.push($mode.to_stage().unwrap());
-                p.push_with_context(Stage::Store, img_ctx);
-                let p = p.compile();
-                p.run(&pixmap.size().to_screen_int_rect(0, 0));
-
-                assert_eq!(p.is_highp, $is_highp);
+                p.push(Stage::Store);
+                let mut p = p.compile();
+                let rect = pixmap.size().to_screen_int_rect(0, 0);
+                p.run(&rect, AAMaskCtx::default(), ClipMaskCtx::default(), pixmap_src,
+                      &mut pixmap.as_mut());
 
                 assert_eq!(
                     pixmap.as_ref().pixel(0, 0).unwrap(),

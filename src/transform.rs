@@ -9,10 +9,6 @@ use crate::Point;
 use crate::floating_point::FiniteF32;
 use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
 
-// FiniteF32::default() is not `const` yet.
-const FINITE_ZERO: FiniteF32 = unsafe { FiniteF32::new_unchecked(0.0) };
-const NONZERO_ONE: FiniteF32 = unsafe { FiniteF32::new_unchecked(1.0) };
-
 #[derive(Copy, Clone, PartialEq, Default)]
 struct TransformFlags(u8);
 
@@ -62,12 +58,12 @@ impl Default for Transform {
     #[inline]
     fn default() -> Self {
         Transform {
-            sx: NONZERO_ONE,
-            kx: FINITE_ZERO,
-            ky: FINITE_ZERO,
-            sy: NONZERO_ONE,
-            tx: FINITE_ZERO,
-            ty: FINITE_ZERO,
+            sx: FiniteF32::FINITE_ONE,
+            kx: FiniteF32::FINITE_ZERO,
+            ky: FiniteF32::FINITE_ZERO,
+            sy: FiniteF32::FINITE_ONE,
+            tx: FiniteF32::FINITE_ZERO,
+            ty: FiniteF32::FINITE_ZERO,
             flags: TransformFlags::IDENTITY,
         }
     }
@@ -120,23 +116,6 @@ impl Transform {
         m
     }
 
-    /// Creates a new `Transform` without checking values.
-    ///
-    /// # Safety
-    ///
-    /// - All values must be finite.
-    /// - `sx` and `sy` must be non-zero.
-    #[inline]
-    pub unsafe fn from_row_unchecked(sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) -> Self {
-        let sx = FiniteF32::new_unchecked(sx);
-        let ky = FiniteF32::new_unchecked(ky);
-        let kx = FiniteF32::new_unchecked(kx);
-        let sy = FiniteF32::new_unchecked(sy);
-        let tx = FiniteF32::new_unchecked(tx);
-        let ty = FiniteF32::new_unchecked(ty);
-        Transform::from_row_safe(sx, ky, kx, sy, tx, ty)
-    }
-
     /// Creates a new translating Transform.
     ///
     /// # Checks
@@ -152,15 +131,15 @@ impl Transform {
     /// Creates a new translating Transform.
     #[inline]
     pub(crate) fn from_translate_safe(tx: FiniteF32, ty: FiniteF32) -> Self {
-        let flags = if tx != FINITE_ZERO || ty != FINITE_ZERO {
+        let flags = if tx != FiniteF32::FINITE_ZERO || ty != FiniteF32::FINITE_ZERO {
             TransformFlags::TRANSLATE
         } else {
             TransformFlags::IDENTITY
         };
 
         Transform {
-            sx: NONZERO_ONE, kx: FINITE_ZERO, tx,
-            ky: FINITE_ZERO, sy: NONZERO_ONE, ty,
+            sx: FiniteF32::FINITE_ONE,  kx: FiniteF32::FINITE_ZERO, tx,
+            ky: FiniteF32::FINITE_ZERO, sy: FiniteF32::FINITE_ONE,  ty,
             flags,
         }
     }
@@ -181,15 +160,15 @@ impl Transform {
     /// Creates a new scaling Transform.
     #[inline]
     pub(crate) fn from_scale_safe(sx: FiniteF32, sy: FiniteF32) -> Self {
-        let flags = if sx != NONZERO_ONE || sy != NONZERO_ONE {
+        let flags = if sx != FiniteF32::FINITE_ONE || sy != FiniteF32::FINITE_ONE {
             TransformFlags::SCALE
         } else {
             TransformFlags::IDENTITY
         };
 
         Transform {
-            sx,              kx: FINITE_ZERO, tx: FINITE_ZERO,
-            ky: FINITE_ZERO, sy,              ty: FINITE_ZERO,
+            sx,                         kx: FiniteF32::FINITE_ZERO, tx: FiniteF32::FINITE_ZERO,
+            ky: FiniteF32::FINITE_ZERO, sy,                         ty: FiniteF32::FINITE_ZERO,
             flags,
         }
     }
@@ -209,15 +188,15 @@ impl Transform {
     /// Creates a new skewing Transform.
     #[inline]
     pub(crate) fn from_skew_safe(kx: FiniteF32, ky: FiniteF32) -> Self {
-        let flags = if kx != FINITE_ZERO || ky != FINITE_ZERO {
+        let flags = if kx != FiniteF32::FINITE_ZERO || ky != FiniteF32::FINITE_ZERO {
             TransformFlags::SKEW
         } else {
             TransformFlags::IDENTITY
         };
 
         Transform {
-            sx: NONZERO_ONE, kx,              tx: FINITE_ZERO,
-            ky,              sy: NONZERO_ONE, ty: FINITE_ZERO,
+            sx: FiniteF32::FINITE_ONE, kx,                        tx: FiniteF32::FINITE_ZERO,
+            ky,                        sy: FiniteF32::FINITE_ONE, ty: FiniteF32::FINITE_ZERO,
             flags,
         }
     }
@@ -335,15 +314,15 @@ impl Transform {
     fn compute_flags(&mut self) {
         self.flags = TransformFlags::IDENTITY;
 
-        if self.sx != NONZERO_ONE || self.sy != NONZERO_ONE {
+        if self.sx != FiniteF32::FINITE_ONE || self.sy != FiniteF32::FINITE_ONE {
             self.flags |= TransformFlags::SCALE;
         }
 
-        if self.tx != FINITE_ZERO || self.ty != FINITE_ZERO {
+        if self.tx != FiniteF32::FINITE_ZERO || self.ty != FiniteF32::FINITE_ZERO {
             self.flags |= TransformFlags::TRANSLATE;
         }
 
-        if self.kx != FINITE_ZERO || self.ky != FINITE_ZERO {
+        if self.kx != FiniteF32::FINITE_ZERO || self.ky != FiniteF32::FINITE_ZERO {
             self.flags |= TransformFlags::SKEW;
         }
     }
@@ -596,11 +575,6 @@ mod tests {
     fn transform() {
         assert_eq!(Transform::identity(),
                    Transform::from_row(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).unwrap());
-
-        unsafe {
-            assert_eq!(Transform::from_row(1.0, 2.0, 3.0, 4.0, 5.0, 6.0).unwrap(),
-                       Transform::from_row_unchecked(1.0, 2.0, 3.0, 4.0, 5.0, 6.0));
-        }
 
         assert_eq!(Transform::from_scale(1.0, 2.0).unwrap(),
                    Transform::from_row(1.0, 0.0, 0.0, 2.0, 0.0, 0.0).unwrap());

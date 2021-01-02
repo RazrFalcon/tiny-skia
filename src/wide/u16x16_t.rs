@@ -49,11 +49,6 @@ impl u16x16 {
     }
 
     #[inline]
-    pub fn as_mut_slice(&mut self) -> &mut [u16; 16] {
-        &mut self.0
-    }
-
-    #[inline]
     pub fn min(&self, other: &Self) -> Self {
         impl_u16x16_op!(self, min, other)
     }

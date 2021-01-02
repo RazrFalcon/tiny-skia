@@ -8,7 +8,7 @@ use crate::{Point, Shader, GradientStop, SpreadMode, Transform, Color};
 
 use crate::scalar::Scalar;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
-use crate::shaders::StageRec;
+use crate::pipeline::RasterPipelineBuilder;
 
 /// A linear gradient shader.
 #[derive(Clone, Debug)]
@@ -92,8 +92,8 @@ impl LinearGradient {
         self.base.colors_are_opaque
     }
 
-    pub(crate) fn push_stages(&self, rec: StageRec) -> Option<()> {
-        self.base.push_stages(rec, &|_, _| {})
+    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> Option<()> {
+        self.base.push_stages(p, &|_| {}, &|_| {})
     }
 }
 

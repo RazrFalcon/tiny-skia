@@ -19,40 +19,43 @@ use std::ffi::c_void;
 
 use wide::{CmpEq, CmpLe, CmpGt, CmpGe, CmpNe};
 
-use crate::{PremultipliedColorU8, SpreadMode, Transform};
+use crate::{PremultipliedColorU8, SpreadMode, PixmapMut, PixmapRef};
 
-use crate::pipeline::BasePipeline;
+// use crate::pipeline::BasePipeline;
 use crate::screen_int_rect::ScreenIntRect;
 use crate::wide::{f32x8, i32x8, u32x8, F32x8Ext, I32x8Ext, U32x8Ext};
 
 pub const STAGE_WIDTH: usize = 8;
 
-type StageFn = fn(p: &mut Pipeline);
+pub type StageFn = fn(p: &mut Pipeline);
 
-pub struct Pipeline {
-    pub program: *const *const c_void,
-    pub r: f32x8,
-    pub g: f32x8,
-    pub b: f32x8,
-    pub a: f32x8,
-    pub dr: f32x8,
-    pub dg: f32x8,
-    pub db: f32x8,
-    pub da: f32x8,
-    pub tail: usize,
-    pub dx: usize,
-    pub dy: usize,
+pub struct Pipeline<'a, 'b: 'a> {
+    index: usize,
+    functions: &'a [StageFn],
+    pixmap_src: PixmapRef<'a>,
+    pixmap_dst: &'a mut PixmapMut<'b>,
+    ctx: &'a mut super::Context, // TODO: remove mut
+    clip_mask_ctx: super::ClipMaskCtx<'a>,
+    mask_ctx: super::AAMaskCtx,
+    r: f32x8,
+    g: f32x8,
+    b: f32x8,
+    a: f32x8,
+    dr: f32x8,
+    dg: f32x8,
+    db: f32x8,
+    da: f32x8,
+    tail: usize,
+    dx: usize,
+    dy: usize,
 }
 
-impl BasePipeline for Pipeline {
+impl Pipeline<'_, '_> {
     #[inline(always)]
-    fn program(&self) -> *const *const c_void {
-        self.program
-    }
-
-    #[inline(always)]
-    fn set_program(&mut self, p: *const *const c_void) {
-        self.program = p;
+    fn next_stage(&mut self) {
+        let next: fn(&mut Self) = self.functions[self.index];
+        self.index += 1;
+        next(self);
     }
 }
 
@@ -127,12 +130,23 @@ pub fn fn_ptr(f: StageFn) -> *const c_void {
 
 #[inline(never)]
 pub fn start(
-    program: *const *const c_void,
-    tail_program: *const *const c_void,
+    functions: &[StageFn],
+    functions_tail: &[StageFn],
     rect: &ScreenIntRect,
+    mask_ctx: super::AAMaskCtx,
+    clip_mask_ctx: super::ClipMaskCtx,
+    ctx: &mut super::Context,
+    pixmap_src: PixmapRef,
+    pixmap_dst: &mut PixmapMut,
 ) {
     let mut p = Pipeline {
-        program: std::ptr::null(),
+        index: 0,
+        functions: &[],
+        pixmap_src,
+        pixmap_dst,
+        clip_mask_ctx,
+        mask_ctx,
+        ctx,
         r: f32x8::default(),
         g: f32x8::default(),
         b: f32x8::default(),
@@ -150,21 +164,23 @@ pub fn start(
         let mut x = rect.x() as usize;
         let end = rect.right() as usize;
 
+        p.functions = functions;
         while x + STAGE_WIDTH <= end {
-            p.program = program;
+            p.index = 0;
             p.dx = x;
             p.dy = y as usize;
             p.tail = STAGE_WIDTH;
-            p.next_stage(0);
+            p.next_stage();
             x += STAGE_WIDTH;
         }
 
         if x != end {
-            p.program = tail_program;
+            p.index = 0;
+            p.functions = functions_tail;
             p.dx = x;
             p.dy = y as usize;
             p.tail = end - x;
-            p.next_stage(0);
+            p.next_stage();
         }
     }
 }
@@ -175,7 +191,7 @@ fn move_source_to_destination(p: &mut Pipeline) {
     p.db = p.b;
     p.da = p.a;
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn premultiply(p: &mut Pipeline) {
@@ -183,7 +199,7 @@ fn premultiply(p: &mut Pipeline) {
     p.g *= p.a;
     p.b *= p.a;
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn move_destination_to_source(p: &mut Pipeline) {
@@ -192,7 +208,7 @@ fn move_destination_to_source(p: &mut Pipeline) {
     p.b = p.db;
     p.a = p.da;
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn clamp_0(p: &mut Pipeline) {
@@ -201,7 +217,7 @@ fn clamp_0(p: &mut Pipeline) {
     p.b = p.b.max(f32x8::default());
     p.a = p.a.max(f32x8::default());
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn clamp_a(p: &mut Pipeline) {
@@ -210,17 +226,17 @@ fn clamp_a(p: &mut Pipeline) {
     p.b = p.b.min(f32x8::splat(1.0));
     p.a = p.a.min(f32x8::splat(1.0));
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn uniform_color(p: &mut Pipeline) {
-    let ctx: &super::UniformColorCtx = p.stage_ctx();
+    let ctx = &p.ctx.uniform_color;
     p.r = f32x8::splat(ctx.r);
     p.g = f32x8::splat(ctx.g);
     p.b = f32x8::splat(ctx.b);
     p.a = f32x8::splat(ctx.a);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn seed_shader(p: &mut Pipeline) {
@@ -236,48 +252,40 @@ fn seed_shader(p: &mut Pipeline) {
     p.db = f32x8::default();
     p.da = f32x8::default();
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 pub fn load_dst(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    load_8888(ctx.slice4_at_xy(p.dx, p.dy), &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
-
-    p.next_stage(2);
+    load_8888(p.pixmap_dst.slice4_at_xy(p.dx, p.dy), &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
+    p.next_stage();
 }
 
 pub fn load_dst_tail(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    load_8888_tail(p.tail, ctx.slice_at_xy(p.dx, p.dy), &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
-
-    p.next_stage(2);
+    load_8888_tail(p.tail, p.pixmap_dst.slice_at_xy(p.dx, p.dy), &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
+    p.next_stage();
 }
 
 pub fn store(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    store_8888(&p.r, &p.g, &p.b, &p.a, ctx.slice4_at_xy(p.dx, p.dy));
-
-    p.next_stage(2);
+    store_8888(&p.r, &p.g, &p.b, &p.a, p.pixmap_dst.slice4_at_xy(p.dx, p.dy));
+    p.next_stage();
 }
 
 pub fn gather(p: &mut Pipeline) {
-    let ctx: &super::GatherCtx = p.stage_ctx();
+    let ix = gather_ix(p.pixmap_src, p.r, p.g);
+    load_8888(&p.pixmap_src.gather(ix), &mut p.r, &mut p.g, &mut p.b, &mut p.a);
 
-    let ix = gather_ix(ctx, p.r, p.g);
-    load_8888(&ctx.gather(ix), &mut p.r, &mut p.g, &mut p.b, &mut p.a);
-
-    p.next_stage(2);
+    p.next_stage();
 }
 
 #[inline(always)]
-fn gather_ix(ctx: &super::GatherCtx, mut x: f32x8, mut y: f32x8) -> u32x8 {
+fn gather_ix(pixmap: PixmapRef, mut x: f32x8, mut y: f32x8) -> u32x8 {
     // Exclusive -> inclusive.
-    let w = ulp_sub(ctx.width.get() as f32);
-    let h = ulp_sub(ctx.height.get() as f32);
+    let w = ulp_sub(pixmap.width() as f32);
+    let h = ulp_sub(pixmap.height() as f32);
     x = x.max(f32x8::default()).min(f32x8::splat(w));
     y = y.max(f32x8::default()).min(f32x8::splat(h));
 
-    (y.trunc_int() * i32x8::splat(ctx.width.get() as i32) + x.trunc_int()).to_u32x8_bitcast()
+    (y.trunc_int() * i32x8::splat(pixmap.width() as i32) + x.trunc_int()).to_u32x8_bitcast()
 }
 
 #[inline(always)]
@@ -287,19 +295,15 @@ fn ulp_sub(v: f32) -> f32 {
 }
 
 pub fn store_tail(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, ctx.slice_at_xy(p.dx, p.dy));
-
-    p.next_stage(2);
+    store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, p.pixmap_dst.slice_at_xy(p.dx, p.dy));
+    p.next_stage();
 }
 
 fn mask_u8(p: &mut Pipeline) {
-    let ctx: &super::ClipMaskCtx = p.stage_ctx();
-
-    let offset = ctx.offset(p.dx, p.dy);
+    let offset = p.clip_mask_ctx.offset(p.dx, p.dy);
     let mut c = [0.0; 8];
     for i in 0..p.tail {
-        c[i] = ctx.data[offset + i] as f32;
+        c[i] = p.clip_mask_ctx.data[offset + i] as f32;
     }
     let c = f32x8::from(c) / f32x8::splat(255.0);
 
@@ -312,14 +316,12 @@ fn mask_u8(p: &mut Pipeline) {
     p.b *= c;
     p.a *= c;
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn scale_u8(p: &mut Pipeline) {
-    let ctx: &super::AAMaskCtx = p.stage_ctx();
-
     // Load u8xTail and cast it to f32x4.
-    let data = ctx.copy_at_xy(p.dx, p.dy, p.tail);
+    let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = f32x8::from([data[0] as f32, data[1] as f32, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
     let c = c / f32x8::splat(255.0);
 
@@ -328,14 +330,12 @@ fn scale_u8(p: &mut Pipeline) {
     p.b *= c;
     p.a *= c;
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn lerp_u8(p: &mut Pipeline) {
-    let ctx: &super::AAMaskCtx = p.stage_ctx();
-
     // Load u8xTail and cast it to f32x4.
-    let data = ctx.copy_at_xy(p.dx, p.dy, p.tail);
+    let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = f32x8::from([data[0] as f32, data[1] as f32, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
     let c = c / f32x8::splat(255.0);
 
@@ -344,29 +344,27 @@ fn lerp_u8(p: &mut Pipeline) {
     p.b = lerp(p.db, p.b, c);
     p.a = lerp(p.da, p.a, c);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn scale_1_float(p: &mut Pipeline) {
-    let c: f32 = *p.stage_ctx();
-    let c = f32x8::splat(c);
+    let c = f32x8::splat(p.ctx.current_coverage);
     p.r *= c;
     p.g *= c;
     p.b *= c;
     p.a *= c;
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn lerp_1_float(p: &mut Pipeline) {
-    let c: f32 = *p.stage_ctx();
-    let c = f32x8::splat(c);
+    let c = f32x8::splat(p.ctx.current_coverage);
     p.r = lerp(p.dr, p.r, c);
     p.g = lerp(p.dg, p.g, c);
     p.b = lerp(p.db, p.b, c);
     p.a = lerp(p.da, p.a, c);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 macro_rules! blend_fn {
@@ -377,7 +375,7 @@ macro_rules! blend_fn {
             p.b = $f(p.b, p.db, p.a, p.da);
             p.a = $f(p.a, p.da, p.a, p.da);
 
-            p.next_stage(1);
+            p.next_stage();
         }
     };
 }
@@ -408,7 +406,7 @@ macro_rules! blend_fn2 {
             p.b = $f(p.b, p.db, p.a, p.da);
             p.a = mad(p.da, inv(p.a), p.a);
 
-            p.next_stage(1);
+            p.next_stage();
         }
     };
 }
@@ -487,7 +485,7 @@ macro_rules! blend_fn3 {
             p.b = tb;
             p.a = ta;
 
-            p.next_stage(1);
+            p.next_stage();
         }
     };
 }
@@ -634,8 +632,7 @@ fn clip_color(r: &mut f32x8, g: &mut f32x8, b: &mut f32x8, a: f32x8) {
 }
 
 pub fn source_over_rgba(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    let pixels = ctx.slice4_at_xy(p.dx, p.dy);
+    let pixels = p.pixmap_dst.slice4_at_xy(p.dx, p.dy);
     load_8888(pixels, &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
     p.r = mad(p.dr, inv(p.a), p.r);
     p.g = mad(p.dg, inv(p.a), p.g);
@@ -643,12 +640,11 @@ pub fn source_over_rgba(p: &mut Pipeline) {
     p.a = mad(p.da, inv(p.a), p.a);
     store_8888(&p.r, &p.g, &p.b, &p.a, pixels);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 pub fn source_over_rgba_tail(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    let pixels = ctx.slice_at_xy(p.dx, p.dy);
+    let pixels = p.pixmap_dst.slice_at_xy(p.dx, p.dy);
     load_8888_tail(p.tail, pixels, &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
     p.r = mad(p.dr, inv(p.a), p.r);
     p.g = mad(p.dg, inv(p.a), p.g);
@@ -656,11 +652,11 @@ pub fn source_over_rgba_tail(p: &mut Pipeline) {
     p.a = mad(p.da, inv(p.a), p.a);
     store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, pixels);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn transform(p: &mut Pipeline) {
-    let ts: &Transform = p.stage_ctx();
+    let ts = &p.ctx.transform;
     let (sx, ky, kx, sy, tx, ty) = ts.get_row();
 
     let tr = mad(p.r, f32x8::splat(sx), mad(p.g, f32x8::splat(kx), f32x8::splat(tx)));
@@ -668,7 +664,7 @@ fn transform(p: &mut Pipeline) {
     p.r = tr;
     p.g = tg;
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 // Tile x or y to [0,limit) == [0,limit - 1 ulp] (think, sampling from images).
@@ -676,17 +672,17 @@ fn transform(p: &mut Pipeline) {
 // we just need to do the basic repeat or mirroring.
 
 fn reflect_x(p: &mut Pipeline) {
-    let ctx: &super::TileCtx = p.stage_ctx();
+    let ctx = &p.ctx.limit_x;
     p.r = exclusive_reflect(p.r, ctx.scale, ctx.inv_scale);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn reflect_y(p: &mut Pipeline) {
-    let ctx: &super::TileCtx = p.stage_ctx();
+    let ctx = &p.ctx.limit_y;
     p.g = exclusive_reflect(p.g, ctx.scale, ctx.inv_scale);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 #[inline(always)]
@@ -698,17 +694,17 @@ fn exclusive_reflect(v: f32x8, limit: f32, inv_limit: f32) -> f32x8 {
 }
 
 fn repeat_x(p: &mut Pipeline) {
-    let ctx: &super::TileCtx = p.stage_ctx();
+    let ctx = &p.ctx.limit_x;
     p.r = exclusive_repeat(p.r, ctx.scale, ctx.inv_scale);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn repeat_y(p: &mut Pipeline) {
-    let ctx: &super::TileCtx = p.stage_ctx();
+    let ctx = &p.ctx.limit_y;
     p.g = exclusive_repeat(p.g, ctx.scale, ctx.inv_scale);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 #[inline(always)]
@@ -717,8 +713,6 @@ fn exclusive_repeat(v: f32x8, limit: f32, inv_limit: f32) -> f32x8 {
 }
 
 fn bilinear(p: &mut Pipeline) {
-    let ctx: &super::SamplerCtx = p.stage_ctx();
-
     let x = p.r;
     let fx = (x + f32x8::splat(0.5)).fract();
     let y = p.g;
@@ -727,14 +721,12 @@ fn bilinear(p: &mut Pipeline) {
     let wx = [one - fx, fx];
     let wy = [one - fy, fy];
 
-    sampler_2x2(ctx, x, y, &wx, &wy, &mut p.r, &mut p.g, &mut p.b, &mut p.a);
+    sampler_2x2(p.pixmap_src, &p.ctx.sampler, x, y, &wx, &wy, &mut p.r, &mut p.g, &mut p.b, &mut p.a);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn bicubic(p: &mut Pipeline) {
-    let ctx: &super::SamplerCtx = p.stage_ctx();
-
     let x = p.r;
     let fx = (x + f32x8::splat(0.5)).fract();
     let y = p.g;
@@ -743,9 +735,9 @@ fn bicubic(p: &mut Pipeline) {
     let wx = [bicubic_far(one - fx), bicubic_near(one - fx), bicubic_near(fx), bicubic_far(fx)];
     let wy = [bicubic_far(one - fy), bicubic_near(one - fy), bicubic_near(fy), bicubic_far(fy)];
 
-    sampler_4x4(ctx, x, y, &wx, &wy, &mut p.r, &mut p.g, &mut p.b, &mut p.a);
+    sampler_4x4(p.pixmap_src, &p.ctx.sampler, x, y, &wx, &wy, &mut p.r, &mut p.g, &mut p.b, &mut p.a);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 // In bicubic interpolation, the 16 pixels and +/- 0.5 and +/- 1.5 offsets from the sample
@@ -778,6 +770,7 @@ fn bicubic_far(t: f32x8) -> f32x8 {
 
 #[inline(always)]
 fn sampler_2x2(
+    pixmap: PixmapRef,
     ctx: &super::SamplerCtx,
     cx: f32x8, cy: f32x8,
     wx: &[f32x8; 2], wy: &[f32x8; 2],
@@ -798,7 +791,7 @@ fn sampler_2x2(
             let mut gg = f32x8::default();
             let mut bb = f32x8::default();
             let mut aa = f32x8::default();
-            sample(ctx, x,y, &mut rr, &mut gg, &mut bb, &mut aa);
+            sample(pixmap, ctx, x,y, &mut rr, &mut gg, &mut bb, &mut aa);
 
             let w = wx[i] * wy[j];
             *r = mad(w, rr, *r);
@@ -815,6 +808,7 @@ fn sampler_2x2(
 
 #[inline(always)]
 fn sampler_4x4(
+    pixmap: PixmapRef,
     ctx: &super::SamplerCtx,
     cx: f32x8, cy: f32x8,
     wx: &[f32x8; 4], wy: &[f32x8; 4],
@@ -835,7 +829,7 @@ fn sampler_4x4(
             let mut gg = f32x8::default();
             let mut bb = f32x8::default();
             let mut aa = f32x8::default();
-            sample(ctx, x,y, &mut rr, &mut gg, &mut bb, &mut aa);
+            sample(pixmap, ctx, x,y, &mut rr, &mut gg, &mut bb, &mut aa);
 
             let w = wx[i] * wy[j];
             *r = mad(w, rr, *r);
@@ -852,14 +846,14 @@ fn sampler_4x4(
 
 #[inline(always)]
 fn sample(
-    ctx: &super::SamplerCtx, mut x: f32x8, mut y: f32x8,
+    pixmap: PixmapRef, ctx: &super::SamplerCtx, mut x: f32x8, mut y: f32x8,
     r: &mut f32x8, g: &mut f32x8, b: &mut f32x8, a: &mut f32x8,
 ) {
-    x = tile(x, ctx.spread_mode, ctx.gather.width.get() as f32, ctx.inv_width);
-    y = tile(y, ctx.spread_mode, ctx.gather.height.get() as f32, ctx.inv_height);
+    x = tile(x, ctx.spread_mode, pixmap.width() as f32, ctx.inv_width);
+    y = tile(y, ctx.spread_mode, pixmap.height() as f32, ctx.inv_height);
 
-    let ix = gather_ix(&ctx.gather, x, y);
-    load_8888(&ctx.gather.gather(ix), r, g, b, a);
+    let ix = gather_ix(pixmap, x, y);
+    load_8888(&pixmap.gather(ix), r, g, b, a);
 }
 
 #[inline(always)]
@@ -876,7 +870,7 @@ fn tile(v: f32x8, mode: SpreadMode, limit: f32, inv_limit: f32) -> f32x8 {
 fn pad_x1(p: &mut Pipeline) {
     p.r = p.r.normalize();
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn reflect_x1(p: &mut Pipeline) {
@@ -886,17 +880,17 @@ fn reflect_x1(p: &mut Pipeline) {
             - f32x8::splat(1.0)
     ).abs().normalize();
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn repeat_x1(p: &mut Pipeline) {
     p.r = (p.r - p.r.floor()).normalize();
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn gradient(p: &mut Pipeline) {
-    let ctx: &super::GradientCtx = p.stage_ctx();
+    let ctx = &p.ctx.gradient;
 
     // N.B. The loop starts at 1 because idx 0 is the color to use before the first stop.
     let t: [f32; 8] = p.r.into();
@@ -917,7 +911,7 @@ fn gradient(p: &mut Pipeline) {
     }
     gradient_lookup(ctx, &idx, p.r, &mut p.r, &mut p.g, &mut p.b, &mut p.a);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn gradient_lookup(
@@ -960,7 +954,7 @@ fn gradient_lookup(
 }
 
 fn evenly_spaced_2_stop_gradient(p: &mut Pipeline) {
-    let ctx: &super::EvenlySpaced2StopGradientCtx = p.stage_ctx();
+    let ctx = &p.ctx.evenly_spaced_2_stop_gradient;
 
     let t = p.r;
     p.r = mad(t, f32x8::splat(ctx.factor.r), f32x8::splat(ctx.bias.r));
@@ -968,7 +962,7 @@ fn evenly_spaced_2_stop_gradient(p: &mut Pipeline) {
     p.b = mad(t, f32x8::splat(ctx.factor.b), f32x8::splat(ctx.bias.b));
     p.a = mad(t, f32x8::splat(ctx.factor.a), f32x8::splat(ctx.bias.a));
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn xy_to_radius(p: &mut Pipeline) {
@@ -976,7 +970,7 @@ fn xy_to_radius(p: &mut Pipeline) {
     let y2 = p.g * p.g;
     p.r = (x2 + y2).sqrt();
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn xy_to_2pt_conical_focal_on_circle(p: &mut Pipeline) {
@@ -984,31 +978,31 @@ fn xy_to_2pt_conical_focal_on_circle(p: &mut Pipeline) {
     let y = p.g;
     p.r = x + y * y / x;
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn xy_to_2pt_conical_well_behaved(p: &mut Pipeline) {
-    let ctx: &super::TwoPointConicalGradientCtx = p.stage_ctx();
+    let ctx = &p.ctx.two_point_conical_gradient;
 
     let x = p.r;
     let y = p.g;
     p.r = (x * x + y * y).sqrt() - x * f32x8::splat(ctx.p0);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn xy_to_2pt_conical_greater(p: &mut Pipeline) {
-    let ctx: &super::TwoPointConicalGradientCtx = p.stage_ctx();
+    let ctx = &p.ctx.two_point_conical_gradient;
 
     let x = p.r;
     let y = p.g;
     p.r = (x * x - y * y).sqrt() - x * f32x8::splat(ctx.p0);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn mask_2pt_conical_degenerates(p: &mut Pipeline) {
-    let ctx: &mut super::TwoPointConicalGradientCtx = p.stage_ctx_mut();
+    let ctx = &mut p.ctx.two_point_conical_gradient;
 
     let t = p.r;
     let is_degenerate = t.cmp_le(f32x8::default()) | t.cmp_ne(t);
@@ -1027,18 +1021,18 @@ fn mask_2pt_conical_degenerates(p: &mut Pipeline) {
         if is_not_degenerate[7] != 0 { !0 } else { 0 },
     ]);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn apply_vector_mask(p: &mut Pipeline) {
-    let ctx: &super::TwoPointConicalGradientCtx = p.stage_ctx();
+    let ctx = &p.ctx.two_point_conical_gradient;
 
     p.r = (p.r.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
     p.g = (p.g.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
     p.b = (p.b.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
     p.a = (p.a.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 pub fn just_return(_: &mut Pipeline) {

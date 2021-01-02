@@ -121,14 +121,12 @@ impl ScreenIntRect {
     #[inline]
     pub fn to_int_rect(&self) -> IntRect {
         // Everything is already checked by constructors.
-        unsafe {
-            IntRect::from_xywh_unchecked(
-                self.x as i32,
-                self.y as i32,
-                self.width.get(),
-                self.height.get(),
-            )
-        }
+        IntRect::from_xywh(
+            self.x as i32,
+            self.y as i32,
+            self.width.get(),
+            self.height.get(),
+        ).unwrap()
     }
 
     /// Converts into a `Rect`.
@@ -136,14 +134,12 @@ impl ScreenIntRect {
     pub fn to_rect(&self) -> Rect {
         // Can't fail, because `ScreenIntRect` is always valid.
         // And u32 always fits into f32.
-        unsafe {
-            Rect::from_ltrb_unchecked(
-                self.x as f32,
-                self.y as f32,
-                self.x as f32 + self.width.get() as f32,
-                self.y as f32 + self.height.get() as f32,
-            )
-        }
+        Rect::from_ltrb(
+            self.x as f32,
+            self.y as f32,
+            self.x as f32 + self.width.get() as f32,
+            self.y as f32 + self.height.get() as f32,
+        ).unwrap()
     }
 }
 

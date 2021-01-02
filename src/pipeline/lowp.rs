@@ -28,40 +28,41 @@ we are still 40-60% behind Skia built for Haswell.
 
 use std::ffi::c_void;
 
-use crate::{PremultipliedColorU8, Transform};
+use crate::{PremultipliedColorU8, PixmapMut};
 
-use crate::pipeline::BasePipeline;
 use crate::screen_int_rect::ScreenIntRect;
 use crate::wide::{f32x4, u16x16, f32x16};
 
 pub const STAGE_WIDTH: usize = 16;
 
-type StageFn = fn(p: &mut Pipeline);
+pub type StageFn = fn(p: &mut Pipeline);
 
-pub struct Pipeline {
-    pub program: *const *const c_void,
-    pub r: u16x16,
-    pub g: u16x16,
-    pub b: u16x16,
-    pub a: u16x16,
-    pub dr: u16x16,
-    pub dg: u16x16,
-    pub db: u16x16,
-    pub da: u16x16,
-    pub tail: usize,
-    pub dx: usize,
-    pub dy: usize,
+pub struct Pipeline<'a, 'b: 'a> {
+    index: usize,
+    functions: &'a [StageFn],
+    pixmap: &'a mut PixmapMut<'b>,
+    clip_mask_ctx: super::ClipMaskCtx<'a>,
+    mask_ctx: super::AAMaskCtx,
+    ctx: &'a mut super::Context,
+    r: u16x16,
+    g: u16x16,
+    b: u16x16,
+    a: u16x16,
+    dr: u16x16,
+    dg: u16x16,
+    db: u16x16,
+    da: u16x16,
+    tail: usize,
+    dx: usize,
+    dy: usize,
 }
 
-impl BasePipeline for Pipeline {
+impl Pipeline<'_, '_> {
     #[inline(always)]
-    fn program(&self) -> *const *const c_void {
-        self.program
-    }
-
-    #[inline(always)]
-    fn set_program(&mut self, p: *const *const c_void) {
-        self.program = p;
+    fn next_stage(&mut self) {
+        let next: fn(&mut Self) = self.functions[self.index];
+        self.index += 1;
+        next(self);
     }
 }
 
@@ -143,12 +144,21 @@ pub fn fn_ptr_eq(f1: StageFn, f2: StageFn) -> bool {
 
 #[inline(never)]
 pub fn start(
-    program: *const *const c_void,
-    tail_program: *const *const c_void,
+    functions: &[StageFn],
+    functions_tail: &[StageFn],
     rect: &ScreenIntRect,
+    mask_ctx: super::AAMaskCtx,
+    clip_mask_ctx: super::ClipMaskCtx,
+    ctx: &mut super::Context,
+    pixmap: &mut PixmapMut,
 ) {
     let mut p = Pipeline {
-        program: std::ptr::null(),
+        index: 0,
+        functions: &[],
+        pixmap,
+        clip_mask_ctx,
+        mask_ctx,
+        ctx,
         r: u16x16::default(),
         g: u16x16::default(),
         b: u16x16::default(),
@@ -166,21 +176,23 @@ pub fn start(
         let mut x = rect.x() as usize;
         let end = rect.right() as usize;
 
+        p.functions = functions;
         while x + STAGE_WIDTH <= end {
-            p.program = program;
+            p.index = 0;
             p.dx = x;
             p.dy = y as usize;
             p.tail = STAGE_WIDTH;
-            p.next_stage(0);
+            p.next_stage();
             x += STAGE_WIDTH;
         }
 
         if x != end {
-            p.program = tail_program;
+            p.index = 0;
+            p.functions = functions_tail;
             p.dx = x;
             p.dy = y as usize;
             p.tail = end - x;
-            p.next_stage(0);
+            p.next_stage();
         }
     }
 }
@@ -191,7 +203,7 @@ fn move_source_to_destination(p: &mut Pipeline) {
     p.db = p.b;
     p.da = p.a;
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn move_destination_to_source(p: &mut Pipeline) {
@@ -200,7 +212,7 @@ fn move_destination_to_source(p: &mut Pipeline) {
     p.b = p.db;
     p.a = p.da;
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn premultiply(p: &mut Pipeline) {
@@ -208,17 +220,17 @@ fn premultiply(p: &mut Pipeline) {
     p.g = div255(p.g * p.a);
     p.b = div255(p.b * p.a);
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn uniform_color(p: &mut Pipeline) {
-    let ctx: &super::UniformColorCtx = p.stage_ctx();
+    let ctx = p.ctx.uniform_color;
     p.r = u16x16::splat(ctx.rgba[0]);
     p.g = u16x16::splat(ctx.rgba[1]);
     p.b = u16x16::splat(ctx.rgba[2]);
     p.a = u16x16::splat(ctx.rgba[3]);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn seed_shader(p: &mut Pipeline) {
@@ -234,45 +246,35 @@ fn seed_shader(p: &mut Pipeline) {
     split(&x, &mut p.r, &mut p.g);
     split(&y, &mut p.b, &mut p.a);
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 pub fn load_dst(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    load_8888(ctx.slice16_at_xy(p.dx, p.dy), &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
-
-    p.next_stage(2);
+    load_8888(p.pixmap.slice16_at_xy(p.dx, p.dy), &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
+    p.next_stage();
 }
 
 pub fn load_dst_tail(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    load_8888_tail(p.tail, ctx.slice_at_xy(p.dx, p.dy), &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
-
-    p.next_stage(2);
+    load_8888_tail(p.tail, p.pixmap.slice_at_xy(p.dx, p.dy), &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
+    p.next_stage();
 }
 
 pub fn store(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    store_8888(&p.r, &p.g, &p.b, &p.a, ctx.slice16_at_xy(p.dx, p.dy));
-
-    p.next_stage(2);
+    store_8888(&p.r, &p.g, &p.b, &p.a, p.pixmap.slice16_at_xy(p.dx, p.dy));
+    p.next_stage();
 }
 
 pub fn store_tail(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, ctx.slice_at_xy(p.dx, p.dy));
-
-    p.next_stage(2);
+    store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, p.pixmap.slice_at_xy(p.dx, p.dy));
+    p.next_stage();
 }
 
 fn mask_u8(p: &mut Pipeline) {
-    let ctx: &super::ClipMaskCtx = p.stage_ctx();
-
-    let offset = ctx.offset(p.dx, p.dy);
+    let offset = p.clip_mask_ctx.offset(p.dx, p.dy);
 
     let mut c = u16x16::default();
     for i in 0..p.tail {
-        c.0[i] = u16::from(ctx.data[offset + i]);
+        c.0[i] = u16::from(p.clip_mask_ctx.data[offset + i]);
     }
 
     if c == u16x16::default() {
@@ -284,14 +286,12 @@ fn mask_u8(p: &mut Pipeline) {
     p.b = div255(p.b * c);
     p.a = div255(p.a * c);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn scale_u8(p: &mut Pipeline) {
-    let ctx: &super::AAMaskCtx = p.stage_ctx();
-
     // Load u8xTail and cast it to u16x16.
-    let data = ctx.copy_at_xy(p.dx, p.dy, p.tail);
+    let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = u16x16([
         u16::from(data[0]),
         u16::from(data[1]),
@@ -316,14 +316,12 @@ fn scale_u8(p: &mut Pipeline) {
     p.b = div255(p.b * c);
     p.a = div255(p.a * c);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn lerp_u8(p: &mut Pipeline) {
-    let ctx: &super::AAMaskCtx = p.stage_ctx();
-
     // Load u8xTail and cast it to u16x16.
-    let data = ctx.copy_at_xy(p.dx, p.dy, p.tail);
+    let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = u16x16([
         u16::from(data[0]),
         u16::from(data[1]),
@@ -348,29 +346,27 @@ fn lerp_u8(p: &mut Pipeline) {
     p.b = lerp(p.db, p.b, c);
     p.a = lerp(p.da, p.a, c);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn scale_1_float(p: &mut Pipeline) {
-    let c: f32 = *p.stage_ctx();
-    let c = from_float(c);
+    let c = from_float(p.ctx.current_coverage);
     p.r = div255(p.r * c);
     p.g = div255(p.g * c);
     p.b = div255(p.b * c);
     p.a = div255(p.a * c);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn lerp_1_float(p: &mut Pipeline) {
-    let c: f32 = *p.stage_ctx();
-    let c = from_float(c);
+    let c = from_float(p.ctx.current_coverage);
     p.r = lerp(p.dr, p.r, c);
     p.g = lerp(p.dg, p.g, c);
     p.b = lerp(p.db, p.b, c);
     p.a = lerp(p.da, p.a, c);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 macro_rules! blend_fn {
@@ -381,7 +377,7 @@ macro_rules! blend_fn {
             p.b = $f(p.b, p.db, p.a, p.da);
             p.a = $f(p.a, p.da, p.a, p.da);
 
-            p.next_stage(1);
+            p.next_stage();
         }
     };
 }
@@ -413,7 +409,7 @@ macro_rules! blend_fn2 {
             p.b = $f(p.b, p.db, p.a, p.da);
             p.a = p.a + div255(p.da * inv(p.a));
 
-            p.next_stage(1);
+            p.next_stage();
         }
     };
 }
@@ -444,8 +440,7 @@ blend_fn2!(overlay, |s: u16x16, d: u16x16, sa, da| {
 });
 
 pub fn source_over_rgba(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    let pixels = ctx.slice16_at_xy(p.dx, p.dy);
+    let pixels = p.pixmap.slice16_at_xy(p.dx, p.dy);
     load_8888(pixels, &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
     p.r = p.r + div255(p.dr * inv(p.a));
     p.g = p.g + div255(p.dg * inv(p.a));
@@ -453,12 +448,11 @@ pub fn source_over_rgba(p: &mut Pipeline) {
     p.a = p.a + div255(p.da * inv(p.a));
     store_8888(&p.r, &p.g, &p.b, &p.a, pixels);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 pub fn source_over_rgba_tail(p: &mut Pipeline) {
-    let ctx: &mut super::PixelsCtx = p.stage_ctx_mut();
-    let pixels = ctx.slice_at_xy(p.dx, p.dy);
+    let pixels = p.pixmap.slice_at_xy(p.dx, p.dy);
     load_8888_tail(p.tail, pixels, &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
     p.r = p.r + div255(p.dr * inv(p.a));
     p.g = p.g + div255(p.dg * inv(p.a));
@@ -466,11 +460,11 @@ pub fn source_over_rgba_tail(p: &mut Pipeline) {
     p.a = p.a + div255(p.da * inv(p.a));
     store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, pixels);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn transform(p: &mut Pipeline) {
-    let ts: &Transform = p.stage_ctx();
+    let ts = &p.ctx.transform;
     let (sx, ky, kx, sy, tx, ty) = ts.get_row();
 
     let x = join(&p.r, &p.g);
@@ -482,7 +476,7 @@ fn transform(p: &mut Pipeline) {
     split(&nx, &mut p.r, &mut p.g);
     split(&ny, &mut p.b, &mut p.a);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn pad_x1(p: &mut Pipeline) {
@@ -490,7 +484,7 @@ fn pad_x1(p: &mut Pipeline) {
     let x = x.normalize();
     split(&x, &mut p.r, &mut p.g);
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn reflect_x1(p: &mut Pipeline) {
@@ -503,7 +497,7 @@ fn reflect_x1(p: &mut Pipeline) {
     ).abs().normalize();
     split(&x, &mut p.r, &mut p.g);
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn repeat_x1(p: &mut Pipeline) {
@@ -511,11 +505,11 @@ fn repeat_x1(p: &mut Pipeline) {
     let x = (x - x.floor()).normalize();
     split(&x, &mut p.r, &mut p.g);
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 fn gradient(p: &mut Pipeline) {
-    let ctx: &super::GradientCtx = p.stage_ctx();
+    let ctx = &p.ctx.gradient;
 
     // N.B. The loop starts at 1 because idx 0 is the color to use before the first stop.
     let t = join(&p.r, &p.g);
@@ -545,11 +539,11 @@ fn gradient(p: &mut Pipeline) {
     }
     gradient_lookup(ctx, &idx, t, &mut p.r, &mut p.g, &mut p.b, &mut p.a);
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn evenly_spaced_2_stop_gradient(p: &mut Pipeline) {
-    let ctx: &super::EvenlySpaced2StopGradientCtx = p.stage_ctx();
+    let ctx = &p.ctx.evenly_spaced_2_stop_gradient;
 
     let t = join(&p.r, &p.g);
     round_f32_to_u16(
@@ -560,7 +554,7 @@ fn evenly_spaced_2_stop_gradient(p: &mut Pipeline) {
         &mut p.r, &mut p.g, &mut p.b, &mut p.a,
     );
 
-    p.next_stage(2);
+    p.next_stage();
 }
 
 fn xy_to_radius(p: &mut Pipeline) {
@@ -570,7 +564,7 @@ fn xy_to_radius(p: &mut Pipeline) {
     split(&x, &mut p.r, &mut p.g);
     split(&y, &mut p.b, &mut p.a);
 
-    p.next_stage(1);
+    p.next_stage();
 }
 
 // We are using u16 for index, not u32 as Skia, to simplify the code a bit.
@@ -778,45 +772,27 @@ fn lerp(from: u16x16, to: u16x16, t: u16x16) -> u16x16 {
 
 #[inline(always)]
 fn split(v: &f32x16, lo: &mut u16x16, hi: &mut u16x16) {
-    const U16X16_SIZEOF: usize = std::mem::size_of::<u16x16>();
+    // We're splitting f32x16 (512bit) into two u16x16 (256 bit).
+    let data: [u8; 64] = bytemuck::cast(v.0);
+    let d0: &mut [u8; 32] = bytemuck::cast_mut(&mut lo.0);
+    let d1: &mut [u8; 32] = bytemuck::cast_mut(&mut hi.0);
 
-    // Should be perfectly safe.
-    // We're simply copying f32x16 (512bit) into two u16x16 (256 bit).
-    unsafe {
-        let v_data = v.0.as_ptr() as *mut u8;
-        std::ptr::copy_nonoverlapping(
-            v_data,
-            lo.as_mut_slice().as_mut_ptr() as *mut u8,
-            U16X16_SIZEOF,
-        );
-        std::ptr::copy_nonoverlapping(
-            v_data.add(U16X16_SIZEOF),
-            hi.as_mut_slice().as_mut_ptr() as *mut u8,
-            U16X16_SIZEOF,
-        );
-    }
+    d0.copy_from_slice(&data[0..32]);
+    d1.copy_from_slice(&data[32..64]);
 }
 
 #[inline(always)]
 fn join(lo: &u16x16, hi: &u16x16) -> f32x16 {
-    const U16X16_SIZEOF: usize = std::mem::size_of::<u16x16>();
+    // We're joining two u16x16 (256 bit) into f32x16 (512bit).
 
-    // Should be perfectly safe.
-    // We're simply copying two u16x16 (256 bit) into f32x16 (512bit).
+    let d0: [u8; 32] = bytemuck::cast(lo.0);
+    let d1: [u8; 32] = bytemuck::cast(hi.0);
+
     let mut v = f32x16::default();
-    unsafe {
-        let v_data = v.0.as_mut_ptr() as *mut u8;
-        std::ptr::copy_nonoverlapping(
-            lo.as_slice().as_ptr() as *const u8,
-            v_data,
-            U16X16_SIZEOF,
-        );
-        std::ptr::copy_nonoverlapping(
-            hi.as_slice().as_ptr() as *const u8,
-            v_data.add(U16X16_SIZEOF),
-            U16X16_SIZEOF,
-        );
-    }
+    let data: &mut [u8; 64] = bytemuck::cast_mut(&mut v.0);
+
+    data[0..32].copy_from_slice(&d0);
+    data[32..64].copy_from_slice(&d1);
 
     v
 }

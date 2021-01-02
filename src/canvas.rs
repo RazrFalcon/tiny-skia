@@ -6,7 +6,7 @@
 
 // This module is closer to SkDraw than SkCanvas.
 
-use crate::{PixmapRef, PixmapMut, Transform, Path, Paint, Stroke, Point, Rect};
+use crate::{PixmapRef, PixmapMut, Transform, Path, Paint, Stroke, Point, Rect, painter};
 use crate::{PathBuilder, Pattern, FilterQuality, BlendMode, FillRule, SpreadMode};
 
 use crate::clip::ClipMask;
@@ -201,9 +201,9 @@ impl<'a> Canvas<'a> {
             let mut paint = paint.clone();
             paint.shader.transform(&self.transform);
 
-            self.pixmap.fill_path(&path, &paint, fill_type, self.clip.as_ref())
+            painter::fill_path(&path, &paint, fill_type, self.clip.as_ref(), &mut self.pixmap)
         } else {
-            self.pixmap.fill_path(path, paint, fill_type, self.clip.as_ref())
+            painter::fill_path(path, paint, fill_type, self.clip.as_ref(), &mut self.pixmap)
         }
     }
 
@@ -258,9 +258,9 @@ impl<'a> Canvas<'a> {
                 paint.shader.transform(&self.transform);
 
                 let path = path.clone().transform(&self.transform)?;
-                self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap, self.clip.as_ref())
+                painter::stroke_hairline(&path, &paint, stroke.line_cap, self.clip.as_ref(), &mut self.pixmap)
             } else {
-                self.pixmap.stroke_hairline(&path, &paint, stroke.line_cap, self.clip.as_ref())
+                painter::stroke_hairline(&path, &paint, stroke.line_cap, self.clip.as_ref(), &mut self.pixmap)
             }
         } else {
             let mut stroked_path = if let Some(stroked_path) = self.stroked_path.take() {
@@ -276,9 +276,9 @@ impl<'a> Canvas<'a> {
                 let mut paint = paint.clone();
                 paint.shader.transform(&self.transform);
 
-                self.pixmap.fill_path(&path, &paint, FillRule::Winding, self.clip.as_ref())
+                painter::fill_path(&path, &paint, FillRule::Winding, self.clip.as_ref(), &mut self.pixmap)
             } else {
-                self.pixmap.fill_path(path, paint, FillRule::Winding, self.clip.as_ref())
+                painter::fill_path(path, paint, FillRule::Winding, self.clip.as_ref(), &mut self.pixmap)
             }
         }
     }
@@ -340,7 +340,7 @@ impl<'a> Canvas<'a> {
     fn fill_rect_impl(&mut self, rect: Rect, paint: &Paint) -> Option<()> {
         // TODO: allow translate too
         if self.transform.is_identity() {
-            self.pixmap.fill_rect(rect, paint, self.clip.as_ref())
+            painter::fill_rect(rect, paint, self.clip.as_ref(), &mut self.pixmap)
         } else {
             let path = PathBuilder::from_rect(rect);
             self.fill_path_impl(&path, paint, FillRule::Winding)

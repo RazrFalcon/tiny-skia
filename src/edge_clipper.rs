@@ -8,6 +8,7 @@ use arrayvec::ArrayVec;
 
 use crate::{Path, Point, Rect};
 
+use crate::floating_point::NormalizedF32Exclusive;
 use crate::line_clipper;
 use crate::path::{PathEdge, PathEdgeIter};
 use crate::path_geometry;
@@ -142,7 +143,7 @@ impl EdgeClipper {
             return;
         }
 
-        let mut t = path_geometry::TValue::ANY;
+        let mut t = NormalizedF32Exclusive::ANY;
         let mut tmp = [Point::zero(); 5];
 
         // are we partially to the left
@@ -381,7 +382,7 @@ fn sort_increasing_y(src: &[Point], dst: &mut [Point]) -> bool {
 
 /// Modifies pts[] in place so that it is clipped in Y to the clip rect.
 fn chop_quad_in_y(clip: &Rect, pts: &mut [Point; 3]) {
-    let mut t = path_geometry::TValue::ANY;
+    let mut t = NormalizedF32Exclusive::ANY;
     let mut tmp = [Point::zero(); 5];
 
     // are we partially above
@@ -428,15 +429,15 @@ fn chop_quad_in_y(clip: &Rect, pts: &mut [Point; 3]) {
     }
 }
 
-fn chop_mono_quad_at_x(pts: &[Point; 3], x: f32, t: &mut path_geometry::TValue) -> bool {
+fn chop_mono_quad_at_x(pts: &[Point; 3], x: f32, t: &mut NormalizedF32Exclusive) -> bool {
     chop_mono_quad_at(pts[0].x, pts[1].x, pts[2].x, x, t)
 }
 
-fn chop_mono_quad_at_y(pts: &[Point; 3], y: f32, t: &mut path_geometry::TValue) -> bool {
+fn chop_mono_quad_at_y(pts: &[Point; 3], y: f32, t: &mut NormalizedF32Exclusive) -> bool {
     chop_mono_quad_at(pts[0].y, pts[1].y, pts[2].y, y, t)
 }
 
-fn chop_mono_quad_at(c0: f32, c1: f32, c2: f32, target: f32, t: &mut path_geometry::TValue) -> bool {
+fn chop_mono_quad_at(c0: f32, c1: f32, c2: f32, target: f32, t: &mut NormalizedF32Exclusive) -> bool {
     // Solve F(t) = y where F(t) := [0](1-t)^2 + 2[1]t(1-t) + [2]t^2
     // We solve for t, using quadratic equation, hence we have to rearrange
     // our coefficients to look like At^2 + Bt + C
@@ -513,8 +514,8 @@ fn chop_mono_cubic_at_x(src: &[Point; 4], x: f32, dst: &mut [Point; 7]) {
         return;
     }
 
-    let src_values = points_to_f32s!(src, 4);
-    path_geometry::chop_cubic_at2(src, mono_cubic_closest_t(src_values, x), dst);
+    let src_values = [src[0].x, src[1].x, src[2].x, src[3].x];
+    path_geometry::chop_cubic_at2(src, mono_cubic_closest_t(&src_values, x), dst);
 }
 
 fn chop_mono_cubic_at_y(src: &[Point; 4], y: f32, dst: &mut [Point; 7]) {
@@ -522,19 +523,19 @@ fn chop_mono_cubic_at_y(src: &[Point; 4], y: f32, dst: &mut [Point; 7]) {
         return;
     }
 
-    let src_values = points_to_f32s!(src, 4);
-    path_geometry::chop_cubic_at2(src, mono_cubic_closest_t(&src_values[1..], y), dst);
+    let src_values = [src[0].y, src[1].y, src[2].y, src[3].y];
+    path_geometry::chop_cubic_at2(src, mono_cubic_closest_t(&src_values, y), dst);
 }
 
-fn mono_cubic_closest_t(src: &[f32], mut x: f32) -> path_geometry::TValue {
+fn mono_cubic_closest_t(src: &[f32; 4], mut x: f32) -> NormalizedF32Exclusive {
     let mut t = 0.5;
     let mut last_t;
     let mut best_t = t;
     let mut step = 0.25;
     let d = src[0];
-    let a = src[6] + 3.0*(src[2] - src[4]) - d;
-    let b = 3.0*(src[4] - src[2] - src[2] + d);
-    let c = 3.0*(src[2] - d);
+    let a = src[3] + 3.0*(src[1] - src[2]) - d;
+    let b = 3.0*(src[2] - src[1] - src[1] + d);
+    let c = 3.0*(src[1] - d);
     x -= d;
     let mut closest = SCALAR_MAX;
     loop {
@@ -554,5 +555,5 @@ fn mono_cubic_closest_t(src: &[f32], mut x: f32) -> path_geometry::TValue {
         }
     }
 
-    path_geometry::TValue::new(best_t).unwrap()
+    NormalizedF32Exclusive::new(best_t).unwrap()
 }

@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Remove almost all `unsafe`. No performance changes.
 
 ## 0.3.0 - 2020-12-20
 ### Added

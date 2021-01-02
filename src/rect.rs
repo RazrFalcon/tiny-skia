@@ -56,21 +56,6 @@ impl Rect {
         Rect::from_ltrb(x, y, w + x, h + y)
     }
 
-    /// Creates new `Rect` without checking edges.
-    ///
-    /// # Safety
-    ///
-    /// All values must be finite.
-    #[inline]
-    pub const unsafe fn from_ltrb_unchecked(left: f32, top: f32, right: f32, bottom: f32) -> Self {
-        Rect {
-            left: FiniteF32::new_unchecked(left),
-            top: FiniteF32::new_unchecked(top),
-            right: FiniteF32::new_unchecked(right),
-            bottom: FiniteF32::new_unchecked(bottom),
-        }
-    }
-
     /// Returns the left edge.
     #[inline]
     pub fn left(&self) -> f32 {
@@ -251,11 +236,6 @@ mod tests {
         assert_eq!(Rect::from_ltrb(10.0, 10.0, std::f32::NAN, 10.0), None);
         assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, std::f32::NAN), None);
         assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, std::f32::INFINITY), None);
-
-        unsafe {
-            assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, 10.0),
-                       Some(Rect::from_ltrb_unchecked(10.0, 10.0, 10.0, 10.0)));
-        }
 
         let rect = Rect::from_ltrb(10.0, 20.0, 30.0, 40.0).unwrap();
         assert_eq!(rect.left(), 10.0);

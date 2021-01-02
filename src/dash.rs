@@ -10,7 +10,7 @@ use arrayref::array_ref;
 
 use crate::{Path, PathSegment, PathSegmentsIter, Point, PathBuilder};
 
-use crate::floating_point::{NormalizedF32, NonZeroPositiveF32, FiniteF32};
+use crate::floating_point::{NormalizedF32, NonZeroPositiveF32, FiniteF32, NormalizedF32Exclusive};
 use crate::path::PathVerb;
 use crate::path_geometry;
 use crate::scalar::Scalar;
@@ -498,7 +498,7 @@ impl ContourMeasure {
             let mut tmp = [Point::zero(); 5];
             let half_t = (min_t + max_t) >> 1;
 
-            path_geometry::chop_quad_at(&[p0, p1, p2], path_geometry::TValue::HALF, &mut tmp);
+            path_geometry::chop_quad_at(&[p0, p1, p2], NormalizedF32Exclusive::HALF, &mut tmp);
             distance = self.compute_quad_segs(
                 tmp[0], tmp[1], tmp[2], distance, min_t, half_t, point_index, tolerance);
             distance = self.compute_quad_segs(
@@ -537,7 +537,7 @@ impl ContourMeasure {
             let mut tmp = [Point::zero(); 7];
             let half_t = (min_t + max_t) >> 1;
 
-            path_geometry::chop_cubic_at2(&[p0, p1, p2, p3], path_geometry::TValue::HALF, &mut tmp);
+            path_geometry::chop_cubic_at2(&[p0, p1, p2, p3], NormalizedF32Exclusive::HALF, &mut tmp);
             distance = self.compute_cubic_segs(
                 tmp[0], tmp[1], tmp[2], tmp[3], distance, min_t, half_t, point_index, tolerance);
             distance = self.compute_cubic_segs(
@@ -666,18 +666,18 @@ fn segment_to(
                 if stop_t == NormalizedF32::ONE {
                     pb.quad_to_pt(points[1], points[2]);
                 } else {
-                    let stop_t = path_geometry::TValue::new_bounded(stop_t.get());
+                    let stop_t = NormalizedF32Exclusive::new_bounded(stop_t.get());
                     path_geometry::chop_quad_at(points, stop_t, &mut tmp0);
                     pb.quad_to_pt(tmp0[1], tmp0[2]);
                 }
             } else {
-                let start_tt = path_geometry::TValue::new_bounded(start_t.get());
+                let start_tt = NormalizedF32Exclusive::new_bounded(start_t.get());
                 path_geometry::chop_quad_at(points, start_tt, &mut tmp0);
                 if stop_t == NormalizedF32::ONE {
                     pb.quad_to_pt(tmp0[3], tmp0[4]);
                 } else {
                     let new_t = (stop_t.get() - start_t.get()) / (1.0 - start_t.get());
-                    let new_t = path_geometry::TValue::new_bounded(new_t);
+                    let new_t = NormalizedF32Exclusive::new_bounded(new_t);
                     path_geometry::chop_quad_at(&tmp0[2..], new_t, &mut tmp1);
                     pb.quad_to_pt(tmp1[1], tmp1[2]);
                 }
@@ -690,18 +690,18 @@ fn segment_to(
                 if stop_t == NormalizedF32::ONE {
                     pb.cubic_to_pt(points[1], points[2], points[3]);
                 } else {
-                    let stop_t = path_geometry::TValue::new_bounded(stop_t.get());
+                    let stop_t = NormalizedF32Exclusive::new_bounded(stop_t.get());
                     path_geometry::chop_cubic_at2(array_ref![points, 0, 4], stop_t, &mut tmp0);
                     pb.cubic_to_pt(tmp0[1], tmp0[2], tmp0[3]);
                 }
             } else {
-                let start_tt = path_geometry::TValue::new_bounded(start_t.get());
+                let start_tt = NormalizedF32Exclusive::new_bounded(start_t.get());
                 path_geometry::chop_cubic_at2(array_ref![points, 0, 4], start_tt, &mut tmp0);
                 if stop_t == NormalizedF32::ONE {
                     pb.cubic_to_pt(tmp0[4], tmp0[5], tmp0[6]);
                 } else {
                     let new_t = (stop_t.get() - start_t.get()) / (1.0 - start_t.get());
-                    let new_t = path_geometry::TValue::new_bounded(new_t);
+                    let new_t = NormalizedF32Exclusive::new_bounded(new_t);
                     path_geometry::chop_cubic_at2(array_ref![tmp0, 3, 4], new_t, &mut tmp1);
                     pb.cubic_to_pt(tmp1[1], tmp1[2], tmp1[3]);
                 }
@@ -726,21 +726,17 @@ fn quad_too_curvy(p0: Point, p1: Point, p2: Point, tolerance: f32) -> bool {
 }
 
 fn cubic_too_curvy(p0: Point, p1: Point, p2: Point, p3: Point, tolerance: f32) -> bool {
-    // Perfectly safe, since both values are always in range.
-    const ONE_THIRD:  NormalizedF32 = unsafe { NormalizedF32::new_unchecked(1.0 / 3.0) };
-    const TWO_THIRDS: NormalizedF32 = unsafe { NormalizedF32::new_unchecked(2.0 / 3.0) };
-
     let n0 = cheap_dist_exceeds_limit(
         p1,
-        interp(p0.x, p3.x, ONE_THIRD),
-        interp(p0.y, p3.y, ONE_THIRD),
+        interp_safe(p0.x, p3.x, 1.0 / 3.0),
+        interp_safe(p0.y, p3.y, 1.0 / 3.0),
         tolerance,
     );
 
     let n1 = cheap_dist_exceeds_limit(
         p2,
-        interp(p0.x, p3.x, TWO_THIRDS),
-        interp(p0.y, p3.y, TWO_THIRDS),
+        interp_safe(p0.x, p3.x, 2.0 / 3.0),
+        interp_safe(p0.y, p3.y, 2.0 / 3.0),
         tolerance,
     );
 
@@ -758,4 +754,9 @@ fn cheap_dist_exceeds_limit(pt: Point, x: f32, y: f32, tolerance: f32) -> bool {
 /// If t is 0, return A. If t is 1, return B else interpolate.
 fn interp(a: f32, b: f32, t: NormalizedF32) -> f32 {
     a + (b - a) * t.get()
+}
+
+fn interp_safe(a: f32, b: f32, t: f32) -> f32 {
+    debug_assert!(t >= 0.0 && t <= 1.0);
+    a + (b - a) * t
 }

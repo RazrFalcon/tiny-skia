@@ -40,21 +40,6 @@ impl IntRect {
         })
     }
 
-    /// Creates a new `IntRect` without checking values.
-    ///
-    /// # Safety
-    ///
-    /// `width` and `height` must be > 0.
-    #[inline]
-    pub const unsafe fn from_xywh_unchecked(x: i32, y: i32, width: u32, height: u32) -> Self {
-        IntRect {
-            x,
-            y,
-            width: LengthU32::new_unchecked(width),
-            height: LengthU32::new_unchecked(height),
-        }
-    }
-
     /// Creates a new `IntRect`.
     pub fn from_ltrb(left: i32, top: i32, right: i32, bottom: i32) -> Option<Self> {
         let width = u32::try_from(right.checked_sub(left)?).ok()?;
@@ -161,14 +146,12 @@ impl IntRect {
     #[inline]
     pub fn to_rect(&self) -> Rect {
         // Can't fail, because `IntRect` is always valid.
-        unsafe {
-            Rect::from_ltrb_unchecked(
-                self.x as f32,
-                self.y as f32,
-                self.x as f32 + self.width.get() as f32,
-                self.y as f32 + self.height.get() as f32,
-            )
-        }
+        Rect::from_ltrb(
+            self.x as f32,
+            self.y as f32,
+            self.x as f32 + self.width.get() as f32,
+            self.y as f32 + self.height.get() as f32,
+        ).unwrap()
     }
 
     /// Converts into `ScreenIntRect`.

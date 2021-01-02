@@ -70,6 +70,14 @@ You can find more information in [benches/README.md](./benches/README.md).
 
 Unless there is a bug, `tiny-skia` must produce exactly the same results as Skia.
 
+## Safety
+
+The library does not rely on unsafe code and all pixels access is checked.
+
+It does have a single `unsafe`
+to mark a type as [bytemuck::Pod](https://docs.rs/bytemuck/1.4.1/bytemuck/trait.Pod.html),
+but this is perfectly safe. And all the dangerous casts are handled by `bytemuck`.
+
 ## API overview
 
 The API is a bit unconventional. It doesn't look like cairo, QPainter (Qt), HTML Canvas or even Skia.
@@ -134,10 +142,6 @@ Right now, the only pure Rust alternative is [raqote].
 - It's very slow (see [benchmarks](./benches/README.md)).
 - There are some rendering issues (like gradient transparency).
 - Raqote has a very rudimentary text rendering support, while tiny-skia has none.
-
-## Safety
-
-The project relies on some unsafe code.
 
 ## License
 

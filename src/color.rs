@@ -102,8 +102,9 @@ impl std::fmt::Debug for ColorU8 {
 #[derive(Copy, Clone, PartialEq)]
 pub struct PremultipliedColorU8(u32);
 
-unsafe impl bytemuck::Zeroable for PremultipliedColorU8 {}
-unsafe impl bytemuck::Pod for PremultipliedColorU8 {}
+// Perfectly safe, since u32 is already Pod.
+#[allow(unsafe_code)] unsafe impl bytemuck::Zeroable for PremultipliedColorU8 {}
+#[allow(unsafe_code)] unsafe impl bytemuck::Pod for PremultipliedColorU8 {}
 
 impl PremultipliedColorU8 {
     /// A transparent color.
@@ -235,10 +236,10 @@ impl Color {
     #[inline]
     pub fn from_rgba8(r: u8, g: u8, b: u8, a: u8) -> Self {
         Color {
-            r: normalize_u8(r),
-            g: normalize_u8(g),
-            b: normalize_u8(b),
-            a: normalize_u8(a),
+            r: NormalizedF32::from_u8(r),
+            g: NormalizedF32::from_u8(g),
+            b: NormalizedF32::from_u8(b),
+            a: NormalizedF32::from_u8(a),
         }
     }
 
@@ -394,15 +395,11 @@ impl PremultipliedColor {
         if a == 0.0 {
             Color::TRANSPARENT
         } else {
-            // Skip 0..1 bounds checking since we're already in a 0..1 range
-            // and we cannot exceed it.
-            unsafe {
-                Color {
-                    r: NormalizedF32::new_unchecked(self.r.get() / a),
-                    g: NormalizedF32::new_unchecked(self.g.get() / a),
-                    b: NormalizedF32::new_unchecked(self.b.get() / a),
-                    a: self.a,
-                }
+            Color {
+                r: NormalizedF32::new_bounded(self.r.get() / a),
+                g: NormalizedF32::new_bounded(self.g.get() / a),
+                b: NormalizedF32::new_bounded(self.b.get() / a),
+                a: self.a,
             }
         }
     }
@@ -411,14 +408,6 @@ impl PremultipliedColor {
     pub fn to_color_u8(&self) -> PremultipliedColorU8 {
         let c = color_f32_to_u8(self.r, self.g, self.b, self.a);
         PremultipliedColorU8::from_rgba_unchecked(c[0], c[1], c[2], c[3])
-    }
-}
-
-#[inline]
-fn normalize_u8(n: u8) -> NormalizedF32 {
-    // Cannot fail, because `n` is in 0..255 range.
-    unsafe {
-        NormalizedF32::new_unchecked(n as f32 / 255.0)
     }
 }
 

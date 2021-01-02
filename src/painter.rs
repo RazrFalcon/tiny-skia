@@ -7,7 +7,7 @@
 use crate::{PixmapMut, Path, Color, BlendMode, Shader, LineCap, Rect};
 
 use crate::clip::ClipMaskData;
-use crate::pipeline::{ContextStorage, RasterPipelineBlitter};
+use crate::pipeline::RasterPipelineBlitter;
 use crate::scan;
 
 // 8K is 1 too big, since 8K << supersample == 32768 which is too big for Fixed.
@@ -103,108 +103,103 @@ impl<'a> Paint<'a> {
 }
 
 
-impl<'a> PixmapMut<'a> {
-    /// Draws a filled rectangle onto the pixmap.
-    ///
-    /// This function is usually slower than filling a rectangular path,
-    /// but it produces better results. Mainly it doesn't suffer from weird
-    /// clipping of horizontal/vertical edges.
-    ///
-    /// Used mainly to render a pixmap onto a pixmap.
-    ///
-    /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
-    pub(crate) fn fill_rect(
-        &mut self,
-        rect: Rect,
-        paint: &Paint,
-        clip_mask: Option<&ClipMaskData>,
-    ) -> Option<()> {
-        // TODO: ignore rects outside the pixmap
+/// Draws a filled rectangle onto the pixmap.
+///
+/// This function is usually slower than filling a rectangular path,
+/// but it produces better results. Mainly it doesn't suffer from weird
+/// clipping of horizontal/vertical edges.
+///
+/// Used mainly to render a pixmap onto a pixmap.
+///
+/// Returns `None` when there is nothing to fill or in case of a numeric overflow.
+pub(crate) fn fill_rect(
+    rect: Rect,
+    paint: &Paint,
+    clip_mask: Option<&ClipMaskData>,
+    pixmap: &mut PixmapMut,
+) -> Option<()> {
+    // TODO: ignore rects outside the pixmap
 
-        // TODO: draw tiler
-        let bbox = rect.round_out();
-        if bbox.width() > MAX_DIM || bbox.height() > MAX_DIM {
-            return None;
-        }
-
-        let clip = self.size().to_screen_int_rect(0, 0);
-
-        let mut ctx_storage = ContextStorage::new();
-        let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut ctx_storage, self)?;
-
-        if paint.anti_alias {
-            scan::fill_rect_aa(&rect, &clip, &mut blitter)
-        } else {
-            scan::fill_rect(&rect, &clip, &mut blitter)
-        }
+    // TODO: draw tiler
+    let bbox = rect.round_out();
+    if bbox.width() > MAX_DIM || bbox.height() > MAX_DIM {
+        return None;
     }
 
-    /// Draws a filled path onto the pixmap.
-    ///
-    /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
-    pub(crate) fn fill_path(
-        &mut self,
-        path: &Path,
-        paint: &Paint,
-        fill_type: FillRule,
-        clip_mask: Option<&ClipMaskData>,
-    ) -> Option<()> {
-        // This is sort of similar to SkDraw::drawPath
+    let clip = pixmap.size().to_screen_int_rect(0, 0);
 
-        // to_rect will fail when bounds' width/height is zero.
-        // This is an intended behaviour since the only
-        // reason for width/height to be zero is a horizontal/vertical line.
-        // And in both cases there is nothing to fill.
-        let path_bounds = path.bounds();
-        let path_int_bounds = path_bounds.round_out();
+    let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, pixmap)?;
 
-        // TODO: ignore paths outside the pixmap
+    if paint.anti_alias {
+        scan::fill_rect_aa(&rect, &clip, &mut blitter)
+    } else {
+        scan::fill_rect(&rect, &clip, &mut blitter)
+    }
+}
 
-        // TODO: draw tiler
-        if path_int_bounds.width() > MAX_DIM || path_int_bounds.height() > MAX_DIM {
-            return None;
-        }
+/// Draws a filled path onto the pixmap.
+///
+/// Returns `None` when there is nothing to fill or in case of a numeric overflow.
+pub(crate) fn fill_path(
+    path: &Path,
+    paint: &Paint,
+    fill_type: FillRule,
+    clip_mask: Option<&ClipMaskData>,
+    pixmap: &mut PixmapMut,
+) -> Option<()> {
+    // This is sort of similar to SkDraw::drawPath
 
-        if path.is_too_big_for_math() {
-            return None;
-        }
+    // to_rect will fail when bounds' width/height is zero.
+    // This is an intended behaviour since the only
+    // reason for width/height to be zero is a horizontal/vertical line.
+    // And in both cases there is nothing to fill.
+    let path_bounds = path.bounds();
+    let path_int_bounds = path_bounds.round_out();
 
-        let clip_rect = self.size().to_screen_int_rect(0, 0);
+    // TODO: ignore paths outside the pixmap
 
-        let mut ctx_storage = ContextStorage::new();
-        let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut ctx_storage, self)?;
-
-        if paint.anti_alias {
-            scan::path_aa::fill_path(path, fill_type, &clip_rect, &mut blitter)
-        } else {
-            scan::path::fill_path(path, fill_type, &clip_rect, &mut blitter)
-        }
+    // TODO: draw tiler
+    if path_int_bounds.width() > MAX_DIM || path_int_bounds.height() > MAX_DIM {
+        return None;
     }
 
-    /// A path stroking with subpixel width.
-    ///
-    /// Should be used when stroke width is <= 1.0
-    /// This function doesn't even accept width, which should be regulated via opacity.
-    ///
-    /// See [`Canvas::stroke_path`] for details.
-    ///
-    /// [`Canvas::stroke_path`]: struct.Canvas.html#method.stroke_path
-    pub(crate) fn stroke_hairline(
-        &mut self,
-        path: &Path,
-        paint: &Paint,
-        line_cap: LineCap,
-        clip_mask: Option<&ClipMaskData>,
-    ) -> Option<()> {
-        let clip = self.size().to_screen_int_rect(0, 0);
+    if path.is_too_big_for_math() {
+        return None;
+    }
 
-        let mut ctx_storage = ContextStorage::new();
-        let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut ctx_storage, self)?;
+    let clip_rect = pixmap.size().to_screen_int_rect(0, 0);
 
-        if paint.anti_alias {
-            scan::hairline_aa::stroke_path(path, line_cap, &clip, &mut blitter)
-        } else {
-            scan::hairline::stroke_path(path, line_cap, &clip, &mut blitter)
-        }
+    let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, pixmap)?;
+
+    if paint.anti_alias {
+        scan::path_aa::fill_path(path, fill_type, &clip_rect, &mut blitter)
+    } else {
+        scan::path::fill_path(path, fill_type, &clip_rect, &mut blitter)
+    }
+}
+
+/// A path stroking with subpixel width.
+///
+/// Should be used when stroke width is <= 1.0
+/// This function doesn't even accept width, which should be regulated via opacity.
+///
+/// See [`Canvas::stroke_path`] for details.
+///
+/// [`Canvas::stroke_path`]: struct.Canvas.html#method.stroke_path
+pub(crate) fn stroke_hairline(
+    path: &Path,
+    paint: &Paint,
+    line_cap: LineCap,
+    clip_mask: Option<&ClipMaskData>,
+    pixmap: &mut PixmapMut,
+) -> Option<()> {
+    let clip = pixmap.size().to_screen_int_rect(0, 0);
+
+    let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, pixmap)?;
+
+    if paint.anti_alias {
+        scan::hairline_aa::stroke_path(path, line_cap, &clip, &mut blitter)
+    } else {
+        scan::hairline::stroke_path(path, line_cap, &clip, &mut blitter)
     }
 }

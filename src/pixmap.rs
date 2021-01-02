@@ -366,7 +366,7 @@ impl<'a> PixmapRef<'a> {
     /// Returns the internal data.
     ///
     /// Bytes are ordered as RGBA.
-    pub fn data(&self) -> &[u8] {
+    pub fn data(&self) -> &'a [u8] {
         self.data
     }
 
@@ -379,7 +379,7 @@ impl<'a> PixmapRef<'a> {
     }
 
     /// Returns a slice of pixels.
-    pub fn pixels(&self) -> &[PremultipliedColorU8] {
+    pub fn pixels(&self) -> &'a [PremultipliedColorU8] {
         bytemuck::cast_slice(self.data())
     }
 

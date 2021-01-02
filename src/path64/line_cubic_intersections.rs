@@ -95,7 +95,7 @@ pub fn horizontal_intersect(cubic: &Cubic64, axis_intercept: f64, roots: &mut [f
 }
 
 pub fn vertical_intersect(cubic: &Cubic64, axis_intercept: f64, roots: &mut [f64; 3]) -> usize {
-    let (a, b, c, mut d) = cubic64::coefficients(cubic.as_f64_slice());
+    let (a, b, c, mut d) = cubic64::coefficients(&cubic.as_f64_slice());
     d -= axis_intercept;
     let mut count = cubic64::roots_valid_t(a, b, c, d, roots);
     let mut index = 0;
@@ -103,7 +103,7 @@ pub fn vertical_intersect(cubic: &Cubic64, axis_intercept: f64, roots: &mut [f64
         let calc_pt = cubic.point_at_t(roots[index]);
         if !calc_pt.x.approximately_equal(axis_intercept) {
             let mut extreme_ts = [0.0; 6];
-            let extrema = cubic64::find_extrema(cubic.as_f64_slice(), &mut extreme_ts);
+            let extrema = cubic64::find_extrema(&cubic.as_f64_slice(), &mut extreme_ts);
             count = cubic.search_roots(extrema, axis_intercept, SearchAxis::X, &mut extreme_ts, roots);
             break;
         }

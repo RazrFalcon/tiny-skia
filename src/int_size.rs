@@ -41,18 +41,6 @@ impl IntSize {
         self.height.get()
     }
 
-    /// Returns width.
-    #[inline]
-    pub(crate) fn width_safe(&self) -> LengthU32 {
-        self.width
-    }
-
-    /// Returns height.
-    #[inline]
-    pub(crate) fn height_safe(&self) -> LengthU32 {
-        self.height
-    }
-
     /// Converts the current size into a `IntRect` at a provided position.
     #[inline]
     pub fn to_int_rect(&self, x: i32, y: i32) -> IntRect {

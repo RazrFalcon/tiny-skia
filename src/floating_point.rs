@@ -114,6 +114,9 @@ macro_rules! impl_debug_display {
 pub struct FiniteF32(f32);
 
 impl FiniteF32 {
+    pub const FINITE_ZERO: FiniteF32 = FiniteF32(0.0);
+    pub const FINITE_ONE: FiniteF32 = FiniteF32(1.0);
+
     /// Creates a finite f32 number.
     ///
     /// Returns `None` for NaN and infinity.
@@ -124,16 +127,6 @@ impl FiniteF32 {
         } else {
             None
         }
-    }
-
-    /// Creates a non-zero without checking the value.
-    ///
-    /// # Safety
-    ///
-    /// `n` must be finite.
-    #[inline]
-    pub const unsafe fn new_unchecked(n: f32) -> Self {
-        FiniteF32(n)
     }
 
     /// Returns the value as a primitive type.
@@ -196,14 +189,9 @@ impl NormalizedF32 {
         }
     }
 
-    /// Creates a new `NormalizedF32` without checking the value.
-    ///
-    /// # Safety
-    ///
-    /// `n` must be in 0..=1 range.
     #[inline]
-    pub const unsafe fn new_unchecked(n: f32) -> Self {
-        NormalizedF32(FiniteF32(n))
+    pub fn from_u8(n: u8) -> Self {
+        NormalizedF32(FiniteF32(f32::from(n) / 255.0))
     }
 
     /// Creates a `NormalizedValue` clamping the given value to a 0..1 range.
@@ -211,11 +199,7 @@ impl NormalizedF32 {
     /// Returns zero in case of NaN or infinity.
     #[inline]
     pub fn new_bounded(n: f32) -> Self {
-        if n.is_finite() {
-            NormalizedF32(FiniteF32(n.bound(0.0, 1.0)))
-        } else {
-            Self::ZERO
-        }
+        NormalizedF32(FiniteF32(n.bound(0.0, 1.0)))
     }
 
     /// Returns the value as a primitive type.
@@ -232,6 +216,45 @@ impl NormalizedF32 {
 }
 
 impl_debug_display!(NormalizedF32);
+
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Default)]
+#[repr(transparent)]
+pub struct NormalizedF32Exclusive(FiniteF32);
+
+impl NormalizedF32Exclusive {
+    // Just a random, valid numbers to init the array.
+    // Will be overwritten anyway.
+    // Perfectly safe.
+    pub const ANY: Self = NormalizedF32Exclusive(FiniteF32(0.5));
+
+    pub const HALF: Self = NormalizedF32Exclusive(FiniteF32(0.5));
+
+    pub fn new(n: f32) -> Option<Self> {
+        if n > 0.0 && n < 1.0 {
+            // `n` is guarantee to be finite after the bounds check.
+            Some(NormalizedF32Exclusive(FiniteF32(n)))
+        } else {
+            None
+        }
+    }
+
+    pub fn new_bounded(n: f32) -> Self {
+        let n = n.bound(std::f32::EPSILON, 1.0 - std::f32::EPSILON);
+        // `n` is guarantee to be finite after clamping.
+        debug_assert!(n.is_finite());
+        NormalizedF32Exclusive(FiniteF32(n))
+    }
+
+    pub fn get(self) -> f32 {
+        self.0.get()
+    }
+
+    pub fn to_normalized(self) -> NormalizedF32 {
+        // NormalizedF32 is (0,1), while NormalizedF32 is [0,1], so it will always fit.
+        NormalizedF32(self.0)
+    }
+}
 
 
 /// A float that is known to be > 0.

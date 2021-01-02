@@ -28,20 +28,3 @@ jobs:
 
     - name: Run tests
       run: cargo test --verbose --no-default-features --features png-format
-  sanitize:
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Install nightly
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-
-      - name: Run tests
-        env:
-          RUSTFLAGS: -Z sanitizer=address
-        run: cargo +nightly test

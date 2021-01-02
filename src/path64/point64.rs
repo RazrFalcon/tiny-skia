@@ -6,24 +6,6 @@
 
 use crate::Point;
 
-/// Converts `&[Point64; N]` into `&[f64; N*2]`.
-macro_rules! points64_to_f64s {
-    ($pts:expr, $n:expr) => {
-        bytemuck::cast_ref::<[Point64; $n], [f64; $n * 2]>($pts)
-    };
-}
-
-/// Converts `&mut [Point64; N]` into `&mut [f64; N*2]`.
-macro_rules! points64_to_f64s_mut {
-    ($pts:expr, $n:expr) => {
-        bytemuck::cast_mut::<[Point64; $n], [f64; $n * 2]>($pts)
-    };
-}
-
-unsafe impl bytemuck::Zeroable for Point64 {}
-unsafe impl bytemuck::Pod for Point64 {}
-
-
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum SearchAxis {
     X,

@@ -8,7 +8,7 @@ use crate::{Shader, Transform, PixmapRef, SpreadMode};
 
 use crate::floating_point::NormalizedF32;
 use crate::pipeline;
-use crate::shaders::StageRec;
+use crate::pipeline::RasterPipelineBuilder;
 
 
 /// Controls how much filtering to be done when transforming images.
@@ -31,7 +31,7 @@ pub enum FilterQuality {
 /// mipmap generation, which adds too much complexity.
 #[derive(Clone, Debug)]
 pub struct Pattern<'a> {
-    pixmap: PixmapRef<'a>,
+    pub(crate) pixmap: PixmapRef<'a>,
     quality: FilterQuality,
     spread_mode: SpreadMode,
     pub(crate) opacity: NormalizedF32,
@@ -59,19 +59,12 @@ impl<'a> Pattern<'a> {
         })
     }
 
-    pub(crate) fn push_stages(&self, rec: StageRec) -> Option<()> {
+    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> Option<()> {
         let ts = self.transform.invert()?;
 
-        rec.pipeline.push(pipeline::Stage::SeedShader);
+        p.push(pipeline::Stage::SeedShader);
 
-        rec.pipeline.push_transform(ts, rec.ctx_storage);
-
-        let ctx = pipeline::GatherCtx {
-            pixels: self.pixmap.pixels().as_ptr(),
-            pixels_len: self.pixmap.pixels().len(),
-            width: self.pixmap.size().width_safe(),
-            height: self.pixmap.size().height_safe(),
-        };
+        p.push_transform(ts);
 
         let mut quality = self.quality;
 
@@ -93,65 +86,57 @@ impl<'a> Pattern<'a> {
 
         match quality {
             FilterQuality::Nearest => {
-                let limit_x = pipeline::TileCtx {
+                p.ctx.limit_x = pipeline::TileCtx {
                     scale: self.pixmap.width() as f32,
                     inv_scale: 1.0 / self.pixmap.width() as f32,
                 };
 
-                let limit_y = pipeline::TileCtx {
+                p.ctx.limit_y = pipeline::TileCtx {
                     scale: self.pixmap.height() as f32,
                     inv_scale: 1.0 / self.pixmap.height() as f32,
                 };
 
-                let limit_x = rec.ctx_storage.push_context(limit_x);
-                let limit_y = rec.ctx_storage.push_context(limit_y);
-                let ctx = rec.ctx_storage.push_context(ctx);
-
                 match self.spread_mode {
-                    SpreadMode::Pad => { /* The gather_xxx stage will clamp for us. */ }
+                    SpreadMode::Pad => { /* The gather() stage will clamp for us. */ }
                     SpreadMode::Repeat => {
-                        rec.pipeline.push_with_context(pipeline::Stage::RepeatX, limit_x);
-                        rec.pipeline.push_with_context(pipeline::Stage::RepeatY, limit_y);
+                        p.push(pipeline::Stage::RepeatX);
+                        p.push(pipeline::Stage::RepeatY);
                     }
                     SpreadMode::Reflect => {
-                        rec.pipeline.push_with_context(pipeline::Stage::ReflectX, limit_x);
-                        rec.pipeline.push_with_context(pipeline::Stage::ReflectY, limit_y);
+                        p.push(pipeline::Stage::ReflectX);
+                        p.push(pipeline::Stage::ReflectY);
                     }
                 }
 
-                rec.pipeline.push_with_context(pipeline::Stage::Gather, ctx);
+                p.push(pipeline::Stage::Gather);
             }
             FilterQuality::Bilinear => {
-                let sampler_ctx = pipeline::SamplerCtx {
-                    gather: ctx,
+                p.ctx.sampler = pipeline::SamplerCtx {
                     spread_mode: self.spread_mode,
-                    inv_width: 1.0 / ctx.width.get() as f32,
-                    inv_height: 1.0 / ctx.height.get() as f32,
+                    inv_width: 1.0 / self.pixmap.width() as f32,
+                    inv_height: 1.0 / self.pixmap.height() as f32,
                 };
-                let sampler_ctx = rec.ctx_storage.push_context(sampler_ctx);
-                rec.pipeline.push_with_context(pipeline::Stage::Bilinear, sampler_ctx);
+                p.push(pipeline::Stage::Bilinear);
             }
             FilterQuality::Bicubic => {
-                let sampler_ctx = pipeline::SamplerCtx {
-                    gather: ctx,
+                p.ctx.sampler = pipeline::SamplerCtx {
                     spread_mode: self.spread_mode,
-                    inv_width: 1.0 / ctx.width.get() as f32,
-                    inv_height: 1.0 / ctx.height.get() as f32,
+                    inv_width: 1.0 / self.pixmap.width() as f32,
+                    inv_height: 1.0 / self.pixmap.height() as f32,
                 };
-                let sampler_ctx = rec.ctx_storage.push_context(sampler_ctx);
-                rec.pipeline.push_with_context(pipeline::Stage::Bicubic, sampler_ctx);
+                p.push(pipeline::Stage::Bicubic);
 
                 // Bicubic filtering naturally produces out of range values on both sides of [0,1].
-                rec.pipeline.push(pipeline::Stage::Clamp0);
-                rec.pipeline.push(pipeline::Stage::ClampA);
+                p.push(pipeline::Stage::Clamp0);
+                p.push(pipeline::Stage::ClampA);
             }
         }
 
         // Unlike Skia, we do not support global opacity and only Pattern allows it.
         if self.opacity != NormalizedF32::ONE {
             debug_assert_eq!(std::mem::size_of_val(&self.opacity), 4, "alpha must be f32");
-            let opacity = rec.ctx_storage.push_context(self.opacity.get());
-            rec.pipeline.push_with_context(pipeline::Stage::Scale1Float, opacity);
+            p.ctx.current_coverage = self.opacity.get();
+            p.push(pipeline::Stage::Scale1Float);
         }
 
         Some(())

@@ -26,8 +26,13 @@ impl Cubic64 {
         Cubic64 { points }
     }
 
-    pub fn as_f64_slice(&self) -> &[f64; POINT_COUNT*2] {
-        points64_to_f64s!(&self.points, POINT_COUNT)
+    pub fn as_f64_slice(&self) -> [f64; POINT_COUNT*2] {
+        [
+            self.points[0].x, self.points[0].y,
+            self.points[1].x, self.points[1].y,
+            self.points[2].x, self.points[2].y,
+            self.points[3].x, self.points[3].y,
+        ]
     }
 
     pub fn point_at_t(&self, t: f64) -> Point64 {
@@ -176,9 +181,8 @@ impl Cubic64 {
 
             Cubic64Pair { points: dst }
         } else {
-            let dst_f64 = points64_to_f64s_mut!(&mut dst, 7);
-            interp_cubic_coords(self.as_f64_slice(), t, dst_f64);
-            interp_cubic_coords(&self.as_f64_slice()[1..], t, &mut dst_f64[1..]);
+            interp_cubic_coords_x(&self.points, t, &mut dst);
+            interp_cubic_coords_y(&self.points, t, &mut dst);
             Cubic64Pair { points: dst }
         }
     }
@@ -367,21 +371,40 @@ fn cmp_f64(a: &f64, b: &f64) -> std::cmp::Ordering {
 }
 
 // classic one t subdivision
-fn interp_cubic_coords(src: &[f64], t: f64, dst: &mut [f64]) {
+fn interp_cubic_coords_x(src: &[Point64; 4], t: f64, dst: &mut [Point64; 7]) {
     use super::interp;
 
-    let ab = interp(src[0], src[2], t);
-    let bc = interp(src[2], src[4], t);
-    let cd = interp(src[4], src[6], t);
+    let ab = interp(src[0].x, src[1].x, t);
+    let bc = interp(src[1].x, src[2].x, t);
+    let cd = interp(src[2].x, src[3].x, t);
     let abc = interp(ab, bc, t);
     let bcd = interp(bc, cd, t);
     let abcd = interp(abc, bcd, t);
 
-    dst[0] = src[0];
-    dst[2] = ab;
-    dst[4] = abc;
-    dst[6] = abcd;
-    dst[8] = bcd;
-    dst[10] = cd;
-    dst[12] = src[6];
+    dst[0].x = src[0].x;
+    dst[1].x = ab;
+    dst[2].x = abc;
+    dst[3].x = abcd;
+    dst[4].x = bcd;
+    dst[5].x = cd;
+    dst[6].x = src[3].x;
+}
+
+fn interp_cubic_coords_y(src: &[Point64; 4], t: f64, dst: &mut [Point64; 7]) {
+    use super::interp;
+
+    let ab = interp(src[0].y, src[1].y, t);
+    let bc = interp(src[1].y, src[2].y, t);
+    let cd = interp(src[2].y, src[3].y, t);
+    let abc = interp(ab, bc, t);
+    let bcd = interp(bc, cd, t);
+    let abcd = interp(abc, bcd, t);
+
+    dst[0].y = src[0].y;
+    dst[1].y = ab;
+    dst[2].y = abc;
+    dst[3].y = abcd;
+    dst[4].y = bcd;
+    dst[5].y = cd;
+    dst[6].y = src[3].y;
 }

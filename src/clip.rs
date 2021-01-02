@@ -6,16 +6,25 @@
 use crate::{Path, LengthU32, FillRule};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
-use crate::screen_int_rect::ScreenIntRect;
-use crate::blitter::Blitter;
-use crate::math::LENGTH_U32_ONE;
-use crate::color::AlphaU8;
 use crate::alpha_runs::AlphaRun;
+use crate::blitter::Blitter;
+use crate::color::AlphaU8;
+use crate::math::LENGTH_U32_ONE;
+use crate::screen_int_rect::ScreenIntRect;
 
 #[derive(Clone, Debug)]
 pub struct ClipMaskData {
     pub data: Vec<u8>,
     pub width: LengthU32,
+}
+
+impl ClipMaskData {
+    pub(crate) fn clip_mask_ctx(&self) -> crate::pipeline::ClipMaskCtx {
+        crate::pipeline::ClipMaskCtx {
+            data: &self.data,
+            stride: self.width,
+        }
+    }
 }
 
 
@@ -28,15 +37,21 @@ pub struct ClipMask {
     mask: ClipMaskData,
 }
 
-impl ClipMask {
-    /// Creates a new, empty mask.
-    pub fn new() -> Self {
+impl Default for ClipMask {
+    fn default() -> Self {
         ClipMask {
             mask: ClipMaskData {
                 data: Vec::new(),
                 width: LENGTH_U32_ONE,
-            },
+            }
         }
+    }
+}
+
+impl ClipMask {
+    /// Creates a new, empty mask.
+    pub fn new() -> Self {
+        ClipMask::default()
     }
 
     /// Checks that mask is empty.

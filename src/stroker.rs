@@ -8,7 +8,7 @@
 
 use crate::{Path, Point, PathBuilder, Transform, PathSegment, PathSegmentsIter, StrokeDash};
 
-use crate::floating_point::{NormalizedF32, NonZeroPositiveF32};
+use crate::floating_point::{NormalizedF32, NonZeroPositiveF32, NormalizedF32Exclusive};
 use crate::path_builder::PathDirection;
 use crate::path_geometry;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
@@ -732,7 +732,7 @@ impl PathStroker {
                 // to find the tangent at that point.
                 //
                 // Unwrap never fails, because we already checked that `t` is not 0/1,
-                let t = path_geometry::TValue::new(t.get()).unwrap();
+                let t = NormalizedF32Exclusive::new(t.get()).unwrap();
                 path_geometry::chop_cubic_at2(&cubic, t, &mut chopped);
                 dxy = chopped[3] - chopped[2];
                 if dxy.x == 0.0 && dxy.y == 0.0 {
@@ -1679,8 +1679,8 @@ fn pt_to_line(pt: Point, line_start: Point, line_end: Point) -> f32 {
 fn intersect_quad_ray<'a>(
     line: &[Point; 2],
     quad: &[Point; 3],
-    roots: &'a mut [path_geometry::TValue; 3],
-) -> &'a [path_geometry::TValue] {
+    roots: &'a mut [NormalizedF32Exclusive; 3],
+) -> &'a [NormalizedF32Exclusive] {
     let vec = line[1] - line[0];
     let mut r = [0.0; 3];
     for n in 0..3 {

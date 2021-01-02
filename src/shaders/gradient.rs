@@ -7,10 +7,9 @@
 use crate::{Color, Transform, SpreadMode};
 
 use crate::floating_point::NormalizedF32;
-use crate::pipeline::{EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
-use crate::pipeline::{self, RasterPipelineBuilder};
+use crate::pipeline::{self, EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
+use crate::pipeline::RasterPipelineBuilder;
 use crate::scalar::Scalar;
-use crate::shaders::StageRec;
 
 // The default SCALAR_NEARLY_ZERO threshold of .0024 is too big and causes regressions for svg
 // gradients defined in the wild.
@@ -104,25 +103,24 @@ impl Gradient {
 
     pub fn push_stages(
         &self,
-        mut rec: StageRec,
-        push_stages: &dyn Fn(&mut StageRec, &mut RasterPipelineBuilder),
+        p: &mut RasterPipelineBuilder,
+        push_stages_pre: &dyn Fn(&mut RasterPipelineBuilder),
+        push_stages_post: &dyn Fn(&mut RasterPipelineBuilder),
     ) -> Option<()> {
-        let mut post_pipeline = RasterPipelineBuilder::new();
-
-        rec.pipeline.push(pipeline::Stage::SeedShader);
+        p.push(pipeline::Stage::SeedShader);
 
         let ts = self.transform.invert()?;
         let ts = ts.post_concat(&self.points_to_unit)?;
-        rec.pipeline.push_transform(ts, rec.ctx_storage);
+        p.push_transform(ts);
 
-        push_stages(&mut rec, &mut post_pipeline);
+        push_stages_pre(p);
 
         match self.tile_mode {
             SpreadMode::Reflect => {
-                rec.pipeline.push(pipeline::Stage::ReflectX1);
+                p.push(pipeline::Stage::ReflectX1);
             }
             SpreadMode::Repeat => {
-                rec.pipeline.push(pipeline::Stage::RepeatX1);
+                p.push(pipeline::Stage::RepeatX1);
             }
             SpreadMode::Pad => {
                 if self.has_uniform_stops {
@@ -130,7 +128,7 @@ impl Gradient {
                     // If not, there may be hard stops, and clamping ruins hard stops at 0 and/or 1.
                     // In that case, we must make sure we're using the general "gradient" stage,
                     // which is the only stage that will correctly handle unclamped t.
-                    rec.pipeline.push(pipeline::Stage::PadX1);
+                    p.push(pipeline::Stage::PadX1);
                 }
             }
         }
@@ -142,7 +140,7 @@ impl Gradient {
             let c0 = self.stops[0].color;
             let c1 = self.stops[1].color;
 
-            let ctx = EvenlySpaced2StopGradientCtx {
+            p.ctx.evenly_spaced_2_stop_gradient = EvenlySpaced2StopGradientCtx {
                 factor: GradientColor::new(
                     c1.red() - c0.red(),
                     c1.green() - c0.green(),
@@ -152,8 +150,7 @@ impl Gradient {
                 bias: GradientColor::from(c0),
             };
 
-            let ctx = rec.ctx_storage.push_context(ctx);
-            rec.pipeline.push_with_context(pipeline::Stage::EvenlySpaced2StopGradient, ctx);
+            p.push(pipeline::Stage::EvenlySpaced2StopGradient);
         } else {
             // Unlike Skia, we do not support the `evenly_spaced_gradient` stage.
             // In our case, there is no performance difference.
@@ -237,15 +234,15 @@ impl Gradient {
                 ctx.biases.push(GradientColor::default());
             }
 
-            let ctx = rec.ctx_storage.push_context(ctx);
-            rec.pipeline.push_with_context(pipeline::Stage::Gradient, ctx);
+            p.push(pipeline::Stage::Gradient);
+            p.ctx.gradient = ctx;
         }
 
         if !self.colors_are_opaque {
-            rec.pipeline.push(pipeline::Stage::Premultiply);
+            p.push(pipeline::Stage::Premultiply);
         }
 
-        rec.pipeline.extend(&post_pipeline);
+        push_stages_post(p);
 
         Some(())
     }

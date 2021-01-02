@@ -8,9 +8,9 @@ use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 
 use crate::pipeline;
 use crate::scalar::Scalar;
-use crate::shaders::StageRec;
 use crate::wide::u32x8;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
+use crate::pipeline::RasterPipelineBuilder;
 
 #[derive(Copy, Clone, Debug)]
 struct FocalData {
@@ -136,37 +136,45 @@ impl RadialGradient {
         }
     }
 
-    pub(crate) fn push_stages(&self, rec: StageRec) -> Option<()> {
-        self.base.push_stages(rec, &|rec, post_p| {
-            if let Some(focal_data) = self.focal_data {
-                // Unlike, we have only the Focal radial gradient type.
+    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> Option<()> {
+        let p0 = if let Some(focal_data) = self.focal_data {
+            1.0 / focal_data.r1
+        } else {
+            1.0
+        };
 
-                let ctx = pipeline::TwoPointConicalGradientCtx {
-                    mask: u32x8::default(),
-                    p0: 1.0 / focal_data.r1,
-                };
+        p.ctx.two_point_conical_gradient = pipeline::TwoPointConicalGradientCtx {
+            mask: u32x8::default(),
+            p0,
+        };
 
-                let ctx = rec.ctx_storage.push_context(ctx);
+        self.base.push_stages(p,
+            &|p| {
+                if let Some(focal_data) = self.focal_data {
+                    // Unlike Skia, we have only the Focal radial gradient type.
 
-                if focal_data.is_focal_on_circle() {
-                    rec.pipeline.push(pipeline::Stage::XYTo2PtConicalFocalOnCircle);
-                } else if focal_data.is_well_behaved() {
-                    rec.pipeline.push_with_context(
-                        pipeline::Stage::XYTo2PtConicalWellBehaved, ctx);
+                    if focal_data.is_focal_on_circle() {
+                        p.push(pipeline::Stage::XYTo2PtConicalFocalOnCircle);
+                    } else if focal_data.is_well_behaved() {
+                        p.push(pipeline::Stage::XYTo2PtConicalWellBehaved);
+                    } else {
+                        p.push(pipeline::Stage::XYTo2PtConicalGreater);
+                    }
+
+                    if !focal_data.is_well_behaved() {
+                        p.push(pipeline::Stage::Mask2PtConicalDegenerates);
+                    }
                 } else {
-                    rec.pipeline.push_with_context(
-                        pipeline::Stage::XYTo2PtConicalGreater, ctx);
+                    p.push(pipeline::Stage::XYToRadius);
                 }
-
-                if !focal_data.is_well_behaved() {
-                    rec.pipeline.push_with_context(
-                        pipeline::Stage::Mask2PtConicalDegenerates, ctx);
-
-                    post_p.push_with_context(pipeline::Stage::ApplyVectorMask, ctx);
+            },
+            &|p| {
+                if let Some(focal_data) = self.focal_data {
+                    if !focal_data.is_well_behaved() {
+                        p.push(pipeline::Stage::ApplyVectorMask);
+                    }
                 }
-            } else {
-                rec.pipeline.push(pipeline::Stage::XYToRadius);
-            }
-        })
+            },
+        )
     }
 }

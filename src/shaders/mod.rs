@@ -17,7 +17,7 @@ pub use pattern::{Pattern, FilterQuality};
 use crate::{Color, Transform};
 
 use crate::floating_point::NormalizedF32;
-use crate::pipeline::{RasterPipelineBuilder, ContextStorage};
+use crate::pipeline::RasterPipelineBuilder;
 use crate::scalar::Scalar;
 
 
@@ -36,10 +36,10 @@ pub enum SpreadMode {
     Repeat,
 }
 
-
-pub struct StageRec<'a> {
-    pub ctx_storage: &'a mut ContextStorage,
-    pub pipeline: &'a mut RasterPipelineBuilder,
+impl Default for SpreadMode {
+    fn default() -> Self {
+        SpreadMode::Pad
+    }
 }
 
 
@@ -78,12 +78,15 @@ impl<'a> Shader<'a> {
     // Unlike Skia, we do not have is_constant, because we don't have Color shaders.
 
     /// If this returns false, then we draw nothing (do not fall back to shader context)
-    pub(crate) fn push_stages(&self, rec: StageRec) -> Option<()> {
+    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> Option<()> {
         match self {
-            Shader::SolidColor(_) => Some(()),
-            Shader::LinearGradient(ref g) => g.push_stages(rec),
-            Shader::RadialGradient(ref g) => g.push_stages(rec),
-            Shader::Pattern(ref p) => p.push_stages(rec),
+            Shader::SolidColor(color) => {
+                p.push_uniform_color(color.premultiply());
+                Some(())
+            }
+            Shader::LinearGradient(ref g) => g.push_stages(p),
+            Shader::RadialGradient(ref g) => g.push_stages(p),
+            Shader::Pattern(ref patt) => patt.push_stages(p),
         }
     }
 
