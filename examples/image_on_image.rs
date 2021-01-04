@@ -1,7 +1,7 @@
 use tiny_skia::*;
 
 fn main() {
-    let triangle = crate_triangle();
+    let triangle = create_triangle();
 
     let mut pixmap = Pixmap::new(400, 400).unwrap();
     let mut canvas = Canvas::from(pixmap.as_mut());
@@ -19,7 +19,7 @@ fn main() {
     pixmap.save_png("image.png").unwrap();
 }
 
-fn crate_triangle() -> Pixmap {
+fn create_triangle() -> Pixmap {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
     let mut canvas = Canvas::from(pixmap.as_mut());
 
