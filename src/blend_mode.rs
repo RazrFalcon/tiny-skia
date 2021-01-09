@@ -53,13 +53,13 @@ pub enum BlendMode {
     Exclusion,
     /// Multiply source with destination, darkening image.
     Multiply,
-    /// hue of source with saturation and luminosity of destination
+    /// Hue of source with saturation and luminosity of destination.
     Hue,
-    /// saturation of source with hue and luminosity of destination
+    /// Saturation of source with hue and luminosity of destination.
     Saturation,
-    ///. hue and saturation of source with luminosity of destination
+    /// Hue and saturation of source with luminosity of destination.
     Color,
-    /// luminosity of source with hue and saturation of destination
+    /// Luminosity of source with hue and saturation of destination.
     Luminosity,
 }
 
@@ -77,11 +77,11 @@ impl BlendMode {
         //   2) always pre-scale Plus.
         //
         // When we pre-scale with rgb coverage, we scale each of source r,g,b, with a distinct value,
-        // and source alpha with one of those three values.  This process destructively updates the
+        // and source alpha with one of those three values. This process destructively updates the
         // source-alpha term, so we can't evaluate blend modes that need its original value.
         //
         // Plus always requires pre-scaling as a specific quirk of its implementation in
-        // SkRasterPipeline.  This lets us put the clamp inside the blend mode itself rather
+        // RasterPipeline. This lets us put the clamp inside the blend mode itself rather
         // than as a separate stage that'd come after the lerp.
         //
         // This function is a finer-grained breakdown of SkBlendMode_SupportsCoverageAsAlpha().

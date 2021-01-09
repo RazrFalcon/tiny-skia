@@ -421,7 +421,7 @@ blend_fn2!(difference,  |s: u16x16, d, sa, da|
 
 blend_fn2!(hard_light, |s: u16x16, d: u16x16, sa, da| {
     div255(s * inv(da) + d * inv(sa)
-        + (s+s).cmp_le(&sa).if_then_else(
+        + (s+s).cmp_le(&sa).blend(
             u16x16::splat(2) * s * d,
             sa * da - u16x16::splat(2) * (sa-s)*(da-d)
         )
@@ -430,7 +430,7 @@ blend_fn2!(hard_light, |s: u16x16, d: u16x16, sa, da| {
 
 blend_fn2!(overlay, |s: u16x16, d: u16x16, sa, da| {
     div255(s * inv(da) + d * inv(sa)
-        + (d+d).cmp_le(&da).if_then_else(
+        + (d+d).cmp_le(&da).blend(
             u16x16::splat(2) * s * d,
             sa * da - u16x16::splat(2) * (sa-s)*(da-d)
         )

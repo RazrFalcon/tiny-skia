@@ -463,7 +463,7 @@ blend_fn2!(soft_light, |s: f32x8, d: f32x8, sa: f32x8, da: f32x8| {
     let lite_src = d * sa + da * (s2 - sa)
         * two(two(d)).cmp_le(da).blend(dark_dst, lite_dst); // 2 or 3?
 
-    s*inv(da) + d*inv(sa) + s2.cmp_le(sa).blend(dark_src, lite_src) // 1 or (2 or 3)?
+    s * inv(da) + d * inv(sa) + s2.cmp_le(sa).blend(dark_src, lite_src) // 1 or (2 or 3)?
 });
 
 // We're basing our implementation of non-separable blend modes on

@@ -81,7 +81,7 @@ impl u16x16 {
     }
 
     #[inline]
-    pub fn if_then_else(self, t: Self, e: Self) -> Self {
+    pub fn blend(self, t: Self, e: Self) -> Self {
         (t & self) | (e & !self)
     }
 }
