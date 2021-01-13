@@ -217,7 +217,7 @@ impl Transform {
         let tmp = from_poly2(src1, src2)?;
         let res = tmp.invert()?;
         let tmp = from_poly2(dst1, dst2)?;
-        concat(&tmp, &res)
+        Some(concat(&tmp, &res))
     }
 
     /// Returns scale pair.
@@ -242,6 +242,12 @@ impl Transform {
     #[inline]
     pub fn get_row(&self) -> (f32, f32, f32, f32, f32, f32) {
         (self.sx.get(), self.ky.get(), self.kx.get(), self.sy.get(), self.tx.get(), self.ty.get())
+    }
+
+    /// Returns all values.
+    #[inline]
+    fn get_row_safe(&self) -> (FiniteF32, FiniteF32, FiniteF32, FiniteF32, FiniteF32, FiniteF32) {
+        (self.sx, self.ky, self.kx, self.sy, self.tx, self.ty)
     }
 
     /// Checks that transform is identity.
@@ -332,7 +338,7 @@ impl Transform {
     #[must_use]
     pub fn pre_scale(&self, sx: f32, sy: f32) -> Option<Self> {
         let other = Transform::from_scale(sx, sy)?;
-        self.pre_concat(&other)
+        Some(self.pre_concat(&other))
     }
 
     /// Post-scales the current transform.
@@ -340,7 +346,7 @@ impl Transform {
     #[must_use]
     pub fn post_scale(&mut self, sx: f32, sy: f32) -> Option<Self> {
         let other = Transform::from_scale(sx, sy)?;
-        self.post_concat(&other)
+        Some(self.post_concat(&other))
     }
 
     /// Pre-translates the current transform.
@@ -348,7 +354,7 @@ impl Transform {
     #[must_use]
     pub fn pre_translate(&self, tx: f32, ty: f32) -> Option<Self> {
         let other = Transform::from_translate(tx, ty)?;
-        self.pre_concat(&other)
+        Some(self.pre_concat(&other))
     }
 
     /// Post-translates the current transform.
@@ -356,20 +362,20 @@ impl Transform {
     #[must_use]
     pub fn post_translate(&self, tx: f32, ty: f32) -> Option<Self> {
         let other = Transform::from_translate(tx, ty)?;
-        self.post_concat(&other)
+        Some(self.post_concat(&other))
     }
 
     /// Pre-concats the current transform.
     #[inline]
     #[must_use]
-    pub fn pre_concat(&self, other: &Self) -> Option<Self> {
+    pub fn pre_concat(&self, other: &Self) -> Self {
         concat(self, other)
     }
 
     /// Post-concats the current transform.
     #[inline]
     #[must_use]
-    pub fn post_concat(&self, other: &Self) -> Option<Self> {
+    pub fn post_concat(&self, other: &Self) -> Self {
         concat(other, self)
     }
 
@@ -532,19 +538,19 @@ fn sdot(a: f32, b: f32, c: f32, d: f32) -> f32 {
     a * b + c * d
 }
 
-fn concat(a: &Transform, b: &Transform) -> Option<Transform> {
+fn concat(a: &Transform, b: &Transform) -> Transform {
     if a.is_identity() {
-        Some(*b)
+        *b
     } else if b.is_identity() {
-        Some(*a)
+        *a
     } else if !a.has_skew() && !b.has_skew() {
         // just scale and translate
-        let (a_sx, _, _, a_sy, a_tx, a_ty) = a.get_row();
-        let (b_sx, _, _, b_sy, b_tx, b_ty) = b.get_row();
-        Transform::from_row(
+        let (a_sx, _, _, a_sy, a_tx, a_ty) = a.get_row_safe();
+        let (b_sx, _, _, b_sy, b_tx, b_ty) = b.get_row_safe();
+        Transform::from_row_safe(
             a_sx * b_sx,
-            0.0,
-            0.0,
+            FiniteF32::new(0.0).unwrap(),
+            FiniteF32::new(0.0).unwrap(),
             a_sy * b_sy,
             a_sx * b_tx + a_tx,
             a_sy * b_ty + a_ty,
@@ -552,19 +558,20 @@ fn concat(a: &Transform, b: &Transform) -> Option<Transform> {
     } else {
         let (a_sx, a_ky, a_kx, a_sy, a_tx, a_ty) = a.get_row();
         let (b_sx, b_ky, b_kx, b_sy, b_tx, b_ty) = b.get_row();
-        Transform::from_row(
+        Transform::from_row_safe(
             mul_add_mul(a_sx, b_sx, a_kx, b_ky),
             mul_add_mul(a_ky, b_sx, a_sy, b_ky),
             mul_add_mul(a_sx, b_kx, a_kx, b_sy),
             mul_add_mul(a_ky, b_kx, a_sy, b_sy),
-            mul_add_mul(a_sx, b_tx, a_kx, b_ty) + a_tx,
-            mul_add_mul(a_ky, b_tx, a_sy, b_ty) + a_ty,
+            mul_add_mul(a_sx, b_tx, a_kx, b_ty) + FiniteF32::new(a_tx).unwrap(),
+            mul_add_mul(a_ky, b_tx, a_sy, b_ty) + FiniteF32::new(a_ty).unwrap(),
         )
     }
 }
 
-fn mul_add_mul(a: f32, b: f32, c: f32, d: f32) -> f32 {
-    (f64::from(a) * f64::from(b) + f64::from(c) * f64::from(d)) as f32
+fn mul_add_mul(a: f32, b: f32, c: f32, d: f32) -> FiniteF32 {
+    FiniteF32::new((f64::from(a) * f64::from(b) + f64::from(c) * f64::from(d)) as f32).expect(
+        "A f64 from multiplication can be casted to a finite f32")
 }
 
 #[cfg(test)]

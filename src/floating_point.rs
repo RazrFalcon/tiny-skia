@@ -4,6 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use std::ops::{Add, Mul};
+
 use crate::scalar::Scalar;
 
 pub const FLOAT_PI: f32 = 3.14159265;
@@ -162,6 +164,22 @@ impl PartialOrd for FiniteF32 {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+impl Add for FiniteF32 {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self::new(self.get() + other.get()).unwrap()
+    }
+}
+
+impl Mul for FiniteF32 {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        Self::new(self.get() * rhs.get()).unwrap()
     }
 }
 

@@ -119,9 +119,7 @@ impl<'a> Canvas<'a> {
     /// Applies an affine transformation to the canvas.
     #[inline]
     pub fn apply_transform(&mut self, ts: &Transform) {
-        if let Some(ts) = self.transform.pre_concat(ts) {
-            self.transform = ts;
-        }
+        self.transform = self.transform.pre_concat(ts)
     }
 
     /// Gets the current canvas transform.

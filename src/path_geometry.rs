@@ -950,7 +950,7 @@ impl Conic {
             transform = transform.pre_scale(1.0, -1.0)?;
         }
 
-        transform = transform.post_concat(user_transform)?;
+        transform = transform.post_concat(user_transform);
 
         for conic in dst.iter_mut().take(conic_count) {
             transform.map_points(&mut conic.points);
