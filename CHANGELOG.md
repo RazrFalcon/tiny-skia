@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Endless loop during stroke dashing.
 
 ## [0.4.0] - 2021-01-02
 ### Changed

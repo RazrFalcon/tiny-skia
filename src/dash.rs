@@ -86,6 +86,23 @@ mod tests {
         assert_eq!(StrokeDash::new(vec![1.0, 1.0], f32::INFINITY), None);
         assert_eq!(StrokeDash::new(vec![1.0, f32::INFINITY], 0.0), None);
     }
+
+    #[test]
+    fn bug_26() {
+        let mut pb = PathBuilder::new();
+        pb.move_to(665.54,287.3);
+        pb.line_to(675.67,273.04);
+        pb.line_to(675.52,271.32);
+        pb.line_to(674.79,269.61);
+        pb.line_to(674.05,268.04);
+        pb.line_to(672.88,266.47);
+        pb.line_to(671.27,264.9);
+        let path = pb.finish().unwrap();
+
+        let stroke_dash = StrokeDash::new(vec![6.0, 4.5], 0.0).unwrap();
+
+        assert!(dash(&path, &stroke_dash, 1.0).is_some());
+    }
 }
 
 
@@ -402,14 +419,13 @@ impl ContourMeasure {
         if seg.point_index == stop_seg.point_index {
             segment_to(&self.points[seg.point_index..], seg.kind, start_t, stop_t, pb);
         } else {
+            let mut new_seg_index = seg_index;
             loop {
                 segment_to(&self.points[seg.point_index..], seg.kind, start_t, NormalizedF32::ONE, pb);
 
                 let old_point_index = seg.point_index;
-                let mut new_seg_index = seg_index;
                 loop {
                     new_seg_index += 1;
-
                     if self.segments[new_seg_index].point_index != old_point_index {
                         break;
                     }
