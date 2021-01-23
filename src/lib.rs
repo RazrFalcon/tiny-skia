@@ -4,7 +4,7 @@
 See the `examples/` directory for usage examples.
 */
 
-#![doc(html_root_url = "https://docs.rs/tiny-skia/0.4.1")]
+#![doc(html_root_url = "https://docs.rs/tiny-skia/0.4.2")]
 #![warn(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(missing_copy_implementations)]
