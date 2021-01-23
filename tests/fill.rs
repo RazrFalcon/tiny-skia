@@ -629,3 +629,30 @@ fn line_curve() {
 
     // Must not panic.
 }
+
+#[test]
+fn vertical_lines_merging_bug() {
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    let mut canvas = Canvas::from(pixmap.as_mut());
+
+    // This path must not trigger edge_builder::combine_vertical,
+    // otherwise AlphaRuns::add will crash later.
+    let mut pb = PathBuilder::new();
+    pb.move_to(765.56, 158.56);
+    pb.line_to(754.4, 168.28);
+    pb.cubic_to(754.4, 168.28, 754.4, 168.24, 754.4, 168.17);
+    pb.cubic_to(754.4, 168.09, 754.4, 168.02, 754.4, 167.95);
+    pb.line_to(754.4, 168.06);
+    let path = pb.finish().unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+
+    canvas.set_transform(Transform::from_row(5.4, 0.0, 0.0, 5.4, -4050.0, -840.0).unwrap());
+    // Must not panic.
+    canvas.fill_path(&path, &paint, FillRule::Winding);
+
+    let expected = Pixmap::load_png("tests/images/fill/vertical-lines-merging-bug.png").unwrap();
+    assert_eq!(pixmap, expected);
+}

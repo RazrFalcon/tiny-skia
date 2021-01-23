@@ -158,7 +158,11 @@ impl BasicEdgeBuilder {
     fn push_line(&mut self, points: &[Point; 2]) {
         if let Some(edge) = LineEdge::new(points[0], points[1], self.clip_shift) {
             let combine = if edge.is_vertical() && !self.edges.is_empty() {
-                combine_vertical(&edge, self.edges.last_mut().unwrap().as_line_mut())
+                if let Some(Edge::Line(last)) = self.edges.last_mut() {
+                    combine_vertical(&edge, last)
+                } else {
+                    Combine::No
+                }
             } else {
                 Combine::No
             };

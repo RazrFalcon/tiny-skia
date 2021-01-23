@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Panic during path filling with anti-aliasing because of incorrect edges processing.
 
 ## [0.4.1] - 2021-01-19
 ### Fixed
