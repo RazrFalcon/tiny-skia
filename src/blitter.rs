@@ -8,7 +8,7 @@ use crate::LengthU32;
 
 use crate::alpha_runs::AlphaRun;
 use crate::color::AlphaU8;
-use crate::screen_int_rect::ScreenIntRect;
+use crate::geom::ScreenIntRect;
 
 /// Mask is used to describe alpha bitmaps.
 pub struct Mask {

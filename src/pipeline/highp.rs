@@ -21,8 +21,7 @@ use wide::{CmpEq, CmpLe, CmpGt, CmpGe, CmpNe};
 
 use crate::{PremultipliedColorU8, SpreadMode, PixmapMut, PixmapRef};
 
-// use crate::pipeline::BasePipeline;
-use crate::screen_int_rect::ScreenIntRect;
+use crate::geom::ScreenIntRect;
 use crate::wide::{f32x8, i32x8, u32x8, F32x8Ext, I32x8Ext, U32x8Ext};
 
 pub const STAGE_WIDTH: usize = 8;

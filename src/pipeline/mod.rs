@@ -52,8 +52,8 @@ use crate::{Transform, PixmapRef, PixmapMut};
 pub use blitter::RasterPipelineBlitter;
 
 use crate::floating_point::NormalizedF32;
+use crate::geom::ScreenIntRect;
 use crate::math::LENGTH_U32_ONE;
-use crate::screen_int_rect::ScreenIntRect;
 use crate::wide::u32x8;
 
 mod blitter;

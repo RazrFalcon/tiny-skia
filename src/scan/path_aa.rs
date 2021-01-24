@@ -11,8 +11,8 @@ use crate::{Path, IntRect, FillRule, LengthU32, Rect};
 use crate::alpha_runs::AlphaRuns;
 use crate::blitter::Blitter;
 use crate::color::AlphaU8;
+use crate::geom::ScreenIntRect;
 use crate::math::left_shift;
-use crate::screen_int_rect::ScreenIntRect;
 
 /// controls how much we super-sample (when we use that scan conversion)
 const SUPERSAMPLE_SHIFT: u32 = 2;

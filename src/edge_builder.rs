@@ -8,9 +8,9 @@ use crate::{Point, Path};
 
 use crate::edge::{Edge, LineEdge, QuadraticEdge, CubicEdge};
 use crate::edge_clipper::EdgeClipperIter;
+use crate::geom::ScreenIntRect;
 use crate::path::PathEdge;
 use crate::path_geometry;
-use crate::screen_int_rect::ScreenIntRect;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 enum Combine {

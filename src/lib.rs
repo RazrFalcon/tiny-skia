@@ -23,9 +23,6 @@ See the `examples/` directory for usage examples.
 #![allow(clippy::neg_cmp_op_on_partial_ord)]
 #![allow(clippy::too_many_arguments)]
 
-// Must be first, because of macro scope rules.
-#[macro_use] mod point;
-
 mod alpha_runs;
 mod blend_mode;
 mod blitter;
@@ -38,8 +35,7 @@ mod edge_builder;
 mod edge_clipper;
 mod fixed_point;
 mod floating_point;
-mod int_rect;
-mod int_size;
+mod geom;
 mod line_clipper;
 mod math;
 mod painter;
@@ -49,10 +45,8 @@ mod path_builder;
 mod path_geometry;
 mod pipeline;
 mod pixmap;
-mod rect;
 mod scalar;
 mod scan;
-mod screen_int_rect;
 mod shaders;
 mod stroker;
 mod transform;
@@ -64,13 +58,11 @@ pub use clip::ClipMask;
 pub use color::{ALPHA_U8_TRANSPARENT, ALPHA_U8_OPAQUE, ALPHA_TRANSPARENT, ALPHA_OPAQUE};
 pub use color::{Color, ColorU8, PremultipliedColor, PremultipliedColorU8};
 pub use dash::StrokeDash;
-pub use int_rect::IntRect;
+pub use geom::{IntRect, Rect, Point};
 pub use painter::{Paint, FillRule};
 pub use path::{Path, PathSegment, PathSegmentsIter};
 pub use path_builder::PathBuilder;
 pub use pixmap::{Pixmap, PixmapRef, PixmapMut, BYTES_PER_PIXEL};
-pub use point::Point;
-pub use rect::Rect;
 pub use shaders::{GradientStop, SpreadMode, FilterQuality};
 pub use shaders::{Shader, LinearGradient, RadialGradient, Pattern};
 pub use stroker::{LineCap, LineJoin, Stroke};

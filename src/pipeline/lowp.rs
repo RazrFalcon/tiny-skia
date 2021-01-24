@@ -30,7 +30,7 @@ use std::ffi::c_void;
 
 use crate::{PremultipliedColorU8, PixmapMut};
 
-use crate::screen_int_rect::ScreenIntRect;
+use crate::geom::ScreenIntRect;
 use crate::wide::{f32x4, u16x16, f32x16};
 
 pub const STAGE_WIDTH: usize = 16;

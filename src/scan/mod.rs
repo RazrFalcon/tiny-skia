@@ -13,7 +13,7 @@ pub mod hairline;
 use crate::{IntRect, Rect};
 
 use crate::blitter::Blitter;
-use crate::screen_int_rect::ScreenIntRect;
+use crate::geom::ScreenIntRect;
 
 
 #[inline]

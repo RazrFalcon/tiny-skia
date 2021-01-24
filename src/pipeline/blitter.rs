@@ -11,9 +11,9 @@ use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
 use crate::clip::ClipMaskData;
 use crate::color::AlphaU8;
+use crate::geom::ScreenIntRect;
 use crate::math::LENGTH_U32_ONE;
 use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder};
-use crate::screen_int_rect::ScreenIntRect;
 
 
 pub struct RasterPipelineBlitter<'a, 'b: 'a> {

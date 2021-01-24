@@ -10,8 +10,7 @@ use std::num::NonZeroUsize;
 use crate::{Color, IntRect};
 
 use crate::color::PremultipliedColorU8;
-use crate::int_size::IntSize;
-use crate::screen_int_rect::ScreenIntRect;
+use crate::geom::{IntSize, ScreenIntRect};
 
 #[cfg(feature = "png-format")]
 use crate::color::{premultiply_u8, ALPHA_U8_OPAQUE};

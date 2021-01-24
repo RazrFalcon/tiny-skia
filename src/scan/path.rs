@@ -13,7 +13,7 @@ use crate::edge::{Edge, LineEdge};
 use crate::edge_builder::{BasicEdgeBuilder, ShiftedIntRect};
 use crate::fixed_point::{fdot6, fdot16, FDot16};
 use crate::floating_point::SaturateCast;
-use crate::screen_int_rect::ScreenIntRect;
+use crate::geom::ScreenIntRect;
 
 pub fn fill_path(
     path: &Path,
