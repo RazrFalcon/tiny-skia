@@ -132,7 +132,7 @@ pub const STAGES_COUNT: usize = Stage::ApplyVectorMask as usize + 1;
 impl<'a> PixmapRef<'a> {
     #[inline(always)]
     pub(crate) fn gather(&self, index: u32x8) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
-        let index: [u32; 8] = index.into();
+        let index: [u32; 8] = bytemuck::cast(index);
         let pixels = self.pixels();
         [
             pixels[index[0] as usize],

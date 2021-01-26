@@ -15,11 +15,16 @@ categories = ["rendering"]
 arrayref = "0.3"
 arrayvec = "0.5"
 bytemuck = "1.4"
+cfg-if = "1"
 png = { version = "0.16", optional = true }
-wide = { version = "0.6.2", features = ["std"] }
+safe_arch = { version = "0.5.2", features = ["bytemuck"], optional = true }
 
 [features]
-default = ["png-format"]
+default = ["simd", "png-format"]
+
+# Enables x86 SIMD instructions from SSE up to AVX2.
+# Has no effect on non-x86 targets. Present mainly for testing.
+simd = ["safe_arch"]
 
 # Allows loading and saving `Pixmap` as PNG.
 png-format = ["png"]

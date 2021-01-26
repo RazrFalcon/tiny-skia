@@ -13,142 +13,57 @@
 // The only exception is U16x16, were we have to force inlining,
 // otherwise the performance will be horrible.
 
-pub use wide::{f32x4, i32x4, u32x4, f32x8, i32x8, u32x8};
+#![allow(non_camel_case_types)]
 
-mod u16x16_t;
+#[allow(unused_macros)]
+macro_rules! impl_x8_op {
+    ($a:expr, $op:ident, $b:expr) => {[
+        $a.0[0].$op($b.0[0]),
+        $a.0[1].$op($b.0[1]),
+        $a.0[2].$op($b.0[2]),
+        $a.0[3].$op($b.0[3]),
+        $a.0[4].$op($b.0[4]),
+        $a.0[5].$op($b.0[5]),
+        $a.0[6].$op($b.0[6]),
+        $a.0[7].$op($b.0[7]),
+    ]};
+}
+
+#[allow(unused_macros)]
+macro_rules! impl_x8_cmp {
+    ($a:expr, $op:ident, $b:expr, $passed:expr, $failed:expr) => {[
+        if $a.0[0].$op(&$b.0[0]) { $passed } else { $failed },
+        if $a.0[1].$op(&$b.0[1]) { $passed } else { $failed },
+        if $a.0[2].$op(&$b.0[2]) { $passed } else { $failed },
+        if $a.0[3].$op(&$b.0[3]) { $passed } else { $failed },
+        if $a.0[4].$op(&$b.0[4]) { $passed } else { $failed },
+        if $a.0[5].$op(&$b.0[5]) { $passed } else { $failed },
+        if $a.0[6].$op(&$b.0[6]) { $passed } else { $failed },
+        if $a.0[7].$op(&$b.0[7]) { $passed } else { $failed },
+    ]};
+}
+
+
 mod f32x2_t;
+mod f32x4_t;
+mod f32x8_t;
+mod i32x8_t;
+mod u32x8_t;
 mod f32x16_t;
-mod i32x16_t;
-mod u32x16_t;
+mod u16x16_t;
 
-pub use u16x16_t::u16x16;
 pub use f32x2_t::f32x2;
+pub use f32x4_t::f32x4;
+pub use f32x8_t::f32x8;
+pub use i32x8_t::i32x8;
+pub use u32x8_t::u32x8;
 pub use f32x16_t::f32x16;
-pub use i32x16_t::i32x16;
-pub use u32x16_t::u32x16;
+pub use u16x16_t::u16x16;
 
-
-pub trait F32x4Ext {
-    fn floor(self) -> Self;
-    fn fract(self) -> Self;
-    fn normalize(self) -> Self;
-    fn to_i32x4_bitcast(self) -> i32x4;
-    fn to_u32x4_bitcast(self) -> u32x4;
-}
-
-impl F32x4Ext for f32x4 {
-    fn floor(self) -> Self {
-        use wide::CmpGt;
-        let roundtrip = self.trunc_int().round_float();
-        roundtrip - roundtrip.cmp_gt(self).blend(f32x4::splat(1.0), f32x4::default())
-    }
-
-    fn fract(self) -> Self {
-        self - self.floor()
-    }
-
-    fn normalize(self) -> Self {
-        self.max(f32x4::default()).min(f32x4::splat(1.0))
-    }
-
-    fn to_i32x4_bitcast(self) -> i32x4 {
-        bytemuck::cast(self)
-    }
-
-    fn to_u32x4_bitcast(self) -> u32x4 {
-        bytemuck::cast(self)
-    }
-}
-
-pub trait U32x4Ext {
-    fn to_i32x4_bitcast(self) -> i32x4;
-    fn to_f32x4_bitcast(self) -> f32x4;
-}
-
-impl U32x4Ext for u32x4 {
-    fn to_i32x4_bitcast(self) -> i32x4 {
-        bytemuck::cast(self)
-    }
-
-    fn to_f32x4_bitcast(self) -> f32x4 {
-        bytemuck::cast(self)
-    }
-}
-
-pub trait I32x4Ext {
-    fn to_u32x4_bitcast(self) -> u32x4;
-    fn to_f32x4_bitcast(self) -> f32x4;
-}
-
-impl I32x4Ext for i32x4 {
-    fn to_u32x4_bitcast(self) -> u32x4 {
-        bytemuck::cast(self)
-    }
-
-    fn to_f32x4_bitcast(self) -> f32x4 {
-        bytemuck::cast(self)
-    }
-}
-
-
-pub trait F32x8Ext {
-    fn floor(self) -> Self;
-    fn fract(self) -> Self;
-    fn normalize(self) -> Self;
-    fn to_i32x8_bitcast(self) -> i32x8;
-    fn to_u32x8_bitcast(self) -> u32x8;
-}
-
-impl F32x8Ext for f32x8 {
-    fn floor(self) -> Self {
-        use wide::CmpGt;
-        let roundtrip = self.trunc_int().round_float();
-        roundtrip - roundtrip.cmp_gt(self).blend(f32x8::splat(1.0), f32x8::default())
-    }
-
-    fn fract(self) -> Self {
-        self - self.floor()
-    }
-
-    fn normalize(self) -> Self {
-        self.max(f32x8::default()).min(f32x8::splat(1.0))
-    }
-
-    fn to_i32x8_bitcast(self) -> i32x8 {
-        bytemuck::cast(self)
-    }
-
-    fn to_u32x8_bitcast(self) -> u32x8 {
-        bytemuck::cast(self)
-    }
-}
-
-pub trait U32x8Ext {
-    fn to_i32x8_bitcast(self) -> i32x8;
-    fn to_f32x8_bitcast(self) -> f32x8;
-}
-
-impl U32x8Ext for u32x8 {
-    fn to_i32x8_bitcast(self) -> i32x8 {
-        bytemuck::cast(self)
-    }
-
-    fn to_f32x8_bitcast(self) -> f32x8 {
-        bytemuck::cast(self)
-    }
-}
-
-pub trait I32x8Ext {
-    fn to_u32x8_bitcast(self) -> u32x8;
-    fn to_f32x8_bitcast(self) -> f32x8;
-}
-
-impl I32x8Ext for i32x8 {
-    fn to_u32x8_bitcast(self) -> u32x8 {
-        bytemuck::cast(self)
-    }
-
-    fn to_f32x8_bitcast(self) -> f32x8 {
-        bytemuck::cast(self)
-    }
+#[allow(dead_code)]
+pub fn generic_bit_blend<T>(mask: T, y: T, n: T) -> T
+where
+    T: Copy + std::ops::BitXor<Output = T> + std::ops::BitAnd<Output = T>,
+{
+    n ^ ((n ^ y) & mask)
 }

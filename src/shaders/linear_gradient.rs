@@ -111,7 +111,7 @@ fn points_to_unit_ts(start: Point, end: Point) -> Option<Transform> {
 }
 
 fn average_gradient_color(points: &[GradientStop]) -> Color {
-    use wide::f32x4;
+    use crate::wide::f32x4;
 
     fn load_color(c: Color) -> f32x4 {
         f32x4::from([c.red(), c.green(), c.blue(), c.alpha()])

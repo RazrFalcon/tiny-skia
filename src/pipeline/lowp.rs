@@ -31,7 +31,7 @@ use std::ffi::c_void;
 use crate::{PremultipliedColorU8, PixmapMut};
 
 use crate::geom::ScreenIntRect;
-use crate::wide::{f32x4, u16x16, f32x16};
+use crate::wide::{f32x8, u16x16, f32x16};
 
 pub const STAGE_WIDTH: usize = 16;
 
@@ -233,10 +233,8 @@ fn uniform_color(p: &mut Pipeline) {
 
 fn seed_shader(p: &mut Pipeline) {
     let iota = f32x16([
-        f32x4::from([ 0.5,  1.5,  2.5,  3.5]),
-        f32x4::from([ 4.5,  5.5,  6.5,  7.5]),
-        f32x4::from([ 8.5,  9.5, 10.5, 11.5]),
-        f32x4::from([12.5, 13.5, 14.5, 15.5]),
+        f32x8::from([0.5,  1.5,  2.5,  3.5,  4.5,  5.5,  6.5,  7.5]),
+        f32x8::from([8.5,  9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5]),
     ]);
 
     let x = f32x16::splat(p.dx as f32) + iota;
@@ -514,26 +512,24 @@ fn gradient(p: &mut Pipeline) {
     let mut idx = u16x16::splat(0);
     for i in 1..ctx.len {
         let tt = ctx.t_values[i].get();
-        let t0: [f32; 4] = t.0[0].into();
-        let t1: [f32; 4] = t.0[1].into();
-        let t2: [f32; 4] = t.0[2].into();
-        let t3: [f32; 4] = t.0[3].into();
+        let t0: [f32; 8] = t.0[0].into();
+        let t1: [f32; 8] = t.0[1].into();
         idx.0[ 0] += (t0[0] >= tt) as u16;
         idx.0[ 1] += (t0[1] >= tt) as u16;
         idx.0[ 2] += (t0[2] >= tt) as u16;
         idx.0[ 3] += (t0[3] >= tt) as u16;
-        idx.0[ 4] += (t1[0] >= tt) as u16;
-        idx.0[ 5] += (t1[1] >= tt) as u16;
-        idx.0[ 6] += (t1[2] >= tt) as u16;
-        idx.0[ 7] += (t1[3] >= tt) as u16;
-        idx.0[ 8] += (t2[0] >= tt) as u16;
-        idx.0[ 9] += (t2[1] >= tt) as u16;
-        idx.0[10] += (t2[2] >= tt) as u16;
-        idx.0[11] += (t2[3] >= tt) as u16;
-        idx.0[12] += (t3[0] >= tt) as u16;
-        idx.0[13] += (t3[1] >= tt) as u16;
-        idx.0[14] += (t3[2] >= tt) as u16;
-        idx.0[15] += (t3[3] >= tt) as u16;
+        idx.0[ 4] += (t0[4] >= tt) as u16;
+        idx.0[ 5] += (t0[5] >= tt) as u16;
+        idx.0[ 6] += (t0[6] >= tt) as u16;
+        idx.0[ 7] += (t0[7] >= tt) as u16;
+        idx.0[ 8] += (t1[0] >= tt) as u16;
+        idx.0[ 9] += (t1[1] >= tt) as u16;
+        idx.0[10] += (t1[2] >= tt) as u16;
+        idx.0[11] += (t1[3] >= tt) as u16;
+        idx.0[12] += (t1[4] >= tt) as u16;
+        idx.0[13] += (t1[5] >= tt) as u16;
+        idx.0[14] += (t1[6] >= tt) as u16;
+        idx.0[15] += (t1[7] >= tt) as u16;
     }
     gradient_lookup(ctx, &idx, t, &mut p.r, &mut p.g, &mut p.b, &mut p.a);
 
@@ -576,25 +572,21 @@ fn gradient_lookup(
             // Surprisingly, but bound checking doesn't affect the performance.
             // And since `idx` can contain any number, we should leave it in place.
             f32x16([
-                f32x4::from([
+                f32x8::from([
                     $d[idx.0[ 0] as usize].$c,
                     $d[idx.0[ 1] as usize].$c,
                     $d[idx.0[ 2] as usize].$c,
                     $d[idx.0[ 3] as usize].$c,
-                ]),
-                f32x4::from([
                     $d[idx.0[ 4] as usize].$c,
                     $d[idx.0[ 5] as usize].$c,
                     $d[idx.0[ 6] as usize].$c,
                     $d[idx.0[ 7] as usize].$c,
                 ]),
-                f32x4::from([
+                f32x8::from([
                     $d[idx.0[ 8] as usize].$c,
                     $d[idx.0[ 9] as usize].$c,
                     $d[idx.0[10] as usize].$c,
                     $d[idx.0[11] as usize].$c,
-                ]),
-                f32x4::from([
                     $d[idx.0[12] as usize].$c,
                     $d[idx.0[13] as usize].$c,
                     $d[idx.0[14] as usize].$c,

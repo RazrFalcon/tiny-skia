@@ -26,5 +26,30 @@ jobs:
     - name: Build without default features
       run: cargo build --verbose --no-default-features
 
-    - name: Run tests
+    - name: Run tests without SIMD
       run: cargo test --verbose --no-default-features --features png-format
+
+    - name: Run tests with simd SSE
+      env:
+        RUSTFLAGS: -Ctarget-feature=+sse
+      run: cargo test --verbose --all-features
+
+    - name: Run tests with simd SSE2
+      env:
+        RUSTFLAGS: -Ctarget-feature=+sse2
+      run: cargo test --verbose --all-features
+
+    - name: Run tests with simd SSE4.1
+      env:
+        RUSTFLAGS: -Ctarget-feature=+sse4.1
+      run: cargo test --verbose --all-features
+
+    - name: Run tests with simd AVX
+      env:
+        RUSTFLAGS: -Ctarget-feature=+avx
+      run: cargo test --verbose --all-features
+
+    - name: Run tests with simd AVX2
+      env:
+        RUSTFLAGS: -Ctarget-feature=+avx2
+      run: cargo test --verbose --all-features

@@ -247,8 +247,9 @@ dependencies = [
  "arrayref",
  "arrayvec",
  "bytemuck",
+ "cfg-if",
  "png 0.16.7",
- "wide",
+ "safe_arch",
 ]
 
 [[package]]
@@ -256,13 +257,3 @@ name = "typed-arena"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0685c84d5d54d1c26f7d3eb96cd41550adb97baed141a761cf335d3d33bcd0ae"
-
-[[package]]
-name = "wide"
-version = "0.6.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82f080666520472f63e0fe65225f0a0fadcb5b57f557d5630266f05999912f68"
-dependencies = [
- "bytemuck",
- "safe_arch",
-]

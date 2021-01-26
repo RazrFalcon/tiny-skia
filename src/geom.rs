@@ -6,12 +6,10 @@
 
 use std::convert::TryFrom;
 
-use wide::{f32x4};
-
 use crate::LengthU32;
 use crate::floating_point::{SaturateRound, FiniteF32};
 use crate::scalar::Scalar;
-use crate::wide::f32x2;
+use crate::wide::{f32x2, f32x4};
 
 
 /// A point.

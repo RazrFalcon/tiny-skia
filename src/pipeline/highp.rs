@@ -17,12 +17,10 @@ and we're using a manual implementation.
 
 use std::ffi::c_void;
 
-use wide::{CmpEq, CmpLe, CmpGt, CmpGe, CmpNe};
-
 use crate::{PremultipliedColorU8, SpreadMode, PixmapMut, PixmapRef};
 
 use crate::geom::ScreenIntRect;
-use crate::wide::{f32x8, i32x8, u32x8, F32x8Ext, I32x8Ext, U32x8Ext};
+use crate::wide::{f32x8, i32x8, u32x8};
 
 pub const STAGE_WIDTH: usize = 8;
 
@@ -317,7 +315,7 @@ fn mask_u8(p: &mut Pipeline) {
 }
 
 fn scale_u8(p: &mut Pipeline) {
-    // Load u8xTail and cast it to f32x4.
+    // Load u8xTail and cast it to f32x8.
     let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = f32x8::from([data[0] as f32, data[1] as f32, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
     let c = c / f32x8::splat(255.0);
@@ -331,7 +329,7 @@ fn scale_u8(p: &mut Pipeline) {
 }
 
 fn lerp_u8(p: &mut Pipeline) {
-    // Load u8xTail and cast it to f32x4.
+    // Load u8xTail and cast it to f32x8.
     let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = f32x8::from([data[0] as f32, data[1] as f32, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
     let c = c / f32x8::splat(255.0);
@@ -884,7 +882,7 @@ fn gradient(p: &mut Pipeline) {
     let mut idx = u32x8::default();
     for i in 1..ctx.len {
         let tt = ctx.t_values[i].get();
-        let n = u32x8::from([
+        let n: u32x8 = bytemuck::cast([
             (t[0] >= tt) as u32,
             (t[1] >= tt) as u32,
             (t[2] >= tt) as u32,
@@ -894,7 +892,7 @@ fn gradient(p: &mut Pipeline) {
             (t[6] >= tt) as u32,
             (t[7] >= tt) as u32,
         ]);
-        idx += n;
+        idx = idx + n;
     }
     gradient_lookup(ctx, &idx, p.r, &mut p.r, &mut p.g, &mut p.b, &mut p.a);
 
@@ -905,7 +903,7 @@ fn gradient_lookup(
     ctx: &super::GradientCtx, idx: &u32x8, t: f32x8,
     r: &mut f32x8, g: &mut f32x8, b: &mut f32x8, a: &mut f32x8,
 ) {
-    let idx: [u32; 8] = (*idx).into();
+    let idx: [u32; 8] = bytemuck::cast(*idx);
 
     macro_rules! gather {
         ($d:expr, $c:ident) => {
@@ -996,8 +994,8 @@ fn mask_2pt_conical_degenerates(p: &mut Pipeline) {
     p.r = is_degenerate.blend(f32x8::default(), t);
 
     let is_not_degenerate = !is_degenerate.to_u32x8_bitcast();
-    let is_not_degenerate: [u32; 8] = is_not_degenerate.into();
-    ctx.mask = u32x8::from([
+    let is_not_degenerate: [u32; 8] = bytemuck::cast(is_not_degenerate);
+    ctx.mask = bytemuck::cast([
         if is_not_degenerate[0] != 0 { !0 } else { 0 },
         if is_not_degenerate[1] != 0 { !0 } else { 0 },
         if is_not_degenerate[2] != 0 { !0 } else { 0 },

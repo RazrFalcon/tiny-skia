@@ -7,7 +7,6 @@
 use crate::LengthU32;
 
 // Perfectly safe.
-#[allow(unsafe_code)]
 pub const LENGTH_U32_ONE: LengthU32 = unsafe { LengthU32::new_unchecked(1) };
 
 pub fn left_shift(value: i32, shift: i32) -> i32 {

@@ -103,8 +103,8 @@ impl std::fmt::Debug for ColorU8 {
 pub struct PremultipliedColorU8(u32);
 
 // Perfectly safe, since u32 is already Pod.
-#[allow(unsafe_code)] unsafe impl bytemuck::Zeroable for PremultipliedColorU8 {}
-#[allow(unsafe_code)] unsafe impl bytemuck::Pod for PremultipliedColorU8 {}
+unsafe impl bytemuck::Zeroable for PremultipliedColorU8 {}
+unsafe impl bytemuck::Pod for PremultipliedColorU8 {}
 
 impl PremultipliedColorU8 {
     /// A transparent color.
