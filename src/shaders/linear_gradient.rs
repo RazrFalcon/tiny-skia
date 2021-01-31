@@ -104,9 +104,9 @@ fn points_to_unit_ts(start: Point, end: Point) -> Option<Transform> {
 
     vec.scale(inv);
 
-    let mut ts = Transform::from_sin_cos_at(-vec.y, vec.x, start.x, start.y)?;
-    ts = ts.post_translate(-start.x, -start.y)?;
-    ts = ts.post_scale(inv, inv)?;
+    let mut ts = Transform::from_sin_cos_at(-vec.y, vec.x, start.x, start.y);
+    ts = ts.post_translate(-start.x, -start.y);
+    ts = ts.post_scale(inv, inv);
     Some(ts)
 }
 

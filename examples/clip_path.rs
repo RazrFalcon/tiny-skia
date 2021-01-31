@@ -15,7 +15,7 @@ fn main() {
 
     // Skew the circle before clipping.
     // Clip path is processed immediately and affected by the current transform.
-    canvas.set_transform(Transform::from_row(1.0, -0.3, 0.0, 1.0, 0.0, 75.0).unwrap());
+    canvas.set_transform(Transform::from_row(1.0, -0.3, 0.0, 1.0, 0.0, 75.0));
     canvas.set_clip_path(&clip_path, FillRule::EvenOdd, true);
 
     // Reset the transform, so the rectangle would be rendered as is,

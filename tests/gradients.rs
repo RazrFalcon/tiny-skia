@@ -411,7 +411,7 @@ fn simple_radial_with_ts_hq() {
             GradientStop::new(1.00, Color::from_rgba8(220, 140, 75, 180)),
         ],
         SpreadMode::Pad,
-        Transform::from_row(2.0, 0.3, -0.7, 1.2, 10.5, -12.3).unwrap(),
+        Transform::from_row(2.0, 0.3, -0.7, 1.2, 10.5, -12.3),
     ).unwrap();
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());

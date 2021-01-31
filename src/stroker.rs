@@ -278,9 +278,8 @@ impl PathStroker {
     /// Smaller values (0 < res < 1) indicate that the result can be less precise, since it will
     /// be zoomed down, and small errors may be invisible.
     pub fn compute_resolution_scale(ts: &Transform) -> f32 {
-        let (sx, ky, kx, sy, _,  _) = ts.get_row();
-        let sx = Point::from_xy(sx, kx).length();
-        let sy = Point::from_xy(ky, sy).length();
+        let sx = Point::from_xy(ts.sx, ts.kx).length();
+        let sy = Point::from_xy(ts.ky, ts.sy).length();
         if sx.is_finite() && sy.is_finite() {
             let scale = sx.max(sy);
             if scale > 0.0 {
@@ -1404,10 +1403,7 @@ fn round_joiner(
         dir = PathDirection::CCW;
     }
 
-    let ts = match Transform::from_row(radius, 0.0, 0.0, radius, pivot.x, pivot.y) {
-        Some(ts) => ts,
-        None => return,
-    };
+    let ts = Transform::from_row(radius, 0.0, 0.0, radius, pivot.x, pivot.y);
 
     let mut conics = [path_geometry::Conic::default(); 5];
     let conics = path_geometry::Conic::build_unit_arc(before, after, dir, &ts, &mut conics);

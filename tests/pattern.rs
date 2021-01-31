@@ -104,7 +104,7 @@ fn pad_bicubic() {
         FilterQuality::Bicubic,
         1.0,
         // Transform must be set, otherwise we will fallback to Nearest.
-        Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
+        Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
@@ -128,7 +128,7 @@ fn repeat_bicubic() {
         FilterQuality::Bicubic,
         1.0,
         // Transform must be set, otherwise we will fallback to Nearest.
-        Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
+        Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
@@ -152,7 +152,7 @@ fn reflect_bicubic() {
         FilterQuality::Bicubic,
         1.0,
         // Transform must be set, otherwise we will fallback to Nearest.
-        Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0).unwrap(),
+        Transform::from_row(1.1, 0.3, 0.0, 1.4, 0.0, 0.0),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
@@ -198,7 +198,7 @@ fn filter_nearest() {
         SpreadMode::Repeat,
         FilterQuality::Nearest,
         1.0,
-        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
@@ -221,7 +221,7 @@ fn filter_bilinear() {
         SpreadMode::Repeat,
         FilterQuality::Bilinear,
         1.0,
-        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
@@ -244,7 +244,7 @@ fn filter_bicubic() {
         SpreadMode::Repeat,
         FilterQuality::Bicubic,
         1.0,
-        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, 0.0, -0.4, -0.8, 5.0, 1.0),
     );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());

@@ -349,7 +349,7 @@ impl RasterPipelineBuilder {
     }
 
     pub fn push_transform(&mut self, ts: Transform) {
-        if !ts.is_identity() {
+        if ts.is_finite() && !ts.is_identity() {
             self.stages.push(Stage::Transform);
             self.ctx.transform = ts;
         }

@@ -945,12 +945,12 @@ impl Conic {
         }
 
         // now handle counter-clockwise and the initial unitStart rotation
-        let mut transform = Transform::from_sin_cos(u_start.y, u_start.x)?;
+        let mut transform = Transform::from_sin_cos(u_start.y, u_start.x);
         if dir == PathDirection::CCW {
-            transform = transform.pre_scale(1.0, -1.0)?;
+            transform = transform.pre_scale(1.0, -1.0);
         }
 
-        transform = transform.post_concat(user_transform)?;
+        transform = transform.post_concat(user_transform);
 
         for conic in dst.iter_mut().take(conic_count) {
             transform.map_points(&mut conic.points);

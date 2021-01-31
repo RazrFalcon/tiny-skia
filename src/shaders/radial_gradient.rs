@@ -95,8 +95,8 @@ impl RadialGradient {
             // or it is fully degenerate (startRadius == endRadius).
 
             let inv = radius.invert();
-            let mut ts = Transform::from_translate(-start.x, -start.y)?;
-            ts = ts.post_scale(inv, inv)?;
+            let mut ts = Transform::from_translate(-start.x, -start.y);
+            ts = ts.post_scale(inv, inv);
 
             // We can treat this gradient as radial, which is faster. If we got here, we know
             // that endRadius is not equal to 0, so this produces a meaningful gradient
@@ -121,9 +121,9 @@ impl RadialGradient {
             // The following transformations are just to accelerate the shader computation by saving
             // some arithmetic operations.
             if focal_data.is_focal_on_circle() {
-                ts = ts.post_scale(0.5, 0.5)?;
+                ts = ts.post_scale(0.5, 0.5);
             } else {
-                ts = ts.post_scale(r1 / (r1 * r1 - 1.0), 1.0 / ((r1 * r1 - 1.0).abs()).sqrt())?;
+                ts = ts.post_scale(r1 / (r1 * r1 - 1.0), 1.0 / ((r1 * r1 - 1.0).abs()).sqrt());
             }
 
             Some(Shader::RadialGradient(RadialGradient {

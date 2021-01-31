@@ -38,7 +38,7 @@ fn rect_ts() {
     let mut canvas = Canvas::from(pixmap.as_mut());
 
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
-    canvas.set_transform(Transform::from_row(1.0, -0.3, 0.0, 1.0, 0.0, 15.0).unwrap());
+    canvas.set_transform(Transform::from_row(1.0, -0.3, 0.0, 1.0, 0.0, 15.0));
     canvas.set_clip_path(&clip_path, FillRule::Winding, false);
     canvas.reset_transform();
 

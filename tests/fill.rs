@@ -257,7 +257,7 @@ fn int_rect_with_ts_clip_right() {
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
-    let transform = Transform::from_row(1.0, 0.0, 0.0, 1.0, 0.5, 0.5).unwrap();
+    let transform = Transform::from_row(1.0, 0.0, 0.0, 1.0, 0.5, 0.5);
     canvas.set_transform(transform);
     canvas.fill_rect(rect, &paint);
 
@@ -649,7 +649,7 @@ fn vertical_lines_merging_bug() {
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
-    canvas.set_transform(Transform::from_row(5.4, 0.0, 0.0, 5.4, -4050.0, -840.0).unwrap());
+    canvas.set_transform(Transform::from_row(5.4, 0.0, 0.0, 5.4, -4050.0, -840.0));
     // Must not panic.
     canvas.fill_path(&path, &paint, FillRule::Winding);
 

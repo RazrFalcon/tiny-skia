@@ -461,13 +461,12 @@ pub fn source_over_rgba_tail(p: &mut Pipeline) {
 
 fn transform(p: &mut Pipeline) {
     let ts = &p.ctx.transform;
-    let (sx, ky, kx, sy, tx, ty) = ts.get_row();
 
     let x = join(&p.r, &p.g);
     let y = join(&p.b, &p.a);
 
-    let nx = mad(x, f32x16::splat(sx), mad(y, f32x16::splat(kx), f32x16::splat(tx)));
-    let ny = mad(x, f32x16::splat(ky), mad(y, f32x16::splat(sy), f32x16::splat(ty)));
+    let nx = mad(x, f32x16::splat(ts.sx), mad(y, f32x16::splat(ts.kx), f32x16::splat(ts.tx)));
+    let ny = mad(x, f32x16::splat(ts.ky), mad(y, f32x16::splat(ts.sy), f32x16::splat(ts.ty)));
 
     split(&nx, &mut p.r, &mut p.g);
     split(&ny, &mut p.b, &mut p.a);

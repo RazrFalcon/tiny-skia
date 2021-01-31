@@ -15,7 +15,7 @@ fn main() {
         SpreadMode::Repeat,
         FilterQuality::Bicubic,
         1.0,
-        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0),
     );
 
     let path = PathBuilder::from_circle(200.0, 200.0, 180.0).unwrap();

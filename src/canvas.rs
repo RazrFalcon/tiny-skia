@@ -93,25 +93,19 @@ impl<'a> Canvas<'a> {
     /// Translates the canvas.
     #[inline]
     pub fn translate(&mut self, tx: f32, ty: f32) {
-        if let Some(ts) = self.transform.pre_translate(tx, ty) {
-            self.transform = ts;
-        }
+        self.transform = self.transform.pre_translate(tx, ty);
     }
 
     /// Scales the canvas.
     #[inline]
     pub fn scale(&mut self, sx: f32, sy: f32) {
-        if let Some(ts) = self.transform.pre_scale(sx, sy) {
-            self.transform = ts;
-        }
+        self.transform = self.transform.pre_scale(sx, sy);
     }
 
     /// Applies an affine transformation to the canvas.
     #[inline]
     pub fn transform(&mut self, sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) {
-        if let Some(ref ts) = Transform::from_row(sx, ky, kx, sy, tx, ty) {
-            self.apply_transform(ts);
-        }
+        self.apply_transform(&Transform::from_row(sx, ky, kx, sy, tx, ty));
     }
 
     // TODO: overload?
@@ -119,9 +113,7 @@ impl<'a> Canvas<'a> {
     /// Applies an affine transformation to the canvas.
     #[inline]
     pub fn apply_transform(&mut self, ts: &Transform) {
-        if let Some(ts) = self.transform.pre_concat(ts) {
-            self.transform = ts;
-        }
+        self.transform = self.transform.pre_concat(ts);
     }
 
     /// Gets the current canvas transform.
@@ -241,7 +233,7 @@ impl<'a> Canvas<'a> {
             path
         };
 
-        if let Some(coverage) = treat_as_hairline(&paint, stroke, &self.transform) {
+        if let Some(coverage) = treat_as_hairline(&paint, stroke, self.transform) {
             let mut paint = paint.clone();
             if coverage == 1.0 {
                 // No changes to the `paint`.
@@ -305,7 +297,7 @@ impl<'a> Canvas<'a> {
         // TODO: clipped out
 
         // Translate pattern as well as bounds.
-        let transform = Transform::from_translate(x as f32, y as f32)?;
+        let transform = Transform::from_translate(x as f32, y as f32);
 
         let paint = Paint {
             shader: Pattern::new(
@@ -348,7 +340,7 @@ impl<'a> Canvas<'a> {
     }
 }
 
-fn treat_as_hairline(paint: &Paint, stroke: &Stroke, ts: &Transform) -> Option<f32> {
+fn treat_as_hairline(paint: &Paint, stroke: &Stroke, mut ts: Transform) -> Option<f32> {
     #[inline]
     fn fast_len(p: Point) -> f32 {
         let mut x = p.x.abs();
@@ -371,10 +363,8 @@ fn treat_as_hairline(paint: &Paint, stroke: &Stroke, ts: &Transform) -> Option<f
     }
 
     // We don't care about translate.
-    let ts = {
-        let (sx, ky, kx, sy, _, _) = ts.get_row();
-        Transform::from_row(sx, ky, kx, sy, 0.0, 0.0)?
-    };
+    ts.tx = 0.0;
+    ts.ty = 0.0;
 
     // We need to try to fake a thick-stroke with a modulated hairline.
     let mut points = [Point::from_xy(stroke.width, 0.0), Point::from_xy(0.0, stroke.width)];

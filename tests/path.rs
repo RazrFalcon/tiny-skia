@@ -206,7 +206,7 @@ fn translate() {
     pb.line_to(30.0, 40.0);
     let mut path = pb.finish().unwrap();
 
-    path = path.transform(&Transform::from_translate(10.0, 20.0).unwrap()).unwrap();
+    path = path.transform(&Transform::from_translate(10.0, 20.0)).unwrap();
 
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(20.0, 40.0)),
@@ -221,7 +221,7 @@ fn scale() {
     pb.line_to(30.0, 40.0);
     let mut path = pb.finish().unwrap();
 
-    path = path.transform(&Transform::from_scale(2.0, 0.5).unwrap()).unwrap();
+    path = path.transform(&Transform::from_scale(2.0, 0.5)).unwrap();
 
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(20.0, 10.0)),
@@ -236,7 +236,7 @@ fn transform() {
     pb.line_to(30.0, 40.0);
     let mut path = pb.finish().unwrap();
 
-    path = path.transform(&Transform::from_row(2.0, 0.7, -0.3, 0.5, 10.0, 20.0).unwrap()).unwrap();
+    path = path.transform(&Transform::from_row(2.0, 0.7, -0.3, 0.5, 10.0, 20.0)).unwrap();
 
     assert_eq!(path.segments().collect::<Vec<_>>(), &[
         PathSegment::MoveTo(Point::from_xy(24.0, 37.0)),
@@ -252,7 +252,7 @@ fn invalid_transform() {
     let path = pb.finish().unwrap();
 
     // will produce infinity
-    assert_eq!(path.transform(&Transform::from_scale(std::f32::MAX, std::f32::MAX).unwrap()), None);
+    assert_eq!(path.transform(&Transform::from_scale(std::f32::MAX, std::f32::MAX)), None);
 }
 
 #[test]

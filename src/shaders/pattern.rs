@@ -74,8 +74,7 @@ impl<'a> Pattern<'a> {
 
         if quality == FilterQuality::Bilinear {
             if ts.is_translate() {
-                let (tx, ty) = ts.get_translate();
-                if tx == tx.trunc() && ty == ty.trunc() {
+                if ts.tx == ts.tx.trunc() && ts.ty == ts.ty.trunc() {
                     // When the matrix is just an integer translate, bilerp == nearest neighbor.
                     quality = FilterQuality::Nearest;
                 }
