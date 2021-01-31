@@ -156,13 +156,13 @@ impl<'a> Canvas<'a> {
     /// Consecutive calls will replace the previous value.
     ///
     /// Clipping is affected by the current transform.
-    pub fn set_clip_path(&mut self, path: &Path, fill_type: FillRule, anti_alias: bool) {
+    pub fn set_clip_path(&mut self, path: &Path, fill_rule: FillRule, anti_alias: bool) {
         if !self.transform.is_identity() {
             if let Some(ref path) = path.clone().transform(&self.transform) {
-                self.clip.set_path(path, self.pixmap.rect(), fill_type, anti_alias);
+                self.clip.set_path(path, self.pixmap.rect(), fill_rule, anti_alias);
             }
         } else {
-            self.clip.set_path(path, self.pixmap.rect(), fill_type, anti_alias);
+            self.clip.set_path(path, self.pixmap.rect(), fill_rule, anti_alias);
         }
     }
 
@@ -189,21 +189,21 @@ impl<'a> Canvas<'a> {
     }
 
     /// Fills a path.
-    pub fn fill_path(&mut self, path: &Path, paint: &Paint, fill_type: FillRule) {
-        self.fill_path_impl(path, paint, fill_type);
+    pub fn fill_path(&mut self, path: &Path, paint: &Paint, fill_rule: FillRule) {
+        self.fill_path_impl(path, paint, fill_rule);
     }
 
     #[inline(always)]
-    fn fill_path_impl(&mut self, path: &Path, paint: &Paint, fill_type: FillRule) -> Option<()> {
+    fn fill_path_impl(&mut self, path: &Path, paint: &Paint, fill_rule: FillRule) -> Option<()> {
         if !self.transform.is_identity() {
             let path = path.clone().transform(&self.transform)?;
 
             let mut paint = paint.clone();
             paint.shader.transform(&self.transform);
 
-            painter::fill_path(&path, &paint, fill_type, self.clip.as_ref(), &mut self.pixmap)
+            painter::fill_path(&path, &paint, fill_rule, self.clip.as_ref(), &mut self.pixmap)
         } else {
-            painter::fill_path(path, paint, fill_type, self.clip.as_ref(), &mut self.pixmap)
+            painter::fill_path(path, paint, fill_rule, self.clip.as_ref(), &mut self.pixmap)
         }
     }
 

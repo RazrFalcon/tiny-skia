@@ -17,7 +17,7 @@ use crate::geom::ScreenIntRect;
 
 pub fn fill_path(
     path: &Path,
-    fill_type: FillRule,
+    fill_rule: FillRule,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
@@ -33,7 +33,7 @@ pub fn fill_path(
 
     // TODO: SkScanClipper
 
-    fill_path_impl(path, fill_type, clip, ir.y(), ir.bottom(), 0, path_contained_in_clip, blitter)
+    fill_path_impl(path, fill_rule, clip, ir.y(), ir.bottom(), 0, path_contained_in_clip, blitter)
 }
 
 // Conservative rounding function, which effectively nudges the int-rect to be slightly larger
@@ -83,7 +83,7 @@ fn round_up_to_int(x: f32) -> i32 {
 
 pub fn fill_path_impl(
     path: &Path,
-    fill_type: FillRule,
+    fill_rule: FillRule,
     clip_rect: &ScreenIntRect,
     mut start_y: i32,
     mut stop_y: i32,
@@ -149,12 +149,12 @@ pub fn fill_path_impl(
 
     // TODO: walk_simple_edges
 
-    walk_edges(fill_type, start_y, stop_y, shifted_clip.shifted().right(), &mut edges, blitter)
+    walk_edges(fill_rule, start_y, stop_y, shifted_clip.shifted().right(), &mut edges, blitter)
 }
 
 // TODO: simplify!
 fn walk_edges(
-    fill_type: FillRule,
+    fill_rule: FillRule,
     start_y: u32,
     stop_y: u32,
     right_clip: u32,
@@ -162,7 +162,7 @@ fn walk_edges(
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
     let mut curr_y = start_y;
-    let winding_mask = if fill_type == FillRule::EvenOdd { 1 } else { -1 };
+    let winding_mask = if fill_rule == FillRule::EvenOdd { 1 } else { -1 };
 
     loop {
         let mut w = 0i32;

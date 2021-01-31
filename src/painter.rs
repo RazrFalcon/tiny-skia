@@ -143,7 +143,7 @@ pub(crate) fn fill_rect(
 pub(crate) fn fill_path(
     path: &Path,
     paint: &Paint,
-    fill_type: FillRule,
+    fill_rule: FillRule,
     clip_mask: Option<&ClipMaskData>,
     pixmap: &mut PixmapMut,
 ) -> Option<()> {
@@ -172,9 +172,9 @@ pub(crate) fn fill_path(
     let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, pixmap)?;
 
     if paint.anti_alias {
-        scan::path_aa::fill_path(path, fill_type, &clip_rect, &mut blitter)
+        scan::path_aa::fill_path(path, fill_rule, &clip_rect, &mut blitter)
     } else {
-        scan::path::fill_path(path, fill_type, &clip_rect, &mut blitter)
+        scan::path::fill_path(path, fill_rule, &clip_rect, &mut blitter)
     }
 }
 

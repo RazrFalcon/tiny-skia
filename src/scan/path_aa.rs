@@ -23,7 +23,7 @@ const MASK: u32  = SCALE - 1;
 
 pub fn fill_path(
     path: &Path,
-    fill_type: FillRule,
+    fill_rule: FillRule,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
@@ -41,7 +41,7 @@ pub fn fill_path(
     // so draw without antialiasing.
     let clipped_ir = ir.intersect(&clip.to_int_rect())?;
     if rect_overflows_short_shift(&clipped_ir, SHIFT as i32) != 0 {
-        return super::path::fill_path(path, fill_type, clip, blitter);
+        return super::path::fill_path(path, fill_rule, clip, blitter);
     }
 
     // Our antialiasing can't handle a clip larger than 32767.
@@ -56,7 +56,7 @@ pub fn fill_path(
     // TODO: SkScanClipper
     // TODO: AAA
 
-    fill_path_impl(path, fill_type, &ir, clip, blitter)
+    fill_path_impl(path, fill_rule, &ir, clip, blitter)
 }
 
 // Would any of the coordinates of this rectangle not fit in a short,
@@ -82,7 +82,7 @@ fn overflows_short_shift(value: i32, shift: i32) -> i32 {
 
 fn fill_path_impl(
     path: &Path,
-    fill_type: FillRule,
+    fill_rule: FillRule,
     bounds: &IntRect,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
@@ -102,7 +102,7 @@ fn fill_path_impl(
 
     super::path::fill_path_impl(
         path,
-        fill_type,
+        fill_rule,
         clip,
         bounds.top(),
         bounds.bottom(),

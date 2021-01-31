@@ -74,7 +74,7 @@ impl ClipMask {
         &mut self,
         path: &Path,
         clip: ScreenIntRect,
-        fill_type: FillRule,
+        fill_rule: FillRule,
         anti_alias: bool,
     ) -> Option<()> {
         self.mask.width = clip.width_safe();
@@ -85,10 +85,10 @@ impl ClipMask {
 
         if anti_alias {
             let mut builder = ClipBuilderAA(&mut self.mask);
-            crate::scan::path_aa::fill_path(path, fill_type, &clip, &mut builder)
+            crate::scan::path_aa::fill_path(path, fill_rule, &clip, &mut builder)
         } else {
             let mut builder = ClipBuilder(&mut self.mask);
-            crate::scan::path::fill_path(path, fill_type, &clip, &mut builder)
+            crate::scan::path::fill_path(path, fill_rule, &clip, &mut builder)
         }
     }
 
