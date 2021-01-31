@@ -86,7 +86,7 @@ impl Transform {
         let tmp = from_poly2(src1, src2);
         let res = tmp.invert()?;
         let tmp = from_poly2(dst1, dst2);
-        Some(concat(&tmp, &res))
+        Some(concat(tmp, res))
     }
 
     #[inline]
@@ -167,46 +167,42 @@ impl Transform {
     #[inline]
     #[must_use]
     pub fn pre_scale(&self, sx: f32, sy: f32) -> Self {
-        let other = Transform::from_scale(sx, sy);
-        self.pre_concat(&other)
+        self.pre_concat(Transform::from_scale(sx, sy))
     }
 
     /// Post-scales the current transform.
     #[inline]
     #[must_use]
     pub fn post_scale(&mut self, sx: f32, sy: f32) -> Self {
-        let other = Transform::from_scale(sx, sy);
-        self.post_concat(&other)
+        self.post_concat(Transform::from_scale(sx, sy))
     }
 
     /// Pre-translates the current transform.
     #[inline]
     #[must_use]
     pub fn pre_translate(&self, tx: f32, ty: f32) -> Self {
-        let other = Transform::from_translate(tx, ty);
-        self.pre_concat(&other)
+        self.pre_concat(Transform::from_translate(tx, ty))
     }
 
     /// Post-translates the current transform.
     #[inline]
     #[must_use]
     pub fn post_translate(&self, tx: f32, ty: f32) -> Self {
-        let other = Transform::from_translate(tx, ty);
-        self.post_concat(&other)
+        self.post_concat(Transform::from_translate(tx, ty))
     }
 
     /// Pre-concats the current transform.
     #[inline]
     #[must_use]
-    pub fn pre_concat(&self, other: &Self) -> Self {
-        concat(self, other)
+    pub fn pre_concat(&self, other: Self) -> Self {
+        concat(*self, other)
     }
 
     /// Post-concats the current transform.
     #[inline]
     #[must_use]
-    pub fn post_concat(&self, other: &Self) -> Self {
-        concat(other, self)
+    pub fn post_concat(&self, other: Self) -> Self {
+        concat(other, *self)
     }
 
     pub(crate) fn from_sin_cos(sin: f32, cos: f32) -> Self {
@@ -351,11 +347,11 @@ fn sdot(a: f32, b: f32, c: f32, d: f32) -> f32 {
     a * b + c * d
 }
 
-fn concat(a: &Transform, b: &Transform) -> Transform {
+fn concat(a: Transform, b: Transform) -> Transform {
     if a.is_identity() {
-        *b
+        b
     } else if b.is_identity() {
-        *a
+        a
     } else if !a.has_skew() && !b.has_skew() {
         // just scale and translate
         Transform::from_row(

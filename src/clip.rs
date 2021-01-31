@@ -65,6 +65,8 @@ impl ClipMask {
     /// Sets the current clipping path.
     ///
     /// Not additive. Overwrites the previous data.
+    ///
+    /// Path must be transformed beforehand.
     pub fn set_path(
         &mut self,
         width: u32,

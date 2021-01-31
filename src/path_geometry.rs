@@ -856,13 +856,13 @@ impl Conic {
         )
     }
 
-    pub fn build_unit_arc<'a>(
+    pub fn build_unit_arc(
         u_start: Point,
         u_stop: Point,
         dir: PathDirection,
-        user_transform: &Transform,
-        dst: &'a mut [Conic; 5],
-    ) -> Option<&'a [Conic]> {
+        user_transform: Transform,
+        dst: &mut [Conic; 5],
+    ) -> Option<&[Conic]> {
         // rotate by x,y so that u_start is (1.0)
         let x = u_start.dot(u_stop);
         let mut y = u_start.cross(u_stop);

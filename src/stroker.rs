@@ -1392,7 +1392,7 @@ fn round_joiner(
     let ts = Transform::from_row(radius, 0.0, 0.0, radius, pivot.x, pivot.y);
 
     let mut conics = [path_geometry::Conic::default(); 5];
-    let conics = path_geometry::Conic::build_unit_arc(before, after, dir, &ts, &mut conics);
+    let conics = path_geometry::Conic::build_unit_arc(before, after, dir, ts, &mut conics);
     if let Some(conics) = conics {
         for conic in conics {
             builders.outer.conic_points_to(conic.points[1], conic.points[2], conic.weight);

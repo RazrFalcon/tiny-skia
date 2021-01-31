@@ -95,13 +95,13 @@ impl<'a> Shader<'a> {
         match self {
             Shader::SolidColor(_) => {}
             Shader::LinearGradient(g) => {
-                g.base.transform = g.base.transform.post_concat(&ts);
+                g.base.transform = g.base.transform.post_concat(ts);
             }
             Shader::RadialGradient(g) => {
-                g.base.transform = g.base.transform.post_concat(&ts);
+                g.base.transform = g.base.transform.post_concat(ts);
             }
             Shader::Pattern(p) => {
-                p.transform = p.transform.post_concat(&ts);
+                p.transform = p.transform.post_concat(ts);
             }
         }
     }

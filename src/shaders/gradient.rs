@@ -110,7 +110,7 @@ impl Gradient {
         p.push(pipeline::Stage::SeedShader);
 
         let ts = self.transform.invert()?;
-        let ts = ts.post_concat(&self.points_to_unit);
+        let ts = ts.post_concat(self.points_to_unit);
         p.push_transform(ts);
 
         push_stages_pre(p);
