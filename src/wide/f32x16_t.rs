@@ -86,7 +86,7 @@ impl f32x16 {
         ])
     }
 
-    // This method is too heavy. It shouldn't be inlined.
+    // This method is too heavy and shouldn't be inlined.
     pub fn save_to_u16x16(&self, dst: &mut u16x16) {
         // Do not use to_i32x8, because it involves rounding,
         // and Skia cast's without it.

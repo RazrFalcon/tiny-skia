@@ -65,7 +65,6 @@ pub struct Stroke {
 }
 
 impl Default for Stroke {
-    #[inline]
     fn default() -> Self {
         Stroke {
             width: 1.0,
@@ -90,7 +89,6 @@ pub enum LineCap {
 }
 
 impl Default for LineCap {
-    #[inline]
     fn default() -> Self {
         LineCap::Butt
     }
@@ -120,7 +118,6 @@ pub enum LineJoin {
 }
 
 impl Default for LineJoin {
-    #[inline]
     fn default() -> Self {
         LineJoin::Miter
     }

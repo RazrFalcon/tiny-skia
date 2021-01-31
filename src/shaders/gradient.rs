@@ -28,7 +28,6 @@ impl GradientStop {
     /// Creates a new gradient point.
     ///
     /// `position` will be clamped to a 0..=1 range.
-    #[inline]
     pub fn new(position: f32, color: Color) -> Self {
         GradientStop { position: NormalizedF32::new_bounded(position), color }
     }

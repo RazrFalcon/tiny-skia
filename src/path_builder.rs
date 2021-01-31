@@ -33,7 +33,6 @@ pub struct PathBuilder {
 
 impl PathBuilder {
     /// Creates a new builder.
-    #[inline]
     pub fn new() -> Self {
         PathBuilder {
             verbs: Vec::new(),
@@ -235,7 +234,6 @@ impl PathBuilder {
     /// Open and closed contour will be filled the same way.
     /// Stroking an open contour will add LineCap at contour's start and end.
     /// Stroking an closed contour will add LineJoin at contour's start and end.
-    #[inline]
     pub fn close(&mut self) {
         // don't add a close if it's the first verb or a repeat
         if !self.verbs.is_empty() {

@@ -47,7 +47,6 @@ pub struct PixmapPaint {
 }
 
 impl Default for PixmapPaint {
-    #[inline]
     fn default() -> Self {
         PixmapPaint {
             opacity: 1.0,

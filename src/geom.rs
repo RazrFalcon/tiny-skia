@@ -30,7 +30,6 @@ impl From<(f32, f32)> for Point {
 
 impl Point {
     /// Creates a new `Point`.
-    #[inline]
     pub fn from_xy(x: f32, y: f32) -> Self {
         Point { x, y }
     }
@@ -295,7 +294,6 @@ pub struct IntSize {
 
 impl IntSize {
     /// Creates a new `IntSize` from width and height.
-    #[inline]
     pub fn from_wh(width: u32, height: u32) -> Option<Self> {
         Some(IntSize {
             width: LengthU32::new(width)?,
@@ -304,25 +302,21 @@ impl IntSize {
     }
 
     /// Returns width.
-    #[inline]
     pub fn width(&self) -> u32 {
         self.width.get()
     }
 
     /// Returns height.
-    #[inline]
     pub fn height(&self) -> u32 {
         self.height.get()
     }
 
     /// Converts the current size into a `IntRect` at a provided position.
-    #[inline]
     pub fn to_int_rect(&self, x: i32, y: i32) -> IntRect {
         IntRect::from_xywh(x, y, self.width.get(), self.height.get()).unwrap()
     }
 
     /// Converts the current size into a `IntRect` at a provided position.
-    #[inline]
     pub(crate) fn to_screen_int_rect(&self, x: u32, y: u32) -> ScreenIntRect {
         ScreenIntRect::from_xywh_safe(x, y, self.width, self.height)
     }
@@ -363,7 +357,6 @@ pub struct IntRect {
 
 impl IntRect {
     /// Creates a new `IntRect`.
-    #[inline]
     pub fn from_xywh(x: i32, y: i32, width: u32, height: u32) -> Option<Self> {
         x.checked_add(i32::try_from(width).ok()?)?;
         y.checked_add(i32::try_from(height).ok()?)?;
@@ -384,57 +377,48 @@ impl IntRect {
     }
 
     /// Returns rect's X position.
-    #[inline]
     pub fn x(&self) -> i32 {
         self.x
     }
 
     /// Returns rect's Y position.
-    #[inline]
     pub fn y(&self) -> i32 {
         self.y
     }
 
     /// Returns rect's width.
-    #[inline]
     pub fn width(&self) -> u32 {
         self.width.get()
     }
 
     /// Returns rect's height.
-    #[inline]
     pub fn height(&self) -> u32 {
         self.height.get()
     }
 
     /// Returns rect's left edge.
-    #[inline]
     pub fn left(&self) -> i32 {
         self.x
     }
 
     /// Returns rect's top edge.
-    #[inline]
     pub fn top(&self) -> i32 {
         self.y
     }
 
     /// Returns rect's right edge.
-    #[inline]
     pub fn right(&self) -> i32 {
         // No overflow is guaranteed by constructors.
         self.x + self.width.get() as i32
     }
 
     /// Returns rect's bottom edge.
-    #[inline]
     pub fn bottom(&self) -> i32 {
         // No overflow is guaranteed by constructors.
         self.y + self.height.get() as i32
     }
 
     /// Checks that the rect is completely includes `other` Rect.
-    #[inline]
     pub(crate) fn contains(&self, other: &Self) -> bool {
         self.x <= other.x &&
             self.y <= other.y &&
@@ -479,7 +463,6 @@ impl IntRect {
     }
 
     /// Converts into `Rect`.
-    #[inline]
     pub fn to_rect(&self) -> Rect {
         // Can't fail, because `IntRect` is always valid.
         Rect::from_ltrb(
@@ -496,7 +479,6 @@ impl IntRect {
     ///
     /// - x >= 0
     /// - y >= 0
-    #[inline]
     pub(crate) fn to_screen_int_rect(&self) -> Option<ScreenIntRect> {
         let x = u32::try_from(self.x).ok()?;
         let y = u32::try_from(self.y).ok()?;
@@ -569,7 +551,6 @@ pub struct ScreenIntRect {
 
 impl ScreenIntRect {
     /// Creates a new `ScreenIntRect`.
-    #[inline]
     pub fn from_xywh(x: u32, y: u32, width: u32, height: u32) -> Option<Self> {
         i32::try_from(x).ok()?;
         i32::try_from(y).ok()?;
@@ -586,49 +567,41 @@ impl ScreenIntRect {
     }
 
     /// Creates a new `ScreenIntRect`.
-    #[inline]
     pub const fn from_xywh_safe(x: u32, y: u32, width: LengthU32, height: LengthU32) -> Self {
         ScreenIntRect { x, y, width, height }
     }
 
     /// Returns rect's X position.
-    #[inline]
     pub fn x(&self) -> u32 {
         self.x
     }
 
     /// Returns rect's Y position.
-    #[inline]
     pub fn y(&self) -> u32 {
         self.y
     }
 
     /// Returns rect's width.
-    #[inline]
     pub fn width(&self) -> u32 {
         self.width.get()
     }
 
     /// Returns rect's height.
-    #[inline]
     pub fn height(&self) -> u32 {
         self.height.get()
     }
 
     /// Returns rect's width.
-    #[inline]
     pub fn width_safe(&self) -> LengthU32 {
         self.width
     }
 
     /// Returns rect's left edge.
-    #[inline]
     pub fn left(&self) -> u32 {
         self.x
     }
 
     /// Returns rect's top edge.
-    #[inline]
     pub fn top(&self) -> u32 {
         self.y
     }
@@ -636,7 +609,6 @@ impl ScreenIntRect {
     /// Returns rect's right edge.
     ///
     /// The right edge is at least 1.
-    #[inline]
     pub fn right(&self) -> u32 {
         // No overflow is guaranteed by constructors.
         self.x + self.width.get()
@@ -645,14 +617,12 @@ impl ScreenIntRect {
     /// Returns rect's bottom edge.
     ///
     /// The bottom edge is at least 1.
-    #[inline]
     pub fn bottom(&self) -> u32 {
         // No overflow is guaranteed by constructors.
         self.y + self.height.get()
     }
 
     /// Checks that the rect is completely includes `other` Rect.
-    #[inline]
     pub fn contains(&self, other: &Self) -> bool {
         self.x <= other.x &&
             self.y <= other.y &&
@@ -661,7 +631,6 @@ impl ScreenIntRect {
     }
 
     /// Converts into a `IntRect`.
-    #[inline]
     pub fn to_int_rect(&self) -> IntRect {
         // Everything is already checked by constructors.
         IntRect::from_xywh(
@@ -673,7 +642,6 @@ impl ScreenIntRect {
     }
 
     /// Converts into a `Rect`.
-    #[inline]
     pub fn to_rect(&self) -> Rect {
         // Can't fail, because `ScreenIntRect` is always valid.
         // And u32 always fits into f32.
@@ -737,7 +705,6 @@ pub struct Rect {
 
 impl Rect {
     /// Creates new `Rect`.
-    #[inline]
     pub fn from_ltrb(left: f32, top: f32, right: f32, bottom: f32) -> Option<Self> {
         let left = FiniteF32::new(left)?;
         let top = FiniteF32::new(top)?;
@@ -756,43 +723,36 @@ impl Rect {
     }
 
     /// Creates new `Rect`.
-    #[inline]
     pub fn from_xywh(x: f32, y: f32, w: f32, h: f32) -> Option<Self> {
         Rect::from_ltrb(x, y, w + x, h + y)
     }
 
     /// Returns the left edge.
-    #[inline]
     pub fn left(&self) -> f32 {
         self.left.get()
     }
 
     /// Returns the top edge.
-    #[inline]
     pub fn top(&self) -> f32 {
         self.top.get()
     }
 
     /// Returns the right edge.
-    #[inline]
     pub fn right(&self) -> f32 {
         self.right.get()
     }
 
     /// Returns the bottom edge.
-    #[inline]
     pub fn bottom(&self) -> f32 {
         self.bottom.get()
     }
 
     /// Returns rect's X position.
-    #[inline]
     pub fn x(&self) -> f32 {
         self.left.get()
     }
 
     /// Returns rect's Y position.
-    #[inline]
     pub fn y(&self) -> f32 {
         self.top.get()
     }
@@ -812,7 +772,6 @@ impl Rect {
     /// Converts into an `IntRect` by adding 0.5 and discarding the fractional portion.
     ///
     /// Width and height are guarantee to be >= 1.
-    #[inline]
     pub fn round(&self) -> IntRect {
         IntRect::from_xywh(
             i32::saturate_round(self.x()),
@@ -825,7 +784,6 @@ impl Rect {
     /// Converts into an `IntRect` rounding outwards.
     ///
     /// Width and height are guarantee to be >= 1.
-    #[inline]
     pub(crate) fn round_out(&self) -> IntRect {
         IntRect::from_xywh(
             i32::saturate_floor(self.x()),
@@ -913,7 +871,6 @@ impl Rect {
     }
 }
 
-#[inline]
 fn checked_f32_sub(a: f32, b: f32) -> Option<f32> {
     debug_assert!(a.is_finite());
     debug_assert!(b.is_finite());

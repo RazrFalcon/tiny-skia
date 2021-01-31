@@ -130,12 +130,10 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     null_fn, // ApplyVectorMask
 ];
 
-#[inline]
 pub fn fn_ptr(f: StageFn) -> *const c_void {
     f as *const () as *const c_void
 }
 
-#[inline]
 pub fn fn_ptr_eq(f1: StageFn, f2: StageFn) -> bool {
     f1 as *const () == f2 as *const ()
 }

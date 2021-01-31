@@ -24,7 +24,6 @@ pub struct Transform {
 }
 
 impl Default for Transform {
-    #[inline]
     fn default() -> Self {
         Transform {
             sx: 1.0,
@@ -39,7 +38,6 @@ impl Default for Transform {
 
 impl Transform {
     /// Creates an identity transform.
-    #[inline]
     pub fn identity() -> Self {
         Transform::default()
     }
@@ -47,31 +45,26 @@ impl Transform {
     /// Creates a new `Transform`.
     ///
     /// We are using column-major-column-vector matrix notation, therefore it's ky-kx, not kx-ky.
-    #[inline]
     pub fn from_row(sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) -> Self {
         Transform { sx, ky, kx, sy, tx, ty }
     }
 
     /// Creates a new translating `Transform`.
-    #[inline]
     pub fn from_translate(tx: f32, ty: f32) -> Self {
         Transform::from_row(1.0, 0.0, 0.0, 1.0, tx, ty)
     }
 
     /// Creates a new scaling `Transform`.
-    #[inline]
     pub fn from_scale(sx: f32, sy: f32) -> Self {
         Transform::from_row(sx, 0.0, 0.0, sy, 0.0, 0.0)
     }
 
     /// Creates a new skewing `Transform`.
-    #[inline]
     pub fn from_skew(kx: f32, ky: f32) -> Self {
         Transform::from_row(1.0, ky, kx, 1.0, 0.0, 0.0)
     }
 
     /// Creates a new rotating `Transform`.
-    #[inline]
     pub fn from_rotate(angle: f32) -> Self {
         let v = angle.to_radians();
         let a =  v.cos();
@@ -82,7 +75,6 @@ impl Transform {
     }
 
     /// Creates a new rotating `Transform` at the specified position.
-    #[inline]
     pub fn from_rotate_at(angle: f32, tx: f32, ty: f32) -> Self {
         let mut ts = Self::default();
         ts = ts.pre_translate(tx, ty);
@@ -110,7 +102,6 @@ impl Transform {
         Some(concat(tmp, res))
     }
 
-    #[inline]
     pub(crate) fn is_finite(&self) -> bool {
         self.sx.is_finite() &&
         self.ky.is_finite() &&
@@ -123,7 +114,6 @@ impl Transform {
     /// Checks that transform is identity.
     ///
     /// The transform type is detected on creation, so this method is essentially free.
-    #[inline]
     pub fn is_identity(&self) -> bool {
         *self == Transform::default()
     }
@@ -131,7 +121,6 @@ impl Transform {
     /// Checks that transform is scale-only.
     ///
     /// The transform type is detected on creation, so this method is essentially free.
-    #[inline]
     pub fn is_scale(&self) -> bool {
         self.has_scale() && !self.has_skew() && !self.has_translate()
     }
@@ -139,7 +128,6 @@ impl Transform {
     /// Checks that transform is skew-only.
     ///
     /// The transform type is detected on creation, so this method is essentially free.
-    #[inline]
     pub fn is_skew(&self) -> bool {
         !self.has_scale() && self.has_skew() && !self.has_translate()
     }
@@ -147,7 +135,6 @@ impl Transform {
     /// Checks that transform is translate-only.
     ///
     /// The transform type is detected on creation, so this method is essentially free.
-    #[inline]
     pub fn is_translate(&self) -> bool {
         !self.has_scale() && !self.has_skew() && self.has_translate()
     }
@@ -155,7 +142,6 @@ impl Transform {
     /// Checks that transform contains only scale and translate.
     ///
     /// The transform type is detected on creation, so this method is essentially free.
-    #[inline]
     pub fn is_scale_translate(&self) -> bool {
         (self.has_scale() || self.has_translate()) && !self.has_skew()
     }
@@ -163,7 +149,6 @@ impl Transform {
     /// Checks that transform contains a scale part.
     ///
     /// The transform type is detected on creation, so this method is essentially free.
-    #[inline]
     pub fn has_scale(&self) -> bool {
         self.sx != 1.0 || self.sy != 1.0
     }
@@ -171,7 +156,6 @@ impl Transform {
     /// Checks that transform contains a skew part.
     ///
     /// The transform type is detected on creation, so this method is essentially free.
-    #[inline]
     pub fn has_skew(&self) -> bool {
         self.kx != 0.0 || self.ky != 0.0
     }
@@ -179,48 +163,41 @@ impl Transform {
     /// Checks that transform contains a translate part.
     ///
     /// The transform type is detected on creation, so this method is essentially free.
-    #[inline]
     pub fn has_translate(&self) -> bool {
         self.tx != 0.0 || self.ty != 0.0
     }
 
     /// Pre-scales the current transform.
-    #[inline]
     #[must_use]
     pub fn pre_scale(&self, sx: f32, sy: f32) -> Self {
         self.pre_concat(Transform::from_scale(sx, sy))
     }
 
     /// Post-scales the current transform.
-    #[inline]
     #[must_use]
     pub fn post_scale(&mut self, sx: f32, sy: f32) -> Self {
         self.post_concat(Transform::from_scale(sx, sy))
     }
 
     /// Pre-translates the current transform.
-    #[inline]
     #[must_use]
     pub fn pre_translate(&self, tx: f32, ty: f32) -> Self {
         self.pre_concat(Transform::from_translate(tx, ty))
     }
 
     /// Post-translates the current transform.
-    #[inline]
     #[must_use]
     pub fn post_translate(&self, tx: f32, ty: f32) -> Self {
         self.post_concat(Transform::from_translate(tx, ty))
     }
 
     /// Pre-concats the current transform.
-    #[inline]
     #[must_use]
     pub fn pre_concat(&self, other: Self) -> Self {
         concat(*self, other)
     }
 
     /// Post-concats the current transform.
-    #[inline]
     #[must_use]
     pub fn post_concat(&self, other: Self) -> Self {
         concat(other, *self)
@@ -281,7 +258,6 @@ fn from_poly2(p0: Point, p1: Point) -> Transform {
     )
 }
 
-#[inline(never)]
 fn invert(ts: &Transform) -> Option<Transform> {
     debug_assert!(!ts.is_identity());
 

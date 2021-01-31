@@ -64,7 +64,6 @@ pub enum BlendMode {
 }
 
 impl Default for BlendMode {
-    #[inline]
     fn default() -> Self {
         BlendMode::SourceOver
     }

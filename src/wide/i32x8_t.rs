@@ -30,12 +30,10 @@ unsafe impl bytemuck::Zeroable for i32x8 {}
 unsafe impl bytemuck::Pod for i32x8 {}
 
 impl i32x8 {
-    #[inline]
     pub fn splat(n: i32) -> Self {
         cast([n, n, n, n, n, n, n, n])
     }
 
-    #[inline]
     pub fn blend(self, t: Self, f: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -48,7 +46,6 @@ impl i32x8 {
         }
     }
 
-    #[inline]
     pub fn cmp_eq(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -61,7 +58,6 @@ impl i32x8 {
         }
     }
 
-    #[inline]
     pub fn cmp_gt(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -74,7 +70,6 @@ impl i32x8 {
         }
     }
 
-    #[inline]
     pub fn cmp_lt(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -87,7 +82,6 @@ impl i32x8 {
         }
     }
 
-    #[inline]
     pub fn to_f32x8(self) -> f32x8 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -113,12 +107,10 @@ impl i32x8 {
         }
     }
 
-    #[inline]
     pub fn to_u32x8_bitcast(self) -> u32x8 {
         bytemuck::cast(self)
     }
 
-    #[inline]
     pub fn to_f32x8_bitcast(self) -> f32x8 {
         bytemuck::cast(self)
     }
@@ -139,7 +131,6 @@ impl From<i32x8> for [i32; 8] {
 impl std::ops::Add for i32x8 {
     type Output = Self;
 
-    #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -156,7 +147,6 @@ impl std::ops::Add for i32x8 {
 impl std::ops::BitAnd for i32x8 {
     type Output = Self;
 
-    #[inline]
     fn bitand(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -173,7 +163,6 @@ impl std::ops::BitAnd for i32x8 {
 impl std::ops::Mul for i32x8 {
     type Output = Self;
 
-    #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -193,7 +182,6 @@ impl std::ops::Mul for i32x8 {
 impl std::ops::BitOr for i32x8 {
     type Output = Self;
 
-    #[inline]
     fn bitor(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -210,7 +198,6 @@ impl std::ops::BitOr for i32x8 {
 impl std::ops::BitXor for i32x8 {
     type Output = Self;
 
-    #[inline]
     fn bitxor(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {

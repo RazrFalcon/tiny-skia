@@ -25,7 +25,6 @@ pub enum FillRule {
 }
 
 impl Default for FillRule {
-    #[inline]
     fn default() -> Self {
         FillRule::Winding
     }
@@ -70,7 +69,6 @@ pub struct Paint<'a> {
 }
 
 impl Default for Paint<'_> {
-    #[inline]
     fn default() -> Self {
         Paint {
             shader: Shader::SolidColor(Color::BLACK),
@@ -83,7 +81,6 @@ impl Default for Paint<'_> {
 
 impl<'a> Paint<'a> {
     /// Sets a paint source to a solid color.
-    #[inline]
     pub fn set_color(&mut self, color: Color) {
         self.shader = Shader::SolidColor(color);
     }
@@ -91,13 +88,11 @@ impl<'a> Paint<'a> {
     /// Sets a paint source to a solid color.
     ///
     /// `self.shader = Shader::SolidColor(Color::from_rgba8(50, 127, 150, 200));` shorthand.
-    #[inline]
     pub fn set_color_rgba8(&mut self, r: u8, g: u8, b: u8, a: u8) {
         self.set_color(Color::from_rgba8(r, g, b, a))
     }
 
     /// Checks that the paint source is a solid color.
-    #[inline]
     pub fn is_solid_color(&self) -> bool {
         matches!(self.shader, Shader::SolidColor(_))
     }
@@ -108,7 +103,6 @@ impl Pixmap {
     /// Draws a filled rectangle onto the pixmap.
     ///
     /// See [`PixmapMut::fill_rect`](struct.PixmapMut.html#method.fill_rect) for details.
-    #[inline]
     pub fn fill_rect(
         &mut self,
         rect: Rect,
@@ -122,7 +116,6 @@ impl Pixmap {
     /// Draws a filled path onto the pixmap.
     ///
     /// See [`PixmapMut::fill_path`](struct.PixmapMut.html#method.fill_path) for details.
-    #[inline]
     pub fn fill_path(
         &mut self,
         path: &Path,
@@ -137,7 +130,6 @@ impl Pixmap {
     /// Strokes a path.
     ///
     /// See [`PixmapMut::stroke_path`](struct.PixmapMut.html#method.stroke_path) for details.
-    #[inline]
     pub fn stroke_path(
         &mut self,
         path: &Path,
@@ -152,7 +144,6 @@ impl Pixmap {
     /// Draws a `Pixmap` on top of the current `Pixmap`.
     ///
     /// See [`PixmapMut::draw_pixmap`](struct.PixmapMut.html#method.draw_pixmap) for details.
-    #[inline]
     pub fn draw_pixmap(
         &mut self,
         x: i32,
@@ -390,7 +381,6 @@ impl PixmapMut<'_> {
 }
 
 fn treat_as_hairline(paint: &Paint, stroke: &Stroke, mut ts: Transform) -> Option<f32> {
-    #[inline]
     fn fast_len(p: Point) -> f32 {
         let mut x = p.x.abs();
         let mut y = p.y.abs();

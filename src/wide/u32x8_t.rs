@@ -34,17 +34,14 @@ impl u32x8 {
         bytemuck::cast([n, n, n, n, n, n, n, n])
     }
 
-    #[inline]
     pub fn to_i32x8_bitcast(self) -> i32x8 {
         bytemuck::cast(self)
     }
 
-    #[inline]
     pub fn to_f32x8_bitcast(self) -> f32x8 {
         bytemuck::cast(self)
     }
 
-    #[inline]
     pub fn cmp_eq(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -61,7 +58,6 @@ impl u32x8 {
 impl std::ops::Not for u32x8 {
     type Output = Self;
 
-    #[inline]
     fn not(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -87,7 +83,6 @@ impl std::ops::Not for u32x8 {
 impl std::ops::Add for u32x8 {
     type Output = Self;
 
-    #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -104,7 +99,6 @@ impl std::ops::Add for u32x8 {
 impl std::ops::BitAnd for u32x8 {
     type Output = Self;
 
-    #[inline]
     fn bitand(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
@@ -121,7 +115,6 @@ impl std::ops::BitAnd for u32x8 {
 impl std::ops::Shl<i32> for u32x8 {
     type Output = Self;
 
-    #[inline]
     fn shl(self, rhs: i32) -> Self::Output {
         let u = rhs as u64;
         cfg_if::cfg_if! {
@@ -150,7 +143,6 @@ impl std::ops::Shl<i32> for u32x8 {
 impl std::ops::Shr<i32> for u32x8 {
     type Output = Self;
 
-    #[inline]
     fn shr(self, rhs: i32) -> Self::Output {
         let u = rhs as u64;
         cfg_if::cfg_if! {

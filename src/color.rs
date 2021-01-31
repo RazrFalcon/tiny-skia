@@ -220,7 +220,6 @@ impl Color {
     /// Creates a new color from 4 components.
     ///
     /// All values must be in 0..=1 range.
-    #[inline]
     pub fn from_rgba(r: f32, g: f32, b: f32, a: f32) -> Option<Self> {
         Some(Color {
             r: NormalizedF32::new(r)?,
@@ -233,7 +232,6 @@ impl Color {
     /// Creates a new color from 4 components.
     ///
     /// u8 will be divided by 255 to get the float component.
-    #[inline]
     pub fn from_rgba8(r: u8, g: u8, b: u8, a: u8) -> Self {
         Color {
             r: NormalizedF32::from_u8(r),

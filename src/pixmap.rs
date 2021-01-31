@@ -188,11 +188,13 @@ impl Pixmap {
     }
 
     /// Returns pixmap's width.
+    #[inline]
     pub fn width(&self) -> u32 {
         self.size.width()
     }
 
     /// Returns pixmap's height.
+    #[inline]
     pub fn height(&self) -> u32 {
         self.size.height()
     }
@@ -311,11 +313,13 @@ impl<'a> PixmapRef<'a> {
     }
 
     /// Returns pixmap's width.
+    #[inline]
     pub fn width(&self) -> u32 {
         self.size.width()
     }
 
     /// Returns pixmap's height.
+    #[inline]
     pub fn height(&self) -> u32 {
         self.size.height()
     }
@@ -480,11 +484,13 @@ impl<'a> PixmapMut<'a> {
     }
 
     /// Returns pixmap's width.
+    #[inline]
     pub fn width(&self) -> u32 {
         self.size.width()
     }
 
     /// Returns pixmap's height.
+    #[inline]
     pub fn height(&self) -> u32 {
         self.size.height()
     }

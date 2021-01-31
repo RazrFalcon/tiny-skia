@@ -65,7 +65,6 @@ pub enum Shader<'a> {
 
 impl<'a> Shader<'a> {
     /// Checks if the shader is guaranteed to produce only opaque colors.
-    #[inline]
     pub fn is_opaque(&self) -> bool {
         match self {
             Shader::SolidColor(ref c) => c.is_opaque(),

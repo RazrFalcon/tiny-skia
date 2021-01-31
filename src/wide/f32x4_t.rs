@@ -28,7 +28,6 @@ impl f32x4 {
         Self::from([n, n, n, n])
     }
 
-    #[inline]
     pub fn max(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
@@ -44,7 +43,6 @@ impl f32x4 {
         }
     }
 
-    #[inline]
     pub fn min(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
@@ -76,7 +74,6 @@ impl From<f32x4> for [f32; 4] {
 impl std::ops::Add for f32x4 {
     type Output = Self;
 
-    #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
@@ -94,7 +91,6 @@ impl std::ops::Add for f32x4 {
 }
 
 impl std::ops::AddAssign for f32x4 {
-    #[inline]
     fn add_assign(&mut self, rhs: f32x4) {
         *self = *self + rhs;
     }
@@ -103,7 +99,6 @@ impl std::ops::AddAssign for f32x4 {
 impl std::ops::Sub for f32x4 {
     type Output = Self;
 
-    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
@@ -123,7 +118,6 @@ impl std::ops::Sub for f32x4 {
 impl std::ops::Mul for f32x4 {
     type Output = Self;
 
-    #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
@@ -141,7 +135,6 @@ impl std::ops::Mul for f32x4 {
 }
 
 impl std::ops::MulAssign for f32x4 {
-    #[inline]
     fn mul_assign(&mut self, rhs: f32x4) {
         *self = *self * rhs;
     }

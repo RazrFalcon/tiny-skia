@@ -39,7 +39,6 @@ impl FixedRect {
 
 /// Multiplies value by 0..256, and shift the result down 8
 /// (i.e. return (value * alpha256) >> 8)
-#[inline]
 fn alpha_mul(value: AlphaU8, alpha256: i32) -> u8 {
     let a = (i32::from(value) * alpha256) >> 8;
     debug_assert!(a >= 0 && a <= 255);

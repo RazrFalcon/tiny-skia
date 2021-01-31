@@ -5,8 +5,8 @@
 
 // This module was written from scratch, therefore there is no Google copyright.
 
-// f32x16, i32x16 and u32x16 are implemented as [Tx4; 4] and not as [T; 16].
-// This way we still can use some SSE2.
+// f32x16, i32x16 and u32x16 are implemented as [Tx8; 2] and not as [T; 16].
+// This way we still can use some SIMD.
 //
 // We doesn't use #[inline] that much in this module.
 // The compiler will inline most of the methods automatically.

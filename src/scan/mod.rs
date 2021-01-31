@@ -16,7 +16,6 @@ use crate::blitter::Blitter;
 use crate::geom::ScreenIntRect;
 
 
-#[inline]
 pub fn fill_rect(
     rect: &Rect,
     clip: &ScreenIntRect,
@@ -25,7 +24,6 @@ pub fn fill_rect(
     fill_int_rect(&rect.round(), clip, blitter)
 }
 
-#[inline]
 fn fill_int_rect(
     rect: &IntRect,
     clip: &ScreenIntRect,
@@ -36,7 +34,6 @@ fn fill_int_rect(
     Some(())
 }
 
-#[inline]
 pub fn fill_rect_aa(
     rect: &Rect,
     clip: &ScreenIntRect,

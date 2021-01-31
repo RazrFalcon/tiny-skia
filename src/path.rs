@@ -118,7 +118,6 @@ impl Path {
     }
 
     /// Clears the path and returns a `PathBuilder` that will reuse an allocated memory.
-    #[inline]
     pub fn clear(mut self) -> PathBuilder {
         self.verbs.clear();
         self.points.clear();
