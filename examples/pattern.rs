@@ -3,11 +3,6 @@ use tiny_skia::*;
 fn main() {
     let triangle = crate_triangle();
 
-    let mut pixmap = Pixmap::new(400, 400).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
-    let now = std::time::Instant::now();
-
     let mut paint = Paint::default();
     paint.anti_alias = true;
     paint.shader = Pattern::new(
@@ -20,17 +15,12 @@ fn main() {
 
     let path = PathBuilder::from_circle(200.0, 200.0, 180.0).unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
-
-    println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
-
+    let mut pixmap = Pixmap::new(400, 400).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
     pixmap.save_png("image.png").unwrap();
 }
 
 fn crate_triangle() -> Pixmap {
-    let mut pixmap = Pixmap::new(20, 20).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
@@ -42,7 +32,7 @@ fn crate_triangle() -> Pixmap {
     pb.close();
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
-
+    let mut pixmap = Pixmap::new(20, 20).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
     pixmap
 }

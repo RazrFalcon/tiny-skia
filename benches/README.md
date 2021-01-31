@@ -28,7 +28,7 @@ Filling a shape with a solid color.
 | -------------------- | -------------: | ------------: | ---------: | --------: | ---------: | ---------: |
 | clear                |         51,020 |        41,785 |     45,898 |    50,203 |     62,331 |  1,127,400 |
 | source               |         51,467 |        41,287 |     46,195 |    50,949 |     62,548 |  1,197,146 |
-| destination          |             63 |            67 |      5,309 |     5,318 |          4 |    736,395 |
+| destination          |             37 |            33 |      5,309 |     5,318 |          4 |    736,395 |
 | source_over          |        492,146 |       355,726 |    490,423 |   261,943 |    212,838 |  2,073,538 |
 | destination_over     |        582,450 |       427,992 |    583,660 |   306,542 |    236,970 |  1,592,753 |
 | source_in            |        588,029 |       413,983 |    577,464 |   291,008 |  1,104,817 |  1,511,211 |
@@ -65,7 +65,7 @@ while Skia uses null blitter, so edges processing is still in place.
 
 | Test/Library         | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
 | -------------------- | -------------: | ------------: | ---------: | --------: | ---------: | ---------: |
-| fill                 |        663,415 |       542,188 |    495,359 |   348,326 |    538,842 |  1,404,107 |
+| fill                 |        785,827 |       578,163 |    495,359 |   348,326 |    538,842 |  1,404,107 |
 
 ### memset fill
 
@@ -75,8 +75,8 @@ Shape filling by overwritting original pixels. No blending.
 
 | Test/Library         | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
 | -------------------- | -------------: | ------------: | ---------: | --------: | ---------: | ---------: |
-| opaque               |         56,173 |        45,190 |     45,392 |    47,662 |     45,804 |  2,432,875 |
-| source               |         56,542 |        50,158 |     50,433 |    50,663 |     48,839 |    970,681 |
+| opaque               |         57,410 |        45,190 |     45,392 |    47,662 |     45,804 |  2,432,875 |
+| source               |         57,161 |        50,158 |     50,433 |    50,663 |     48,839 |    970,681 |
 
 ### rectangle fill
 
@@ -86,9 +86,9 @@ Fills a rectangle with a solid color.
 
 | Test/Library          | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
 | --------------------- | -------------: | ------------: | ---------: | --------: | ---------: | ---------: |
-| basic                 |        699,878 |       499,512 |    711,992 |   348,918 |    203,921 |  2,609,525 |
-| with AA               |        744,711 |       541,858 |    735,547 |   371,368 |    192,178 |  2,244,119 |
-| with AA and transform |        369,684 |       284,392 |    321,105 |   191,670 |    175,061 |    978,946 |
+| basic                 |        699,878 |       518,147 |    711,992 |   348,918 |    203,921 |  2,609,525 |
+| with AA               |        744,711 |       563,036 |    735,547 |   371,368 |    192,178 |  2,244,119 |
+| with AA and transform |        394,147 |       318,005 |    321,105 |   191,670 |    175,061 |    978,946 |
 
 The last test simply fallbacks to path filling in Skia/tiny-skia.
 
@@ -102,7 +102,7 @@ Filling the whole canvas with a color.
 
 | Test/Library         | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
 | -------------------- | -------------: | ------------: | ---------: | --------: | ---------: | ---------: |
-| fill                 |         64,213 |        64,916 |  1,112,417 |   554,113 |    285,316 |     61,205 |
+| fill                 |         61,300 |        64,916 |  1,112,417 |   554,113 |    285,316 |     61,205 |
 
 ### spiral stroke
 
@@ -113,7 +113,7 @@ when a rendering backend is designed for long horizontal strides.
 
 | Test/Library         | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
 | -------------------- | -------------: | ------------: | ---------: | --------: | ---------: | ---------: |
-| stroke               |      1,658,247 |     1,602,847 |  1,205,407 | 1,174,229 |  3,161,763 |  6,211,240 |
+| stroke               |      1,853,344 |     1,602,847 |  1,205,407 | 1,174,229 |  3,161,763 |  6,211,240 |
 
 ### hairline stroking
 
@@ -123,8 +123,8 @@ Draws a large spiral using a subpixel stroke width.
 
 | Test/Library | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo      | raqote     |
 | ------------ | -------------: | ------------: | ---------: | --------: | ---------: | ---------: |
-| no AA        |      1,391,101 |     1,345,418 |  1,022,641 | 1,027,160 |  2,469,764 |          - |
-| with AA      |      3,363,682 |     3,084,936 |  1,846,240 | 1,868,304 | 13,457,819 |          - |
+| no AA        |      1,483,733 |     1,556,751 |  1,022,641 | 1,027,160 |  2,469,764 |          - |
+| with AA      |      3,363,682 |     3,300,237 |  1,846,240 | 1,868,304 | 13,457,819 |          - |
 
 - `raqote` doesn't support hairline stroking.
 - Not sure why `cairo` is so slow with AA.
@@ -141,10 +141,10 @@ Draws a large spiral using a subpixel stroke width.
 | linear, two stops, pad               |      1,417,980 |     1,223,505 |    993,781 |   571,583 |  2,458,368 |  3,379,723 |
 | linear, two stops, reflect           |      1,724,305 |     1,391,261 |  1,248,226 |   684,310 |  2,449,727 |  3,301,529 |
 | linear, two stops, repeat            |      1,633,253 |     1,294,505 |  1,043,289 |   599,061 |  2,445,711 |  3,115,416 |
-| linear, three stops, evenly spread   |      2,068,385 |     1,940,036 |  1,806,614 |   781,344 |  2,413,454 |  4,021,338 |
-| linear, three stops, unevenly spread |      2,068,394 |     1,939,826 |  1,805,379 |   687,479 |  2,423,142 |  3,412,176 |
-| simple radial                        |      2,293,883 |     2,205,554 |  2,050,437 |   805,376 |  4,704,141 |  5,531,178 |
-| two point radial                     |      2,700,221 |     2,516,614 |  1,943,448 | 1,083,230 |  4,709,760 | 13,454,676 |
+| linear, three stops, evenly spread   |      2,266,704 |     1,940,036 |  1,806,614 |   781,344 |  2,413,454 |  4,021,338 |
+| linear, three stops, unevenly spread |      2,265,796 |     1,939,826 |  1,805,379 |   687,479 |  2,423,142 |  3,412,176 |
+| simple radial                        |      2,426,413 |     2,205,554 |  2,050,437 |   805,376 |  4,704,141 |  5,531,178 |
+| two point radial                     |      2,918,107 |     2,516,614 |  1,943,448 | 1,083,230 |  4,709,760 | 13,454,676 |
 
 ### pattern
 
@@ -152,9 +152,9 @@ Draws a large spiral using a subpixel stroke width.
 
 | Test/Library                | tiny-skia SSE2 | tiny-skia AVX | Skia SSE2  | Skia AVX  | cairo       | raqote     |
 | --------------------------- | -------------: | ------------: | ---------: | --------: | ----------: | ---------: |
-| plain (nearest, no ts)      |      2,633,745 |     2,263,839 |  1,315,079 | 1,122,982 |     785,550 |  1,865,327 |
-| lq (bilinear, with ts)      |      8,602,786 |     4,865,226 |  4,484,023 | 2,646,523 |  17,612,685 | 24,906,379 |
-| hq (bicubic/gauss, with ts) |     27,967,739 |    14,760,398 | 12,386,848 | 9,364,356 | 162,771,632 |          - |
+| plain (nearest, no ts)      |      2,708,322 |     2,318,295 |  1,315,079 | 1,122,982 |     785,550 |  1,865,327 |
+| lq (bilinear, with ts)      |      8,602,786 |     4,987,509 |  4,484,023 | 2,646,523 |  17,612,685 | 24,906,379 |
+| hq (bicubic/gauss, with ts) |     28,277,794 |    15,353,485 | 12,386,848 | 9,364,356 | 162,771,632 |          - |
 
 Note that `raqote` doesn't support high quality filtering.
 

@@ -21,7 +21,8 @@ pub enum PathVerb {
 
 /// A Bezier path.
 ///
-/// Can be created via `PathBuilder`.
+/// Can be created via [`PathBuilder`].
+/// Where [`PathBuilder`] can be created from the `Path` using [`clear`] to reuse the allocation.
 ///
 /// # Guarantees
 ///
@@ -32,6 +33,9 @@ pub enum PathVerb {
 /// - No duplicated Move.
 /// - No duplicated Close.
 /// - Zero-length contours are allowed.
+///
+/// [`PathBuilder`]: struct.PathBuilder.html
+/// [`clear`]: struct.Path.html#method.clear
 #[derive(Clone, PartialEq)]
 pub struct Path {
     pub(crate) verbs: Vec<PathVerb>,
@@ -60,7 +64,7 @@ impl Path {
     /// Returns a transformed in-place path.
     ///
     /// Some points may become NaN/inf therefore this method can fail.
-    pub fn transform(mut self, ts: &Transform) -> Option<Self> {
+    pub fn transform(mut self, ts: Transform) -> Option<Self> {
         if ts.is_identity() {
             return Some(self);
         }

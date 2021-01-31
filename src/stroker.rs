@@ -303,20 +303,6 @@ impl PathStroker {
         self.stroke_inner(path, width, stroke.miter_limit, stroke.line_cap, stroke.line_join, res_scale)
     }
 
-    /// Stokes the path into the `out_path`.
-    ///
-    /// Can be called multiple times to reuse allocated buffers.
-    pub fn stroke_to(
-        &mut self,
-        path: &Path,
-        stroke: &Stroke,
-        res_scale: f32,
-        out_path: Path,
-    ) -> Option<Path> {
-        self.outer = out_path.clear();
-        self.stroke(path, stroke, res_scale)
-    }
-
     fn stroke_inner(
         &mut self,
         path: &Path,

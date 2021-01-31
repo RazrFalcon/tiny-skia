@@ -8,9 +8,6 @@ fn two_stops_linear_tiny_skia(
 ) {
     use tiny_skia::*;
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.force_hq_pipeline = hq;
     paint.shader = LinearGradient::new(
@@ -29,8 +26,10 @@ fn two_stops_linear_tiny_skia(
     pb.close();
     let path = pb.finish().unwrap();
 
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillRule::Winding);
+        pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
     });
 }
 
@@ -490,9 +489,6 @@ fn three_stops_linear_even_cairo(bencher: &mut Bencher) {
 fn simple_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
         Point::from_xy(500.0, 500.0),
@@ -514,8 +510,10 @@ fn simple_radial_tiny_skia(bencher: &mut Bencher) {
     pb.close();
     let path = pb.finish().unwrap();
 
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillRule::Winding);
+        pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
     });
 }
 
@@ -637,9 +635,6 @@ fn simple_radial_cairo(bencher: &mut Bencher) {
 fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
         Point::from_xy(400.0, 400.0),
@@ -661,8 +656,10 @@ fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
     pb.close();
     let path = pb.finish().unwrap();
 
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillRule::Winding);
+        pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
     });
 }
 

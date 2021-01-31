@@ -3,9 +3,6 @@ use bencher::{benchmark_group, benchmark_main, Bencher};
 fn fill_aa_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
@@ -19,8 +16,10 @@ fn fill_aa_tiny_skia(bencher: &mut Bencher) {
     pb.close();
     let path = pb.finish().unwrap();
 
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillRule::EvenOdd);
+        pixmap.fill_path(&path, &paint, FillRule::EvenOdd, Transform::identity(), None);
     });
 }
 

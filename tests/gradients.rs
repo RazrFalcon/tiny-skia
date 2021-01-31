@@ -2,9 +2,6 @@ use tiny_skia::*;
 
 #[test]
 fn two_stops_linear_pad_lq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
@@ -19,7 +16,8 @@ fn two_stops_linear_pad_lq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-pad-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -27,9 +25,6 @@ fn two_stops_linear_pad_lq() {
 
 #[test]
 fn two_stops_linear_repeat_lq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
@@ -44,7 +39,8 @@ fn two_stops_linear_repeat_lq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-repeat-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -52,9 +48,6 @@ fn two_stops_linear_repeat_lq() {
 
 #[test]
 fn two_stops_linear_reflect_lq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
@@ -69,7 +62,8 @@ fn two_stops_linear_reflect_lq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-reflect-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -77,9 +71,6 @@ fn two_stops_linear_reflect_lq() {
 
 #[test]
 fn three_stops_evenly_spaced_lq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
@@ -96,7 +87,8 @@ fn three_stops_evenly_spaced_lq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/three-stops-evenly-spaced-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -104,9 +96,6 @@ fn three_stops_evenly_spaced_lq() {
 
 #[test]
 fn two_stops_unevenly_spaced_lq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
@@ -122,7 +111,8 @@ fn two_stops_unevenly_spaced_lq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-unevenly-spaced-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -130,9 +120,6 @@ fn two_stops_unevenly_spaced_lq() {
 
 #[test]
 fn two_stops_linear_pad_hq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
     paint.shader = LinearGradient::new(
@@ -148,7 +135,8 @@ fn two_stops_linear_pad_hq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-pad-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -156,9 +144,6 @@ fn two_stops_linear_pad_hq() {
 
 #[test]
 fn two_stops_linear_repeat_hq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
     paint.shader = LinearGradient::new(
@@ -174,7 +159,8 @@ fn two_stops_linear_repeat_hq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-repeat-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -182,9 +168,6 @@ fn two_stops_linear_repeat_hq() {
 
 #[test]
 fn two_stops_linear_reflect_hq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
     paint.shader = LinearGradient::new(
@@ -200,7 +183,8 @@ fn two_stops_linear_reflect_hq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-linear-reflect-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -208,9 +192,6 @@ fn two_stops_linear_reflect_hq() {
 
 #[test]
 fn three_stops_evenly_spaced_hq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
     paint.shader = LinearGradient::new(
@@ -228,7 +209,8 @@ fn three_stops_evenly_spaced_hq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/three-stops-evenly-spaced-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -236,9 +218,6 @@ fn three_stops_evenly_spaced_hq() {
 
 #[test]
 fn two_stops_unevenly_spaced_hq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
     paint.shader = LinearGradient::new(
@@ -255,7 +234,8 @@ fn two_stops_unevenly_spaced_hq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/two-stops-unevenly-spaced-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -266,9 +246,6 @@ fn two_stops_unevenly_spaced_hq() {
 
 #[test]
 fn well_behaved_radial() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
@@ -284,7 +261,8 @@ fn well_behaved_radial() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/well-behaved-radial.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -292,9 +270,6 @@ fn well_behaved_radial() {
 
 #[test]
 fn focal_on_circle_radial() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
@@ -310,7 +285,8 @@ fn focal_on_circle_radial() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/focal-on-circle-radial.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -318,9 +294,6 @@ fn focal_on_circle_radial() {
 
 #[test]
 fn conical_greater_radial() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
@@ -336,7 +309,8 @@ fn conical_greater_radial() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/conical-greater-radial.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -344,9 +318,6 @@ fn conical_greater_radial() {
 
 #[test]
 fn simple_radial_lq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
@@ -362,7 +333,8 @@ fn simple_radial_lq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/simple-radial-lq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -370,9 +342,6 @@ fn simple_radial_lq() {
 
 #[test]
 fn simple_radial_hq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
     paint.shader = RadialGradient::new(
@@ -389,7 +358,8 @@ fn simple_radial_hq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/simple-radial-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -397,9 +367,6 @@ fn simple_radial_hq() {
 
 #[test]
 fn simple_radial_with_ts_hq() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
     paint.shader = RadialGradient::new(
@@ -416,7 +383,8 @@ fn simple_radial_with_ts_hq() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/simple-radial-with-ts-hq.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -426,9 +394,6 @@ fn simple_radial_with_ts_hq() {
 // But it checks colors only on creation, so we have to recheck them after calling `apply_opacity`.
 #[test]
 fn global_opacity() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
@@ -445,7 +410,8 @@ fn global_opacity() {
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 190.0, 190.0).unwrap());
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/gradients/global-opacity.png").unwrap();
     assert_eq!(pixmap, expected);

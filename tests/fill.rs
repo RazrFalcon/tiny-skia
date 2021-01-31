@@ -2,9 +2,6 @@ use tiny_skia::*;
 
 #[test]
 fn horizontal_line() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -13,7 +10,8 @@ fn horizontal_line() {
     pb.line_to(90.0, 10.0);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -21,9 +19,6 @@ fn horizontal_line() {
 
 #[test]
 fn vertical_line() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -32,7 +27,8 @@ fn vertical_line() {
     pb.line_to(10.0, 90.0);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -40,9 +36,6 @@ fn vertical_line() {
 
 #[test]
 fn single_line() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -51,7 +44,8 @@ fn single_line() {
     pb.line_to(90.0, 90.0);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/empty.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -59,15 +53,13 @@ fn single_line() {
 
 #[test]
 fn int_rect() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let rect = Rect::from_xywh(10.0, 15.0, 80.0, 70.0).unwrap();
 
-    canvas.fill_rect(rect, &paint);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/int-rect.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -75,15 +67,13 @@ fn int_rect() {
 
 #[test]
 fn float_rect() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
 
-    canvas.fill_rect(rect, &paint);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -91,16 +81,14 @@ fn float_rect() {
 
 #[test]
 fn int_rect_aa() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(10.0, 15.0, 80.0, 70.0).unwrap();
 
-    canvas.fill_rect(rect, &paint);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/int-rect-aa.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -108,16 +96,14 @@ fn int_rect_aa() {
 
 #[test]
 fn float_rect_aa() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
 
-    canvas.fill_rect(rect, &paint);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-aa.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -125,9 +111,6 @@ fn float_rect_aa() {
 
 #[test]
 fn float_rect_aa_highp() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
@@ -135,7 +118,8 @@ fn float_rect_aa_highp() {
 
     let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
 
-    canvas.fill_rect(rect, &paint);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-aa-highp.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -143,14 +127,12 @@ fn float_rect_aa_highp() {
 
 #[test]
 fn tiny_float_rect() {
-    let mut pixmap = Pixmap::new(3, 3).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let rect = Rect::from_xywh(1.3, 1.4, 0.5, 0.6).unwrap();
-    canvas.fill_rect(rect, &paint);
+    let mut pixmap = Pixmap::new(3, 3).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     assert_eq!(
         pixmap.pixels(),
@@ -172,15 +154,14 @@ fn tiny_float_rect() {
 
 #[test]
 fn tiny_float_rect_aa() {
-    let mut pixmap = Pixmap::new(3, 3).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(1.3, 1.4, 0.5, 0.6).unwrap();
-    canvas.fill_rect(rect, &paint);
+
+    let mut pixmap = Pixmap::new(3, 3).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     assert_eq!(
         pixmap.pixels(),
@@ -202,15 +183,14 @@ fn tiny_float_rect_aa() {
 
 #[test]
 fn float_rect_clip_top_left_aa() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(-10.3, -20.4, 100.5, 70.2).unwrap();
-    canvas.fill_rect(rect, &paint);
+
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-clip-top-left-aa.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -218,15 +198,14 @@ fn float_rect_clip_top_left_aa() {
 
 #[test]
 fn float_rect_clip_top_right_aa() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(60.3, -20.4, 100.5, 70.2).unwrap();
-    canvas.fill_rect(rect, &paint);
+
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-clip-top-right-aa.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -234,15 +213,14 @@ fn float_rect_clip_top_right_aa() {
 
 #[test]
 fn float_rect_clip_bottom_right_aa() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
     let rect = Rect::from_xywh(60.3, 40.4, 100.5, 70.2).unwrap();
-    canvas.fill_rect(rect, &paint);
+
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/float-rect-clip-bottom-right-aa.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -250,16 +228,13 @@ fn float_rect_clip_bottom_right_aa() {
 
 #[test]
 fn int_rect_with_ts_clip_right() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
-    let transform = Transform::from_row(1.0, 0.0, 0.0, 1.0, 0.5, 0.5);
-    canvas.set_transform(transform);
-    canvas.fill_rect(rect, &paint);
+
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(rect, &paint, Transform::from_row(1.0, 0.0, 0.0, 1.0, 0.5, 0.5), None);
 
     let expected = Pixmap::load_png("tests/images/fill/int-rect-with-ts-clip-right.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -267,9 +242,6 @@ fn int_rect_with_ts_clip_right() {
 
 #[test]
 fn open_polygon() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -281,7 +253,8 @@ fn open_polygon() {
     pb.line_to(90.744819, 40.864522);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/polygon.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -290,9 +263,6 @@ fn open_polygon() {
 // Must be the same a open.
 #[test]
 fn closed_polygon() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -305,7 +275,8 @@ fn closed_polygon() {
     pb.close(); // the only difference
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/polygon.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -313,9 +284,6 @@ fn closed_polygon() {
 
 #[test]
 fn winding_star() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -327,7 +295,8 @@ fn winding_star() {
     pb.line_to(25.0, 87.5);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/winding-star.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -335,9 +304,6 @@ fn winding_star() {
 
 #[test]
 fn even_odd_star() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -349,7 +315,8 @@ fn even_odd_star() {
     pb.line_to(25.0, 87.5);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::EvenOdd);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::EvenOdd, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/even-odd-star.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -357,9 +324,6 @@ fn even_odd_star() {
 
 #[test]
 fn quad_curve() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -368,7 +332,8 @@ fn quad_curve() {
     pb.quad_to(95.0, 35.0, 75.0, 90.0);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::EvenOdd);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::EvenOdd, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/quad.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -376,9 +341,6 @@ fn quad_curve() {
 
 #[test]
 fn cubic_curve() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -387,7 +349,8 @@ fn cubic_curve() {
     pb.cubic_to(95.0, 35.0, 0.0, 75.0, 75.0, 90.0);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::EvenOdd);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::EvenOdd, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/cubic.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -395,14 +358,13 @@ fn cubic_curve() {
 
 #[test]
 fn memset2d() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 90.0, 90.0).unwrap());
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/memset2d.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -411,14 +373,13 @@ fn memset2d() {
 // Make sure we do not write past pixmap memory.
 #[test]
 fn memset2d_out_of_bounds() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(50.0, 50.0, 120.0, 120.0).unwrap());
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/memset2d-2.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -428,9 +389,6 @@ fn memset2d_out_of_bounds() {
 // so for now simply check that it actually applied.
 #[test]
 fn fill_aa() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
@@ -443,7 +401,8 @@ fn fill_aa() {
     pb.line_to(25.0, 87.5);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::EvenOdd);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::EvenOdd, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/star-aa.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -451,9 +410,6 @@ fn fill_aa() {
 
 #[test]
 fn overflow_in_walk_edges_1() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -463,14 +419,12 @@ fn overflow_in_walk_edges_1() {
     let path = pb.finish().unwrap();
 
     // Must not panic.
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 }
 
 #[test]
 fn clip_line_1() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -482,7 +436,8 @@ fn clip_line_1() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-line-1.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -490,9 +445,6 @@ fn clip_line_1() {
 
 #[test]
 fn clip_line_2() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -505,7 +457,8 @@ fn clip_line_2() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-line-2.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -513,9 +466,6 @@ fn clip_line_2() {
 
 #[test]
 fn clip_quad() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -524,7 +474,8 @@ fn clip_quad() {
     pb.quad_to(150.0, 150.0, 85.0, 15.0);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-quad.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -532,9 +483,6 @@ fn clip_quad() {
 
 #[test]
 fn clip_cubic_1() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -544,7 +492,8 @@ fn clip_cubic_1() {
     pb.cubic_to(0.0, 175.0, 195.0, 70.0, 75.0, 20.0);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-cubic-1.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -552,9 +501,6 @@ fn clip_cubic_1() {
 
 #[test]
 fn clip_cubic_2() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
@@ -564,7 +510,8 @@ fn clip_cubic_2() {
     pb.cubic_to(10.0, 40.0, 90.0, 120.0, 125.0, 20.0);
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/fill/clip-cubic-2.png").unwrap();
     assert_eq!(pixmap, expected);
@@ -572,9 +519,6 @@ fn clip_cubic_2() {
 
 #[test]
 fn aa_endless_loop() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.anti_alias = true;
 
@@ -585,25 +529,25 @@ fn aa_endless_loop() {
     let path = pb.finish().unwrap();
 
     // Must not loop.
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 }
 
 #[test]
 fn clear_aa() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    pixmap.fill(Color::from_rgba8(50, 127, 150, 200));
-
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     // Make sure that Clear with AA doesn't fallback to memset.
     let mut paint = Paint::default();
     paint.anti_alias = true;
     paint.blend_mode = BlendMode::Clear;
 
-    canvas.fill_path(
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill(Color::from_rgba8(50, 127, 150, 200));
+    pixmap.fill_path(
         &PathBuilder::from_circle(50.0, 50.0, 40.0).unwrap(),
         &paint,
         FillRule::Winding,
+        Transform::identity(),
+        None,
     );
 
     let expected = Pixmap::load_png("tests/images/fill/clear-aa.png").unwrap();
@@ -612,9 +556,6 @@ fn clear_aa() {
 
 #[test]
 fn line_curve() {
-    let mut pixmap = Pixmap::new(200, 200).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut paint = Paint::default();
     paint.anti_alias = true;
 
@@ -625,16 +566,14 @@ fn line_curve() {
         pb.finish().unwrap()
     };
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
 
     // Must not panic.
 }
 
 #[test]
 fn vertical_lines_merging_bug() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     // This path must not trigger edge_builder::combine_vertical,
     // otherwise AlphaRuns::add will crash later.
     let mut pb = PathBuilder::new();
@@ -649,10 +588,28 @@ fn vertical_lines_merging_bug() {
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
 
-    canvas.set_transform(Transform::from_row(5.4, 0.0, 0.0, 5.4, -4050.0, -840.0));
     // Must not panic.
-    canvas.fill_path(&path, &paint, FillRule::Winding);
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::from_row(5.4, 0.0, 0.0, 5.4, -4050.0, -840.0), None);
 
     let expected = Pixmap::load_png("tests/images/fill/vertical-lines-merging-bug.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn fill_rect() {
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
+
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(
+        Rect::from_xywh(20.3, 10.4, 50.5, 30.2).unwrap(),
+        &paint,
+        Transform::from_row(1.2, 0.3, -0.7, 0.8, 12.0, 15.3),
+        None,
+    );
+
+    let expected = Pixmap::load_png("tests/images/canvas/fill-rect.png").unwrap();
     assert_eq!(pixmap, expected);
 }

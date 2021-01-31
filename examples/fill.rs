@@ -1,11 +1,6 @@
 use tiny_skia::*;
 
 fn main() {
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
-    let now = std::time::Instant::now();
-
     let mut paint1 = Paint::default();
     paint1.set_color_rgba8(50, 127, 150, 200);
     paint1.anti_alias = true;
@@ -33,10 +28,8 @@ fn main() {
         pb.finish().unwrap()
     };
 
-    canvas.fill_path(&path1, &paint1, FillRule::Winding);
-    canvas.fill_path(&path2, &paint2, FillRule::Winding);
-
-    println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
-
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    pixmap.fill_path(&path1, &paint1, FillRule::Winding, Transform::identity(), None);
+    pixmap.fill_path(&path2, &paint2, FillRule::Winding, Transform::identity(), None);
     pixmap.save_png("image.png").unwrap();
 }

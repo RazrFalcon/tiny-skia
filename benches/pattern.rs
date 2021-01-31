@@ -8,9 +8,6 @@ fn pattern_tiny_skia(
     use tiny_skia::*;
 
     fn crate_triangle() -> Pixmap {
-        let mut pixmap = Pixmap::new(20, 20).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
         let mut paint = Paint::default();
         paint.set_color_rgba8(50, 127, 150, 200);
         paint.anti_alias = true;
@@ -22,13 +19,12 @@ fn pattern_tiny_skia(
         pb.close();
         let path = pb.finish().unwrap();
 
-        canvas.fill_path(&path, &paint, FillRule::Winding);
-
+        let mut pixmap = Pixmap::new(20, 20).unwrap();
+        pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
         pixmap
     }
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
@@ -50,7 +46,7 @@ fn pattern_tiny_skia(
     let path = pb.finish().unwrap();
 
     bencher.iter(|| {
-        canvas.fill_path(&path, &paint, FillRule::Winding);
+        pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
     });
 }
 
@@ -67,7 +63,7 @@ fn lq_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     pattern_tiny_skia(
         FilterQuality::Bilinear,
-        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0),
         bencher,
     )
 }
@@ -76,7 +72,7 @@ fn hq_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     pattern_tiny_skia(
         FilterQuality::Bicubic,
-        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0).unwrap(),
+        Transform::from_row(1.5, -0.4, 0.0, -0.8, 5.0, 1.0),
         bencher,
     )
 }

@@ -3,11 +3,6 @@ use tiny_skia::*;
 // Based on https://fiddle.skia.org/c/@compose_path
 
 fn main() {
-    let mut pixmap = Pixmap::new(500, 500).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
-    let now = std::time::Instant::now();
-
     let mut paint = Paint::default();
     paint.set_color_rgba8(0, 127, 0, 200);
     paint.anti_alias = true;
@@ -29,9 +24,7 @@ fn main() {
     stroke.line_cap = LineCap::Round;
     stroke.dash = StrokeDash::new(vec![20.0, 40.0], 0.0);
 
-    canvas.stroke_path(&path, &paint, &stroke);
-
-    println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
-
+    let mut pixmap = Pixmap::new(500, 500).unwrap();
+    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None);
     pixmap.save_png("image.png").unwrap();
 }

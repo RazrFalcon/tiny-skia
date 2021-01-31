@@ -11,11 +11,13 @@ use crate::blitter::Blitter;
 use crate::color::AlphaU8;
 use crate::geom::ScreenIntRect;
 use crate::math::LENGTH_U32_ONE;
+use std::num::NonZeroU32;
 
 #[derive(Clone, Debug)]
 pub struct ClipMaskData {
     pub data: Vec<u8>,
     pub width: LengthU32,
+    pub height: LengthU32,
 }
 
 impl ClipMaskData {
@@ -34,7 +36,7 @@ impl ClipMaskData {
 /// It's way slower, but times easier to implement.
 #[derive(Clone, Debug)]
 pub struct ClipMask {
-    mask: ClipMaskData,
+    pub(crate) mask: ClipMaskData,
 }
 
 impl Default for ClipMask {
@@ -43,6 +45,7 @@ impl Default for ClipMask {
             mask: ClipMaskData {
                 data: Vec::new(),
                 width: LENGTH_U32_ONE,
+                height: LENGTH_U32_ONE,
             }
         }
     }
@@ -59,29 +62,28 @@ impl ClipMask {
         self.mask.data.is_empty()
     }
 
-    pub(crate) fn as_ref(&self) -> Option<&ClipMaskData> {
-        if self.is_empty() {
-            None
-        } else {
-            Some(&self.mask)
-        }
-    }
-
     /// Sets the current clipping path.
     ///
     /// Not additive. Overwrites the previous data.
     pub fn set_path(
         &mut self,
+        width: u32,
+        height: u32,
         path: &Path,
-        clip: ScreenIntRect,
         fill_rule: FillRule,
         anti_alias: bool,
     ) -> Option<()> {
-        self.mask.width = clip.width_safe();
+        let width = NonZeroU32::new(width)?;
+        let height = NonZeroU32::new(height)?;
+
+        self.mask.width = width;
+        self.mask.height = height;
 
         // Reuse the existing allocation.
         self.mask.data.clear();
-        self.mask.data.resize((clip.width() * clip.height()) as usize, 0);
+        self.mask.data.resize((width.get() * height.get()) as usize, 0);
+
+        let clip = ScreenIntRect::from_xywh_safe(0, 0, width, height);
 
         if anti_alias {
             let mut builder = ClipBuilderAA(&mut self.mask);

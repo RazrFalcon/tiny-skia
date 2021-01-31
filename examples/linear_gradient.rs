@@ -1,11 +1,6 @@
 use tiny_skia::*;
 
 fn main() {
-    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
-    let now = std::time::Instant::now();
-
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
         Point::from_xy(100.0, 100.0),
@@ -26,9 +21,7 @@ fn main() {
     pb.close();
     let path = pb.finish().unwrap();
 
-    canvas.fill_path(&path, &paint, FillRule::Winding);
-
-    println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
-
+    let mut pixmap = Pixmap::new(1000, 1000).unwrap();
+    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
     pixmap.save_png("image.png").unwrap();
 }

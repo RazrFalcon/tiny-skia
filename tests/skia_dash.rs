@@ -26,9 +26,6 @@ fn crbug_124652() {
 // due to single precision rounding.
 #[test]
 fn infinite_dash() {
-    let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
-
     let mut pb = PathBuilder::new();
     pb.move_to(0.0, 5.0);
     pb.line_to(5000000.0, 5.0);
@@ -41,7 +38,8 @@ fn infinite_dash() {
     let mut stroke = Stroke::default();
     stroke.dash = StrokeDash::new(vec![0.2, 0.2], 0.0);
 
-    canvas.stroke_path(&path, &paint, &stroke); // Doesn't draw anything.
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None); // Doesn't draw anything.
 
     assert!(true);
 }

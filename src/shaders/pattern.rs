@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Shader, Transform, PixmapRef, SpreadMode};
+use crate::{Shader, Transform, PixmapRef, SpreadMode, BlendMode};
 
 use crate::floating_point::NormalizedF32;
 use crate::pipeline;
@@ -20,6 +20,41 @@ pub enum FilterQuality {
     Bilinear,
     /// Bicubic. High quality, but slow.
     Bicubic,
+}
+
+
+/// Controls how a pixmap should be blended.
+///
+/// Like `Paint`, but for `Pixmap`.
+#[derive(Copy, Clone, Debug)]
+pub struct PixmapPaint {
+    /// Pixmap opacity.
+    ///
+    /// Must be in 0..=1 range.
+    ///
+    /// Default: 1.0
+    pub opacity: f32,
+
+    /// Pixmap blending mode.
+    ///
+    /// Default: SourceOver
+    pub blend_mode: BlendMode,
+
+    /// Specifies how much filtering to be done when transforming images.
+    ///
+    /// Default: Nearest
+    pub quality: FilterQuality,
+}
+
+impl Default for PixmapPaint {
+    #[inline]
+    fn default() -> Self {
+        PixmapPaint {
+            opacity: 1.0,
+            blend_mode: BlendMode::default(),
+            quality: FilterQuality::Nearest,
+        }
+    }
 }
 
 

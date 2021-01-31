@@ -162,40 +162,13 @@ impl Pixmap {
     /// Encodes pixmap into a PNG data.
     #[cfg(feature = "png-format")]
     pub fn encode_png(&self) -> Result<Vec<u8>, png::EncodingError> {
-        // Skia uses skcms here, which is somewhat similar to RasterPipeline.
-
-        // Sadly, we have to copy the pixmap here.
-        // Not sure how to avoid this.
-        let mut tmp_pixmap = self.clone();
-
-        // Demultiply alpha.
-        //
-        // RasterPipeline is 15% faster here, but produces slightly different results
-        // due to rounding. So we stick with this method for now.
-        for pixel in tmp_pixmap.as_mut().pixels_mut() {
-            let c = pixel.demultiply();
-            *pixel = PremultipliedColorU8::from_rgba_unchecked(
-                c.red(), c.green(), c.blue(), c.alpha());
-        }
-
-        let mut data = Vec::new();
-        {
-            let mut encoder = png::Encoder::new(&mut data, self.width(), self.height());
-            encoder.set_color(png::ColorType::RGBA);
-            encoder.set_depth(png::BitDepth::Eight);
-            let mut writer = encoder.write_header()?;
-            writer.write_image_data(&tmp_pixmap.data)?;
-        }
-
-        Ok(data)
+        self.as_ref().encode_png()
     }
 
     /// Saves pixmap as a PNG file.
     #[cfg(feature = "png-format")]
     pub fn save_png<P: AsRef<std::path::Path>>(&self, path: P) -> Result<(), png::EncodingError> {
-        let data = self.encode_png()?;
-        std::fs::write(path, data)?;
-        Ok(())
+        self.as_ref().save_png(path)
     }
 
     /// Returns a container that references Pixmap's data.
@@ -230,11 +203,6 @@ impl Pixmap {
         self.size
     }
 
-    // /// Returns pixmap's rect.
-    // pub(crate) fn rect(&self) -> ScreenIntRect {
-    //     self.size.to_screen_int_rect(0, 0)
-    // }
-
     /// Fills the entire pixmap with a specified color.
     pub fn fill(&mut self, color: Color) {
         let c = color.premultiply().to_color_u8();
@@ -245,14 +213,14 @@ impl Pixmap {
 
     /// Returns the internal data.
     ///
-    /// Bytes are ordered as RGBA.
+    /// Byteorder: ABGR
     pub fn data(&self) -> &[u8] {
         self.data.as_slice()
     }
 
     /// Returns the mutable internal data.
     ///
-    /// Bytes are ordered as RGBA.
+    /// Byteorder: ABGR
     pub fn data_mut(&mut self) -> &mut [u8] {
         self.data.as_mut_slice()
     }
@@ -277,7 +245,7 @@ impl Pixmap {
 
     /// Consumes the internal data.
     ///
-    /// Bytes are ordered as RGBA.
+    /// Byteorder: ABGR
     pub fn take(self) -> Vec<u8> {
         self.data
     }
@@ -364,7 +332,7 @@ impl<'a> PixmapRef<'a> {
 
     /// Returns the internal data.
     ///
-    /// Bytes are ordered as RGBA.
+    /// Byteorder: ABGR
     pub fn data(&self) -> &'a [u8] {
         self.data
     }
@@ -408,6 +376,46 @@ impl<'a> PixmapRef<'a> {
         }
 
         Some(new)
+    }
+
+    /// Encodes pixmap into a PNG data.
+    #[cfg(feature = "png-format")]
+    pub fn encode_png(&self) -> Result<Vec<u8>, png::EncodingError> {
+        // Skia uses skcms here, which is somewhat similar to RasterPipeline.
+
+        // Sadly, we have to copy the pixmap here.
+        // Not sure how to avoid this.
+        // TODO: remove allocation
+        let mut tmp_pixmap = self.to_owned();
+
+        // Demultiply alpha.
+        //
+        // RasterPipeline is 15% faster here, but produces slightly different results
+        // due to rounding. So we stick with this method for now.
+        for pixel in tmp_pixmap.pixels_mut() {
+            let c = pixel.demultiply();
+            *pixel = PremultipliedColorU8::from_rgba_unchecked(
+                c.red(), c.green(), c.blue(), c.alpha());
+        }
+
+        let mut data = Vec::new();
+        {
+            let mut encoder = png::Encoder::new(&mut data, self.width(), self.height());
+            encoder.set_color(png::ColorType::RGBA);
+            encoder.set_depth(png::BitDepth::Eight);
+            let mut writer = encoder.write_header()?;
+            writer.write_image_data(&tmp_pixmap.data)?;
+        }
+
+        Ok(data)
+    }
+
+    /// Saves pixmap as a PNG file.
+    #[cfg(feature = "png-format")]
+    pub fn save_png<P: AsRef<std::path::Path>>(&self, path: P) -> Result<(), png::EncodingError> {
+        let data = self.encode_png()?;
+        std::fs::write(path, data)?;
+        Ok(())
     }
 }
 
@@ -463,6 +471,14 @@ impl<'a> PixmapMut<'a> {
         }
     }
 
+    /// Returns a container that references Pixmap's data.
+    pub fn as_ref(&self) -> PixmapRef {
+        PixmapRef {
+            data: &self.data,
+            size: self.size,
+        }
+    }
+
     /// Returns pixmap's width.
     pub fn width(&self) -> u32 {
         self.size.width()
@@ -478,14 +494,17 @@ impl<'a> PixmapMut<'a> {
         self.size
     }
 
-    /// Returns pixmap's rect.
-    pub(crate) fn rect(&self) -> ScreenIntRect {
-        self.size.to_screen_int_rect(0, 0)
+    /// Fills the entire pixmap with a specified color.
+    pub fn fill(&mut self, color: Color) {
+        let c = color.premultiply().to_color_u8();
+        for p in self.pixels_mut() {
+            *p = c;
+        }
     }
 
     /// Returns the mutable internal data.
     ///
-    /// Bytes are ordered as RGBA.
+    /// Byteorder: ABGR
     pub fn data_mut(&mut self) -> &mut [u8] {
         self.data
     }

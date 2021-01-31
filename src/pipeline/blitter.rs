@@ -32,6 +32,13 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         clip_mask: Option<&'a ClipMaskData>,
         pixmap: &'a mut PixmapMut<'b>,
     ) -> Option<Self> {
+        // Make sure that `clip_mask` has the same size as `pixmap`.
+        if let Some(mask) = clip_mask {
+            if mask.width.get() != pixmap.width() || mask.height.get() != pixmap.height() {
+                return None;
+            }
+        }
+
         // Fast-reject.
         // This is basically SkInterpretXfermode().
         match paint.blend_mode {

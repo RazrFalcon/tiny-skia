@@ -12,7 +12,7 @@ mod pattern;
 pub use gradient::GradientStop;
 pub use linear_gradient::LinearGradient;
 pub use radial_gradient::RadialGradient;
-pub use pattern::{Pattern, FilterQuality};
+pub use pattern::{Pattern, FilterQuality, PixmapPaint};
 
 use crate::{Color, Transform};
 
@@ -91,17 +91,17 @@ impl<'a> Shader<'a> {
     }
 
     /// Transforms the shader.
-    pub fn transform(&mut self, ts: &Transform) {
+    pub fn transform(&mut self, ts: Transform) {
         match self {
             Shader::SolidColor(_) => {}
             Shader::LinearGradient(g) => {
-                g.base.transform = g.base.transform.post_concat(ts);
+                g.base.transform = g.base.transform.post_concat(&ts);
             }
             Shader::RadialGradient(g) => {
-                g.base.transform = g.base.transform.post_concat(ts);
+                g.base.transform = g.base.transform.post_concat(&ts);
             }
             Shader::Pattern(p) => {
-                p.transform = p.transform.post_concat(ts);
+                p.transform = p.transform.post_concat(&ts);
             }
         }
     }

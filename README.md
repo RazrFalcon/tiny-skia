@@ -78,24 +78,6 @@ It does have a single `unsafe`
 to mark a type as [bytemuck::Pod](https://docs.rs/bytemuck/1.4.1/bytemuck/trait.Pod.html),
 but this is perfectly safe. And all the dangerous casts are handled by `bytemuck`.
 
-## API overview
-
-The API is a bit unconventional. It doesn't look like cairo, QPainter (Qt), HTML Canvas or even Skia.
-
-The core ideas are that almost everything is stateless, immutable and valid.
-
-- `Canvas` provides a fairly spartan and low-level API.
-  We don't have a `draw_path` method. Instead, there are `fill_path` and `stroke_path`.
-- `Canvas` contains just two states: world transform and clip path.
-  We don't have save/restore functionality.
-- The only truly mutable type is `Pixmap`, which is our raster image.
-- `Path` cannot be modified after creation.
-  It can be transformed, but this function consumes the object.
-- All geometry types are always valid and immutable.
-  You cannot create a negative `Size`.
-  And so on.
-- All types that store `f32` guarantee that it is finite.
-
 ## Out of scope
 
 Skia is a huge library and we support only a tiny part of.

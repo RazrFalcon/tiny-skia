@@ -2,7 +2,6 @@ use tiny_skia::*;
 
 fn draw_line(x0: f32, y0: f32, x1: f32, y1: f32, anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(x0, y0);
@@ -16,7 +15,7 @@ fn draw_line(x0: f32, y0: f32, x1: f32, y1: f32, anti_alias: bool, width: f32, l
     let mut stroke = Stroke::default();
     stroke.width = width;
     stroke.line_cap = line_cap;
-    canvas.stroke_path(&path, &paint, &stroke);
+    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None);
 
     pixmap
 }
@@ -107,7 +106,6 @@ fn clip_vline_right_aa() {
 
 fn draw_quad(anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
     let mut pixmap = Pixmap::new(200, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(25.0, 80.0);
@@ -121,7 +119,7 @@ fn draw_quad(anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
     let mut stroke = Stroke::default();
     stroke.width = width;
     stroke.line_cap = line_cap;
-    canvas.stroke_path(&path, &paint, &stroke);
+    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None);
 
     pixmap
 }
@@ -146,7 +144,6 @@ fn quad_width_00() {
 
 fn draw_cubic(points: &[f32; 8], anti_alias: bool, width: f32, line_cap: LineCap) -> Pixmap {
     let mut pixmap = Pixmap::new(200, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut pb = PathBuilder::new();
     pb.move_to(points[0], points[1]);
@@ -160,7 +157,7 @@ fn draw_cubic(points: &[f32; 8], anti_alias: bool, width: f32, line_cap: LineCap
     let mut stroke = Stroke::default();
     stroke.width = width;
     stroke.line_cap = line_cap;
-    canvas.stroke_path(&path, &paint, &stroke);
+    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None);
 
     pixmap
 }
@@ -223,7 +220,6 @@ fn clip_cubic_00() {
 #[test]
 fn clipped_circle_aa() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
-    let mut canvas = Canvas::from(pixmap.as_mut());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -233,7 +229,7 @@ fn clipped_circle_aa() {
     stroke.width = 0.5;
 
     let path = PathBuilder::from_circle(50.0, 50.0, 55.0).unwrap();
-    canvas.stroke_path(&path, &paint, &stroke);
+    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None);
 
     let expected = Pixmap::load_png("tests/images/hairline/clipped-circle-aa.png").unwrap();
     assert_eq!(pixmap, expected);
