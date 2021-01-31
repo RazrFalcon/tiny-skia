@@ -13,7 +13,7 @@ use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
 ///
 /// Stores scale, skew and transform coordinates and a type of a transform.
 #[allow(missing_docs)]
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Transform {
     pub sx: f32,
     pub kx: f32,
@@ -52,22 +52,43 @@ impl Transform {
         Transform { sx, ky, kx, sy, tx, ty }
     }
 
-    /// Creates a new translating Transform.
+    /// Creates a new translating `Transform`.
     #[inline]
     pub fn from_translate(tx: f32, ty: f32) -> Self {
         Transform::from_row(1.0, 0.0, 0.0, 1.0, tx, ty)
     }
 
-    /// Creates a new scaling Transform.
+    /// Creates a new scaling `Transform`.
     #[inline]
     pub fn from_scale(sx: f32, sy: f32) -> Self {
         Transform::from_row(sx, 0.0, 0.0, sy, 0.0, 0.0)
     }
 
-    /// Creates a new skewing Transform.
+    /// Creates a new skewing `Transform`.
     #[inline]
     pub fn from_skew(kx: f32, ky: f32) -> Self {
         Transform::from_row(1.0, ky, kx, 1.0, 0.0, 0.0)
+    }
+
+    /// Creates a new rotating `Transform`.
+    #[inline]
+    pub fn from_rotate(angle: f32) -> Self {
+        let v = angle.to_radians();
+        let a =  v.cos();
+        let b =  v.sin();
+        let c = -b;
+        let d =  a;
+        Transform::from_row(a, b, c, d, 0.0, 0.0)
+    }
+
+    /// Creates a new rotating `Transform` at the specified position.
+    #[inline]
+    pub fn from_rotate_at(angle: f32, tx: f32, ty: f32) -> Self {
+        let mut ts = Self::default();
+        ts = ts.pre_translate(tx, ty);
+        ts = ts.pre_concat(Transform::from_rotate(angle));
+        ts = ts.pre_translate(-tx, -ty);
+        ts
     }
 
     pub(crate) fn from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Self {
@@ -246,19 +267,6 @@ impl Transform {
         }
 
         invert(self)
-    }
-}
-
-impl std::fmt::Debug for Transform {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Transform")
-            .field("sx", &self.sx)
-            .field("ky", &self.ky)
-            .field("kx", &self.kx)
-            .field("sy", &self.sy)
-            .field("tx", &self.tx)
-            .field("ty", &self.ty)
-            .finish()
     }
 }
 
