@@ -213,14 +213,14 @@ impl Pixmap {
 
     /// Returns the internal data.
     ///
-    /// Byteorder: ABGR
+    /// Byteorder: RGBA
     pub fn data(&self) -> &[u8] {
         self.data.as_slice()
     }
 
     /// Returns the mutable internal data.
     ///
-    /// Byteorder: ABGR
+    /// Byteorder: RGBA
     pub fn data_mut(&mut self) -> &mut [u8] {
         self.data.as_mut_slice()
     }
@@ -245,7 +245,7 @@ impl Pixmap {
 
     /// Consumes the internal data.
     ///
-    /// Byteorder: ABGR
+    /// Byteorder: RGBA
     pub fn take(self) -> Vec<u8> {
         self.data
     }
@@ -286,7 +286,7 @@ impl<'a> PixmapRef<'a> {
     /// The size must be at least `size.width() * size.height() * BYTES_PER_PIXEL`.
     /// Zero size in an error. Width is limited by i32::MAX/4.
     ///
-    /// The `data` is assumed to have premultiplied RGBA pixels (byteorder: ABGR).
+    /// The `data` is assumed to have premultiplied RGBA pixels (byteorder: RGBA).
     pub fn from_bytes(data: &'a [u8], width: u32, height: u32) -> Option<Self> {
         let size = IntSize::from_wh(width, height)?;
         let data_len = data_len_for_size(size)?;
@@ -332,7 +332,7 @@ impl<'a> PixmapRef<'a> {
 
     /// Returns the internal data.
     ///
-    /// Byteorder: ABGR
+    /// Byteorder: RGBA
     pub fn data(&self) -> &'a [u8] {
         self.data
     }
@@ -447,7 +447,7 @@ impl<'a> PixmapMut<'a> {
     /// The size must be at least `size.width() * size.height() * BYTES_PER_PIXEL`.
     /// Zero size in an error. Width is limited by i32::MAX/4.
     ///
-    /// The `data` is assumed to have premultiplied RGBA pixels (byteorder: ABGR).
+    /// The `data` is assumed to have premultiplied RGBA pixels (byteorder: RGBA).
     pub fn from_bytes(data: &'a mut [u8], width: u32, height: u32) -> Option<Self> {
         let size = IntSize::from_wh(width, height)?;
         let data_len = data_len_for_size(size)?;
@@ -504,7 +504,7 @@ impl<'a> PixmapMut<'a> {
 
     /// Returns the mutable internal data.
     ///
-    /// Byteorder: ABGR
+    /// Byteorder: RGBA
     pub fn data_mut(&mut self) -> &mut [u8] {
         self.data
     }
