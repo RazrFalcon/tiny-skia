@@ -63,7 +63,7 @@ pub use u16x16_t::u16x16;
 #[allow(dead_code)]
 pub fn generic_bit_blend<T>(mask: T, y: T, n: T) -> T
 where
-    T: Copy + std::ops::BitXor<Output = T> + std::ops::BitAnd<Output = T>,
+    T: Copy + core::ops::BitXor<Output = T> + core::ops::BitAnd<Output = T>,
 {
     n ^ ((n ^ y) & mask)
 }

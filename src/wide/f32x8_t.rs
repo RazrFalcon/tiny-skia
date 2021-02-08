@@ -6,23 +6,26 @@
 // Based on https://github.com/Lokathor/wide (Zlib)
 
 use bytemuck::cast;
-#[cfg(feature = "simd")] use safe_arch::*;
 
 use crate::wide::{u32x8, i32x8};
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
+
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-        #[cfg(all(feature = "simd", target_feature = "avx"))]
+        use safe_arch::*;
+
         #[derive(Default, Clone, Copy, PartialEq, Debug)]
         #[repr(C, align(32))]
         pub struct f32x8(m256);
     } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-        #[cfg(all(feature = "simd", target_feature = "sse2"))]
+        use safe_arch::*;
+
         #[derive(Default, Clone, Copy, PartialEq, Debug)]
         #[repr(C, align(32))]
         pub struct f32x8(m128, m128);
     } else {
-        #[cfg(not(feature = "simd"))]
         #[derive(Default, Clone, Copy, PartialEq, Debug)]
         #[repr(C, align(32))]
         pub struct f32x8([f32; 8]);
@@ -341,7 +344,7 @@ impl From<f32x8> for [f32; 8] {
     }
 }
 
-impl std::ops::Add for f32x8 {
+impl core::ops::Add for f32x8 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -357,13 +360,13 @@ impl std::ops::Add for f32x8 {
     }
 }
 
-impl std::ops::AddAssign for f32x8 {
+impl core::ops::AddAssign for f32x8 {
     fn add_assign(&mut self, rhs: f32x8) {
         *self = *self + rhs;
     }
 }
 
-impl std::ops::Sub for f32x8 {
+impl core::ops::Sub for f32x8 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -379,7 +382,7 @@ impl std::ops::Sub for f32x8 {
     }
 }
 
-impl std::ops::Mul for f32x8 {
+impl core::ops::Mul for f32x8 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -395,13 +398,13 @@ impl std::ops::Mul for f32x8 {
     }
 }
 
-impl std::ops::MulAssign for f32x8 {
+impl core::ops::MulAssign for f32x8 {
     fn mul_assign(&mut self, rhs: f32x8) {
         *self = *self * rhs;
     }
 }
 
-impl std::ops::Div for f32x8 {
+impl core::ops::Div for f32x8 {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
@@ -417,7 +420,7 @@ impl std::ops::Div for f32x8 {
     }
 }
 
-impl std::ops::BitAnd for f32x8 {
+impl core::ops::BitAnd for f32x8 {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self::Output {
@@ -442,7 +445,7 @@ impl std::ops::BitAnd for f32x8 {
     }
 }
 
-impl std::ops::BitOr for f32x8 {
+impl core::ops::BitOr for f32x8 {
     type Output = Self;
 
     fn bitor(self, rhs: Self) -> Self::Output {
@@ -467,7 +470,7 @@ impl std::ops::BitOr for f32x8 {
     }
 }
 
-impl std::ops::BitXor for f32x8 {
+impl core::ops::BitXor for f32x8 {
     type Output = Self;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
@@ -492,7 +495,7 @@ impl std::ops::BitXor for f32x8 {
     }
 }
 
-impl std::ops::Neg for f32x8 {
+impl core::ops::Neg for f32x8 {
     type Output = Self;
 
     fn neg(self) -> Self {
@@ -500,7 +503,7 @@ impl std::ops::Neg for f32x8 {
     }
 }
 
-impl std::ops::Not for f32x8 {
+impl core::ops::Not for f32x8 {
     type Output = Self;
 
     fn not(self) -> Self {

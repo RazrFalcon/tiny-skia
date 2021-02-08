@@ -4,13 +4,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use crate::LengthU32;
 use crate::floating_point::{SaturateRound, FiniteF32};
 use crate::scalar::Scalar;
 use crate::wide::{f32x2, f32x4};
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 /// A point.
 #[allow(missing_docs)]
@@ -158,7 +160,7 @@ impl Point {
     }
 
     pub(crate) fn swap_coords(&mut self) {
-        std::mem::swap(&mut self.x, &mut self.y);
+        core::mem::swap(&mut self.x, &mut self.y);
     }
 
     pub(crate) fn rotate_cw(&mut self) {
@@ -215,7 +217,7 @@ fn set_point_length(
     true
 }
 
-impl std::ops::Neg for Point {
+impl core::ops::Neg for Point {
     type Output = Point;
 
     fn neg(self) -> Self::Output {
@@ -226,7 +228,7 @@ impl std::ops::Neg for Point {
     }
 }
 
-impl std::ops::Add for Point {
+impl core::ops::Add for Point {
     type Output = Point;
 
     fn add(self, other: Point) -> Self::Output {
@@ -237,14 +239,14 @@ impl std::ops::Add for Point {
     }
 }
 
-impl std::ops::AddAssign for Point {
+impl core::ops::AddAssign for Point {
     fn add_assign(&mut self, other: Point) {
         self.x += other.x;
         self.y += other.y;
     }
 }
 
-impl std::ops::Sub for Point {
+impl core::ops::Sub for Point {
     type Output = Point;
 
     fn sub(self, other: Point) -> Self::Output {
@@ -255,14 +257,14 @@ impl std::ops::Sub for Point {
     }
 }
 
-impl std::ops::SubAssign for Point {
+impl core::ops::SubAssign for Point {
     fn sub_assign(&mut self, other: Point) {
         self.x -= other.x;
         self.y -= other.y;
     }
 }
 
-impl std::ops::Mul for Point {
+impl core::ops::Mul for Point {
     type Output = Point;
 
     fn mul(self, other: Point) -> Self::Output {
@@ -273,7 +275,7 @@ impl std::ops::Mul for Point {
     }
 }
 
-impl std::ops::MulAssign for Point {
+impl core::ops::MulAssign for Point {
     fn mul_assign(&mut self, other: Point) {
         self.x *= other.x;
         self.y *= other.y;
@@ -496,12 +498,12 @@ mod int_rect_tests {
         assert_eq!(IntRect::from_xywh(0, 0, 1, 0), None);
         assert_eq!(IntRect::from_xywh(0, 0, 0, 1), None);
 
-        assert_eq!(IntRect::from_xywh(0, 0, std::u32::MAX, std::u32::MAX), None);
-        assert_eq!(IntRect::from_xywh(0, 0, 1, std::u32::MAX), None);
-        assert_eq!(IntRect::from_xywh(0, 0, std::u32::MAX, 1), None);
+        assert_eq!(IntRect::from_xywh(0, 0, core::u32::MAX, core::u32::MAX), None);
+        assert_eq!(IntRect::from_xywh(0, 0, 1, core::u32::MAX), None);
+        assert_eq!(IntRect::from_xywh(0, 0, core::u32::MAX, 1), None);
 
-        assert_eq!(IntRect::from_xywh(std::i32::MAX, 0, 1, 1), None);
-        assert_eq!(IntRect::from_xywh(0, std::i32::MAX, 1, 1), None);
+        assert_eq!(IntRect::from_xywh(core::i32::MAX, 0, 1, 1), None);
+        assert_eq!(IntRect::from_xywh(0, core::i32::MAX, 1, 1), None);
 
         let r = IntRect::from_xywh(1, 2, 3, 4).unwrap();
         assert_eq!(r.to_screen_int_rect().unwrap(), ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap());
@@ -664,14 +666,14 @@ mod screen_int_rect_tests {
         assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, 0), None);
         assert_eq!(ScreenIntRect::from_xywh(0, 0, 0, 1), None);
 
-        assert_eq!(ScreenIntRect::from_xywh(0, 0, std::u32::MAX, std::u32::MAX), None);
-        assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, std::u32::MAX), None);
-        assert_eq!(ScreenIntRect::from_xywh(0, 0, std::u32::MAX, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, core::u32::MAX, core::u32::MAX), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, core::u32::MAX), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, core::u32::MAX, 1), None);
 
-        assert_eq!(ScreenIntRect::from_xywh(std::u32::MAX, 0, 1, 1), None);
-        assert_eq!(ScreenIntRect::from_xywh(0, std::u32::MAX, 1, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(core::u32::MAX, 0, 1, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, core::u32::MAX, 1, 1), None);
 
-        assert_eq!(ScreenIntRect::from_xywh(std::u32::MAX, std::u32::MAX, std::u32::MAX, std::u32::MAX), None);
+        assert_eq!(ScreenIntRect::from_xywh(core::u32::MAX, core::u32::MAX, core::u32::MAX, core::u32::MAX), None);
 
         let r = ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap();
         assert_eq!(r.x(), 1);
@@ -776,8 +778,8 @@ impl Rect {
         IntRect::from_xywh(
             i32::saturate_round(self.x()),
             i32::saturate_round(self.y()),
-            std::cmp::max(1, i32::saturate_round(self.width()) as u32),
-            std::cmp::max(1, i32::saturate_round(self.height()) as u32),
+            core::cmp::max(1, i32::saturate_round(self.width()) as u32),
+            core::cmp::max(1, i32::saturate_round(self.height()) as u32),
         ).unwrap()
     }
 
@@ -788,8 +790,8 @@ impl Rect {
         IntRect::from_xywh(
             i32::saturate_floor(self.x()),
             i32::saturate_floor(self.y()),
-            std::cmp::max(1, i32::saturate_ceil(self.width()) as u32),
-            std::cmp::max(1, i32::saturate_ceil(self.height()) as u32),
+            core::cmp::max(1, i32::saturate_ceil(self.width()) as u32),
+            core::cmp::max(1, i32::saturate_ceil(self.height()) as u32),
         ).unwrap()
     }
 
@@ -877,7 +879,7 @@ fn checked_f32_sub(a: f32, b: f32) -> Option<f32> {
 
     let n = a as f64 - b as f64;
     // Not sure if this is perfectly correct.
-    if n > std::f32::MIN as f64 && n < std::f32::MAX as f64 {
+    if n > core::f32::MIN as f64 && n < core::f32::MAX as f64 {
         Some(n as f32)
     } else {
         None
@@ -893,11 +895,11 @@ mod rect_tests {
     fn tests() {
         assert_eq!(Rect::from_ltrb(10.0, 10.0, 5.0, 10.0), None);
         assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, 5.0), None);
-        assert_eq!(Rect::from_ltrb(std::f32::NAN, 10.0, 10.0, 10.0), None);
-        assert_eq!(Rect::from_ltrb(10.0, std::f32::NAN, 10.0, 10.0), None);
-        assert_eq!(Rect::from_ltrb(10.0, 10.0, std::f32::NAN, 10.0), None);
-        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, std::f32::NAN), None);
-        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, std::f32::INFINITY), None);
+        assert_eq!(Rect::from_ltrb(core::f32::NAN, 10.0, 10.0, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, core::f32::NAN, 10.0, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, core::f32::NAN, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, core::f32::NAN), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, core::f32::INFINITY), None);
 
         let rect = Rect::from_ltrb(10.0, 20.0, 30.0, 40.0).unwrap();
         assert_eq!(rect.left(), 10.0);

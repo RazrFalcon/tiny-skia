@@ -6,6 +6,9 @@
 
 use crate::scalar::{SCALAR_MAX, Scalar};
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
+
 // Must be first, because of macro scope rules.
 #[macro_use] pub mod point64;
 

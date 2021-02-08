@@ -6,6 +6,9 @@
 
 // NOTE: this is not SkPathBuilder, but rather a reimplementation of SkPath.
 
+use alloc::vec;
+use alloc::vec::Vec;
+
 use crate::{Point, Rect, Path};
 
 use crate::path_geometry;

@@ -14,6 +14,9 @@ use crate::path::{PathEdge, PathEdgeIter};
 use crate::path_geometry;
 use crate::scalar::SCALAR_MAX;
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
+
 // This is a fail-safe `arr[n..n+3].try_into().unwrap()` alternative.
 // Everything is checked at compile-time so there is no bound checking and panics.
 macro_rules! copy_3_points {
@@ -75,7 +78,7 @@ impl EdgeClipper {
 
     fn push_vline(&mut self, x: f32, mut y0: f32, mut y1: f32, reverse: bool) {
         if reverse {
-            std::mem::swap(&mut y0, &mut y1);
+            core::mem::swap(&mut y0, &mut y1);
         }
 
         self.edges.push(PathEdge::LineTo(Point::from_xy(x, y0), Point::from_xy(x, y1)));

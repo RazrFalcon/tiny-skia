@@ -6,10 +6,11 @@
 // Based on https://github.com/Lokathor/wide (Zlib)
 
 use bytemuck::cast;
-#[cfg(feature = "simd")] use safe_arch::*;
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "simd", target_feature = "sse"))] {
+        use safe_arch::*;
+
         #[derive(Default, Clone, Copy, PartialEq, Debug)]
         #[repr(C, align(16))]
         pub struct f32x4(m128);
@@ -71,7 +72,7 @@ impl From<f32x4> for [f32; 4] {
     }
 }
 
-impl std::ops::Add for f32x4 {
+impl core::ops::Add for f32x4 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -90,13 +91,13 @@ impl std::ops::Add for f32x4 {
     }
 }
 
-impl std::ops::AddAssign for f32x4 {
+impl core::ops::AddAssign for f32x4 {
     fn add_assign(&mut self, rhs: f32x4) {
         *self = *self + rhs;
     }
 }
 
-impl std::ops::Sub for f32x4 {
+impl core::ops::Sub for f32x4 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -115,7 +116,7 @@ impl std::ops::Sub for f32x4 {
     }
 }
 
-impl std::ops::Mul for f32x4 {
+impl core::ops::Mul for f32x4 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -134,7 +135,7 @@ impl std::ops::Mul for f32x4 {
     }
 }
 
-impl std::ops::MulAssign for f32x4 {
+impl core::ops::MulAssign for f32x4 {
     fn mul_assign(&mut self, rhs: f32x4) {
         *self = *self * rhs;
     }

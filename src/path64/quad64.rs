@@ -6,6 +6,9 @@
 
 use super::Scalar64;
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
+
 pub fn push_valid_ts(s: &[f64], real_roots: usize, t: &mut [f64]) -> usize {
     let mut found_roots = 0;
     'outer: for index in 0..real_roots {

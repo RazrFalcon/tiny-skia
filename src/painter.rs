@@ -11,6 +11,9 @@ use crate::scalar::Scalar;
 use crate::scan;
 use crate::stroker::PathStroker;
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
+
 // 8K is 1 too big, since 8K << supersample == 32768 which is too big for Fixed.
 const MAX_DIM: u32 = 8192 - 1;
 
@@ -385,7 +388,7 @@ fn treat_as_hairline(paint: &Paint, stroke: &Stroke, mut ts: Transform) -> Optio
         let mut x = p.x.abs();
         let mut y = p.y.abs();
         if x < y {
-            std::mem::swap(&mut x, &mut y);
+            core::mem::swap(&mut x, &mut y);
         }
 
         x + y.half()

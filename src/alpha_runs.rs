@@ -4,8 +4,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::convert::TryFrom;
-use std::num::NonZeroU16;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::convert::TryFrom;
+use core::num::NonZeroU16;
 
 use crate::LengthU32;
 use crate::color::AlphaU8;

@@ -6,6 +6,8 @@
 
 // This module is a mix of SkDashPath, SkDashPathEffect, SkContourMeasure and SkPathMeasure.
 
+use alloc::vec::Vec;
+
 use arrayref::array_ref;
 
 use crate::{Path, PathSegment, PathSegmentsIter, Point, PathBuilder};
@@ -14,6 +16,9 @@ use crate::floating_point::{NormalizedF32, NonZeroPositiveF32, FiniteF32, Normal
 use crate::path::PathVerb;
 use crate::path_geometry;
 use crate::scalar::Scalar;
+
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 /// A stroke dashing properties.
 ///
@@ -74,6 +79,7 @@ impl StrokeDash {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::vec;
 
     #[test]
     fn test() {

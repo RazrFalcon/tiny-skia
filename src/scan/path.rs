@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use crate::{Path, IntRect, FillRule, LengthU32, Rect};
 
@@ -14,6 +14,9 @@ use crate::edge_builder::{BasicEdgeBuilder, ShiftedIntRect};
 use crate::fixed_point::{fdot6, fdot16, FDot16};
 use crate::floating_point::SaturateCast;
 use crate::geom::ScreenIntRect;
+
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 pub fn fill_path(
     path: &Path,

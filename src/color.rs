@@ -83,8 +83,8 @@ impl ColorU8 {
     }
 }
 
-impl std::fmt::Debug for ColorU8 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for ColorU8 {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("ColorU8")
             .field("r", &self.red())
             .field("g", &self.green())
@@ -181,8 +181,8 @@ impl PremultipliedColorU8 {
     }
 }
 
-impl std::fmt::Debug for PremultipliedColorU8 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for PremultipliedColorU8 {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("PremultipliedColorU8")
             .field("r", &self.red())
             .field("g", &self.green())

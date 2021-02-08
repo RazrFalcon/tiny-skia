@@ -8,6 +8,9 @@ use super::Scalar64;
 use super::point64::{Point64, SearchAxis};
 use super::quad64;
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
+
 pub const POINT_COUNT: usize = 4;
 const PI: f64 = 3.141592653589793;
 
@@ -360,13 +363,13 @@ pub fn find_extrema(src: &[f64], t_values: &mut [f64]) -> usize {
 }
 
 // Skia doesn't seems to care about NaN/inf during sorting, so we don't too.
-fn cmp_f64(a: &f64, b: &f64) -> std::cmp::Ordering {
+fn cmp_f64(a: &f64, b: &f64) -> core::cmp::Ordering {
     if a < b {
-        std::cmp::Ordering::Less
+        core::cmp::Ordering::Less
     } else if a > b {
-        std::cmp::Ordering::Greater
+        core::cmp::Ordering::Greater
     } else {
-        std::cmp::Ordering::Equal
+        core::cmp::Ordering::Equal
     }
 }
 

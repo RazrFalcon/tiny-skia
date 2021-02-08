@@ -21,7 +21,7 @@ pub type FDot16 = i32;
 
 pub mod fdot6 {
     use super::*;
-    use std::convert::TryFrom;
+    use core::convert::TryFrom;
 
     pub const ONE: FDot6 = 64;
 
@@ -62,7 +62,7 @@ pub mod fdot6 {
     }
 
     pub fn can_convert_to_fdot16(n: FDot6) -> bool {
-        let max_dot6 = std::i32::MAX >> (16 - 6);
+        let max_dot6 = core::i32::MAX >> (16 - 6);
         n.abs() <= max_dot6
     }
 

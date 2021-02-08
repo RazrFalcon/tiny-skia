@@ -116,7 +116,7 @@ impl f32x16 {
     }
 }
 
-impl std::ops::Add<f32x16> for f32x16 {
+impl core::ops::Add<f32x16> for f32x16 {
     type Output = Self;
 
     fn add(self, other: f32x16) -> Self::Output {
@@ -127,7 +127,7 @@ impl std::ops::Add<f32x16> for f32x16 {
     }
 }
 
-impl std::ops::Sub<f32x16> for f32x16 {
+impl core::ops::Sub<f32x16> for f32x16 {
     type Output = Self;
 
     fn sub(self, other: f32x16) -> Self::Output {
@@ -138,7 +138,7 @@ impl std::ops::Sub<f32x16> for f32x16 {
     }
 }
 
-impl std::ops::Mul<f32x16> for f32x16 {
+impl core::ops::Mul<f32x16> for f32x16 {
     type Output = Self;
 
     fn mul(self, other: f32x16) -> Self::Output {

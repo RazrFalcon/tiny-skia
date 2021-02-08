@@ -193,7 +193,7 @@ fn sect_with_vertical(src: &[Point; 2], x: f32) -> f32 {
 
 fn pin_unsorted_f32(value: f32, mut limit0: f32, mut limit1: f32) -> f32 {
     if limit1 < limit0 {
-        std::mem::swap(&mut limit0, &mut limit1);
+        core::mem::swap(&mut limit0, &mut limit1);
     }
     // now the limits are sorted
     debug_assert!(limit0 <= limit1);
@@ -209,7 +209,7 @@ fn pin_unsorted_f32(value: f32, mut limit0: f32, mut limit1: f32) -> f32 {
 
 fn pin_unsorted_f64(value: f64, mut limit0: f64, mut limit1: f64) -> f64 {
     if limit1 < limit0 {
-        std::mem::swap(&mut limit0, &mut limit1);
+        core::mem::swap(&mut limit0, &mut limit1);
     }
     // now the limits are sorted
     debug_assert!(limit0 <= limit1);

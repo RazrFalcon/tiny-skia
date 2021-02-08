@@ -4,6 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use alloc::vec::Vec;
+
 use crate::{Point, PathBuilder, Rect, Transform};
 
 use crate::scalar::SCALAR_MAX;
@@ -131,11 +133,11 @@ impl Path {
     }
 }
 
-impl std::fmt::Debug for Path {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use std::fmt::Write;
+impl core::fmt::Debug for Path {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        use core::fmt::Write;
 
-        let mut s = String::new();
+        let mut s = alloc::string::String::new();
         for segment in self.segments() {
             match segment {
                 PathSegment::MoveTo(p) =>

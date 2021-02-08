@@ -23,8 +23,8 @@ jobs:
         toolchain: ${{ matrix.rust }}
         override: true
 
-    - name: Build without default features
-      run: cargo build --verbose --no-default-features
+    - name: Build with minimal features (no_std)
+      run: cargo build --verbose --no-default-features --features libm
 
     - name: Run tests without SIMD
       run: cargo test --verbose --no-default-features --features png-format

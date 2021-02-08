@@ -8,6 +8,8 @@ use crate::Point;
 
 use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 /// An affine transformation matrix.
 ///

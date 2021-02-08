@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::convert::TryInto;
+use core::convert::TryInto;
 
 use crate::{Path, LineCap, Point, PathSegment, Rect, IntRect};
 
@@ -18,6 +18,9 @@ use crate::path::PathVerb;
 use crate::path_geometry;
 use crate::scalar::Scalar;
 use crate::wide::f32x2;
+
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 pub type LineProc = fn(&[Point], Option<&ScreenIntRect>, &mut dyn Blitter) -> Option<()>;
 
@@ -78,8 +81,8 @@ fn hair_line_rgn(
 
             if x0 > x1 {
                 // we want to go left-to-right
-                std::mem::swap(&mut x0, &mut x1);
-                std::mem::swap(&mut y0, &mut y1);
+                core::mem::swap(&mut x0, &mut x1);
+                core::mem::swap(&mut y0, &mut y1);
             }
 
             let mut ix0 = fdot6::round(x0);
@@ -110,8 +113,8 @@ fn hair_line_rgn(
 
             if y0 > y1 {
                 // we want to go top-to-bottom
-                std::mem::swap(&mut x0, &mut x1);
-                std::mem::swap(&mut y0, &mut y1);
+                core::mem::swap(&mut x0, &mut x1);
+                core::mem::swap(&mut y0, &mut y1);
             }
 
             let mut iy0 = fdot6::round(y0);

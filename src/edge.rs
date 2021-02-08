@@ -41,7 +41,7 @@ impl Edge {
     }
 }
 
-impl std::ops::Deref for Edge {
+impl core::ops::Deref for Edge {
     type Target = LineEdge;
 
     fn deref(&self) -> &Self::Target {
@@ -49,7 +49,7 @@ impl std::ops::Deref for Edge {
     }
 }
 
-impl std::ops::DerefMut for Edge {
+impl core::ops::DerefMut for Edge {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.as_line_mut()
     }
@@ -80,8 +80,8 @@ impl LineEdge {
         let mut winding = 1;
 
         if y0 > y1 {
-            std::mem::swap(&mut x0, &mut x1);
-            std::mem::swap(&mut y0, &mut y1);
+            core::mem::swap(&mut x0, &mut x1);
+            core::mem::swap(&mut y0, &mut y1);
             winding = -1;
         }
 
@@ -179,8 +179,8 @@ impl QuadraticEdge {
 
         let mut winding = 1;
         if y0 > y2 {
-            std::mem::swap(&mut x0, &mut x2);
-            std::mem::swap(&mut y0, &mut y2);
+            core::mem::swap(&mut x0, &mut x2);
+            core::mem::swap(&mut y0, &mut y2);
             winding = -1;
         }
         debug_assert!(y0 <= y1 && y1 <= y2);
@@ -357,10 +357,10 @@ impl CubicEdge {
 
         let mut winding = 1;
         if sort_y && y0 > y3 {
-            std::mem::swap(&mut x0, &mut x3);
-            std::mem::swap(&mut x1, &mut x2);
-            std::mem::swap(&mut y0, &mut y3);
-            std::mem::swap(&mut y1, &mut y2);
+            core::mem::swap(&mut x0, &mut x3);
+            core::mem::swap(&mut x1, &mut x2);
+            core::mem::swap(&mut y0, &mut y3);
+            core::mem::swap(&mut y1, &mut y2);
             winding = -1;
         }
 

@@ -6,16 +6,19 @@
 // Based on https://github.com/Lokathor/wide (Zlib)
 
 use bytemuck::cast;
-#[cfg(feature = "simd")] use safe_arch::*;
 
 use crate::wide::{f32x8, u32x8};
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
+        use safe_arch::*;
+
         #[derive(Default, Clone, Copy, PartialEq, Eq, Debug)]
         #[repr(C, align(32))]
         pub struct i32x8(m256i);
     } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
+        use safe_arch::*;
+
         #[derive(Default, Clone, Copy, PartialEq, Eq, Debug)]
         #[repr(C, align(32))]
         pub struct i32x8(pub m128i, pub m128i);
@@ -128,7 +131,7 @@ impl From<i32x8> for [i32; 8] {
     }
 }
 
-impl std::ops::Add for i32x8 {
+impl core::ops::Add for i32x8 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -144,7 +147,7 @@ impl std::ops::Add for i32x8 {
     }
 }
 
-impl std::ops::BitAnd for i32x8 {
+impl core::ops::BitAnd for i32x8 {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self::Output {
@@ -160,7 +163,7 @@ impl std::ops::BitAnd for i32x8 {
     }
 }
 
-impl std::ops::Mul for i32x8 {
+impl core::ops::Mul for i32x8 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -179,7 +182,7 @@ impl std::ops::Mul for i32x8 {
     }
 }
 
-impl std::ops::BitOr for i32x8 {
+impl core::ops::BitOr for i32x8 {
     type Output = Self;
 
     fn bitor(self, rhs: Self) -> Self::Output {
@@ -195,7 +198,7 @@ impl std::ops::BitOr for i32x8 {
     }
 }
 
-impl std::ops::BitXor for i32x8 {
+impl core::ops::BitXor for i32x8 {
     type Output = Self;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
