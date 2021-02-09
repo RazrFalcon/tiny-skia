@@ -44,6 +44,8 @@ There are still some exceptions, which are basically an imperfect implementation
 and should be optimized out in the future.
 */
 
+use alloc::vec::Vec;
+
 use arrayvec::ArrayVec;
 
 use crate::{LengthU32, Color, SpreadMode, PremultipliedColor, PremultipliedColorU8};

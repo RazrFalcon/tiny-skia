@@ -13,6 +13,8 @@ use crate::path_builder::PathDirection;
 use crate::path_geometry;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 struct SwappableBuilders<'a> {
     inner: &'a mut PathBuilder,
@@ -22,11 +24,11 @@ struct SwappableBuilders<'a> {
 impl<'a> SwappableBuilders<'a> {
     fn swap(&mut self) {
         // Skia swaps pointers to inner and outer builders during joining,
-        // but not builders itself. So a simple `std::mem::swap` will produce invalid results.
-        // And if we try to use use `std::mem::swap` on references, like below,
+        // but not builders itself. So a simple `core::mem::swap` will produce invalid results.
+        // And if we try to use use `core::mem::swap` on references, like below,
         // borrow checker will be unhappy.
         // That's why we need this wrapper. Maybe there is a better solution.
-        std::mem::swap(&mut self.inner, &mut self.outer);
+        core::mem::swap(&mut self.inner, &mut self.outer);
     }
 }
 
@@ -1216,7 +1218,7 @@ impl PathStroker {
 
         // Swap out the outer builder.
         let mut buf = PathBuilder::new();
-        std::mem::swap(&mut self.outer, &mut buf);
+        core::mem::swap(&mut self.outer, &mut buf);
 
         buf.finish()
     }
@@ -1418,7 +1420,7 @@ fn miter_joiner(
         }
 
         handle_inner_join(pivot, after, builders.inner);
-    };
+    }
 
     fn do_miter(builders: SwappableBuilders, pivot: Point, radius: f32,
                 prev_is_line: bool, curr_is_line: bool, mid: Point, after: Point) {
@@ -1429,7 +1431,7 @@ fn miter_joiner(
         }
 
         do_blunt(builders, pivot, radius, curr_is_line, after);
-    };
+    }
 
     // negate the dot since we're using normals instead of tangents
     let dot_prod = before_unit_normal.dot(after_unit_normal);
@@ -1685,7 +1687,7 @@ fn sharp_angle(quad: &[Point; 3]) -> bool {
     let smaller_len = smaller.length_sqd();
     let mut larger_len = larger.length_sqd();
     if smaller_len > larger_len {
-        std::mem::swap(&mut smaller, &mut larger);
+        core::mem::swap(&mut smaller, &mut larger);
         larger_len = smaller_len;
     }
 

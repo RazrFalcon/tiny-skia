@@ -13,6 +13,8 @@ use crate::wide::f32x2;
 use crate::path_builder::PathDirection;
 use crate::floating_point::{NormalizedF32, NormalizedF32Exclusive};
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 /// use for : eval(t) == A * t^2 + B * t + C
 #[derive(Default)]

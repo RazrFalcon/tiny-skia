@@ -9,6 +9,7 @@ and a user should manage the world transform, clipping mask and style manually.
 See the `examples/` directory for usage examples.
 */
 
+#![no_std]
 #![doc(html_root_url = "https://docs.rs/tiny-skia/0.4.2")]
 #![warn(missing_docs)]
 #![warn(missing_copy_implementations)]
@@ -26,6 +27,14 @@ See the `examples/` directory for usage examples.
 #![allow(clippy::needless_range_loop)]
 #![allow(clippy::neg_cmp_op_on_partial_ord)]
 #![allow(clippy::too_many_arguments)]
+
+#[cfg(not(any(feature = "std", feature = "libm")))]
+compile_error!("You have to activate either the `std` or the `libm` feature.");
+
+#[cfg(feature = "std")]
+extern crate std;
+
+extern crate alloc;
 
 mod alpha_runs;
 mod blend_mode;
@@ -71,4 +80,4 @@ pub use stroker::{LineCap, LineJoin, Stroke};
 pub use transform::Transform;
 
 /// An integer length that is guarantee to be > 0
-type LengthU32 = std::num::NonZeroU32;
+type LengthU32 = core::num::NonZeroU32;

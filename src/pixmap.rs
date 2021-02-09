@@ -4,8 +4,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::convert::TryFrom;
-use std::num::NonZeroUsize;
+#[cfg(feature = "png-format")]
+use alloc::string::ToString;
+use alloc::vec;
+use alloc::vec::Vec;
+
+use core::convert::TryFrom;
+use core::num::NonZeroUsize;
 
 use crate::{Color, IntRect};
 
@@ -260,8 +265,8 @@ impl Pixmap {
     }
 }
 
-impl std::fmt::Debug for Pixmap {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Pixmap {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Pixmap")
             .field("data", &"...")
             .field("width", &self.size.width())
@@ -423,8 +428,8 @@ impl<'a> PixmapRef<'a> {
     }
 }
 
-impl std::fmt::Debug for PixmapRef<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for PixmapRef<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("PixmapRef")
             .field("data", &"...")
             .field("width", &self.size.width())
@@ -521,8 +526,8 @@ impl<'a> PixmapMut<'a> {
     }
 }
 
-impl std::fmt::Debug for PixmapMut<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for PixmapMut<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("PixmapMut")
             .field("data", &"...")
             .field("width", &self.size.width())

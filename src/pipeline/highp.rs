@@ -15,8 +15,6 @@ For some reason, we are almost 2x slower. Maybe because Skia uses clang's vector
 and we're using a manual implementation.
 */
 
-use std::ffi::c_void;
-
 use crate::{PremultipliedColorU8, SpreadMode, PixmapMut, PixmapRef};
 
 use crate::geom::ScreenIntRect;
@@ -119,8 +117,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     apply_vector_mask,
 ];
 
-pub fn fn_ptr(f: StageFn) -> *const c_void {
-    f as *const () as *const c_void
+pub fn fn_ptr(f: StageFn) -> *const () {
+    f as *const ()
 }
 
 #[inline(never)]

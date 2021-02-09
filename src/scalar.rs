@@ -67,6 +67,81 @@ impl Scalar for f32 {
     }
 }
 
+cfg_if::cfg_if! {
+    if #[cfg(all(not(feature = "std"), feature = "libm"))] {
+        pub trait FloatExt {
+            fn trunc(self) -> Self;
+            fn sqrt(self) -> Self;
+            fn abs(self) -> Self;
+            fn sin(self) -> Self;
+            fn cos(self) -> Self;
+            fn ceil(self) -> Self;
+            fn floor(self) -> Self;
+            fn powf(self, y: Self) -> Self;
+            fn acos(self) -> Self;
+        }
+
+        impl FloatExt for f32 {
+            fn trunc(self) -> Self {
+                libm::truncf(self)
+            }
+            fn sqrt(self) -> Self {
+                libm::sqrtf(self)
+            }
+            fn abs(self) -> Self {
+                libm::fabsf(self)
+            }
+            fn sin(self) -> Self {
+                libm::sinf(self)
+            }
+            fn cos(self) -> Self {
+                libm::cosf(self)
+            }
+            fn ceil(self) -> Self {
+                libm::ceilf(self)
+            }
+            fn floor(self) -> Self {
+                libm::floorf(self)
+            }
+            fn powf(self, y: Self) -> Self {
+                libm::powf(self, y)
+            }
+            fn acos(self) -> Self {
+                libm::acosf(self)
+            }
+        }
+
+        impl FloatExt for f64 {
+            fn trunc(self) -> Self {
+                libm::trunc(self)
+            }
+            fn sqrt(self) -> Self {
+                libm::sqrt(self)
+            }
+            fn abs(self) -> Self {
+                libm::fabs(self)
+            }
+            fn sin(self) -> Self {
+                libm::sin(self)
+            }
+            fn cos(self) -> Self {
+                libm::cos(self)
+            }
+            fn ceil(self) -> Self {
+                libm::ceil(self)
+            }
+            fn floor(self) -> Self {
+                libm::floor(self)
+            }
+            fn powf(self, y: Self) -> Self {
+                libm::pow(self, y)
+            }
+            fn acos(self) -> Self {
+                libm::acos(self)
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -74,10 +149,10 @@ mod tests {
 
     #[test]
     fn bound() {
-        assert_eq!(std::f32::NAN.bound(0.0, 1.0), 1.0);
-        assert_eq!(std::f32::INFINITY.bound(0.0, 1.0), 1.0);
-        assert_eq!(std::f32::NEG_INFINITY.bound(0.0, 1.0), 0.0);
-        assert_eq!(std::f32::EPSILON.bound(0.0, 1.0), std::f32::EPSILON);
+        assert_eq!(core::f32::NAN.bound(0.0, 1.0), 1.0);
+        assert_eq!(core::f32::INFINITY.bound(0.0, 1.0), 1.0);
+        assert_eq!(core::f32::NEG_INFINITY.bound(0.0, 1.0), 0.0);
+        assert_eq!(core::f32::EPSILON.bound(0.0, 1.0), core::f32::EPSILON);
         assert_eq!(0.5.bound(0.0, 1.0), 0.5);
         assert_eq!((-1.0).bound(0.0, 1.0), 0.0);
         assert_eq!(2.0.bound(0.0, 1.0), 1.0);

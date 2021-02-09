@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use crate::{Path, IntRect, FillRule, LengthU32, Rect};
 
@@ -13,6 +13,9 @@ use crate::blitter::Blitter;
 use crate::color::AlphaU8;
 use crate::geom::ScreenIntRect;
 use crate::math::left_shift;
+
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 /// controls how much we super-sample (when we use that scan conversion)
 const SUPERSAMPLE_SHIFT: u32 = 2;

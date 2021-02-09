@@ -10,6 +10,8 @@ use crate::floating_point::NormalizedF32;
 use crate::pipeline;
 use crate::pipeline::RasterPipelineBuilder;
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 /// Controls how much filtering to be done when transforming images.
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -161,7 +163,7 @@ impl<'a> Pattern<'a> {
 
         // Unlike Skia, we do not support global opacity and only Pattern allows it.
         if self.opacity != NormalizedF32::ONE {
-            debug_assert_eq!(std::mem::size_of_val(&self.opacity), 4, "alpha must be f32");
+            debug_assert_eq!(core::mem::size_of_val(&self.opacity), 4, "alpha must be f32");
             p.ctx.current_coverage = self.opacity.get();
             p.push(pipeline::Stage::Scale1Float);
         }

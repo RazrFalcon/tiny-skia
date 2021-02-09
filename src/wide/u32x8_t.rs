@@ -5,17 +5,20 @@
 
 // Based on https://github.com/Lokathor/wide (Zlib)
 
-#[cfg(feature = "simd")] use bytemuck::cast;
-#[cfg(feature = "simd")] use safe_arch::*;
-
 use crate::wide::{i32x8, f32x8};
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
+        use safe_arch::*;
+        use bytemuck::cast;
+
         #[derive(Default, Clone, Copy, PartialEq, Eq, Debug)]
         #[repr(C, align(32))]
         pub struct u32x8(m256i);
     } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
+        use safe_arch::*;
+        use bytemuck::cast;
+
         #[derive(Default, Clone, Copy, PartialEq, Eq, Debug)]
         #[repr(C, align(32))]
         pub struct u32x8(m128i, m128i);
@@ -55,7 +58,7 @@ impl u32x8 {
     }
 }
 
-impl std::ops::Not for u32x8 {
+impl core::ops::Not for u32x8 {
     type Output = Self;
 
     fn not(self) -> Self {
@@ -80,7 +83,7 @@ impl std::ops::Not for u32x8 {
     }
 }
 
-impl std::ops::Add for u32x8 {
+impl core::ops::Add for u32x8 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -96,7 +99,7 @@ impl std::ops::Add for u32x8 {
     }
 }
 
-impl std::ops::BitAnd for u32x8 {
+impl core::ops::BitAnd for u32x8 {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self::Output {
@@ -112,7 +115,7 @@ impl std::ops::BitAnd for u32x8 {
     }
 }
 
-impl std::ops::Shl<i32> for u32x8 {
+impl core::ops::Shl<i32> for u32x8 {
     type Output = Self;
 
     fn shl(self, rhs: i32) -> Self::Output {
@@ -140,7 +143,7 @@ impl std::ops::Shl<i32> for u32x8 {
     }
 }
 
-impl std::ops::Shr<i32> for u32x8 {
+impl core::ops::Shr<i32> for u32x8 {
     type Output = Self;
 
     fn shr(self, rhs: i32) -> Self::Output {

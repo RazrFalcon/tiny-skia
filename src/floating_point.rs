@@ -6,6 +6,9 @@
 
 use crate::scalar::Scalar;
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
+
 pub const FLOAT_PI: f32 = 3.14159265;
 
 const MAX_I32_FITS_IN_F32: f32 = 2147483520.0;
@@ -86,14 +89,14 @@ fn sign_bit_to_2s_compliment(mut x: i32) -> i32 {
 
 macro_rules! impl_debug_display {
     ($t:ident) => {
-        impl std::fmt::Debug for $t {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl core::fmt::Debug for $t {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 write!(f, "{}", self.get())
             }
         }
 
-        impl std::fmt::Display for $t {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        impl core::fmt::Display for $t {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
                 write!(f, "{}", self.get())
             }
         }
@@ -138,19 +141,19 @@ impl PartialEq for FiniteF32 {
 }
 
 impl Ord for FiniteF32 {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         if self.0 < other.0 {
-            std::cmp::Ordering::Less
+            core::cmp::Ordering::Less
         } else if self.0 > other.0 {
-            std::cmp::Ordering::Greater
+            core::cmp::Ordering::Greater
         } else {
-            std::cmp::Ordering::Equal
+            core::cmp::Ordering::Equal
         }
     }
 }
 
 impl PartialOrd for FiniteF32 {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -226,7 +229,7 @@ impl NormalizedF32Exclusive {
     }
 
     pub fn new_bounded(n: f32) -> Self {
-        let n = n.bound(std::f32::EPSILON, 1.0 - std::f32::EPSILON);
+        let n = n.bound(core::f32::EPSILON, 1.0 - core::f32::EPSILON);
         // `n` is guarantee to be finite after clamping.
         debug_assert!(n.is_finite());
         NormalizedF32Exclusive(FiniteF32(n))

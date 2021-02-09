@@ -26,8 +26,6 @@ And while `-C target-cpu=haswell` boosts our performance by around 25%,
 we are still 40-60% behind Skia built for Haswell.
 */
 
-use std::ffi::c_void;
-
 use crate::{PremultipliedColorU8, PixmapMut};
 
 use crate::geom::ScreenIntRect;
@@ -130,8 +128,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     null_fn, // ApplyVectorMask
 ];
 
-pub fn fn_ptr(f: StageFn) -> *const c_void {
-    f as *const () as *const c_void
+pub fn fn_ptr(f: StageFn) -> *const () {
+    f as *const ()
 }
 
 pub fn fn_ptr_eq(f1: StageFn, f2: StageFn) -> bool {

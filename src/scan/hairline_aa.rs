@@ -4,8 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use std::convert::TryFrom;
-use std::num::NonZeroU16;
+use core::convert::TryFrom;
+use core::num::NonZeroU16;
 
 use crate::{IntRect, LengthU32, Path, LineCap, Point, Rect};
 
@@ -212,7 +212,7 @@ fn call_hline_blitter(
             n = HLINE_STACK_BUFFER as u32;
         }
 
-        debug_assert!(n <= std::u16::MAX as u32);
+        debug_assert!(n <= core::u16::MAX as u32);
         runs[0] = NonZeroU16::new(n as u16);
         runs[n as usize] = None;
         if let Some(y) = y {
@@ -372,8 +372,8 @@ fn do_anti_hairline(
 
         if x0 > x1 {
             // we want to go left-to-right
-            std::mem::swap(&mut x0, &mut x1);
-            std::mem::swap(&mut y0, &mut y1);
+            core::mem::swap(&mut x0, &mut x1);
+            core::mem::swap(&mut y0, &mut y1);
         }
 
         istart = fdot6::floor(x0);
@@ -458,8 +458,8 @@ fn do_anti_hairline(
 
         if y0 > y1 {
             // we want to go top-to-bottom
-            std::mem::swap(&mut x0, &mut x1);
-            std::mem::swap(&mut y0, &mut y1);
+            core::mem::swap(&mut x0, &mut x1);
+            core::mem::swap(&mut y0, &mut y1);
         }
 
         istart = fdot6::floor(y0);
@@ -602,7 +602,7 @@ fn bad_int(x: i32) -> i32 {
 }
 
 fn any_bad_ints(a: i32, b: i32, c: i32, d: i32) -> i32 {
-    (bad_int(a) | bad_int(b) | bad_int(c) | bad_int(d)) >> ((std::mem::size_of::<i32>() << 3) - 1)
+    (bad_int(a) | bad_int(b) | bad_int(c) | bad_int(d)) >> ((core::mem::size_of::<i32>() << 3) - 1)
 }
 
 // We want the fractional part of ordinate, but we want multiples of 64 to

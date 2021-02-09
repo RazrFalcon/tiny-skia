@@ -4,6 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use alloc::vec::Vec;
+
 use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 
 use crate::pipeline;
@@ -11,6 +13,9 @@ use crate::scalar::Scalar;
 use crate::wide::u32x8;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::pipeline::RasterPipelineBuilder;
+
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
 
 #[derive(Copy, Clone, Debug)]
 struct FocalData {

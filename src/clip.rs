@@ -3,6 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use alloc::vec::Vec;
+
 use crate::{Path, LengthU32, FillRule};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
@@ -11,7 +13,7 @@ use crate::blitter::Blitter;
 use crate::color::AlphaU8;
 use crate::geom::ScreenIntRect;
 use crate::math::LENGTH_U32_ONE;
-use std::num::NonZeroU32;
+use core::num::NonZeroU32;
 
 #[derive(Clone, Debug)]
 pub struct ClipMaskData {

@@ -3,6 +3,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#[cfg(all(not(feature = "std"), feature = "libm"))]
+use crate::scalar::FloatExt;
+
 // Right now, there are no visible benefits of using SIMD for f32x2. So we don't.
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Default, PartialEq, Debug)]
@@ -46,7 +49,7 @@ impl f32x2 {
     pub fn y(&self) -> f32 { self.0[1] }
 }
 
-impl std::ops::Add<f32x2> for f32x2 {
+impl core::ops::Add<f32x2> for f32x2 {
     type Output = f32x2;
 
     fn add(self, other: f32x2) -> f32x2 {
@@ -57,7 +60,7 @@ impl std::ops::Add<f32x2> for f32x2 {
     }
 }
 
-impl std::ops::Sub<f32x2> for f32x2 {
+impl core::ops::Sub<f32x2> for f32x2 {
     type Output = f32x2;
 
     fn sub(self, other: f32x2) -> f32x2 {
@@ -68,7 +71,7 @@ impl std::ops::Sub<f32x2> for f32x2 {
     }
 }
 
-impl std::ops::Mul<f32x2> for f32x2 {
+impl core::ops::Mul<f32x2> for f32x2 {
     type Output = f32x2;
 
     fn mul(self, other: f32x2) -> f32x2 {
@@ -79,7 +82,7 @@ impl std::ops::Mul<f32x2> for f32x2 {
     }
 }
 
-impl std::ops::Div<f32x2> for f32x2 {
+impl core::ops::Div<f32x2> for f32x2 {
     type Output = f32x2;
 
     fn div(self, other: f32x2) -> f32x2 {

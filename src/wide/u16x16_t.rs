@@ -86,7 +86,7 @@ impl u16x16 {
     }
 }
 
-impl std::ops::Add<u16x16> for u16x16 {
+impl core::ops::Add<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
@@ -95,7 +95,7 @@ impl std::ops::Add<u16x16> for u16x16 {
     }
 }
 
-impl std::ops::Sub<u16x16> for u16x16 {
+impl core::ops::Sub<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
@@ -104,7 +104,7 @@ impl std::ops::Sub<u16x16> for u16x16 {
     }
 }
 
-impl std::ops::Mul<u16x16> for u16x16 {
+impl core::ops::Mul<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
@@ -113,7 +113,7 @@ impl std::ops::Mul<u16x16> for u16x16 {
     }
 }
 
-impl std::ops::Div<u16x16> for u16x16 {
+impl core::ops::Div<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
@@ -122,7 +122,7 @@ impl std::ops::Div<u16x16> for u16x16 {
     }
 }
 
-impl std::ops::BitAnd<u16x16> for u16x16 {
+impl core::ops::BitAnd<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
@@ -131,7 +131,7 @@ impl std::ops::BitAnd<u16x16> for u16x16 {
     }
 }
 
-impl std::ops::BitOr<u16x16> for u16x16 {
+impl core::ops::BitOr<u16x16> for u16x16 {
     type Output = Self;
 
     #[inline]
@@ -140,7 +140,7 @@ impl std::ops::BitOr<u16x16> for u16x16 {
     }
 }
 
-impl std::ops::Not for u16x16 {
+impl core::ops::Not for u16x16 {
     type Output = Self;
 
     #[inline]
