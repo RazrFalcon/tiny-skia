@@ -331,33 +331,29 @@ impl Iterator for EdgeClipperIter<'_> {
     type Item = ClippedEdges;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let edge = self.edge_iter.next()?;
-        match edge {
-            PathEdge::LineTo(p0, p1) => {
-                let clipper = EdgeClipper::new(self.clip, self.can_cull_to_the_right);
-                if let Some(edges) = clipper.clip_line(p0, p1) {
-                    Some(edges)
-                } else {
-                    self.next()
+        for edge in &mut self.edge_iter {
+            let clipper = EdgeClipper::new(self.clip, self.can_cull_to_the_right);
+
+            match edge {
+                PathEdge::LineTo(p0, p1) => {
+                    if let Some(edges) = clipper.clip_line(p0, p1) {
+                        return Some(edges)
+                    }
                 }
-            }
-            PathEdge::QuadTo(p0, p1, p2) => {
-                let clipper = EdgeClipper::new(self.clip, self.can_cull_to_the_right);
-                if let Some(edges) = clipper.clip_quad(p0, p1, p2) {
-                    Some(edges)
-                } else {
-                    self.next()
+                PathEdge::QuadTo(p0, p1, p2) => {
+                    if let Some(edges) = clipper.clip_quad(p0, p1, p2) {
+                        return Some(edges)
+                    }
                 }
-            }
-            PathEdge::CubicTo(p0, p1, p2, p3) => {
-                let clipper = EdgeClipper::new(self.clip, self.can_cull_to_the_right);
-                if let Some(edges) = clipper.clip_cubic(p0, p1, p2, p3) {
-                    Some(edges)
-                } else {
-                    self.next()
+                PathEdge::CubicTo(p0, p1, p2, p3) => {
+                    if let Some(edges) = clipper.clip_cubic(p0, p1, p2, p3) {
+                        return Some(edges)
+                    }
                 }
             }
         }
+
+        None
     }
 }
 
