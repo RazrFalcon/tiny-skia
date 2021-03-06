@@ -107,15 +107,14 @@ impl ClipMask {
         fill_rule: FillRule,
         anti_alias: bool,
     ) -> Option<()> {
-        let clip = ScreenIntRect::from_xywh_safe(0, 0, self.mask.width, self.mask.height);
+        let mut submask = ClipMask::new();
+        submask.set_path(self.mask.width.get(), self.mask.height.get(), path, fill_rule, anti_alias)?;
 
-        if anti_alias {
-            let mut builder = ClipBuilderAA(&mut self.mask);
-            crate::scan::path_aa::fill_path(path, fill_rule, &clip, &mut builder)
-        } else {
-            let mut builder = ClipBuilder(&mut self.mask);
-            crate::scan::path::fill_path(path, fill_rule, &clip, &mut builder)
+        for (a, b) in self.mask.data.iter_mut().zip(submask.mask.data.iter()) {
+            *a = (((u16::from(*a)) * u16::from(*b)) >> 8) as u8;
         }
+
+        Some(())
     }
 
     /// Clears the mask.
@@ -165,10 +164,7 @@ impl Blitter for ClipBuilderAA<'_> {
                 alpha => {
                     let offset = (y * self.0.width.get() + x) as usize;
                     for i in 0..width.get() as usize {
-                        let curr_alpha = &mut self.0.data[offset + i];
-                        if *curr_alpha == 0 {
-                            *curr_alpha = alpha;
-                        }
+                        self.0.data[offset + i] = alpha;
                     }
                 }
             }
