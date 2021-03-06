@@ -57,7 +57,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
 
         // When we're drawing a constant color in Source mode, we can sometimes just memset.
         let mut memset2d_color = None;
-        if paint.is_solid_color() && blend_mode == BlendMode::Source {
+        if paint.is_solid_color() && blend_mode == BlendMode::Source && clip_mask.is_none() {
             // Unlike Skia, our shader cannot be constant.
             // Therefore there is no need to run a raster pipeline to get shader's color.
             if let Shader::SolidColor(ref color) = paint.shader {
@@ -66,7 +66,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         };
 
         // Clear is just a transparent color memset.
-        if blend_mode == BlendMode::Clear && !paint.anti_alias {
+        if blend_mode == BlendMode::Clear && !paint.anti_alias && clip_mask.is_none() {
             blend_mode = BlendMode::Source;
             memset2d_color = Some(PremultipliedColorU8::TRANSPARENT);
         }

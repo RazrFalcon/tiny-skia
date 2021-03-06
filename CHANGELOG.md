@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Color memset optimizations should be ignored when clip mask is present.
 
 ## [0.5.0] - 2021-03-06
 ### Added

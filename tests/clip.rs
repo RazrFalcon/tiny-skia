@@ -147,8 +147,29 @@ fn intersect_aa() {
         Transform::identity(),
         Some(&clip_mask),
     );
-    pixmap.save_png("image.png").unwrap();
 
     let expected = Pixmap::load_png("tests/images/clip/intersect-aa.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
+fn ignore_memset() {
+    let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
+
+    let mut clip_mask = ClipMask::new();
+    clip_mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 255);
+
+    let mut pixmap = Pixmap::new(100, 100).unwrap();
+    pixmap.fill_rect(
+        Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap(),
+        &paint,
+        Transform::identity(),
+        Some(&clip_mask),
+    );
+
+    let expected = Pixmap::load_png("tests/images/clip/ignore-memset.png").unwrap();
     assert_eq!(pixmap, expected);
 }
