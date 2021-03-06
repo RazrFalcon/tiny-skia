@@ -23,7 +23,7 @@ The main motivation behind this library is to have a small, high-quality 2D rend
 library that can be used by [resvg]. And the choice is rather limited.
 You basically have to choose between [cairo], Qt and Skia. And all of them are
 relatively bloated, hard to compile and distribute. Not to mention that none of them
-is written in Rust.
+are written in Rust.
 
 But if we ignore those problems and focus only on quality and speed alone,
 Skia is by far the best one.
@@ -33,8 +33,8 @@ various filters, color spaces, color types and text rendering.
 It consists of 370 KLOC without dependencies (around 7 MLOC with dependencies)
 and requires around 4-8 GiB of disk space to be built from sources.
 And the final binary is 3-8 MiB big, depending on enabled features.
-Not to mention that it requires `clang` and no other compiler,
-uses an obscure build system (`gn`) which still uses Python2.
+Not to mention that it requires `clang` and no other compiler
+and uses an obscure build system (`gn`) which still uses Python2.
 
 `tiny-skia` tries to be small, simple and easy to build.
 Currently, it has around 14 KLOC, compiles in less than 5s on a modern CPU

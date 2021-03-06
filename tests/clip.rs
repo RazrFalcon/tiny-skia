@@ -127,3 +127,28 @@ fn skip_dest() {
     let expected = Pixmap::load_png("tests/images/clip/skip-dest.png").unwrap();
     assert_eq!(pixmap, expected);
 }
+
+#[test]
+fn intersect_aa() {
+    let circle1 = PathBuilder::from_circle(75.0, 75.0, 50.0).unwrap();
+    let circle2 = PathBuilder::from_circle(125.0, 125.0, 50.0).unwrap();
+
+    let mut clip_mask = ClipMask::new();
+    clip_mask.set_path(200, 200, &circle1, FillRule::Winding, true);
+    clip_mask.intersect_path(&circle2, FillRule::Winding, true);
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+
+    let mut pixmap = Pixmap::new(200, 200).unwrap();
+    pixmap.fill_rect(
+        Rect::from_xywh(0.0, 0.0, 200.0, 200.0).unwrap(),
+        &paint,
+        Transform::identity(),
+        Some(&clip_mask),
+    );
+    pixmap.save_png("image.png").unwrap();
+
+    let expected = Pixmap::load_png("tests/images/clip/intersect-aa.png").unwrap();
+    assert_eq!(pixmap, expected);
+}

@@ -98,6 +98,26 @@ impl ClipMask {
         }
     }
 
+    /// Intersects the provided path with the current clipping path.
+    ///
+    /// Path must be transformed beforehand.
+    pub fn intersect_path(
+        &mut self,
+        path: &Path,
+        fill_rule: FillRule,
+        anti_alias: bool,
+    ) -> Option<()> {
+        let clip = ScreenIntRect::from_xywh_safe(0, 0, self.mask.width, self.mask.height);
+
+        if anti_alias {
+            let mut builder = ClipBuilderAA(&mut self.mask);
+            crate::scan::path_aa::fill_path(path, fill_rule, &clip, &mut builder)
+        } else {
+            let mut builder = ClipBuilder(&mut self.mask);
+            crate::scan::path::fill_path(path, fill_rule, &clip, &mut builder)
+        }
+    }
+
     /// Clears the mask.
     ///
     /// Internal memory buffer is not deallocated.
@@ -145,7 +165,10 @@ impl Blitter for ClipBuilderAA<'_> {
                 alpha => {
                     let offset = (y * self.0.width.get() + x) as usize;
                     for i in 0..width.get() as usize {
-                        self.0.data[offset + i] = alpha;
+                        let curr_alpha = &mut self.0.data[offset + i];
+                        if *curr_alpha == 0 {
+                            *curr_alpha = alpha;
+                        }
                     }
                 }
             }
