@@ -1,6 +1,6 @@
 [package]
 name = "tiny-skia"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Evgeniy Reizner <razrfalcon@gmail.com>"]
 edition = "2018"
 description = "A tiny Skia subset ported to Rust."
