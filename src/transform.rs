@@ -177,7 +177,7 @@ impl Transform {
 
     /// Post-scales the current transform.
     #[must_use]
-    pub fn post_scale(&mut self, sx: f32, sy: f32) -> Self {
+    pub fn post_scale(&self, sx: f32, sy: f32) -> Self {
         self.post_concat(Transform::from_scale(sx, sy))
     }
 
