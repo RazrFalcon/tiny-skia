@@ -61,6 +61,8 @@ impl i32x8 {
                 Self(blend_varying_i8_m256i(f.0, t.0, self.0))
             } else if #[cfg(all(feature = "simd", target_feature = "sse4.1"))] {
                 Self(blend_varying_i8_m128i(f.0, t.0, self.0), blend_varying_i8_m128i(f.1, t.1, self.1))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(v128_bitselect(t.0, f.0, self.0), v128_bitselect(t.1, f.1, self.1))
             } else {
                 super::generic_bit_blend(self, t, f)
             }
