@@ -211,7 +211,8 @@ void skiac_canvas_draw_surface(
     paint.setFilterQuality((SkFilterQuality)filter_quality);
     paint.setAlpha(alpha);
     paint.setBlendMode((SkBlendMode)blend_mode);
-    CANVAS_CAST->drawImage(image, left, top, &paint);
+    const auto sampling = SkSamplingOptions((SkFilterQuality)filter_quality);
+    CANVAS_CAST->drawImage(image, left, top, sampling, &paint);
 }
 
 void skiac_canvas_draw_surface_rect(
@@ -225,7 +226,8 @@ void skiac_canvas_draw_surface_rect(
     paint.setFilterQuality((SkFilterQuality)filter_quality);
     auto src = SkRect::MakeXYWH(0, 0, image->width(), image->height());
     auto dst = SkRect::MakeXYWH(x, y, w, h);
-    CANVAS_CAST->drawImageRect(image, src, dst, &paint);
+    const auto sampling = SkSamplingOptions((SkFilterQuality)filter_quality);
+    CANVAS_CAST->drawImageRect(image, src, dst, sampling, &paint, SkCanvas::kFast_SrcRectConstraint);
 }
 
 void skiac_canvas_reset_transform(skiac_canvas* c_canvas)
@@ -478,12 +480,13 @@ skiac_shader* skiac_shader_make_from_surface_image(
 {
     const auto skia_tile_mode = SkTileMode::kRepeat;
     const auto ts = conv_from_transform(c_ts);
+    const auto sampling = SkSamplingOptions((SkFilterQuality)filter_quality);
     sk_sp<SkImage> image = SURFACE_CAST->makeImageSnapshot();
     auto shader = image->makeShader(
         skia_tile_mode,
         skia_tile_mode,
-        &ts,
-        (SkFilterQuality)filter_quality
+        sampling,
+        &ts
     ).release();
 
     if (shader) {

@@ -222,11 +222,13 @@ You will need `git`, `clang`, `ninja` and Python 2.
 
 On Windows, use `clang-cl` and `clang-cl++` for `cc` and `cxx` instead.
 
+When building on macOS, you can remove `cc` and `cxx`. On M1 also remove `"-march=native"`
+
 ```sh
 git clone https://skia.googlesource.com/skia.git
 cd skia
 git fetch --all
-git checkout -b m85 origin/chrome/m85
+git checkout -b m90 origin/chrome/m90
 python2 tools/git-sync-deps # this will download about 3 GiB of code
 bin/gn gen out/Shared --args='
     is_official_build=false
@@ -242,13 +244,10 @@ bin/gn gen out/Shared --args='
     skia_enable_discrete_gpu=false
     skia_enable_gpu=false
     skia_enable_nvpr=false
-    skia_enable_particles=false
     skia_enable_pdf=false
     skia_enable_skottie=false
     skia_enable_skrive=false
     skia_enable_skshaper=false
-    skia_enable_sksl_interpreter=false
-    skia_enable_skvm_jit=false
     skia_enable_tools=false
     skia_use_expat=false
     skia_use_gl=false
