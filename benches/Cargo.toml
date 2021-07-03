@@ -4,66 +4,10 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-bencher = "0.1.5"
 tiny-skia = { path = "../" }
-skia-rs = { path = "../testing-tools/skia-rs" }
-raqote = { version = "0.8", default-features = false }
+skia-rs = { path = "../testing-tools/skia-rs", optional = true }
+raqote = { version = "0.8", default-features = false, optional = true }
 # Do not upgrade, because 0.9 uses proc-macros now and it's too slow to compile.
 # And it should not affect the performance anyway, since we are using the system library anyway.
-cairo-rs = { version = "0.8", default-features = false }
+cairo-rs = { version = "0.8", default-features = false, optional = true }
 png = "0.16.6"
-
-[[bench]]
-name = "blend"
-path = "blend.rs"
-harness = false
-
-[[bench]]
-name = "memset_fill"
-path = "memset_fill.rs"
-harness = false
-
-[[bench]]
-name = "fill_aa"
-path = "fill_aa.rs"
-harness = false
-
-[[bench]]
-name = "fill_all"
-path = "fill_all.rs"
-harness = false
-
-[[bench]]
-name = "fill_rect"
-path = "fill_rect.rs"
-harness = false
-
-[[bench]]
-name = "spiral"
-path = "spiral.rs"
-harness = false
-
-[[bench]]
-name = "hairline"
-path = "hairline.rs"
-harness = false
-
-[[bench]]
-name = "gradients"
-path = "gradients.rs"
-harness = false
-
-[[bench]]
-name = "pattern"
-path = "pattern.rs"
-harness = false
-
-[[bench]]
-name = "clip"
-path = "clip.rs"
-harness = false
-
-[[bench]]
-name = "png_io"
-path = "png_io.rs"
-harness = false

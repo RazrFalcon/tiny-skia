@@ -191,19 +191,30 @@ Waiting for [image-png/#239](https://github.com/image-rs/image-png/issues/239).
 
 ## Running benchmarks
 
-We support only Linux. The benchmark may work on other OS'es, but it will require a lot of preperation
-(building Skia and cairo).
-
-You have to install cairo first and built Skia from sources (see below).
-
-Run:
+Benchmarks are using nightly Rust, so you have to install it first:
 
 ```sh
+rustup toolchain install nightly
+```
+
+And to run benchmarks:
+
+```sh
+rustup run nightly cargo bench
+```
+
+By default, only tiny-skia is tested. To enable other libraries use `--features`:
+
+```sh
+# those are skia-rs specific exports
 export SKIA_DIR="/path/to/skia"
 export SKIA_LIB_DIR="/path/to/skia/out/Shared"
 export LD_LIBRARY_PATH="/path/to/skia/out/Shared"
-cargo bench
+
+rustup run nightly cargo bench --features skia-rs,raqote,cairo-rs
 ```
+
+You have to install cairo first and built Skia from sources (see below).
 
 ### Building Skia
 

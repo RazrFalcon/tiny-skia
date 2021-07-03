@@ -1,4 +1,4 @@
-use bencher::{benchmark_group, benchmark_main, Bencher};
+use test::Bencher;
 
 fn two_stops_linear_tiny_skia(
     hq: bool,
@@ -33,6 +33,7 @@ fn two_stops_linear_tiny_skia(
     });
 }
 
+#[bench]
 fn two_stops_linear_pad_tiny_skia_lq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -46,6 +47,7 @@ fn two_stops_linear_pad_tiny_skia_lq(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn two_stops_linear_reflect_tiny_skia_lq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -59,6 +61,7 @@ fn two_stops_linear_reflect_tiny_skia_lq(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn two_stops_linear_repeat_tiny_skia_lq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -72,6 +75,7 @@ fn two_stops_linear_repeat_tiny_skia_lq(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn three_stops_linear_uneven_tiny_skia_lq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -86,6 +90,7 @@ fn three_stops_linear_uneven_tiny_skia_lq(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn three_stops_linear_even_tiny_skia_lq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -100,6 +105,7 @@ fn three_stops_linear_even_tiny_skia_lq(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn two_stops_linear_pad_tiny_skia_hq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -113,6 +119,7 @@ fn two_stops_linear_pad_tiny_skia_hq(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn two_stops_linear_reflect_tiny_skia_hq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -126,6 +133,7 @@ fn two_stops_linear_reflect_tiny_skia_hq(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn two_stops_linear_repeat_tiny_skia_hq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -139,6 +147,7 @@ fn two_stops_linear_repeat_tiny_skia_hq(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn three_stops_linear_uneven_tiny_skia_hq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -153,6 +162,7 @@ fn three_stops_linear_uneven_tiny_skia_hq(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn three_stops_linear_even_tiny_skia_hq(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
@@ -167,6 +177,7 @@ fn three_stops_linear_even_tiny_skia_hq(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "skia-rs")]
 fn two_stops_linear_skia(
     colors: Vec<skia_rs::Color>,
     positions: Vec<f32>,
@@ -202,6 +213,8 @@ fn two_stops_linear_skia(
     });
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn two_stops_linear_pad_skia(bencher: &mut Bencher) {
     use skia_rs::*;
     two_stops_linear_skia(
@@ -212,6 +225,8 @@ fn two_stops_linear_pad_skia(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn two_stops_linear_reflect_skia(bencher: &mut Bencher) {
     use skia_rs::*;
     two_stops_linear_skia(
@@ -222,6 +237,8 @@ fn two_stops_linear_reflect_skia(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn two_stops_linear_repeat_skia(bencher: &mut Bencher) {
     use skia_rs::*;
     two_stops_linear_skia(
@@ -232,6 +249,8 @@ fn two_stops_linear_repeat_skia(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn three_stops_linear_uneven_skia(bencher: &mut Bencher) {
     use skia_rs::*;
     two_stops_linear_skia(
@@ -244,6 +263,8 @@ fn three_stops_linear_uneven_skia(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn three_stops_linear_even_skia(bencher: &mut Bencher) {
     use skia_rs::*;
     two_stops_linear_skia(
@@ -256,6 +277,7 @@ fn three_stops_linear_even_skia(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "raqote")]
 fn two_stops_linear_raqote(
     stops: Vec<raqote::GradientStop>,
     mode: raqote::Spread,
@@ -293,6 +315,8 @@ fn two_stops_linear_raqote(
     });
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn two_stops_linear_pad_raqote(bencher: &mut Bencher) {
     use raqote::*;
     two_stops_linear_raqote(
@@ -311,6 +335,8 @@ fn two_stops_linear_pad_raqote(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn two_stops_linear_reflect_raqote(bencher: &mut Bencher) {
     use raqote::*;
     two_stops_linear_raqote(
@@ -329,6 +355,8 @@ fn two_stops_linear_reflect_raqote(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn two_stops_linear_repeat_raqote(bencher: &mut Bencher) {
     use raqote::*;
     two_stops_linear_raqote(
@@ -347,6 +375,8 @@ fn two_stops_linear_repeat_raqote(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn three_stops_linear_uneven_raqote(bencher: &mut Bencher) {
     use raqote::*;
     two_stops_linear_raqote(
@@ -369,6 +399,8 @@ fn three_stops_linear_uneven_raqote(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn three_stops_linear_even_raqote(bencher: &mut Bencher) {
     use raqote::*;
     two_stops_linear_raqote(
@@ -391,6 +423,7 @@ fn three_stops_linear_even_raqote(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "cairo-rs")]
 fn two_stops_linear_cairo(
     stops: Vec<(f64, u8, u8, u8, u8)>,
     mode: cairo::Extend,
@@ -429,6 +462,8 @@ fn two_stops_linear_cairo(
     });
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn two_stops_linear_pad_cairo(bencher: &mut Bencher) {
     two_stops_linear_cairo(
         vec![
@@ -440,6 +475,8 @@ fn two_stops_linear_pad_cairo(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn two_stops_linear_reflect_cairo(bencher: &mut Bencher) {
     two_stops_linear_cairo(
         vec![
@@ -451,6 +488,8 @@ fn two_stops_linear_reflect_cairo(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn two_stops_linear_repeat_cairo(bencher: &mut Bencher) {
     two_stops_linear_cairo(
         vec![
@@ -462,6 +501,8 @@ fn two_stops_linear_repeat_cairo(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn three_stops_linear_uneven_cairo(bencher: &mut Bencher) {
     two_stops_linear_cairo(
         vec![
@@ -474,6 +515,8 @@ fn three_stops_linear_uneven_cairo(bencher: &mut Bencher) {
     );
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn three_stops_linear_even_cairo(bencher: &mut Bencher) {
     two_stops_linear_cairo(
         vec![
@@ -486,6 +529,7 @@ fn three_stops_linear_even_cairo(bencher: &mut Bencher) {
     );
 }
 
+#[bench]
 fn simple_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
@@ -517,6 +561,8 @@ fn simple_radial_tiny_skia(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn simple_radial_skia(bencher: &mut Bencher) {
     use skia_rs::*;
 
@@ -549,6 +595,8 @@ fn simple_radial_skia(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn simple_radial_raqote(bencher: &mut Bencher) {
     use raqote::*;
 
@@ -591,6 +639,8 @@ fn simple_radial_raqote(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn simple_radial_cairo(bencher: &mut Bencher) {
     use cairo::*;
 
@@ -632,6 +682,7 @@ fn simple_radial_cairo(bencher: &mut Bencher) {
     });
 }
 
+#[bench]
 fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
@@ -663,6 +714,8 @@ fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn two_point_radial_skia(bencher: &mut Bencher) {
     use skia_rs::*;
 
@@ -695,6 +748,8 @@ fn two_point_radial_skia(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn two_point_radial_raqote(bencher: &mut Bencher) {
     use raqote::*;
 
@@ -739,6 +794,8 @@ fn two_point_radial_raqote(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn two_point_radial_cairo(bencher: &mut Bencher) {
     use cairo::*;
 
@@ -779,46 +836,3 @@ fn two_point_radial_cairo(bencher: &mut Bencher) {
         cr.fill_preserve();
     });
 }
-
-benchmark_group!(bench,
-    two_stops_linear_pad_tiny_skia_lq,
-    two_stops_linear_pad_tiny_skia_hq,
-    two_stops_linear_pad_skia,
-    two_stops_linear_pad_raqote,
-    two_stops_linear_pad_cairo,
-
-    two_stops_linear_reflect_tiny_skia_lq,
-    two_stops_linear_reflect_tiny_skia_hq,
-    two_stops_linear_reflect_skia,
-    two_stops_linear_reflect_raqote,
-    two_stops_linear_reflect_cairo,
-
-    two_stops_linear_repeat_tiny_skia_lq,
-    two_stops_linear_repeat_tiny_skia_hq,
-    two_stops_linear_repeat_skia,
-    two_stops_linear_repeat_raqote,
-    two_stops_linear_repeat_cairo,
-
-    three_stops_linear_uneven_tiny_skia_lq,
-    three_stops_linear_uneven_tiny_skia_hq,
-    three_stops_linear_uneven_skia,
-    three_stops_linear_uneven_raqote,
-    three_stops_linear_uneven_cairo,
-
-    three_stops_linear_even_tiny_skia_lq,
-    three_stops_linear_even_tiny_skia_hq,
-    three_stops_linear_even_skia,
-    three_stops_linear_even_raqote,
-    three_stops_linear_even_cairo,
-
-    simple_radial_tiny_skia,
-    simple_radial_skia,
-    simple_radial_raqote,
-    simple_radial_cairo,
-
-    two_point_radial_tiny_skia,
-    two_point_radial_skia,
-    two_point_radial_raqote,
-    two_point_radial_cairo
-);
-benchmark_main!(bench);

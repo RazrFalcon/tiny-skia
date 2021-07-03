@@ -1,4 +1,4 @@
-use bencher::{benchmark_group, benchmark_main, Bencher};
+use test::Bencher;
 
 fn pattern_tiny_skia(
     quality: tiny_skia::FilterQuality,
@@ -50,6 +50,7 @@ fn pattern_tiny_skia(
     });
 }
 
+#[bench]
 fn plain_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     pattern_tiny_skia(
@@ -59,6 +60,7 @@ fn plain_tiny_skia(bencher: &mut Bencher) {
     )
 }
 
+#[bench]
 fn lq_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     pattern_tiny_skia(
@@ -68,6 +70,7 @@ fn lq_tiny_skia(bencher: &mut Bencher) {
     )
 }
 
+#[bench]
 fn hq_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     pattern_tiny_skia(
@@ -77,6 +80,7 @@ fn hq_tiny_skia(bencher: &mut Bencher) {
     )
 }
 
+#[cfg(feature = "skia-rs")]
 fn pattern_skia(
     quality: skia_rs::FilterQuality,
     ts: skia_rs::Transform,
@@ -128,6 +132,8 @@ fn pattern_skia(
     });
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn plain_skia(bencher: &mut Bencher) {
     use skia_rs::*;
     pattern_skia(
@@ -137,6 +143,8 @@ fn plain_skia(bencher: &mut Bencher) {
     )
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn lq_skia(bencher: &mut Bencher) {
     use skia_rs::*;
     pattern_skia(
@@ -146,6 +154,8 @@ fn lq_skia(bencher: &mut Bencher) {
     )
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn hq_skia(bencher: &mut Bencher) {
     use skia_rs::*;
     pattern_skia(
@@ -155,6 +165,7 @@ fn hq_skia(bencher: &mut Bencher) {
     )
 }
 
+#[cfg(feature = "cairo-rs")]
 fn pattern_cairo(
     quality: cairo::Filter,
     ts: cairo::Matrix,
@@ -207,6 +218,8 @@ fn pattern_cairo(
     });
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn plain_cairo(bencher: &mut Bencher) {
     use cairo::*;
     pattern_cairo(
@@ -216,6 +229,8 @@ fn plain_cairo(bencher: &mut Bencher) {
     )
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn lq_cairo(bencher: &mut Bencher) {
     use cairo::*;
     pattern_cairo(
@@ -225,6 +240,8 @@ fn lq_cairo(bencher: &mut Bencher) {
     )
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn hq_cairo(bencher: &mut Bencher) {
     use cairo::*;
     pattern_cairo(
@@ -235,6 +252,7 @@ fn hq_cairo(bencher: &mut Bencher) {
     )
 }
 
+#[cfg(feature = "raqote")]
 fn pattern_raqote(
     quality: raqote::FilterMode,
     ts: raqote::Transform,
@@ -302,6 +320,8 @@ fn pattern_raqote(
     });
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn plain_raqote(bencher: &mut Bencher) {
     use raqote::*;
     pattern_raqote(
@@ -311,6 +331,8 @@ fn plain_raqote(bencher: &mut Bencher) {
     )
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn lq_raqote(bencher: &mut Bencher) {
     use raqote::*;
     pattern_raqote(
@@ -320,25 +342,8 @@ fn lq_raqote(bencher: &mut Bencher) {
     )
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn hq_raqote(_bencher: &mut Bencher) {
     // unsupported
 }
-
-benchmark_group!(bench,
-    plain_tiny_skia,
-    lq_tiny_skia,
-    hq_tiny_skia,
-
-    plain_skia,
-    lq_skia,
-    hq_skia,
-
-    plain_raqote,
-    lq_raqote,
-    hq_raqote,
-
-    plain_cairo,
-    lq_cairo,
-    hq_cairo
-);
-benchmark_main!(bench);

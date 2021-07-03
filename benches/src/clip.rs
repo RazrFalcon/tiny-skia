@@ -1,4 +1,4 @@
-use bencher::{benchmark_group, benchmark_main, Bencher};
+use test::Bencher;
 
 fn do_clip_tiny_skia(aa: bool, bencher: &mut Bencher) {
     use tiny_skia::*;
@@ -27,14 +27,17 @@ fn do_clip_tiny_skia(aa: bool, bencher: &mut Bencher) {
     });
 }
 
-fn clip_path_tiny_skia(bencher: &mut Bencher) {
+#[bench]
+fn tiny_skia(bencher: &mut Bencher) {
     do_clip_tiny_skia(false, bencher);
 }
 
-fn clip_path_aa_tiny_skia(bencher: &mut Bencher) {
+#[bench]
+fn aa_tiny_skia(bencher: &mut Bencher) {
     do_clip_tiny_skia(true, bencher);
 }
 
+#[cfg(feature = "skia-rs")]
 fn do_clip_path_skia(aa: bool, bencher: &mut Bencher) {
     use skia_rs::*;
 
@@ -62,14 +65,19 @@ fn do_clip_path_skia(aa: bool, bencher: &mut Bencher) {
     });
 }
 
-fn clip_path_skia(bencher: &mut Bencher) {
+#[cfg(feature = "skia-rs")]
+#[bench]
+fn skia(bencher: &mut Bencher) {
     do_clip_path_skia(false, bencher);
 }
 
-fn clip_path_aa_skia(bencher: &mut Bencher) {
+#[cfg(feature = "skia-rs")]
+#[bench]
+fn aa_skia(bencher: &mut Bencher) {
     do_clip_path_skia(true, bencher);
 }
 
+#[cfg(feature = "raqote")]
 fn do_clip_path_raqote(aa: raqote::AntialiasMode, bencher: &mut Bencher) {
     use raqote::*;
 
@@ -101,14 +109,19 @@ fn do_clip_path_raqote(aa: raqote::AntialiasMode, bencher: &mut Bencher) {
     });
 }
 
-fn clip_path_raqote(bencher: &mut Bencher) {
+#[cfg(feature = "raqote")]
+#[bench]
+fn raqote(bencher: &mut Bencher) {
     do_clip_path_raqote(raqote::AntialiasMode::None, bencher);
 }
 
-fn clip_path_aa_raqote(bencher: &mut Bencher) {
+#[cfg(feature = "raqote")]
+#[bench]
+fn aa_raqote(bencher: &mut Bencher) {
     do_clip_path_raqote(raqote::AntialiasMode::Gray, bencher);
 }
 
+#[cfg(feature = "cairo-rs")]
 fn do_clip_path_cairo(aa: cairo::Antialias, bencher: &mut Bencher) {
     use cairo::*;
 
@@ -132,23 +145,14 @@ fn do_clip_path_cairo(aa: cairo::Antialias, bencher: &mut Bencher) {
     });
 }
 
-fn clip_path_cairo(bencher: &mut Bencher) {
+#[cfg(feature = "cairo-rs")]
+#[bench]
+fn cairo(bencher: &mut Bencher) {
     do_clip_path_cairo(cairo::Antialias::None, bencher);
 }
 
-fn clip_path_aa_cairo(bencher: &mut Bencher) {
+#[cfg(feature = "cairo-rs")]
+#[bench]
+fn aa_cairo(bencher: &mut Bencher) {
     do_clip_path_cairo(cairo::Antialias::Subpixel, bencher);
 }
-
-benchmark_group!(clip,
-    clip_path_tiny_skia,
-    clip_path_skia,
-    clip_path_raqote,
-    clip_path_cairo,
-
-    clip_path_aa_tiny_skia,
-    clip_path_aa_skia,
-    clip_path_aa_raqote,
-    clip_path_aa_cairo
-);
-benchmark_main!(clip);

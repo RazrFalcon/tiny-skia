@@ -1,4 +1,4 @@
-use bencher::{benchmark_group, benchmark_main, Bencher};
+use test::Bencher;
 
 const CURVES: &[f32] = &[
     497.55677,  502.45092,  497.54656,  502.45636,  497.54465,  502.45674,
@@ -193,22 +193,22 @@ const CURVES: &[f32] = &[
     28.961255,  682.04043,  5.4141471,  398.97266,   159.7947,  215.05432,
     316.05566,  28.895802,  602.11902,  5.1034409,  787.97883,  161.12478,
     976.09054,  319.03649,  1000.1294,  608.11121,  842.45864,  795.92268,
-    682.8875,  985.99778,  390.78565,  1010.2845,  201.01233,  850.95554,
+     682.8875,  985.99778,  390.78565,  1010.2845,  201.01233,  850.95554,
     8.9636489,   689.7163, -15.572093,  394.57156,  145.42362,  202.82618,
     308.33963,  8.7937345,  606.54304, -15.992341,  800.27066,  146.67884,
     996.29707,   311.2803,  1021.3348,  612.55814,  856.97942,  808.27819,
     690.68384,  1006.3088,   386.3158,  1031.5993,  188.59312,  865.55117,
-    -11.451802,   697.5528, -36.996502,   390.0788,  130.75314,  190.34329,
+   -11.451802,   697.5528, -36.996502,   390.0788,  130.75314,  190.34329,
     300.46298, -11.726177,  611.05872, -37.526293,  812.81723,  131.93351,
     1016.9214,  303.36349,  1042.9782,  617.09673,   871.7996,  820.88846,
 ];
 
-fn draw_tiny_skia(aa: bool, bencher: &mut Bencher) {
+#[bench]
+fn tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
-    paint.anti_alias = aa;
 
     let mut pb = PathBuilder::new();
     pb.move_to(497.55261, 502.44739);
@@ -217,17 +217,15 @@ fn draw_tiny_skia(aa: bool, bencher: &mut Bencher) {
     }
     let path = pb.finish().unwrap();
 
-    let mut stroke = Stroke::default();
-    stroke.width = 0.5;
-
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-
     bencher.iter(|| {
-        pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None);
+        pixmap.stroke_path(&path, &paint, &Stroke::default(), Transform::identity(), None);
     });
 }
 
-fn draw_skia(aa: bool, bencher: &mut Bencher) {
+#[cfg(feature = "skia-rs")]
+#[bench]
+fn skia(bencher: &mut Bencher) {
     use skia_rs::*;
 
     let mut surface = Surface::new_rgba_premultiplied(1000, 1000).unwrap();
@@ -235,8 +233,9 @@ fn draw_skia(aa: bool, bencher: &mut Bencher) {
     let mut paint = Paint::new();
     paint.set_color(50, 127, 150, 200);
     paint.set_style(PaintStyle::Stroke);
-    paint.set_stroke_width(0.5);
-    paint.set_anti_alias(aa);
+    paint.set_stroke_width(1.0);
+    paint.set_blend_mode(BlendMode::SourceOver);
+    paint.set_anti_alias(false);
 
     let mut path = Path::new();
     path.move_to(497.55261, 502.44739);
@@ -249,7 +248,42 @@ fn draw_skia(aa: bool, bencher: &mut Bencher) {
     });
 }
 
-fn draw_cairo(aa: bool, bencher: &mut Bencher) {
+#[cfg(feature = "raqote")]
+#[bench]
+fn raqote(bencher: &mut Bencher) {
+    use raqote::*;
+
+    let mut dt = DrawTarget::new(1000, 1000);
+
+    let mut path = {
+        let mut pb = PathBuilder::new();
+        pb.move_to(497.55261, 502.44739);
+        for c in CURVES.chunks(6) {
+            pb.cubic_to(c[0], c[1], c[2], c[3], c[4], c[5]);
+        }
+        pb.finish()
+    };
+    path.winding = Winding::EvenOdd;
+
+    // raqote uses ARGB order.
+    let src = Source::from(Color::new(200, 50, 127, 150));
+
+    let draw_opt = DrawOptions {
+        blend_mode: BlendMode::SrcOver,
+        alpha: 1.0,
+        antialias: AntialiasMode::None,
+    };
+
+    let style = StrokeStyle::default();
+
+    bencher.iter(|| {
+        dt.stroke(&path, &src, &style, &draw_opt);
+    });
+}
+
+#[cfg(feature = "cairo-rs")]
+#[bench]
+fn cairo(bencher: &mut Bencher) {
     use cairo::*;
 
     let surface = ImageSurface::create(Format::ARgb32, 1000, 1000).unwrap();
@@ -262,56 +296,11 @@ fn draw_cairo(aa: bool, bencher: &mut Bencher) {
     }
 
     cr.set_source_rgba(50.0 / 255.0, 127.0 / 255.0, 150.0 / 255.0, 200.0 / 255.0);
-    cr.set_line_width(0.5);
-    cr.set_antialias(if aa { Antialias::Gray } else { Antialias::None });
+    cr.set_antialias(Antialias::None);
+    cr.set_operator(Operator::Over);
 
     bencher.iter(|| {
         // Does it cache the stoked path?
         cr.stroke_preserve();
     });
 }
-
-fn hairline_tiny_skia(bencher: &mut Bencher) {
-    draw_tiny_skia(false, bencher);
-}
-
-fn hairline_aa_tiny_skia(bencher: &mut Bencher) {
-    draw_tiny_skia(true, bencher);
-}
-
-fn hairline_skia(bencher: &mut Bencher) {
-    draw_skia(false, bencher);
-}
-
-fn hairline_aa_skia(bencher: &mut Bencher) {
-    draw_skia(true, bencher);
-}
-
-fn hairline_raqote(_bencher: &mut Bencher) {
-    // unsupported
-}
-
-fn hairline_aa_raqote(_bencher: &mut Bencher) {
-    // unsupported
-}
-
-fn hairline_cairo(bencher: &mut Bencher) {
-    draw_cairo(false, bencher);
-}
-
-fn hairline_aa_cairo(bencher: &mut Bencher) {
-    draw_cairo(true, bencher);
-}
-
-benchmark_group!(spiral,
-    hairline_tiny_skia,
-    hairline_skia,
-    hairline_raqote,
-    hairline_cairo,
-
-    hairline_aa_tiny_skia,
-    hairline_aa_skia,
-    hairline_aa_raqote,
-    hairline_aa_cairo
-);
-benchmark_main!(spiral);

@@ -1,7 +1,8 @@
-use bencher::{benchmark_group, benchmark_main, Bencher};
+use test::Bencher;
 
 // Filling a semi-transparent rectangle path with a Source blending mode.
 // By using this blending mode we're forcing a simple pixels overwrite.
+#[bench]
 fn source_fill_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
@@ -18,6 +19,8 @@ fn source_fill_tiny_skia(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn source_fill_skia(bencher: &mut Bencher) {
     use skia_rs::*;
 
@@ -35,6 +38,8 @@ fn source_fill_skia(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn source_fill_raqote(bencher: &mut Bencher) {
     use raqote::*;
 
@@ -60,6 +65,8 @@ fn source_fill_raqote(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn source_fill_cairo(bencher: &mut Bencher) {
     use cairo::*;
 
@@ -83,6 +90,7 @@ fn source_fill_cairo(bencher: &mut Bencher) {
 // Filling an opaque rectangle path.
 // A chosen blending mode doesn't really matter in this case,
 // since we are simply overwriting the pixels.
+#[bench]
 fn opaque_fill_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
@@ -98,6 +106,8 @@ fn opaque_fill_tiny_skia(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "skia-rs")]
+#[bench]
 fn opaque_fill_skia(bencher: &mut Bencher) {
     use skia_rs::*;
 
@@ -115,6 +125,8 @@ fn opaque_fill_skia(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "raqote")]
+#[bench]
 fn opaque_fill_raqote(bencher: &mut Bencher) {
     use raqote::*;
 
@@ -140,6 +152,8 @@ fn opaque_fill_raqote(bencher: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "cairo-rs")]
+#[bench]
 fn opaque_fill_cairo(bencher: &mut Bencher) {
     use cairo::*;
 
@@ -158,16 +172,3 @@ fn opaque_fill_cairo(bencher: &mut Bencher) {
         cr.fill_preserve();
     });
 }
-
-benchmark_group!(fill,
-    source_fill_tiny_skia,
-    source_fill_skia,
-    source_fill_raqote,
-    source_fill_cairo,
-
-    opaque_fill_tiny_skia,
-    opaque_fill_skia,
-    opaque_fill_raqote,
-    opaque_fill_cairo
-);
-benchmark_main!(fill);

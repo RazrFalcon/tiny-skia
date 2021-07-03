@@ -1,6 +1,7 @@
-use bencher::{benchmark_group, benchmark_main, Bencher};
+use test::Bencher;
 
-fn fill_aa_tiny_skia(bencher: &mut Bencher) {
+#[bench]
+fn tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
     let mut paint = Paint::default();
@@ -23,7 +24,9 @@ fn fill_aa_tiny_skia(bencher: &mut Bencher) {
     });
 }
 
-fn fill_aa_skia(bencher: &mut Bencher) {
+#[cfg(feature = "skia-rs")]
+#[bench]
+fn skia(bencher: &mut Bencher) {
     use skia_rs::*;
 
     let mut surface = Surface::new_rgba_premultiplied(1000, 1000).unwrap();
@@ -47,7 +50,9 @@ fn fill_aa_skia(bencher: &mut Bencher) {
     });
 }
 
-fn fill_aa_raqote(bencher: &mut Bencher) {
+#[cfg(feature = "raqote")]
+#[bench]
+fn raqote(bencher: &mut Bencher) {
     use raqote::*;
 
     let mut dt = DrawTarget::new(1000, 1000);
@@ -78,7 +83,9 @@ fn fill_aa_raqote(bencher: &mut Bencher) {
     });
 }
 
-fn fill_aa_cairo(bencher: &mut Bencher) {
+#[cfg(feature = "cairo-rs")]
+#[bench]
+fn cairo(bencher: &mut Bencher) {
     use cairo::*;
 
     let surface = ImageSurface::create(Format::ARgb32, 1000, 1000).unwrap();
@@ -101,11 +108,3 @@ fn fill_aa_cairo(bencher: &mut Bencher) {
         cr.fill_preserve();
     });
 }
-
-benchmark_group!(fill_aa,
-    fill_aa_tiny_skia,
-    fill_aa_skia,
-    fill_aa_raqote,
-    fill_aa_cairo
-);
-benchmark_main!(fill_aa);

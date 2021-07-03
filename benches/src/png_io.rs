@@ -1,5 +1,6 @@
-use bencher::{benchmark_group, benchmark_main, Bencher};
+use test::Bencher;
 
+#[bench]
 fn decode_rgb(bencher: &mut Bencher) {
     let data = std::fs::read("../tests/images/pngs/rgb.png").unwrap();
     bencher.iter(|| {
@@ -7,6 +8,7 @@ fn decode_rgb(bencher: &mut Bencher) {
     });
 }
 
+#[bench]
 fn decode_rgba(bencher: &mut Bencher) {
     let data = std::fs::read("../tests/images/pngs/rgba.png").unwrap();
     bencher.iter(|| {
@@ -16,6 +18,7 @@ fn decode_rgba(bencher: &mut Bencher) {
 
 // Just a PNG decoding without preprocessing
 // to see how much overhead our code has.
+#[bench]
 fn decode_raw_rgb(bencher: &mut Bencher) {
     let data = std::fs::read("../tests/images/pngs/rgb.png").unwrap();
     let mut img_data = vec![0; 30000];
@@ -26,6 +29,7 @@ fn decode_raw_rgb(bencher: &mut Bencher) {
     });
 }
 
+#[bench]
 fn decode_raw_rgba(bencher: &mut Bencher) {
     let data = std::fs::read("../tests/images/pngs/rgba.png").unwrap();
     let mut img_data = vec![0; 40000];
@@ -36,6 +40,7 @@ fn decode_raw_rgba(bencher: &mut Bencher) {
     });
 }
 
+#[bench]
 fn encode_rgba(bencher: &mut Bencher) {
     let pixmap = tiny_skia::Pixmap::load_png("../tests/images/pngs/rgba.png").unwrap();
     bencher.iter(|| {
@@ -43,6 +48,7 @@ fn encode_rgba(bencher: &mut Bencher) {
     });
 }
 
+#[bench]
 fn encode_raw_rgba(bencher: &mut Bencher) {
     let pixmap = tiny_skia::Pixmap::load_png("../tests/images/pngs/rgba.png").unwrap();
     bencher.iter(|| {
@@ -56,7 +62,3 @@ fn encode_raw_rgba(bencher: &mut Bencher) {
         writer.write_image_data(pixmap.data()).unwrap();
     });
 }
-
-benchmark_group!(decode, decode_rgb, decode_rgba, decode_raw_rgb, decode_raw_rgba);
-benchmark_group!(encode, encode_rgba, encode_raw_rgba);
-benchmark_main!(decode, encode);
