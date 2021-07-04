@@ -34,7 +34,7 @@ fn two_stops_linear_tiny_skia(
 }
 
 #[bench]
-fn two_stops_linear_pad_tiny_skia_lq(bencher: &mut Bencher) {
+fn two_stops_linear_pad_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
         false,
@@ -48,7 +48,7 @@ fn two_stops_linear_pad_tiny_skia_lq(bencher: &mut Bencher) {
 }
 
 #[bench]
-fn two_stops_linear_reflect_tiny_skia_lq(bencher: &mut Bencher) {
+fn two_stops_linear_reflect_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
         false,
@@ -62,7 +62,7 @@ fn two_stops_linear_reflect_tiny_skia_lq(bencher: &mut Bencher) {
 }
 
 #[bench]
-fn two_stops_linear_repeat_tiny_skia_lq(bencher: &mut Bencher) {
+fn two_stops_linear_repeat_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
         false,
@@ -76,7 +76,7 @@ fn two_stops_linear_repeat_tiny_skia_lq(bencher: &mut Bencher) {
 }
 
 #[bench]
-fn three_stops_linear_uneven_tiny_skia_lq(bencher: &mut Bencher) {
+fn three_stops_linear_uneven_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
         false,
@@ -91,7 +91,7 @@ fn three_stops_linear_uneven_tiny_skia_lq(bencher: &mut Bencher) {
 }
 
 #[bench]
-fn three_stops_linear_even_tiny_skia_lq(bencher: &mut Bencher) {
+fn three_stops_linear_even_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
     two_stops_linear_tiny_skia(
         false,

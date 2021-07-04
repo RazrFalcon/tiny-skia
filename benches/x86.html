@@ -1,0 +1,667 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>tiny-skia benchmarks</title>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <div style="height: 1500px">
+      <canvas id="blendChart"></canvas>
+    </div>
+    <div style="height: 500px">
+      <canvas id="fillChart"></canvas>
+    </div>
+    <div style="height: 500px">
+      <canvas id="gradientsChart"></canvas>
+    </div>
+    <div style="height: 200px">
+      <canvas id="patternsChart"></canvas>
+    </div>
+    <div style="height: 170px">
+      <canvas id="clipChart"></canvas>
+    </div>
+    <div style="height: 170px">
+      <canvas id="hairlineChart"></canvas>
+    </div>
+    <div style="height: 110px">
+      <canvas id="spiralChart"></canvas>
+    </div>
+    <script>
+      const blendLabels = [
+        'Clear',
+        'Source',
+        'Destination',
+        'Source Over',
+        'Destination Over',
+        'Source In',
+        'Destination In',
+        'Source Out',
+        'Destination Out',
+        'Source Atop',
+        'Destination Atop',
+        'Xor',
+        'Plus',
+        'Modulate',
+        'Screen',
+        'Overlay',
+        'Darken',
+        'Lighten',
+        'Color Dodge',
+        'Color Burn',
+        'Hard Light',
+        'Soft Light',
+        'Difference',
+        'Exclusion',
+        'Multiply',
+        'Hue',
+        'Saturation',
+        'Color',
+        'Luminosity',
+      ]
+
+      const blendData = {
+        labels: blendLabels,
+        datasets: [
+          {
+            label: 'tiny-skia SSE2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [52546, 51396, 17, 470794, 568025, 556467, 498171, 557839, 499227, 559390, 535983, 580040, 479009, 493178, 498435, 778957, 589106, 586005, 1722885, 1806032, 751964, 2435684, 608912, 527144, 567739, 2679915, 2840184, 2353015, 2397023],
+          },
+          {
+            label: 'skia SSE2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [54511, 52588, 7, 515638, 591337, 587255, 580224, 592109, 598567, 615565, 604681, 645425, 587272, 570150, 607496, 815961, 664078, 663453, 1584327, 1611514, 809418, 2201527, 680659, 634162, 643528, 3010620, 2962399, 2410976, 2324774],
+          },
+          {
+            label: 'tiny-skia AVX2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [44776, 42881, 18, 366536, 441886, 420344, 391409, 428629, 391076, 440633, 440549, 453835, 385336, 397963, 420411, 503275, 466817, 460907, 820767, 851569, 498527, 1150755, 464948, 424983, 457029, 1615451, 1583103, 1296288, 1243511],
+          },
+          {
+            label: 'skia AVX2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [54877, 52466, 10, 253486, 303462, 290673, 290616, 296759, 296777, 304275, 312085, 311286, 288057, 290427, 311738, 371654, 317962, 319398, 682298, 692448, 365455, 973225, 324767, 317335, 317888, 1436773, 1419906, 1122812, 1088909],
+          },
+          {
+            label: 'cairo',
+            backgroundColor: '#fcc100',
+            borderColor: '#fcc100',
+            data: [66686, 64119, 4, 211778, 229726, 1069900, 1098333, 1113808, 547446, 643481, 1226843, 662896, 121081, 0, 3814683, 3530785, 3563052, 3522596, 4865921, 4731259, 3615838, 5618954, 3599352, 3887197, 3583811, 7668378, 7669070, 5770399, 5790491],
+          },
+          {
+            label: 'raqote',
+            backgroundColor: '#3131d8',
+            borderColor: '#3131d8',
+            data: [854751, 925021, 450206, 1637042, 1300318, 1232794, 1210595, 1260776, 1230960, 1835679, 1855060, 2007878, 5068798, 0, 1746725, 6326474, 5681012, 5819476, 9241562, 9438572, 6570706, 10255816, 7248079, 5872176, 5747653, 14151595, 14469408, 11538567, 11530354],
+          },
+        ]
+      };
+
+      const blendConfig = {
+        type: 'bar',
+        data: blendData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          elements: {
+            bar: {
+              borderWidth: 2,
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'right',
+            },
+            title: {
+              display: true,
+              text: 'Blending modes'
+            },
+          },
+          scales: {
+            x: {
+              ticks: {
+                callback: function(val, index) {
+                  return this.getLabelForValue(val) + 'ns';
+                },
+              }
+            }
+          }
+        },
+      };
+
+      new Chart(
+        document.getElementById('blendChart'),
+        blendConfig
+      );
+
+      const fillLabels = [
+        'All',
+        'Rect',
+        'Rect AA',
+        'Rect AA transformed',
+        'Path AA',
+        'Source',
+        'Opaque',
+      ]
+
+      const fillData = {
+        labels: fillLabels,
+        datasets: [
+          {
+            label: 'tiny-skia SSE2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [60601, 663447, 710933, 362138, 655224, 56991, 57481],
+          },
+          {
+            label: 'skia SSE2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [1172315, 760673, 777911, 328612, 527904, 48839, 48799],
+          },
+          {
+            label: 'tiny-skia AVX2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [64342, 509752, 554033, 382181, 551812, 43359, 43418],
+          },
+          {
+            label: 'skia AVX2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [540124, 342526, 365104, 189661, 340678, 47622, 47822],
+          },
+          {
+            label: 'cairo',
+            backgroundColor: '#fcc100',
+            borderColor: '#fcc100',
+            data: [311838, 204938, 206799, 172809, 549199, 48613, 45962],
+          },
+          {
+            label: 'raqote',
+            backgroundColor: '#3131d8',
+            borderColor: '#3131d8',
+            data: [60690, 2065233, 1831371, 750199, 1264851, 908016, 2102572],
+          },
+        ]
+      };
+
+      const fillConfig = {
+        type: 'bar',
+        data: fillData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          elements: {
+            bar: {
+              borderWidth: 2,
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'right',
+            },
+            title: {
+              display: true,
+              text: 'Fill'
+            },
+          },
+          scales: {
+            x: {
+              ticks: {
+                callback: function(val, index) {
+                  return this.getLabelForValue(val) + 'ns';
+                },
+              }
+            }
+          }
+        },
+      };
+
+      new Chart(
+        document.getElementById('fillChart'),
+        fillConfig
+      );
+
+      const gradientsLabels = [
+        ['Linear', 'two stops', 'pad'],
+        ['Linear', 'two stops', 'reflect'],
+        ['Linear', 'two stops', 'repeat'],
+        ['Linear', 'three stops', 'evenly spread'],
+        ['Linear', 'three stops', 'unevenly spread'],
+        'Simple radial',
+        'Two point radial',
+      ]
+
+      const gradientsData = {
+        labels: gradientsLabels,
+        datasets: [
+          {
+            label: 'tiny-skia SSE2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [1922451, 2266654, 2177343, 2652463, 2649479, 2938836, 2911164],
+          },
+          {
+            label: 'skia SSE2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [1176961, 1334958, 1277469, 1951526, 1870440, 1958950, 2788054],
+          },
+          {
+            label: 'tiny-skia AVX2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [1587473, 1889245, 1795236, 2275484, 2276270, 2441645, 2293933],
+          },
+          {
+            label: 'skia AVX2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [564788, 674389, 603060, 797981, 725095, 803721, 1055245],
+          },
+          {
+            label: 'cairo',
+            backgroundColor: '#fcc100',
+            borderColor: '#fcc100',
+            data: [2455481, 2459418, 2487829, 2462315, 2451399, 4656612, 4582991],
+          },
+          {
+            label: 'raqote',
+            backgroundColor: '#3131d8',
+            borderColor: '#3131d8',
+            data: [3089317, 3141592, 2980496, 3149536, 3090932, 4545732, 12952113],
+          },
+        ]
+      };
+
+      const gradientsConfig = {
+        type: 'bar',
+        data: gradientsData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          elements: {
+            bar: {
+              borderWidth: 2,
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'right',
+            },
+            title: {
+              display: true,
+              text: 'Gradients'
+            },
+          },
+          scales: {
+            x: {
+              ticks: {
+                callback: function(val, index) {
+                  return this.getLabelForValue(val) + 'ns';
+                },
+              }
+            }
+          }
+        },
+      };
+
+      new Chart(
+        document.getElementById('gradientsChart'),
+        gradientsConfig
+      );
+
+      const patternsLabels = [
+        'Nearest',
+        'Bilinear',
+        'Bicubic/Gauss',
+      ]
+
+      const patternsData = {
+        labels: patternsLabels,
+        datasets: [
+          {
+            label: 'tiny-skia SSE2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [2673518, 7936619, 26177309],
+          },
+          {
+            label: 'skia SSE2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [2261130, 6229053, 22625607],
+          },
+          {
+            label: 'tiny-skia AVX2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [1940391, 4477511, 13628621],
+          },
+          {
+            label: 'skia AVX2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [1153222, 2979746, 10137156],
+          },
+          {
+            label: 'cairo',
+            backgroundColor: '#fcc100',
+            borderColor: '#fcc100',
+            data: [759332, 17396620, 162408109],
+          },
+          {
+            label: 'raqote',
+            backgroundColor: '#3131d8',
+            borderColor: '#3131d8',
+            data: [1621783, 24961215, 0],
+          },
+        ]
+      };
+
+      const patternsConfig = {
+        type: 'bar',
+        data: patternsData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          elements: {
+            bar: {
+              borderWidth: 2,
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'right',
+            },
+            title: {
+              display: true,
+              text: 'Patterns'
+            },
+          },
+          scales: {
+            x: {
+              ticks: {
+                callback: function(val, index) {
+                  return this.getLabelForValue(val) + 'ns';
+                },
+              }
+            }
+          }
+        },
+      };
+
+      new Chart(
+        document.getElementById('patternsChart'),
+        patternsConfig
+      );
+
+      const clipLabels = [
+        'No AA',
+        'AA',
+      ]
+
+      const clipData = {
+        labels: clipLabels,
+        datasets: [
+          {
+            label: 'tiny-skia SSE2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [2227398, 2365590],
+          },
+          {
+            label: 'skia SSE2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [594097, 897846],
+          },
+          {
+            label: 'tiny-skia AVX2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [1709203, 1821447],
+          },
+          {
+            label: 'skia AVX2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [293059, 578330],
+          },
+          {
+            label: 'cairo',
+            backgroundColor: '#fcc100',
+            borderColor: '#fcc100',
+            data: [5023986, 3008361],
+          },
+          {
+            label: 'raqote',
+            backgroundColor: '#3131d8',
+            borderColor: '#3131d8',
+            data: [3431563, 3045791],
+          },
+        ]
+      };
+
+      const clipConfig = {
+        type: 'bar',
+        data: clipData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          elements: {
+            bar: {
+              borderWidth: 2,
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'right',
+            },
+            title: {
+              display: true,
+              text: 'Clip'
+            },
+          },
+          scales: {
+            x: {
+              ticks: {
+                callback: function(val, index) {
+                  return this.getLabelForValue(val) + 'ns';
+                },
+              }
+            }
+          }
+        },
+      };
+
+      new Chart(
+        document.getElementById('clipChart'),
+        clipConfig
+      );
+
+      const hairlineLabels = [
+        'No AA',
+        'AA',
+      ]
+
+      const hairlineData = {
+        labels: hairlineLabels,
+        datasets: [
+          {
+            label: 'tiny-skia SSE2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [1432026, 3225440],
+          },
+          {
+            label: 'skia SSE2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [1070427, 1899219],
+          },
+          {
+            label: 'tiny-skia AVX2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [1369451, 3091244],
+          },
+          {
+            label: 'skia AVX2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [1038342, 1855764],
+          },
+          {
+            label: 'cairo',
+            backgroundColor: '#fcc100',
+            borderColor: '#fcc100',
+            data: [2575912, 13508248],
+          },
+          {
+            label: 'raqote',
+            backgroundColor: '#3131d8',
+            borderColor: '#3131d8',
+            data: [0, 0],
+          },
+        ]
+      };
+
+      const hairlineConfig = {
+        type: 'bar',
+        data: hairlineData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          elements: {
+            bar: {
+              borderWidth: 2,
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'right',
+            },
+            title: {
+              display: true,
+              text: 'Hairline stroking'
+            },
+          },
+          scales: {
+            x: {
+              ticks: {
+                callback: function(val, index) {
+                  return this.getLabelForValue(val) + 'ns';
+                },
+              }
+            }
+          }
+        },
+      };
+
+      new Chart(
+        document.getElementById('hairlineChart'),
+        hairlineConfig
+      );
+
+      const spiralLabels = [
+        'Spiral',
+      ]
+
+      const spiralData = {
+        labels: spiralLabels,
+        datasets: [
+          {
+            label: 'tiny-skia SSE2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [1780929],
+          },
+          {
+            label: 'skia SSE2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [1246955],
+          },
+          {
+            label: 'tiny-skia AVX2',
+            backgroundColor: '#fc7f37',
+            borderColor: '#fc7f37',
+            data: [1696236],
+          },
+          {
+            label: 'skia AVX2',
+            backgroundColor: '#d8317f',
+            borderColor: '#d8317f',
+            data: [1240595],
+          },
+          {
+            label: 'cairo',
+            backgroundColor: '#fcc100',
+            borderColor: '#fcc100',
+            data: [3428583],
+          },
+          {
+            label: 'raqote',
+            backgroundColor: '#3131d8',
+            borderColor: '#3131d8',
+            data: [5948775],
+          },
+        ]
+      };
+
+      const spiralConfig = {
+        type: 'bar',
+        data: spiralData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          elements: {
+            bar: {
+              borderWidth: 2,
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'right',
+            },
+            title: {
+              display: true,
+              text: 'Stroke spiral'
+            },
+          },
+          scales: {
+            x: {
+              ticks: {
+                callback: function(val, index) {
+                  return this.getLabelForValue(val) + 'ns';
+                },
+              }
+            }
+          }
+        },
+      };
+
+      new Chart(
+        document.getElementById('spiralChart'),
+        spiralConfig
+      );
+
+
+    </script>
+  </body>
+</html>
