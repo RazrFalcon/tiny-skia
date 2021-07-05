@@ -22,6 +22,24 @@ cfg_if::cfg_if! {
         #[derive(Default, Clone, Copy, PartialEq, Eq, Debug)]
         #[repr(C, align(32))]
         pub struct i32x8(pub m128i, pub m128i);
+    } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+        use core::arch::wasm32::*;
+
+        #[derive(Clone, Copy, Debug)]
+        #[repr(C, align(32))]
+        pub struct i32x8(pub v128, pub v128);
+
+        impl Default for i32x8 {
+            fn default() -> Self {
+                Self::splat(0)
+            }
+        }
+
+        impl PartialEq for i32x8 {
+            fn eq(&self, other: &Self) -> bool {
+                !v128_any_true(v128_or(v128_xor(self.0, other.0), v128_xor(self.1, other.1)))
+            }
+        }
     } else {
         #[derive(Default, Clone, Copy, PartialEq, Eq, Debug)]
         #[repr(C, align(32))]
@@ -55,6 +73,8 @@ impl i32x8 {
                 Self(cmp_eq_mask_i32_m256i(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(cmp_eq_mask_i32_m128i(self.0, rhs.0), cmp_eq_mask_i32_m128i(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(i32x4_eq(self.0, rhs.0), i32x4_eq(self.1, rhs.1))
             } else {
                 Self(impl_x8_cmp!(self, eq, rhs, -1, 0))
             }
@@ -67,6 +87,8 @@ impl i32x8 {
                 Self(cmp_gt_mask_i32_m256i(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(cmp_gt_mask_i32_m128i(self.0, rhs.0), cmp_gt_mask_i32_m128i(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(i32x4_gt(self.0, rhs.0), i32x4_eq(self.1, rhs.1))
             } else {
                 Self(impl_x8_cmp!(self, gt, rhs, -1, 0))
             }
@@ -79,6 +101,8 @@ impl i32x8 {
                 Self(!cmp_gt_mask_i32_m256i(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(cmp_lt_mask_i32_m128i(self.0, rhs.0), cmp_lt_mask_i32_m128i(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(i32x4_lt(self.0, rhs.0), i32x4_lt(self.1, rhs.1))
             } else {
                 Self(impl_x8_cmp!(self, lt, rhs, -1, 0))
             }
@@ -94,6 +118,8 @@ impl i32x8 {
                     cast(convert_to_m128_from_i32_m128i(self.0)),
                     cast(convert_to_m128_from_i32_m128i(self.1)),
                 ))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                cast(Self(f32x4_convert_i32x4(self.0), f32x4_convert_i32x4(self.1)))
             } else {
                 let arr: [i32; 8] = cast(self);
                 cast([
@@ -140,6 +166,8 @@ impl core::ops::Add for i32x8 {
                 Self(add_i32_m256i(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(add_i32_m128i(self.0, rhs.0), add_i32_m128i(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(i32x4_add(self.0, rhs.0), i32x4_add(self.1, rhs.1))
             } else {
                 Self(impl_x8_op!(self, wrapping_add, rhs))
             }
@@ -156,6 +184,8 @@ impl core::ops::BitAnd for i32x8 {
                 Self(bitand_m256i(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(bitand_m128i(self.0, rhs.0), bitand_m128i(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(v128_and(self.0, rhs.0), v128_and(self.1, rhs.1))
             } else {
                 Self(impl_x8_op!(self, bitand, rhs))
             }
@@ -172,6 +202,8 @@ impl core::ops::Mul for i32x8 {
                 Self(mul_i32_keep_low_m256i(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "sse4.1"))] {
                 Self(mul_i32_keep_low_m128i(self.0, rhs.0), mul_i32_keep_low_m128i(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(i32x4_mul(self.0, rhs.0), i32x4_mul(self.1, rhs.1))
             } else {
                 struct Dummy([i32; 8]);
                 let arr1: [i32; 8] = cast(self);
@@ -191,6 +223,8 @@ impl core::ops::BitOr for i32x8 {
                 Self(bitor_m256i(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(bitor_m128i(self.0, rhs.0), bitor_m128i(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(v128_or(self.0, rhs.0), v128_or(self.1, rhs.1))
             } else {
                 Self(impl_x8_op!(self, bitor, rhs))
             }
@@ -207,6 +241,8 @@ impl core::ops::BitXor for i32x8 {
                 Self(bitxor_m256i(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(bitxor_m128i(self.0, rhs.0), bitxor_m128i(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(v128_xor(self.0, rhs.0), v128_xor(self.1, rhs.1))
             } else {
                 Self(impl_x8_op!(self, bitxor, rhs))
             }

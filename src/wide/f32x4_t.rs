@@ -14,6 +14,25 @@ cfg_if::cfg_if! {
         #[derive(Default, Clone, Copy, PartialEq, Debug)]
         #[repr(C, align(16))]
         pub struct f32x4(m128);
+    } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+        use core::arch::wasm32::*;
+
+        // repr(transparent) allows for directly passing the v128 on the WASM stack.
+        #[derive(Clone, Copy, Debug)]
+        #[repr(transparent)]
+        pub struct f32x4(v128);
+
+        impl Default for f32x4 {
+            fn default() -> Self {
+                Self::splat(0.0)
+            }
+        }
+
+        impl PartialEq for f32x4 {
+            fn eq(&self, other: &Self) -> bool {
+                u32x4_all_true(f32x4_eq(self.0, other.0))
+            }
+        }
     } else {
         #[derive(Default, Clone, Copy, PartialEq, Debug)]
         #[repr(C, align(16))]
@@ -33,6 +52,8 @@ impl f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
                 Self(max_m128(self.0, rhs.0))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(f32x4_max(self.0, rhs.0))
             } else {
                 Self([
                     self.0[0].max(rhs.0[0]),
@@ -48,6 +69,8 @@ impl f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
                 Self(min_m128(self.0, rhs.0))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(f32x4_min(self.0, rhs.0))
             } else {
                 Self([
                     self.0[0].min(rhs.0[0]),
@@ -79,6 +102,8 @@ impl core::ops::Add for f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
                 Self(add_m128(self.0, rhs.0))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(f32x4_add(self.0, rhs.0))
             } else {
                 Self([
                     self.0[0] + rhs.0[0],
@@ -104,6 +129,8 @@ impl core::ops::Sub for f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
                 Self(sub_m128(self.0, rhs.0))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(f32x4_sub(self.0, rhs.0))
             } else {
                 Self([
                     self.0[0] - rhs.0[0],
@@ -123,6 +150,8 @@ impl core::ops::Mul for f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse"))] {
                 Self(mul_m128(self.0, rhs.0))
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(f32x4_mul(self.0, rhs.0))
             } else {
                 Self([
                     self.0[0] * rhs.0[0],
