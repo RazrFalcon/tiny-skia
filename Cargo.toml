@@ -18,7 +18,7 @@ bytemuck = "1.4"
 cfg-if = "1"
 libm = { version = "0.2.1", optional = true }
 png = { version = "0.16", optional = true }
-safe_arch = { version = "0.5.2", features = ["bytemuck"], optional = true }
+safe_arch = { version = "0.6.0", features = ["bytemuck"], optional = true }
 
 [features]
 default = ["std", "simd", "png-format"]
