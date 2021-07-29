@@ -53,3 +53,36 @@ jobs:
       env:
         RUSTFLAGS: -Ctarget-feature=+avx2
       run: cargo test --verbose --all-features
+
+  wasm:
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        rust:
+          - stable
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        override: true
+        target: wasm32-wasi
+
+    - name: Install wasmtime
+      run: |
+        curl https://wasmtime.dev/install.sh -sSf | bash
+        echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
+
+    - name: Build with minimal features (no_std)
+      run: cargo build --target wasm32-wasi --verbose --no-default-features --features libm
+
+    - name: Run tests without SIMD
+      run: cargo test --target wasm32-wasi --verbose --no-default-features --features png-format
+
+    - name: Run tests with SIMD128
+      env:
+        RUSTFLAGS: -Ctarget-feature=+simd128,+bulk-memory,+nontrapping-fptoint,+sign-ext
+      run: cargo test --target wasm32-wasi --verbose --all-features
