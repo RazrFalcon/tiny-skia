@@ -38,7 +38,7 @@ impl Pixmap {
     ///
     /// A pixmap is filled with transparent black by default, aka (0, 0, 0, 0).
     ///
-    /// Zero size in an error.
+    /// Zero size results in an error.
     ///
     /// Pixmap's width is limited by i32::MAX/4.
     pub fn new(width: u32, height: u32) -> Option<Self> {
