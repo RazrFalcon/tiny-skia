@@ -13,11 +13,13 @@ categories = ["rendering"]
 
 [dependencies]
 arrayref = "0.3"
+# do not update to 0.6, because it requires Rust >= 1.51
 arrayvec = { version = "0.5", default-features = false }
 bytemuck = "1.4"
 cfg-if = "1"
 libm = { version = "0.2.1", optional = true }
-png = { version = "0.16", optional = true }
+png = { version = "0.17", optional = true }
+# do not update to 0.6, because it requires Rust >= 1.51
 safe_arch = { version = "0.5.2", features = ["bytemuck"], optional = true }
 
 [features]

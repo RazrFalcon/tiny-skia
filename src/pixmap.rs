@@ -4,8 +4,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#[cfg(feature = "png-format")]
-use alloc::string::ToString;
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -73,23 +71,23 @@ impl Pixmap {
     /// Index PNGs are not supported.
     #[cfg(feature = "png-format")]
     pub fn decode_png(data: &[u8]) -> Result<Self, png::DecodingError> {
-        let decoder = png::Decoder::new(data);
-        let (info, mut reader) = decoder.read_info()?;
+        let mut decoder = png::Decoder::new(data);
+        decoder.set_transformations(png::Transformations::normalize_to_color8());
+        let mut reader = decoder.read_info()?;
+        let mut img_data = vec![0; reader.output_buffer_size()];
+        let info = reader.next_frame(&mut img_data)?;
 
         if info.bit_depth != png::BitDepth::Eight {
-            return Err(png::DecodingError::from("unsupported bit depth".to_string()));
+            return Err(make_custom_png_error("unsupported bit depth"));
         }
 
         let size = IntSize::from_wh(info.width, info.height)
-            .ok_or_else(|| png::DecodingError::from("invalid image size".to_string()))?;
+            .ok_or_else(|| make_custom_png_error("invalid image size"))?;
         let data_len = data_len_for_size(size)
-            .ok_or_else(|| png::DecodingError::from("image is too big".to_string()))?;
-
-        let mut img_data = vec![0; info.buffer_size()];
-        reader.next_frame(&mut img_data)?;
+            .ok_or_else(|| make_custom_png_error("image is too big"))?;
 
         img_data = match info.color_type {
-            png::ColorType::RGB => {
+            png::ColorType::Rgb => {
                 let mut rgba_data = Vec::with_capacity(data_len);
                 for rgb in img_data.chunks(3) {
                     rgba_data.push(rgb[0]);
@@ -100,7 +98,7 @@ impl Pixmap {
 
                 rgba_data
             }
-            png::ColorType::RGBA => {
+            png::ColorType::Rgba => {
                 img_data
             }
             png::ColorType::Grayscale => {
@@ -128,7 +126,7 @@ impl Pixmap {
                 rgba_data
             }
             png::ColorType::Indexed => {
-                return Err(png::DecodingError::from("indexed PNG is not supported".to_string()));
+                return Err(make_custom_png_error("indexed PNG is not supported"));
             }
         };
 
@@ -148,7 +146,7 @@ impl Pixmap {
         }
 
         Pixmap::from_vec(img_data, size)
-            .ok_or_else(|| png::DecodingError::from("failed to create a pixmap".to_string()))
+            .ok_or_else(|| make_custom_png_error("failed to create a pixmap"))
     }
 
     /// Loads a PNG file into a `Pixmap`.
@@ -275,6 +273,10 @@ impl core::fmt::Debug for Pixmap {
     }
 }
 
+fn make_custom_png_error(msg: &str) -> png::DecodingError {
+    std::io::Error::new(std::io::ErrorKind::Other, msg).into()
+}
+
 
 /// A container that references premultiplied RGBA pixels.
 ///
@@ -392,7 +394,7 @@ impl<'a> PixmapRef<'a> {
     pub fn encode_png(&self) -> Result<Vec<u8>, png::EncodingError> {
         // Skia uses skcms here, which is somewhat similar to RasterPipeline.
 
-        // Sadly, we have to copy the pixmap here.
+        // Sadly, we have to copy the pixmap here, because of demultiplication.
         // Not sure how to avoid this.
         // TODO: remove allocation
         let mut tmp_pixmap = self.to_owned();
@@ -410,7 +412,7 @@ impl<'a> PixmapRef<'a> {
         let mut data = Vec::new();
         {
             let mut encoder = png::Encoder::new(&mut data, self.width(), self.height());
-            encoder.set_color(png::ColorType::RGBA);
+            encoder.set_color(png::ColorType::Rgba);
             encoder.set_depth(png::BitDepth::Eight);
             let mut writer = encoder.write_header()?;
             writer.write_image_data(&tmp_pixmap.data)?;

@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- WASM simd128 support. Thanks to [@CryZe](https://github.com/CryZe)
+
+### Changed
+- `Transform::post_scale` no longer requires `&mut self`.
+- Update `png` crate.
 
 ## [0.5.1] - 2021-03-07
 ### Fixed
@@ -14,7 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.5.0] - 2021-03-06
 ### Added
 - `ClipMask::intersect_path`
-- no_std support.
+- no_std support. Thanks to [@CryZe](https://github.com/CryZe)
 
 ### Changed
 - Reduce `Transform` strictness. It's no longer guarantee to have only finite values,
