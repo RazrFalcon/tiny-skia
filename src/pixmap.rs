@@ -71,6 +71,10 @@ impl Pixmap {
     /// Index PNGs are not supported.
     #[cfg(feature = "png-format")]
     pub fn decode_png(data: &[u8]) -> Result<Self, png::DecodingError> {
+        fn make_custom_png_error(msg: &str) -> png::DecodingError {
+            std::io::Error::new(std::io::ErrorKind::Other, msg).into()
+        }
+
         let mut decoder = png::Decoder::new(data);
         decoder.set_transformations(png::Transformations::normalize_to_color8());
         let mut reader = decoder.read_info()?;
@@ -271,10 +275,6 @@ impl core::fmt::Debug for Pixmap {
             .field("height", &self.size.height())
             .finish()
     }
-}
-
-fn make_custom_png_error(msg: &str) -> png::DecodingError {
-    std::io::Error::new(std::io::ErrorKind::Other, msg).into()
 }
 
 
