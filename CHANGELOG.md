@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support rendering on pixmaps larger than 8191x8191 pixels.
   From now, `Pixmap` is limited only by the amount of memory caller has.
 - `Transform::map_points`
+- `PathBuilder::push_oval`
 
 ## [0.6.0] - 2021-08-21
 ### Added

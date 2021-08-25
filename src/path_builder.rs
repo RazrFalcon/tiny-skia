@@ -95,14 +95,19 @@ impl PathBuilder {
 
     /// Creates a new `Path` from a circle.
     ///
-    /// The contour is closed and has a clock-wise direction.
-    ///
-    /// Returns `None` when:
-    /// - `radius` <= 0
-    /// - any value is not finite or really large
+    /// See [`PathBuilder::push_circle`] for details.
     pub fn from_circle(cx: f32, cy: f32, radius: f32) -> Option<Path> {
         let mut b = PathBuilder::new();
         b.push_circle(cx, cy, radius);
+        b.finish()
+    }
+
+    /// Creates a new `Path` from an oval.
+    ///
+    /// See [`PathBuilder::push_oval`] for details.
+    pub fn from_oval(oval: Rect) -> Option<Path> {
+        let mut b = PathBuilder::new();
+        b.push_oval(oval);
         b.finish()
     }
 
@@ -291,7 +296,10 @@ impl PathBuilder {
         }
     }
 
-    fn push_oval(&mut self, oval: &Rect) {
+    /// Adds an oval contour bounded by the provided rectangle.
+    ///
+    /// The contour is closed and has a clock-wise direction.
+    pub fn push_oval(&mut self, oval: Rect) {
         let cx = oval.left().half() + oval.right().half();
         let cy = oval.top().half() + oval.bottom().half();
 
@@ -326,7 +334,7 @@ impl PathBuilder {
     /// - any value is not finite or really large
     pub fn push_circle(&mut self, x: f32, y: f32, r: f32) {
         if let Some(r) = Rect::from_xywh(x - r, y - r, r + r, r + r) {
-            self.push_oval(&r);
+            self.push_oval(r);
         }
     }
 
