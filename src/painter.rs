@@ -342,13 +342,14 @@ impl PixmapMut<'_> {
 
                 Some(())
             } else {
+                let subpix = &mut self.as_subpixmap();
                 if !transform.is_identity() {
                     paint.shader.transform(transform);
 
                     let path = path.clone().transform(transform)?; // TODO: avoid clone
-                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, &mut self.as_subpixmap())
+                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, subpix)
                 } else {
-                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, &mut self.as_subpixmap())
+                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, subpix)
                 }
             }
         } else {
@@ -373,7 +374,6 @@ impl PixmapMut<'_> {
         if paint.anti_alias {
             scan::hairline_aa::stroke_path(path, line_cap, &clip, &mut blitter)
         } else {
-            // TODO: is it ever called?
             scan::hairline::stroke_path(path, line_cap, &clip, &mut blitter)
         }
     }
