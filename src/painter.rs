@@ -225,15 +225,18 @@ impl PixmapMut<'_> {
 
             if let Some(tiler) = DrawTiler::new(self.width(), self.height()) {
                 let mut path = path.clone(); // TODO: avoid cloning
+                let mut paint = paint.clone();
+
                 for tile in tiler {
                     let ts = Transform::from_translate(-(tile.x() as f32), -(tile.y() as f32));
                     path = path.transform(ts)?;
+                    paint.shader.transform(ts);
 
                     let clip_rect = tile.size().to_screen_int_rect(0, 0);
                     let mut subpix = self.subpixmap(tile.to_int_rect())?;
 
                     let clip_mask = clip_mask.map(|mask| &mask.mask);
-                    let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut subpix)?;
+                    let mut blitter = RasterPipelineBlitter::new(&paint, clip_mask, &mut subpix)?;
                     // We're ignoring "errors" here, because `fill_path` will return `None`
                     // when rendering a tile that doesn't have a path on it.
                     // Which is not an error in this case.
@@ -245,6 +248,7 @@ impl PixmapMut<'_> {
 
                     let ts = Transform::from_translate(tile.x() as f32, tile.y() as f32);
                     path = path.transform(ts)?;
+                    paint.shader.transform(ts);
                 }
 
                 Some(())
@@ -319,6 +323,7 @@ impl PixmapMut<'_> {
 
             if let Some(tiler) = DrawTiler::new(self.width(), self.height()) {
                 let mut path = path.clone(); // TODO: avoid cloning
+                let mut paint = paint.clone();
 
                 if !transform.is_identity() {
                     paint.shader.transform(transform);
@@ -328,6 +333,7 @@ impl PixmapMut<'_> {
                 for tile in tiler {
                     let ts = Transform::from_translate(-(tile.x() as f32), -(tile.y() as f32));
                     path = path.transform(ts)?;
+                    paint.shader.transform(ts);
 
                     let mut subpix = self.subpixmap(tile.to_int_rect())?;
 
@@ -338,6 +344,7 @@ impl PixmapMut<'_> {
 
                     let ts = Transform::from_translate(tile.x() as f32, tile.y() as f32);
                     path = path.transform(ts)?;
+                    paint.shader.transform(ts);
                 }
 
                 Some(())
