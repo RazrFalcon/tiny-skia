@@ -209,7 +209,8 @@ impl Transform {
         Transform::from_row(cos, sin, -sin, cos, 0.0, 0.0)
     }
 
-    pub(crate) fn map_points(&self, points: &mut [Point]) {
+    /// Transforms a slice of points using the current transform.
+    pub fn map_points(&self, points: &mut [Point]) {
         if points.is_empty() {
             return;
         }
