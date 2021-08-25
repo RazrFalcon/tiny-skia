@@ -152,7 +152,8 @@ pub fn fill_path_impl(
 
     // TODO: walk_simple_edges
 
-    walk_edges(fill_rule, start_y, stop_y, shifted_clip.shifted().right(), &mut edges, blitter)
+    walk_edges(fill_rule, start_y, stop_y, shifted_clip.shifted().right(), &mut edges, blitter);
+    Some(())
 }
 
 // TODO: simplify!
@@ -163,7 +164,7 @@ fn walk_edges(
     right_clip: u32,
     edges: &mut [Edge],
     blitter: &mut dyn Blitter,
-) -> Option<()> {
+) {
     let mut curr_y = start_y;
     let winding_mask = if fill_rule == FillRule::EvenOdd { 1 } else { -1 };
 
@@ -263,8 +264,6 @@ fn walk_edges(
         // now current edge points to the first edge with a Yint larger than curr_y
         insert_new_edges(curr_idx, curr_y as i32, edges);
     }
-
-    Some(())
 }
 
 fn remove_edge(curr_idx: usize, edges: &mut [Edge]) {

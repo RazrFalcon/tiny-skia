@@ -420,6 +420,14 @@ impl IntRect {
         self.y + self.height.get() as i32
     }
 
+    /// Returns rect's size.
+    pub(crate) fn size(&self) -> IntSize {
+        IntSize {
+            width: self.width,
+            height: self.height,
+        }
+    }
+
     /// Checks that the rect is completely includes `other` Rect.
     pub(crate) fn contains(&self, other: &Self) -> bool {
         self.x <= other.x &&
@@ -622,6 +630,14 @@ impl ScreenIntRect {
     pub fn bottom(&self) -> u32 {
         // No overflow is guaranteed by constructors.
         self.y + self.height.get()
+    }
+
+    /// Returns rect's size.
+    pub fn size(&self) -> IntSize {
+        IntSize {
+            width: self.width,
+            height: self.height,
+        }
     }
 
     /// Checks that the rect is completely includes `other` Rect.

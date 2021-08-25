@@ -6,16 +6,15 @@
 
 use crate::*;
 
+use crate::geom::ScreenIntRect;
 use crate::pipeline::RasterPipelineBlitter;
+use crate::pixmap::SubPixmapMut;
 use crate::scalar::Scalar;
 use crate::scan;
 use crate::stroker::PathStroker;
 
 #[cfg(all(not(feature = "std"), feature = "libm"))]
 use crate::scalar::FloatExt;
-
-// 8K is 1 too big, since 8K << supersample == 32768 which is too big for Fixed.
-const MAX_DIM: u32 = 8192 - 1;
 
 
 /// A path filling rule.
@@ -177,19 +176,15 @@ impl PixmapMut<'_> {
         transform: Transform,
         clip_mask: Option<&ClipMask>,
     ) -> Option<()> {
-        if transform.is_identity() {
+        // TODO: we probably can use tiler for rect too
+        if transform.is_identity() && !DrawTiler::required(self.width(), self.height()) {
             // TODO: ignore rects outside the pixmap
-
-            // TODO: draw tiler
-            let bbox = rect.round_out();
-            if bbox.width() > MAX_DIM || bbox.height() > MAX_DIM {
-                return None;
-            }
 
             let clip = self.size().to_screen_int_rect(0, 0);
 
             let clip_mask = clip_mask.map(|mask| &mask.mask);
-            let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, self)?;
+            let mut subpix = self.as_subpixmap();
+            let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut subpix)?;
 
             if paint.anti_alias {
                 scan::fill_rect_aa(&rect, &clip, &mut blitter)
@@ -216,17 +211,9 @@ impl PixmapMut<'_> {
         if transform.is_identity() {
             // This is sort of similar to SkDraw::drawPath
 
-            // to_rect will fail when bounds' width/height is zero.
-            // This is an intended behaviour since the only
-            // reason for width/height to be zero is a horizontal/vertical line.
-            // And in both cases there is nothing to fill.
+            // Skip empty paths and horizontal/vertical lines.
             let path_bounds = path.bounds();
-            let path_int_bounds = path_bounds.round_out();
-
-            // TODO: ignore paths outside the pixmap
-
-            // TODO: draw tiler
-            if path_int_bounds.width() > MAX_DIM || path_int_bounds.height() > MAX_DIM {
+            if path_bounds.width().is_nearly_zero() || path_bounds.height().is_nearly_zero() {
                 return None;
             }
 
@@ -234,15 +221,43 @@ impl PixmapMut<'_> {
                 return None;
             }
 
-            let clip_rect = self.size().to_screen_int_rect(0, 0);
+            // TODO: ignore paths outside the pixmap
 
-            let clip_mask = clip_mask.map(|mask| &mask.mask);
-            let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, self)?;
+            if let Some(tiler) = DrawTiler::new(self.width(), self.height()) {
+                let mut path = path.clone(); // TODO: avoid cloning
+                for tile in tiler {
+                    let ts = Transform::from_translate(-(tile.x() as f32), -(tile.y() as f32));
+                    path = path.transform(ts)?;
 
-            if paint.anti_alias {
-                scan::path_aa::fill_path(path, fill_rule, &clip_rect, &mut blitter)
+                    let clip_rect = tile.size().to_screen_int_rect(0, 0);
+                    let mut subpix = self.subpixmap(tile.to_int_rect())?;
+
+                    let clip_mask = clip_mask.map(|mask| &mask.mask);
+                    let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut subpix)?;
+                    // We're ignoring "errors" here, because `fill_path` will return `None`
+                    // when rendering a tile that doesn't have a path on it.
+                    // Which is not an error in this case.
+                    if paint.anti_alias {
+                        scan::path_aa::fill_path(&path, fill_rule, &clip_rect, &mut blitter);
+                    } else {
+                        scan::path::fill_path(&path, fill_rule, &clip_rect, &mut blitter);
+                    }
+
+                    let ts = Transform::from_translate(tile.x() as f32, tile.y() as f32);
+                    path = path.transform(ts)?;
+                }
+
+                Some(())
             } else {
-                scan::path::fill_path(path, fill_rule, &clip_rect, &mut blitter)
+                let clip_rect = self.size().to_screen_int_rect(0, 0);
+                let clip_mask = clip_mask.map(|mask| &mask.mask);
+                let mut subpix = self.as_subpixmap();
+                let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut subpix)?;
+                if paint.anti_alias {
+                    scan::path_aa::fill_path(&path, fill_rule, &clip_rect, &mut blitter)
+                } else {
+                    scan::path::fill_path(&path, fill_rule, &clip_rect, &mut blitter)
+                }
             }
         } else {
             let path = path.clone().transform(transform)?;
@@ -254,16 +269,14 @@ impl PixmapMut<'_> {
         }
     }
 
-    // TODO: add dash
     /// Strokes a path.
     ///
     /// Stroking is implemented using two separate algorithms:
     ///
     /// 1. If a stroke width is wider than 1px (after applying the transformation),
-    ///    a path will be converted into a stroked path and then filled using `Canvas::fill_path`.
+    ///    a path will be converted into a stroked path and then filled using `fill_path`.
     ///    Which means that we have to allocate a separate `Path`, that can be 2-3x larger
     ///    then the original path.
-    ///    `Canvas` will reuse this allocation during subsequent strokes.
     /// 2. If a stroke width is thinner than 1px (after applying the transformation),
     ///    we will use hairline stroking, which doesn't involve a separate path allocation.
     ///
@@ -304,13 +317,39 @@ impl PixmapMut<'_> {
                 paint.shader.apply_opacity(new_alpha as f32 / 255.0);
             }
 
-            if !transform.is_identity() {
-                paint.shader.transform(transform);
+            if let Some(tiler) = DrawTiler::new(self.width(), self.height()) {
+                let mut path = path.clone(); // TODO: avoid cloning
 
-                let path = path.clone().transform(transform)?;
-                self.stroke_hairline(&path, &paint, stroke.line_cap, clip_mask)
+                if !transform.is_identity() {
+                    paint.shader.transform(transform);
+                    path = path.transform(transform)?;
+                }
+
+                for tile in tiler {
+                    let ts = Transform::from_translate(-(tile.x() as f32), -(tile.y() as f32));
+                    path = path.transform(ts)?;
+
+                    let mut subpix = self.subpixmap(tile.to_int_rect())?;
+
+                    // We're ignoring "errors" here, because `stroke_hairline` will return `None`
+                    // when rendering a tile that doesn't have a path on it.
+                    // Which is not an error in this case.
+                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, &mut subpix);
+
+                    let ts = Transform::from_translate(tile.x() as f32, tile.y() as f32);
+                    path = path.transform(ts)?;
+                }
+
+                Some(())
             } else {
-                self.stroke_hairline(&path, &paint, stroke.line_cap, clip_mask)
+                if !transform.is_identity() {
+                    paint.shader.transform(transform);
+
+                    let path = path.clone().transform(transform)?; // TODO: avoid clone
+                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, &mut self.as_subpixmap())
+                } else {
+                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, &mut self.as_subpixmap())
+                }
             }
         } else {
             let path = PathStroker::new().stroke(path, stroke, res_scale)?;
@@ -318,29 +357,23 @@ impl PixmapMut<'_> {
         }
     }
 
-    /// A path stroking with subpixel width.
-    ///
-    /// Should be used when stroke width is <= 1.0
-    /// This function doesn't even accept width, which should be regulated via opacity.
-    ///
-    /// See [`Canvas::stroke_path`] for details.
-    ///
-    /// [`Canvas::stroke_path`]: struct.Canvas.html#method.stroke_path
-    pub(crate) fn stroke_hairline(
-        &mut self,
+    /// A stroking for paths with subpixel/hairline width.
+    fn stroke_hairline(
         path: &Path,
         paint: &Paint,
         line_cap: LineCap,
         clip_mask: Option<&ClipMask>,
+        pixmap: &mut SubPixmapMut,
     ) -> Option<()> {
-        let clip = self.size().to_screen_int_rect(0, 0);
+        let clip = pixmap.size.to_screen_int_rect(0, 0);
 
         let clip_mask = clip_mask.map(|mask| &mask.mask);
-        let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, self)?;
+        let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, pixmap)?;
 
         if paint.anti_alias {
             scan::hairline_aa::stroke_path(path, line_cap, &clip, &mut blitter)
         } else {
+            // TODO: is it ever called?
             scan::hairline::stroke_path(path, line_cap, &clip, &mut blitter)
         }
     }
@@ -420,4 +453,119 @@ fn treat_as_hairline(paint: &Paint, stroke: &Stroke, mut ts: Transform) -> Optio
     }
 
     None
+}
+
+/// Splits the target pixmap into a list of tiles.
+///
+/// Skia/tiny-skia uses a lot of fixed-point math during path rendering.
+/// Probably more for precision than performance.
+/// And our fixed-point types are limited by 8192 and 32768.
+/// Which means that we cannot render a path larger than 8192 onto a pixmap.
+/// When pixmap is smaller than 8192, the path will be automatically clipped anyway,
+/// but for large pixmaps we have to render in tiles.
+struct DrawTiler {
+    image_width: u32,
+    image_height: u32,
+    x_offset: u32,
+    y_offset: u32,
+    finished: bool,
+}
+
+impl DrawTiler {
+    // 8K is 1 too big, since 8K << supersample == 32768 which is too big for Fixed.
+    const MAX_DIMENSIONS: u32 = 8192 - 1;
+
+    fn required(image_width: u32, image_height: u32) -> bool {
+        image_width > Self::MAX_DIMENSIONS || image_height > Self::MAX_DIMENSIONS
+    }
+
+    fn new(image_width: u32, image_height: u32) -> Option<Self> {
+        if Self::required(image_width, image_height) {
+            Some(DrawTiler {
+                image_width,
+                image_height,
+                x_offset: 0,
+                y_offset: 0,
+                finished: false,
+            })
+        } else {
+            None
+        }
+    }
+}
+
+impl Iterator for DrawTiler {
+    type Item = ScreenIntRect;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.finished {
+            return None;
+        }
+
+        // TODO: iterate only over tiles that actually affected by the shape
+
+        if self.x_offset < self.image_width && self.y_offset < self.image_height {
+            let h = if self.y_offset < self.image_height {
+                (self.image_height - self.y_offset).min(Self::MAX_DIMENSIONS)
+            } else {
+                self.image_height
+            };
+
+            let r = ScreenIntRect::from_xywh(
+                self.x_offset,
+                self.y_offset,
+                (self.image_width - self.x_offset).min(Self::MAX_DIMENSIONS),
+                h,
+            );
+
+            self.x_offset += Self::MAX_DIMENSIONS;
+            if self.x_offset >= self.image_width {
+                self.x_offset = 0;
+                self.y_offset += Self::MAX_DIMENSIONS;
+            }
+
+            return r;
+        }
+
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    const MAX_DIM: u32 = DrawTiler::MAX_DIMENSIONS;
+
+    #[test]
+    fn skip() {
+        assert!(DrawTiler::new(100, 500).is_none());
+    }
+
+    #[test]
+    fn horizontal() {
+        let mut iter = DrawTiler::new(10000, 500).unwrap();
+        assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, 0, MAX_DIM, 500));
+        assert_eq!(iter.next(), ScreenIntRect::from_xywh(MAX_DIM, 0, 10000-MAX_DIM, 500));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn vertical() {
+        let mut iter = DrawTiler::new(500, 10000).unwrap();
+        assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, 0, 500, MAX_DIM));
+        assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, MAX_DIM, 500, 10000-MAX_DIM));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn rect() {
+        let mut iter = DrawTiler::new(10000, 10000).unwrap();
+        // Row 1
+        assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, 0, MAX_DIM, MAX_DIM));
+        assert_eq!(iter.next(), ScreenIntRect::from_xywh(MAX_DIM, 0, 10000-MAX_DIM, MAX_DIM));
+        // Row 2
+        assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, MAX_DIM, MAX_DIM, 10000-MAX_DIM));
+        assert_eq!(iter.next(), ScreenIntRect::from_xywh(MAX_DIM, MAX_DIM, 10000-MAX_DIM, 10000-MAX_DIM));
+        assert_eq!(iter.next(), None);
+    }
 }

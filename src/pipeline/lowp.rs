@@ -26,9 +26,10 @@ And while `-C target-cpu=haswell` boosts our performance by around 25%,
 we are still 40-60% behind Skia built for Haswell.
 */
 
-use crate::{PremultipliedColorU8, PixmapMut};
+use crate::PremultipliedColorU8;
 
 use crate::geom::ScreenIntRect;
+use crate::pixmap::SubPixmapMut;
 use crate::wide::{f32x8, u16x16, f32x16};
 
 pub const STAGE_WIDTH: usize = 16;
@@ -38,7 +39,7 @@ pub type StageFn = fn(p: &mut Pipeline);
 pub struct Pipeline<'a, 'b: 'a> {
     index: usize,
     functions: &'a [StageFn],
-    pixmap: &'a mut PixmapMut<'b>,
+    pixmap: &'a mut SubPixmapMut<'b>,
     clip_mask_ctx: super::ClipMaskCtx<'a>,
     mask_ctx: super::AAMaskCtx,
     ctx: &'a mut super::Context,
@@ -144,7 +145,7 @@ pub fn start(
     mask_ctx: super::AAMaskCtx,
     clip_mask_ctx: super::ClipMaskCtx,
     ctx: &mut super::Context,
-    pixmap: &mut PixmapMut,
+    pixmap: &mut SubPixmapMut,
 ) {
     let mut p = Pipeline {
         index: 0,

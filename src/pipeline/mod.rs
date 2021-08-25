@@ -49,13 +49,14 @@ use alloc::vec::Vec;
 use arrayvec::ArrayVec;
 
 use crate::{LengthU32, Color, SpreadMode, PremultipliedColor, PremultipliedColorU8};
-use crate::{Transform, PixmapRef, PixmapMut};
+use crate::{Transform, PixmapRef};
 
 pub use blitter::RasterPipelineBlitter;
 
 use crate::floating_point::NormalizedF32;
 use crate::geom::ScreenIntRect;
 use crate::math::LENGTH_U32_ONE;
+use crate::pixmap::SubPixmapMut;
 use crate::wide::u32x8;
 
 mod blitter;
@@ -149,10 +150,10 @@ impl<'a> PixmapRef<'a> {
     }
 }
 
-impl<'a> PixmapMut<'a> {
+impl<'a> SubPixmapMut<'a> {
     #[inline(always)]
     pub(crate) fn offset(&self, dx: usize, dy: usize) -> usize {
-        self.width() as usize * dy + dx
+        self.real_width * dy + dx
     }
 
     #[inline(always)]
@@ -471,7 +472,7 @@ impl RasterPipeline {
         mask_ctx: AAMaskCtx,
         clip_mask_ctx: ClipMaskCtx,
         pixmap_src: PixmapRef,
-        pixmap_dst: &mut PixmapMut,
+        pixmap_dst: &mut SubPixmapMut,
     ) {
         match self.kind {
             RasterPipelineKind::High { ref functions, ref tail_functions } => {
@@ -534,7 +535,7 @@ mod blend_tests {
                 let mut p = p.compile();
                 let rect = pixmap.size().to_screen_int_rect(0, 0);
                 p.run(&rect, AAMaskCtx::default(), ClipMaskCtx::default(), pixmap_src,
-                      &mut pixmap.as_mut());
+                      &mut pixmap.as_mut().as_subpixmap());
 
                 assert_eq!(
                     pixmap.as_ref().pixel(0, 0).unwrap(),

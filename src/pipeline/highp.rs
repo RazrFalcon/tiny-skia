@@ -15,9 +15,10 @@ For some reason, we are almost 2x slower. Maybe because Skia uses clang's vector
 and we're using a manual implementation.
 */
 
-use crate::{PremultipliedColorU8, SpreadMode, PixmapMut, PixmapRef};
+use crate::{PremultipliedColorU8, SpreadMode, PixmapRef};
 
 use crate::geom::ScreenIntRect;
+use crate::pixmap::SubPixmapMut;
 use crate::wide::{f32x8, i32x8, u32x8};
 
 pub const STAGE_WIDTH: usize = 8;
@@ -28,7 +29,7 @@ pub struct Pipeline<'a, 'b: 'a> {
     index: usize,
     functions: &'a [StageFn],
     pixmap_src: PixmapRef<'a>,
-    pixmap_dst: &'a mut PixmapMut<'b>,
+    pixmap_dst: &'a mut SubPixmapMut<'b>,
     ctx: &'a mut super::Context, // TODO: remove mut
     clip_mask_ctx: super::ClipMaskCtx<'a>,
     mask_ctx: super::AAMaskCtx,
@@ -130,7 +131,7 @@ pub fn start(
     clip_mask_ctx: super::ClipMaskCtx,
     ctx: &mut super::Context,
     pixmap_src: PixmapRef,
-    pixmap_dst: &mut PixmapMut,
+    pixmap_dst: &mut SubPixmapMut,
 ) {
     let mut p = Pipeline {
         index: 0,

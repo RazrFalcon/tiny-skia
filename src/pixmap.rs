@@ -526,6 +526,30 @@ impl<'a> PixmapMut<'a> {
     pub fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
         bytemuck::cast_slice_mut(self.data_mut())
     }
+
+    /// Creates `SubPixmapMut` that contains the whole `PixmapMut`.
+    pub(crate) fn as_subpixmap(&mut self) -> SubPixmapMut {
+        SubPixmapMut {
+            size: self.size(),
+            real_width: self.width() as usize,
+            data: &mut self.data,
+        }
+    }
+
+    /// Returns a mutable reference to the pixmap region that intersects the `rect`.
+    ///
+    /// Returns `None` when `Pixmap`'s rect doesn't contain `rect`.
+    pub(crate) fn subpixmap<'b>(&'b mut self, rect: IntRect) -> Option<SubPixmapMut<'b>> {
+        let rect = self.size.to_int_rect(0, 0).intersect(&rect)?;
+        let row_bytes = self.width() as usize * BYTES_PER_PIXEL;
+        let offset = rect.top() as usize * row_bytes + rect.left() as usize * BYTES_PER_PIXEL;
+
+        Some(SubPixmapMut {
+            size: rect.size(),
+            real_width: self.width() as usize,
+            data: &mut self.data[offset..],
+        })
+    }
 }
 
 impl core::fmt::Debug for PixmapMut<'_> {
@@ -535,6 +559,30 @@ impl core::fmt::Debug for PixmapMut<'_> {
             .field("width", &self.size.width())
             .field("height", &self.size.height())
             .finish()
+    }
+}
+
+
+/// A `PixmapMut` subregion.
+///
+/// Unlike `PixmapMut`, contains `real_width` which references the parent `PixmapMut` width.
+/// This way we can operate on a `PixmapMut` subregion without reallocations.
+/// Primarily required because of `DrawTiler`.
+///
+/// We cannot implement it in `PixmapMut` directly, because it will brake `fill`, `data_mut`
+/// `pixels_mut` and other similar methods.
+/// This is because `SubPixmapMut.data` references more "data" than it actually allowed to access.
+/// On the other hand, `PixmapMut.data` can access all it's data and it's stored linearly.
+pub struct SubPixmapMut<'a> {
+    pub data: &'a mut [u8],
+    pub size: IntSize,
+    pub real_width: usize,
+}
+
+impl<'a> SubPixmapMut<'a> {
+    /// Returns a mutable slice of pixels.
+    pub fn pixels_mut(&mut self) -> &mut [PremultipliedColorU8] {
+        bytemuck::cast_slice_mut(self.data)
     }
 }
 

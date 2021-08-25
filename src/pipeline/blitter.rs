@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::{Paint, BlendMode, LengthU32, PixmapMut, PremultipliedColorU8, Shader, PixmapRef};
+use crate::{Paint, BlendMode, LengthU32, PremultipliedColorU8, Shader, PixmapRef};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
@@ -14,12 +14,13 @@ use crate::color::AlphaU8;
 use crate::geom::ScreenIntRect;
 use crate::math::LENGTH_U32_ONE;
 use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder};
+use crate::pixmap::SubPixmapMut;
 
 
 pub struct RasterPipelineBlitter<'a, 'b: 'a> {
     clip_mask: Option<&'a ClipMaskData>,
     pixmap_src: PixmapRef<'a>,
-    pixmap: &'a mut PixmapMut<'b>,
+    pixmap: &'a mut SubPixmapMut<'b>,
     memset2d_color: Option<PremultipliedColorU8>,
     blit_anti_h_rp: RasterPipeline,
     blit_rect_rp: RasterPipeline,
@@ -30,11 +31,11 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
     pub fn new(
         paint: &Paint<'a>,
         clip_mask: Option<&'a ClipMaskData>,
-        pixmap: &'a mut PixmapMut<'b>,
+        pixmap: &'a mut SubPixmapMut<'b>,
     ) -> Option<Self> {
         // Make sure that `clip_mask` has the same size as `pixmap`.
         if let Some(mask) = clip_mask {
-            if mask.width.get() != pixmap.width() || mask.height.get() != pixmap.height() {
+            if mask.width.get() != pixmap.size.width() || mask.height.get() != pixmap.size.height() {
                 return None;
             }
         }
