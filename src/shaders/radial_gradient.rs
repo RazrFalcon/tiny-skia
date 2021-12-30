@@ -46,9 +46,6 @@ impl FocalData {
 #[derive(Clone, Debug)]
 pub struct RadialGradient {
     pub(crate) base: Gradient,
-    center1: Point,
-    center2: Point,
-    radius: f32,
     focal_data: Option<FocalData>,
 }
 
@@ -107,9 +104,6 @@ impl RadialGradient {
             // that endRadius is not equal to 0, so this produces a meaningful gradient
             Some(Shader::RadialGradient(RadialGradient {
                 base: Gradient::new(stops, mode, transform, ts),
-                center1: start,
-                center2: end,
-                radius,
                 focal_data: None,
             }))
         } else {
@@ -133,9 +127,6 @@ impl RadialGradient {
 
             Some(Shader::RadialGradient(RadialGradient {
                 base: Gradient::new(stops, mode, transform, ts),
-                center1: start,
-                center2: end,
-                radius,
                 focal_data: Some(focal_data),
             }))
         }

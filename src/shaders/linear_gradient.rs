@@ -16,8 +16,6 @@ use crate::pipeline::RasterPipelineBuilder;
 #[derive(Clone, Debug)]
 pub struct LinearGradient {
     pub(crate) base: Gradient,
-    start: Point,
-    end: Point,
 }
 
 impl LinearGradient {
@@ -85,8 +83,6 @@ impl LinearGradient {
         let unit_ts = points_to_unit_ts(start, end)?;
         Some(Shader::LinearGradient(LinearGradient {
             base: Gradient::new(stops, mode, transform, unit_ts),
-            start,
-            end,
         }))
     }
 
