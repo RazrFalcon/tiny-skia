@@ -111,7 +111,7 @@ impl ClipMask {
         submask.set_path(self.mask.width.get(), self.mask.height.get(), path, fill_rule, anti_alias)?;
 
         for (a, b) in self.mask.data.iter_mut().zip(submask.mask.data.iter()) {
-            *a = (((u16::from(*a)) * u16::from(*b)) >> 8) as u8;
+            *a = crate::color::premultiply_u8(*a, *b);
         }
 
         Some(())
