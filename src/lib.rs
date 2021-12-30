@@ -10,7 +10,6 @@ See the `examples/` directory for usage examples.
 */
 
 #![no_std]
-#![doc(html_root_url = "https://docs.rs/tiny-skia/0.6.1")]
 #![warn(missing_docs)]
 #![warn(missing_copy_implementations)]
 #![warn(missing_debug_implementations)]
