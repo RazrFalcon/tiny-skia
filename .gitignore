@@ -1,6 +1,5 @@
 /target
 Cargo.lock
 .directory
-.idea
-*.iml
+.DS_Store
 /image.png
