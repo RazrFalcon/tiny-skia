@@ -52,7 +52,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
 
         // We can strength-reduce SourceOver into Source when opaque.
         let mut blend_mode = paint.blend_mode;
-        if paint.shader.is_opaque() && blend_mode == BlendMode::SourceOver {
+        if paint.shader.is_opaque() && blend_mode == BlendMode::SourceOver && clip_mask.is_none() {
             blend_mode = BlendMode::Source;
         }
 

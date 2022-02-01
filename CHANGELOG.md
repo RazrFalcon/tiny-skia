@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- SourceOver blend mode must not be optimized to Source when ClipPath is present.
 
 ## [0.6.2] - 2021-12-30
 ### Fixed
