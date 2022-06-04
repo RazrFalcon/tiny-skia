@@ -81,6 +81,27 @@ fn clip_line_00() {
 }
 
 #[test]
+fn clip_line_00_v2() {
+    let mut pixmap = Pixmap::new(512, 512).unwrap();
+
+    let mut paint = Paint::default();
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
+
+    let mut stroke = Stroke::default();
+    stroke.width = 0.0;
+
+    let mut builder = PathBuilder::default();
+    builder.move_to(369.26462, 577.8069);
+    builder.line_to(488.0846, 471.04388);
+    let path = builder.finish().unwrap();
+    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None);
+
+    let expected = Pixmap::load_png("tests/images/hairline/clip-line-00-v2.png").unwrap();
+    assert_eq!(pixmap, expected);
+}
+
+#[test]
 fn clip_hline_top_aa() {
     let expected = Pixmap::load_png("tests/images/hairline/clip-hline-top-aa.png").unwrap();
     assert_eq!(draw_line(-1.0, 0.0, 101.0, 0.0, true, 1.0, LineCap::Butt), expected);

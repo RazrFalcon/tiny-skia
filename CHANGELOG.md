@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Panic during non-aliased hairline stroking at the bottom edge of an image.
 
 ## [0.6.3] - 2022-02-01
 ### Fixed

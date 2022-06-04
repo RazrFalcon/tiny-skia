@@ -96,9 +96,20 @@ fn hair_line_rgn(
             #[allow(clippy::precedence)]
             let mut start_y = fdot6::to_fdot16(y0) + (slope * ((32 - x0) & 63) >> 6);
 
+            // In some cases, probably due to precision/rounding issues,
+            // `start_y` can become equal to the image height,
+            // which will lead to panic, because we would be accessing pixels outside
+            // the current memory buffer.
+            // This is tiny-skia specific issue. Skia handles this part differently.
+            let max_y = if let Some(clip_bounds) = clip_bounds {
+                fdot16::from_f32(clip_bounds.bottom())
+            } else {
+                i32::MAX
+            };
+
             debug_assert!(ix0 < ix1);
             loop {
-                if ix0 >= 0 && start_y >= 0 {
+                if ix0 >= 0 && start_y >= 0 && start_y < max_y {
                     blitter.blit_h(ix0 as u32, (start_y >> 16) as u32, LENGTH_U32_ONE);
                 }
 
