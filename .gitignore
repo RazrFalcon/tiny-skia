@@ -3,3 +3,4 @@ Cargo.lock
 .directory
 .DS_Store
 /image.png
+/.vscode
