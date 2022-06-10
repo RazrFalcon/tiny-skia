@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.5] - 2022-06-10
+### Fixed
+- Minimum `arrayref` version.
+
 ## [0.6.4] - 2022-06-04
 ### Fixed
 - Panic during non-aliased hairline stroking at the bottom edge of an image.
@@ -87,7 +91,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.4...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.5...HEAD
+[0.6.5]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.1...v0.6.2
