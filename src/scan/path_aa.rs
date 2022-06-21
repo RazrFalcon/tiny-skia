@@ -37,7 +37,7 @@ pub fn fill_path(
         path.bounds.top().floor(),
         path.bounds.right().ceil(),
         path.bounds.bottom().ceil(),
-    )?.round_out();
+    )?.round_out()?;
 
     // If the intersection of the path bounds and the clip bounds
     // will overflow 32767 when << by SHIFT, we can't supersample,
