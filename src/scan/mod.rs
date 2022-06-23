@@ -21,7 +21,7 @@ pub fn fill_rect(
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
-    fill_int_rect(&rect.round(), clip, blitter)
+    fill_int_rect(&rect.round()?, clip, blitter)
 }
 
 fn fill_int_rect(

@@ -790,25 +790,25 @@ impl Rect {
     /// Converts into an `IntRect` by adding 0.5 and discarding the fractional portion.
     ///
     /// Width and height are guarantee to be >= 1.
-    pub fn round(&self) -> IntRect {
+    pub fn round(&self) -> Option<IntRect> {
         IntRect::from_xywh(
             i32::saturate_round(self.x()),
             i32::saturate_round(self.y()),
             core::cmp::max(1, i32::saturate_round(self.width()) as u32),
             core::cmp::max(1, i32::saturate_round(self.height()) as u32),
-        ).unwrap()
+        )
     }
 
     /// Converts into an `IntRect` rounding outwards.
     ///
     /// Width and height are guarantee to be >= 1.
-    pub(crate) fn round_out(&self) -> IntRect {
+    pub(crate) fn round_out(&self) -> Option<IntRect> {
         IntRect::from_xywh(
             i32::saturate_floor(self.x()),
             i32::saturate_floor(self.y()),
             core::cmp::max(1, i32::saturate_ceil(self.width()) as u32),
             core::cmp::max(1, i32::saturate_ceil(self.height()) as u32),
-        ).unwrap()
+        )
     }
 
     /// Returns an intersection of two rectangles.
@@ -928,5 +928,18 @@ mod rect_tests {
         let rect = Rect::from_ltrb(-30.0, 20.0, -10.0, 40.0).unwrap();
         assert_eq!(rect.width(), 20.0);
         assert_eq!(rect.height(), 20.0);
+    }
+
+    #[test]
+    fn round_overflow() {
+        // minimum value that cause overflow
+        // because i32::MAX has no exact conversion to f32
+        let x = 128.0;
+        // maximum width
+        let width = i32::MAX as f32;
+
+        let rect = Rect::from_xywh(x, 0.0, width, 1.0).unwrap();
+        assert_eq!(rect.round(), None);
+        assert_eq!(rect.round_out(), None);
     }
 }

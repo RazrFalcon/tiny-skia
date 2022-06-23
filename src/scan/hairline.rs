@@ -170,7 +170,7 @@ pub fn stroke_path_impl(
 
     {
         let cap_out = if line_cap == LineCap::Butt { 1.0 } else { 2.0 };
-        let ibounds = path.bounds().outset(cap_out, cap_out)?.round_out();
+        let ibounds = path.bounds().outset(cap_out, cap_out)?.round_out()?;
         clip.to_int_rect().intersect(&ibounds)?;
 
         if !clip.to_int_rect().contains(&ibounds) {
