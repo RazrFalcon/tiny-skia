@@ -1,0 +1,10 @@
+mod clip;
+mod dash;
+mod fill;
+mod gradients;
+mod hairline;
+mod path;
+mod pattern;
+mod pixmap;
+mod png;
+mod skia_dash;
