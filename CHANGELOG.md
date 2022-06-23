@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.6] - 2022-06-23
+### Fixed
+- Panic in `Rect::round` and `Rect::round_out`.
+  Thanks to [@Wardenfar](https://github.com/Wardenfar)
+
 ## [0.6.5] - 2022-06-10
 ### Fixed
 - Minimum `arrayref` version.
@@ -91,7 +96,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.5...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.6...HEAD
+[0.6.6]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.2...v0.6.3
