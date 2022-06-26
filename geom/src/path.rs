@@ -6,11 +6,13 @@
 
 use alloc::vec::Vec;
 
-use crate::{Point, PathBuilder, Rect, Transform};
+use crate::path_builder::PathBuilder;
+use crate::transform::Transform;
+use crate::{Point, Rect};
 
-use crate::scalar::SCALAR_MAX;
 
-
+/// A path verb.
+#[allow(missing_docs)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum PathVerb {
     Move,
@@ -24,7 +26,11 @@ pub enum PathVerb {
 /// A Bezier path.
 ///
 /// Can be created via [`PathBuilder`].
-/// Where [`PathBuilder`] can be created from the `Path` using [`clear`] to reuse the allocation.
+/// Where [`PathBuilder`] can be created from the [`Path`] using [`clear`] to reuse the allocation.
+///
+/// Path is immutable and uses compact storage, where segment types and numbers are stored
+/// separately. Use can access path segments via [`Path::verbs`] and [`Path::points`],
+/// or via [`Path::segments`]
 ///
 /// # Guarantees
 ///
@@ -63,6 +69,16 @@ impl Path {
         self.bounds
     }
 
+    /// Returns an internal vector of verbs.
+    pub fn verbs(&self) -> &[PathVerb] {
+        &self.verbs
+    }
+
+    /// Returns an internal vector of points.
+    pub fn points(&self) -> &[Point] {
+        &self.points
+    }
+
     /// Returns a transformed in-place path.
     ///
     /// Some points may become NaN/inf therefore this method can fail.
@@ -79,24 +95,6 @@ impl Path {
         Some(self)
     }
 
-    /// Sometimes in the drawing pipeline, we have to perform math on path coordinates, even after
-    /// the path is in device-coordinates. Tessellation and clipping are two examples. Usually this
-    /// is pretty modest, but it can involve subtracting/adding coordinates, or multiplying by
-    /// small constants (e.g. 2,3,4). To try to preflight issues where these optionations could turn
-    /// finite path values into infinities (or NaNs), we allow the upper drawing code to reject
-    /// the path if its bounds (in device coordinates) is too close to max float.
-    pub(crate) fn is_too_big_for_math(&self) -> bool {
-        // This value is just a guess. smaller is safer, but we don't want to reject largish paths
-        // that we don't have to.
-        const SCALE_DOWN_TO_ALLOW_FOR_SMALL_MULTIPLIES: f32 = 0.25;
-        const MAX: f32 = SCALAR_MAX * SCALE_DOWN_TO_ALLOW_FOR_SMALL_MULTIPLIES;
-
-        let b = self.bounds;
-
-        // use ! expression so we return true if bounds contains NaN
-        !(b.left() >= -MAX && b.top() >= -MAX && b.right() <= MAX && b.bottom() <= MAX)
-    }
-
     /// Returns an iterator over path's segments.
     pub fn segments(&self) -> PathSegmentsIter {
         PathSegmentsIter {
@@ -106,16 +104,6 @@ impl Path {
             is_auto_close: false,
             last_move_to: Point::zero(),
             last_point: Point::zero(),
-        }
-    }
-
-    pub(crate) fn edge_iter(&self) -> PathEdgeIter {
-        PathEdgeIter {
-            path: self,
-            verb_index: 0,
-            points_index: 0,
-            move_to: Point::zero(),
-            needs_close_line: false,
         }
     }
 
@@ -243,11 +231,13 @@ impl<'a> PathSegmentsIter<'a> {
         false
     }
 
-    pub(crate) fn curr_verb(&self) -> PathVerb {
+    /// Returns the current verb.
+    pub fn curr_verb(&self) -> PathVerb {
         self.path.verbs[self.verb_index - 1]
     }
 
-    pub(crate) fn next_verb(&self) -> Option<PathVerb> {
+    /// Returns the next verb.
+    pub fn next_verb(&self) -> Option<PathVerb> {
         self.path.verbs.get(self.verb_index).cloned()
     }
 }
@@ -295,106 +285,6 @@ impl<'a> Iterator for PathSegmentsIter<'a> {
                     Some(seg)
                 }
             }
-        } else {
-            None
-        }
-    }
-}
-
-
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub enum PathEdge {
-    LineTo(Point, Point),
-    QuadTo(Point, Point, Point),
-    CubicTo(Point, Point, Point, Point),
-}
-
-/// Lightweight variant of PathIter that only returns segments (e.g. lines/quads).
-///
-/// Does not return Move or Close. Always "auto-closes" each contour.
-pub struct PathEdgeIter<'a> {
-    path: &'a Path,
-    verb_index: usize,
-    points_index: usize,
-    move_to: Point,
-    needs_close_line: bool,
-}
-
-impl<'a, 'b> PathEdgeIter<'a> {
-    fn close_line(&mut self) -> Option<PathEdge> {
-        self.needs_close_line = false;
-
-        let edge = PathEdge::LineTo(self.path.points[self.points_index - 1], self.move_to);
-        Some(edge)
-    }
-}
-
-impl<'a> Iterator for PathEdgeIter<'a> {
-    type Item = PathEdge;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.verb_index < self.path.verbs.len() {
-            let verb = self.path.verbs[self.verb_index];
-            self.verb_index += 1;
-
-            match verb {
-                PathVerb::Move => {
-                    if self.needs_close_line {
-                        let res = self.close_line();
-                        self.move_to = self.path.points[self.points_index];
-                        self.points_index += 1;
-                        return res;
-                    }
-
-                    self.move_to = self.path.points[self.points_index];
-                    self.points_index += 1;
-                    self.next()
-                }
-                PathVerb::Close => {
-                    if self.needs_close_line {
-                        return self.close_line();
-                    }
-
-                    self.next()
-                }
-                _ => {
-                    // Actual edge.
-                    self.needs_close_line = true;
-
-                    let edge;
-                    match verb {
-                        PathVerb::Line => {
-                            edge = PathEdge::LineTo(
-                                self.path.points[self.points_index - 1],
-                                self.path.points[self.points_index + 0],
-                            );
-                            self.points_index += 1;
-                        }
-                        PathVerb::Quad => {
-                            edge = PathEdge::QuadTo(
-                                self.path.points[self.points_index - 1],
-                                self.path.points[self.points_index + 0],
-                                self.path.points[self.points_index + 1],
-                            );
-                            self.points_index += 2;
-                        }
-                        PathVerb::Cubic => {
-                            edge = PathEdge::CubicTo(
-                                self.path.points[self.points_index - 1],
-                                self.path.points[self.points_index + 0],
-                                self.path.points[self.points_index + 1],
-                                self.path.points[self.points_index + 2],
-                            );
-                            self.points_index += 3;
-                        }
-                        _ => unreachable!(),
-                    };
-
-                    Some(edge)
-                }
-            }
-        } else if self.needs_close_line {
-            self.close_line()
         } else {
             None
         }

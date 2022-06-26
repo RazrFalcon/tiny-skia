@@ -5,13 +5,14 @@
 
 use alloc::vec::Vec;
 
+use tiny_skia_geom::ScreenIntRect;
+
 use crate::{Path, LengthU32, FillRule};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
 use crate::blitter::Blitter;
 use crate::color::AlphaU8;
-use crate::geom::ScreenIntRect;
 use crate::math::LENGTH_U32_ONE;
 use core::num::NonZeroU32;
 

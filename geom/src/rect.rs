@@ -1,4 +1,3 @@
-// Copyright 2006 The Android Open Source Project
 // Copyright 2020 Yevhenii Reizner
 //
 // Use of this source code is governed by a BSD-style license that can be
@@ -6,341 +5,7 @@
 
 use core::convert::TryFrom;
 
-use crate::LengthU32;
-use crate::floating_point::{SaturateRound, FiniteF32};
-use crate::scalar::Scalar;
-use crate::wide::{f32x2, f32x4};
-
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
-
-/// A point.
-#[allow(missing_docs)]
-#[repr(C)]
-#[derive(Copy, Clone, PartialEq, Default, Debug)]
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
-}
-
-impl From<(f32, f32)> for Point {
-    #[inline]
-    fn from(v: (f32, f32)) -> Self {
-        Point { x: v.0, y: v.1 }
-    }
-}
-
-impl Point {
-    /// Creates a new `Point`.
-    pub fn from_xy(x: f32, y: f32) -> Self {
-        Point { x, y }
-    }
-
-    pub(crate) fn from_f32x2(r: f32x2) -> Self {
-        Point::from_xy(r.x(), r.y())
-    }
-
-    pub(crate) fn to_f32x2(&self) -> f32x2 {
-        f32x2::new(self.x, self.y)
-    }
-
-    /// Creates a point at 0x0 position.
-    pub fn zero() -> Self {
-        Point { x: 0.0, y: 0.0 }
-    }
-
-    /// Returns true if x and y are both zero.
-    pub fn is_zero(&self) -> bool {
-        self.x == 0.0 && self.y == 0.0
-    }
-
-    /// Returns true if both x and y are measurable values.
-    ///
-    /// Both values are other than infinities and NaN.
-    pub(crate) fn is_finite(&self) -> bool {
-        (self.x * self.y).is_finite()
-    }
-
-    pub(crate) fn almost_equal(&self, other: Point) -> bool {
-        !(*self - other).can_normalize()
-    }
-
-    pub(crate) fn equals_within_tolerance(&self, other: Point, tolerance: f32) -> bool {
-        (self.x - other.x).is_nearly_zero_within_tolerance(tolerance) &&
-            (self.y - other.y).is_nearly_zero_within_tolerance(tolerance)
-    }
-
-    /// Scales (fX, fY) so that length() returns one, while preserving ratio of fX to fY,
-    /// if possible.
-    ///
-    /// If prior length is nearly zero, sets vector to (0, 0) and returns
-    /// false; otherwise returns true.
-    pub(crate) fn normalize(&mut self) -> bool {
-        self.set_length_from(self.x, self.y, 1.0)
-    }
-
-    /// Sets vector to (x, y) scaled so length() returns one, and so that (x, y)
-    /// is proportional to (x, y).
-    ///
-    /// If (x, y) length is nearly zero, sets vector to (0, 0) and returns false;
-    /// otherwise returns true.
-    pub(crate) fn set_normalize(&mut self, x: f32, y: f32) -> bool {
-        self.set_length_from(x, y, 1.0)
-    }
-
-    pub(crate) fn can_normalize(&self) -> bool {
-        self.x.is_finite() && self.y.is_finite() && (self.x != 0.0 || self.y != 0.0)
-    }
-
-    /// Returns the Euclidean distance from origin.
-    pub(crate) fn length(&self) -> f32 {
-        let mag2 = self.x * self.x + self.y * self.y;
-        if mag2.is_finite() {
-            mag2.sqrt()
-        } else {
-            let xx = f64::from(self.x);
-            let yy = f64::from(self.y);
-            (xx * xx + yy * yy).sqrt() as f32
-        }
-    }
-
-    /// Scales vector so that distanceToOrigin() returns length, if possible.
-    ///
-    /// If former length is nearly zero, sets vector to (0, 0) and return false;
-    /// otherwise returns true.
-    pub(crate) fn set_length(&mut self, length: f32) -> bool {
-        self.set_length_from(self.x, self.y, length)
-    }
-
-    /// Sets vector to (x, y) scaled to length, if possible.
-    ///
-    /// If former length is nearly zero, sets vector to (0, 0) and return false;
-    /// otherwise returns true.
-    pub(crate) fn set_length_from(&mut self, x: f32, y: f32, length: f32) -> bool {
-        set_point_length(self, x, y, length, &mut None)
-    }
-
-    /// Returns the Euclidean distance from origin.
-    pub(crate) fn distance(&self, other: Point) -> f32 {
-        (*self - other).length()
-    }
-
-    /// Returns the dot product of two points.
-    pub(crate) fn dot(&self, other: Point) -> f32 {
-        self.x * other.x + self.y * other.y
-    }
-
-    /// Returns the cross product of vector and vec.
-    ///
-    /// Vector and vec form three-dimensional vectors with z-axis value equal to zero.
-    /// The cross product is a three-dimensional vector with x-axis and y-axis values
-    /// equal to zero. The cross product z-axis component is returned.
-    pub(crate) fn cross(&self, other: Point) -> f32 {
-        self.x * other.y - self.y * other.x
-    }
-
-    pub(crate) fn distance_to_sqd(&self, pt: Point) -> f32 {
-        let dx = self.x - pt.x;
-        let dy = self.y - pt.y;
-        dx * dx + dy * dy
-    }
-
-    pub(crate) fn length_sqd(&self) -> f32 {
-        self.dot(*self)
-    }
-
-    /// Scales Point in-place by scale.
-    pub(crate) fn scale(&mut self, scale: f32) {
-        self.x *= scale;
-        self.y *= scale;
-    }
-
-    pub(crate) fn scaled(&self, scale: f32) -> Self {
-        Point::from_xy(self.x * scale, self.y * scale)
-    }
-
-    pub(crate) fn swap_coords(&mut self) {
-        core::mem::swap(&mut self.x, &mut self.y);
-    }
-
-    pub(crate) fn rotate_cw(&mut self) {
-        self.swap_coords();
-        self.x = -self.x;
-    }
-
-    pub(crate) fn rotate_ccw(&mut self) {
-        self.swap_coords();
-        self.y = -self.y;
-    }
-}
-
-// We have to worry about 2 tricky conditions:
-// 1. underflow of mag2 (compared against nearlyzero^2)
-// 2. overflow of mag2 (compared w/ isfinite)
-//
-// If we underflow, we return false. If we overflow, we compute again using
-// doubles, which is much slower (3x in a desktop test) but will not overflow.
-fn set_point_length(
-    pt: &mut Point,
-    mut x: f32,
-    mut y: f32,
-    length: f32,
-    orig_length: &mut Option<f32>,
-) -> bool {
-    // our mag2 step overflowed to infinity, so use doubles instead.
-    // much slower, but needed when x or y are very large, other wise we
-    // divide by inf. and return (0,0) vector.
-    let xx = x as f64;
-    let yy = y as f64;
-    let dmag = (xx * xx + yy * yy).sqrt();
-    let dscale = length as f64 / dmag;
-    x *= dscale as f32;
-    y *= dscale as f32;
-
-    // check if we're not finite, or we're zero-length
-    if !x.is_finite() || !y.is_finite() || (x == 0.0 && y == 0.0) {
-        *pt = Point::zero();
-        return false;
-    }
-
-    let mut mag = 0.0;
-    if orig_length.is_some() {
-        mag = dmag as f32;
-    }
-
-    *pt = Point::from_xy(x, y);
-
-    if orig_length.is_some() {
-        *orig_length = Some(mag);
-    }
-
-    true
-}
-
-impl core::ops::Neg for Point {
-    type Output = Point;
-
-    fn neg(self) -> Self::Output {
-        Point {
-            x: -self.x,
-            y: -self.y,
-        }
-    }
-}
-
-impl core::ops::Add for Point {
-    type Output = Point;
-
-    fn add(self, other: Point) -> Self::Output {
-        Point::from_xy(
-            self.x + other.x,
-            self.y + other.y,
-        )
-    }
-}
-
-impl core::ops::AddAssign for Point {
-    fn add_assign(&mut self, other: Point) {
-        self.x += other.x;
-        self.y += other.y;
-    }
-}
-
-impl core::ops::Sub for Point {
-    type Output = Point;
-
-    fn sub(self, other: Point) -> Self::Output {
-        Point::from_xy(
-            self.x - other.x,
-            self.y - other.y,
-        )
-    }
-}
-
-impl core::ops::SubAssign for Point {
-    fn sub_assign(&mut self, other: Point) {
-        self.x -= other.x;
-        self.y -= other.y;
-    }
-}
-
-impl core::ops::Mul for Point {
-    type Output = Point;
-
-    fn mul(self, other: Point) -> Self::Output {
-        Point::from_xy(
-            self.x * other.x,
-            self.y * other.y,
-        )
-    }
-}
-
-impl core::ops::MulAssign for Point {
-    fn mul_assign(&mut self, other: Point) {
-        self.x *= other.x;
-        self.y *= other.y;
-    }
-}
-
-
-/// An integer size.
-///
-/// # Guarantees
-///
-/// - Width and height are positive and non-zero.
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub struct IntSize {
-    width: LengthU32,
-    height: LengthU32,
-}
-
-impl IntSize {
-    /// Creates a new `IntSize` from width and height.
-    pub fn from_wh(width: u32, height: u32) -> Option<Self> {
-        Some(IntSize {
-            width: LengthU32::new(width)?,
-            height: LengthU32::new(height)?,
-        })
-    }
-
-    /// Returns width.
-    pub fn width(&self) -> u32 {
-        self.width.get()
-    }
-
-    /// Returns height.
-    pub fn height(&self) -> u32 {
-        self.height.get()
-    }
-
-    /// Converts the current size into a `IntRect` at a provided position.
-    pub fn to_int_rect(&self, x: i32, y: i32) -> IntRect {
-        IntRect::from_xywh(x, y, self.width.get(), self.height.get()).unwrap()
-    }
-
-    /// Converts the current size into a `IntRect` at a provided position.
-    pub(crate) fn to_screen_int_rect(&self, x: u32, y: u32) -> ScreenIntRect {
-        ScreenIntRect::from_xywh_safe(x, y, self.width, self.height)
-    }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn int_size_tests() {
-        assert_eq!(IntSize::from_wh(0, 0), None);
-        assert_eq!(IntSize::from_wh(1, 0), None);
-        assert_eq!(IntSize::from_wh(0, 1), None);
-
-        let size = IntSize::from_wh(3, 4).unwrap();
-        assert_eq!(size.to_int_rect(1, 2), IntRect::from_xywh(1, 2, 3, 4).unwrap());
-        assert_eq!(size.to_screen_int_rect(1, 2), ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap());
-    }
-}
-
+use crate::{LengthU32, IntSize, FiniteF32, SaturateRound, Point};
 
 /// An integer rectangle.
 ///
@@ -421,7 +86,7 @@ impl IntRect {
     }
 
     /// Returns rect's size.
-    pub(crate) fn size(&self) -> IntSize {
+    pub fn size(&self) -> IntSize {
         IntSize {
             width: self.width,
             height: self.height,
@@ -429,7 +94,7 @@ impl IntRect {
     }
 
     /// Checks that the rect is completely includes `other` Rect.
-    pub(crate) fn contains(&self, other: &Self) -> bool {
+    pub fn contains(&self, other: &Self) -> bool {
         self.x <= other.x &&
             self.y <= other.y &&
             self.right() >= other.right() &&
@@ -439,7 +104,7 @@ impl IntRect {
     /// Returns an intersection of two rectangles.
     ///
     /// Returns `None` otherwise.
-    pub(crate) fn intersect(&self, other: &Self) -> Option<Self> {
+    pub fn intersect(&self, other: &Self) -> Option<Self> {
         let left = self.x.max(other.x);
         let top = self.y.max(other.y);
 
@@ -453,7 +118,7 @@ impl IntRect {
     }
 
     /// Insets the rectangle.
-    pub(crate) fn inset(&self, dx: i32, dy: i32) -> Option<Self> {
+    pub fn inset(&self, dx: i32, dy: i32) -> Option<Self> {
         IntRect::from_ltrb(
             self.left() + dx,
             self.top() + dy,
@@ -463,7 +128,7 @@ impl IntRect {
     }
 
     /// Outsets the rectangle.
-    pub(crate) fn make_outset(&self, dx: i32, dy: i32) -> Option<Self> {
+    pub fn make_outset(&self, dx: i32, dy: i32) -> Option<Self> {
         IntRect::from_ltrb(
             self.left().saturating_sub(dx),
             self.top().saturating_sub(dy),
@@ -489,7 +154,7 @@ impl IntRect {
     ///
     /// - x >= 0
     /// - y >= 0
-    pub(crate) fn to_screen_int_rect(&self) -> Option<ScreenIntRect> {
+    pub fn to_screen_int_rect(&self) -> Option<ScreenIntRect> {
         let x = u32::try_from(self.x).ok()?;
         let y = u32::try_from(self.y).ok()?;
         Some(ScreenIntRect::from_xywh_safe(x, y, self.width, self.height))
@@ -802,7 +467,7 @@ impl Rect {
     /// Converts into an `IntRect` rounding outwards.
     ///
     /// Width and height are guarantee to be >= 1.
-    pub(crate) fn round_out(&self) -> Option<IntRect> {
+    pub fn round_out(&self) -> Option<IntRect> {
         IntRect::from_xywh(
             i32::saturate_floor(self.x()),
             i32::saturate_floor(self.y()),
@@ -814,7 +479,7 @@ impl Rect {
     /// Returns an intersection of two rectangles.
     ///
     /// Returns `None` otherwise.
-    pub(crate) fn intersect(&self, other: &Self) -> Option<Self> {
+    pub fn intersect(&self, other: &Self) -> Option<Self> {
         let left = self.x().max(other.x());
         let top = self.y().max(other.y());
 
@@ -827,7 +492,9 @@ impl Rect {
     /// Creates a Rect from Point array.
     ///
     /// Returns None if count is zero or if Point array contains an infinity or NaN.
-    pub(crate) fn from_points(points: &[Point]) -> Option<Self> {
+    pub fn from_points(points: &[Point]) -> Option<Self> {
+        use crate::f32x4_t::f32x4;
+
         if points.is_empty() {
             return None;
         }
@@ -837,13 +504,13 @@ impl Rect {
         let mut max;
         if points.len() & 1 != 0 {
             let pt = points[0];
-            min = f32x4::from([pt.x, pt.y, pt.x, pt.y]);
+            min = f32x4([pt.x, pt.y, pt.x, pt.y]);
             max = min;
             offset += 1;
         } else {
             let pt0 = points[0];
             let pt1 = points[1];
-            min = f32x4::from([pt0.x, pt0.y, pt1.x, pt1.y]);
+            min = f32x4([pt0.x, pt0.y, pt1.x, pt1.y]);
             max = min;
             offset += 2;
         }
@@ -852,7 +519,7 @@ impl Rect {
         while offset != points.len() {
             let pt0 = points[offset + 0];
             let pt1 = points[offset + 1];
-            let xy = f32x4::from([pt0.x, pt0.y, pt1.x, pt1.y]);
+            let xy = f32x4([pt0.x, pt0.y, pt1.x, pt1.y]);
 
             accum *= xy;
             min = min.min(xy);
@@ -861,8 +528,8 @@ impl Rect {
         }
 
         let all_finite = accum * f32x4::default() == f32x4::default();
-        let min: [f32; 4] = min.into();
-        let max: [f32; 4] = max.into();
+        let min: [f32; 4] = min.0;
+        let max: [f32; 4] = max.0;
         if all_finite {
             Rect::from_ltrb(
                 min[0].min(min[2]),
@@ -875,7 +542,8 @@ impl Rect {
         }
     }
 
-    pub(crate) fn inset(&mut self, dx: f32, dy: f32) -> Option<Self> {
+    /// Insets the rectangle by the specified offset.
+    pub fn inset(&mut self, dx: f32, dy: f32) -> Option<Self> {
         Rect::from_ltrb(
             self.left() + dx,
             self.top() + dy,
@@ -884,7 +552,8 @@ impl Rect {
         )
     }
 
-    pub(crate) fn outset(&mut self, dx: f32, dy: f32) -> Option<Self> {
+    /// Outsets the rectangle by the specified offset.
+    pub fn outset(&mut self, dx: f32, dy: f32) -> Option<Self> {
         self.inset(-dx, -dy)
     }
 }

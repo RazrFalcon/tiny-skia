@@ -7,13 +7,14 @@
 use core::convert::TryFrom;
 use core::num::NonZeroU16;
 
+use tiny_skia_geom::ScreenIntRect;
+
 use crate::{IntRect, LengthU32, Path, LineCap, Point, Rect};
 
 use crate::alpha_runs::{AlphaRun, AlphaRuns};
 use crate::blitter::Blitter;
 use crate::color::AlphaU8;
 use crate::fixed_point::{fdot6, fdot8, fdot16, FDot6, FDot8, FDot16};
-use crate::geom::ScreenIntRect;
 use crate::line_clipper;
 use crate::math::LENGTH_U32_ONE;
 

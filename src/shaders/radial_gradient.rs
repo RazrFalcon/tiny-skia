@@ -6,16 +6,17 @@
 
 use alloc::vec::Vec;
 
+use tiny_skia_geom::Scalar;
+
 use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 
 use crate::pipeline;
-use crate::scalar::Scalar;
 use crate::wide::u32x8;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::pipeline::RasterPipelineBuilder;
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use tiny_skia_geom::NoStdFloat;
 
 #[derive(Copy, Clone, Debug)]
 struct FocalData {
@@ -108,7 +109,7 @@ impl RadialGradient {
             }))
         } else {
             // From SkTwoPointConicalGradient::Create
-            let mut ts = Transform::from_poly_to_poly(
+            let mut ts = ts_from_poly_to_poly(
                 start, end,
                 Point::from_xy(0.0, 0.0), Point::from_xy(1.0, 0.0),
             )?;
@@ -173,4 +174,27 @@ impl RadialGradient {
             },
         )
     }
+}
+
+fn ts_from_poly_to_poly(
+    src1: Point,
+    src2: Point,
+    dst1: Point,
+    dst2: Point,
+) -> Option<Transform> {
+    let tmp = from_poly2(src1, src2);
+    let res = tmp.invert()?;
+    let tmp = from_poly2(dst1, dst2);
+    Some(tmp.pre_concat(res))
+}
+
+fn from_poly2(p0: Point, p1: Point) -> Transform {
+    Transform::from_row(
+        p1.y - p0.y,
+        p0.x - p1.x,
+        p1.x - p0.x,
+        p1.y - p0.y,
+        p0.x,
+        p0.y,
+    )
 }

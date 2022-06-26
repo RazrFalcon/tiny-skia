@@ -6,21 +6,20 @@
 
 use core::convert::TryInto;
 
+use tiny_skia_geom::{PathVerb, Scalar, SaturateCast, ScreenIntRect, f32x2};
+
 use crate::{Path, LineCap, Point, PathSegment, Rect, IntRect};
 
 use crate::blitter::Blitter;
 use crate::fixed_point::{fdot6, fdot16};
-use crate::floating_point::{FLOAT_PI, SaturateCast};
-use crate::geom::ScreenIntRect;
 use crate::line_clipper;
 use crate::math::LENGTH_U32_ONE;
-use crate::path::PathVerb;
 use crate::path_geometry;
-use crate::scalar::Scalar;
-use crate::wide::f32x2;
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use tiny_skia_geom::NoStdFloat;
+
+const FLOAT_PI: f32 = 3.14159265;
 
 pub type LineProc = fn(&[Point], Option<&ScreenIntRect>, &mut dyn Blitter) -> Option<()>;
 
@@ -450,7 +449,8 @@ fn hair_quad2(
     let dt = f32x2::splat(1.0 / lines as f32);
     for i in 1..lines {
         t = t + dt;
-        tmp[i] = Point::from_f32x2((coeff.a * t + coeff.b) * t + coeff.c);
+        let v = (coeff.a * t + coeff.b) * t + coeff.c;
+        tmp[i] = Point::from_xy(v.x(), v.y());
     }
 
     tmp[lines] = points[2];

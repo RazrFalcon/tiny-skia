@@ -11,23 +11,27 @@ license = "BSD-3-Clause"
 keywords = ["2d", "rendering", "skia"]
 categories = ["rendering"]
 
+[workspace]
+members = ["geom"]
+
 [dependencies]
 arrayref = "0.3.6"
 # do not update to 0.6, because it requires Rust >= 1.51
 arrayvec = { version = "0.5", default-features = false }
 bytemuck = "1.4"
 cfg-if = "1"
-libm = { version = "0.2.1", optional = true }
 png = { version = "0.17", optional = true }
 # do not update to 0.6, because it requires Rust >= 1.51
 safe_arch = { version = "0.5.2", features = ["bytemuck"], optional = true }
+tiny-skia-geom = { version = "0.6.6", path = "geom", default-features = false }
 
 [features]
 default = ["std", "simd", "png-format"]
 
-# Enables the use of the standard library. Deactivate this and activate the libm
+# Enables the use of the standard library. Deactivate this and activate the no-std-float
 # feature to compile for targets that don't have std.
-std = []
+std = ["tiny-skia-geom/std"]
+no-std-float = ["tiny-skia-geom/no-std-float"]
 
 # Enables x86 SIMD instructions from SSE up to AVX2.
 # Has no effect on non-x86 targets. Present mainly for testing.

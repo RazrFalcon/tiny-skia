@@ -6,16 +6,16 @@
 
 use arrayvec::ArrayVec;
 
+use tiny_skia_geom::{NormalizedF32Exclusive, SCALAR_MAX};
+
 use crate::{Path, Point, Rect};
 
-use crate::floating_point::NormalizedF32Exclusive;
 use crate::line_clipper;
-use crate::path::{PathEdge, PathEdgeIter};
+use crate::edge_builder::{PathEdge, PathEdgeIter, edge_iter};
 use crate::path_geometry;
-use crate::scalar::SCALAR_MAX;
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use tiny_skia_geom::NoStdFloat;
 
 // This is a fail-safe `arr[n..n+3].try_into().unwrap()` alternative.
 // Everything is checked at compile-time so there is no bound checking and panics.
@@ -320,7 +320,7 @@ pub struct EdgeClipperIter<'a> {
 impl<'a> EdgeClipperIter<'a> {
     pub fn new(path: &'a Path, clip: Rect, can_cull_to_the_right: bool) -> Self {
         EdgeClipperIter {
-            edge_iter: path.edge_iter(),
+            edge_iter: edge_iter(path),
             clip,
             can_cull_to_the_right,
         }

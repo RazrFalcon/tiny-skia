@@ -6,8 +6,8 @@
 
 use super::Scalar64;
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use tiny_skia_geom::NoStdFloat;
 
 pub fn push_valid_ts(s: &[f64], real_roots: usize, t: &mut [f64]) -> usize {
     let mut found_roots = 0;

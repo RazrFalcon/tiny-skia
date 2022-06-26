@@ -9,6 +9,8 @@ mod linear_gradient;
 mod radial_gradient;
 mod pattern;
 
+use tiny_skia_geom::{Scalar, NormalizedF32};
+
 pub use gradient::GradientStop;
 pub use linear_gradient::LinearGradient;
 pub use radial_gradient::RadialGradient;
@@ -16,9 +18,7 @@ pub use pattern::{Pattern, FilterQuality, PixmapPaint};
 
 use crate::{Color, Transform};
 
-use crate::floating_point::NormalizedF32;
 use crate::pipeline::RasterPipelineBuilder;
-use crate::scalar::Scalar;
 
 
 /// A shader spreading mode.

@@ -6,15 +6,14 @@
 
 use crate::*;
 
-use crate::geom::ScreenIntRect;
+use tiny_skia_geom::{ScreenIntRect, Scalar, PathStroker,  SCALAR_MAX};
+
 use crate::pipeline::RasterPipelineBlitter;
 use crate::pixmap::SubPixmapMut;
-use crate::scalar::Scalar;
 use crate::scan;
-use crate::stroker::PathStroker;
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use tiny_skia_geom::NoStdFloat;
 
 
 /// A path filling rule.
@@ -217,7 +216,7 @@ impl PixmapMut<'_> {
                 return None;
             }
 
-            if path.is_too_big_for_math() {
+            if is_too_big_for_math(path) {
                 return None;
             }
 
@@ -302,7 +301,7 @@ impl PixmapMut<'_> {
 
         let dash_path;
         let path = if let Some(ref dash) = stroke.dash {
-            dash_path = crate::dash::dash(path, dash, res_scale)?;
+            dash_path = path.dash(dash, res_scale)?;
             &dash_path
         } else {
             path
@@ -360,7 +359,7 @@ impl PixmapMut<'_> {
                 }
             }
         } else {
-            let path = PathStroker::new().stroke(path, stroke, res_scale)?;
+            let path = path.stroke(stroke, res_scale)?;
             self.fill_path(&path, paint, FillRule::Winding, transform, clip_mask)
         }
     }
@@ -460,6 +459,24 @@ fn treat_as_hairline(paint: &Paint, stroke: &Stroke, mut ts: Transform) -> Optio
     }
 
     None
+}
+
+/// Sometimes in the drawing pipeline, we have to perform math on path coordinates, even after
+/// the path is in device-coordinates. Tessellation and clipping are two examples. Usually this
+/// is pretty modest, but it can involve subtracting/adding coordinates, or multiplying by
+/// small constants (e.g. 2,3,4). To try to preflight issues where these optionations could turn
+/// finite path values into infinities (or NaNs), we allow the upper drawing code to reject
+/// the path if its bounds (in device coordinates) is too close to max float.
+fn is_too_big_for_math(path: &Path) -> bool {
+    // This value is just a guess. smaller is safer, but we don't want to reject largish paths
+    // that we don't have to.
+    const SCALE_DOWN_TO_ALLOW_FOR_SMALL_MULTIPLIES: f32 = 0.25;
+    const MAX: f32 = SCALAR_MAX * SCALE_DOWN_TO_ALLOW_FOR_SMALL_MULTIPLIES;
+
+    let b = path.bounds();
+
+    // use ! expression so we return true if bounds contains NaN
+    !(b.left() >= -MAX && b.top() >= -MAX && b.right() <= MAX && b.bottom() <= MAX)
 }
 
 /// Splits the target pixmap into a list of tiles.

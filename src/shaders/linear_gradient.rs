@@ -6,9 +6,10 @@
 
 use alloc::vec::Vec;
 
+use tiny_skia_geom::Scalar;
+
 use crate::{Point, Shader, GradientStop, SpreadMode, Transform, Color};
 
-use crate::scalar::Scalar;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::pipeline::RasterPipelineBuilder;
 
@@ -102,7 +103,7 @@ fn points_to_unit_ts(start: Point, end: Point) -> Option<Transform> {
 
     vec.scale(inv);
 
-    let mut ts = Transform::from_sin_cos_at(-vec.y, vec.x, start.x, start.y);
+    let mut ts = ts_from_sin_cos_at(-vec.y, vec.x, start.x, start.y);
     ts = ts.post_translate(-start.x, -start.y);
     ts = ts.post_scale(inv, inv);
     Some(ts)
@@ -158,4 +159,15 @@ fn average_gradient_color(points: &[GradientStop]) -> Color {
     }
 
     store_color(blend)
+}
+
+fn ts_from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Transform {
+    let cos_inv = 1.0 - cos;
+    Transform::from_row(
+        cos, sin, -sin, cos, sdot(sin, py, cos_inv, px), sdot(-sin, px, cos_inv, py)
+    )
+}
+
+fn sdot(a: f32, b: f32, c: f32, d: f32) -> f32 {
+    a * b + c * d
 }

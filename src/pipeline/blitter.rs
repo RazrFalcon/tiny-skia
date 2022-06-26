@@ -4,6 +4,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use tiny_skia_geom::ScreenIntRect;
+
 use crate::{Paint, BlendMode, LengthU32, PremultipliedColorU8, Shader, PixmapRef};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
@@ -11,7 +13,6 @@ use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
 use crate::clip::ClipMaskData;
 use crate::color::AlphaU8;
-use crate::geom::ScreenIntRect;
 use crate::math::LENGTH_U32_ONE;
 use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder};
 use crate::pixmap::SubPixmapMut;

@@ -26,9 +26,10 @@ And while `-C target-cpu=haswell` boosts our performance by around 25%,
 we are still 40-60% behind Skia built for Haswell.
 */
 
+use tiny_skia_geom::ScreenIntRect;
+
 use crate::PremultipliedColorU8;
 
-use crate::geom::ScreenIntRect;
 use crate::pixmap::SubPixmapMut;
 use crate::wide::{f32x8, u16x16, f32x16};
 

@@ -6,10 +6,14 @@
 
 use crate::floating_point::f32_as_2s_compliment;
 
-pub const SCALAR_MAX: f32           = 3.402823466e+38;
-pub const SCALAR_NEARLY_ZERO: f32   = 1.0 / (1 << 12) as f32;
-pub const SCALAR_ROOT_2_OVER_2: f32 = 0.707106781;
+#[allow(missing_docs)] pub const SCALAR_MAX: f32           = 3.402823466e+38;
+#[allow(missing_docs)] pub const SCALAR_NEARLY_ZERO: f32   = 1.0 / (1 << 12) as f32;
+#[allow(missing_docs)] pub const SCALAR_ROOT_2_OVER_2: f32 = 0.707106781;
 
+/// Float number extension methods.
+///
+/// Mainly for internal use. Do not rely on it!
+#[allow(missing_docs)]
 pub trait Scalar {
     fn half(self) -> Self;
     fn ave(self, other: Self) -> Self;
@@ -40,6 +44,7 @@ impl Scalar for f32 {
     }
 
     // Works just like SkTPin, returning `max` for NaN/inf
+    /// A non-panicking clamp.
     fn bound(self, min: Self, max: Self) -> Self {
         max.min(self).max(min)
     }
@@ -67,79 +72,79 @@ impl Scalar for f32 {
     }
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(all(not(feature = "std"), feature = "libm"))] {
-        pub trait FloatExt {
-            fn trunc(self) -> Self;
-            fn sqrt(self) -> Self;
-            fn abs(self) -> Self;
-            fn sin(self) -> Self;
-            fn cos(self) -> Self;
-            fn ceil(self) -> Self;
-            fn floor(self) -> Self;
-            fn powf(self, y: Self) -> Self;
-            fn acos(self) -> Self;
-        }
+#[allow(missing_docs)]
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+pub trait NoStdFloat {
+    fn trunc(self) -> Self;
+    fn sqrt(self) -> Self;
+    fn abs(self) -> Self;
+    fn sin(self) -> Self;
+    fn cos(self) -> Self;
+    fn ceil(self) -> Self;
+    fn floor(self) -> Self;
+    fn powf(self, y: Self) -> Self;
+    fn acos(self) -> Self;
+}
 
-        impl FloatExt for f32 {
-            fn trunc(self) -> Self {
-                libm::truncf(self)
-            }
-            fn sqrt(self) -> Self {
-                libm::sqrtf(self)
-            }
-            fn abs(self) -> Self {
-                libm::fabsf(self)
-            }
-            fn sin(self) -> Self {
-                libm::sinf(self)
-            }
-            fn cos(self) -> Self {
-                libm::cosf(self)
-            }
-            fn ceil(self) -> Self {
-                libm::ceilf(self)
-            }
-            fn floor(self) -> Self {
-                libm::floorf(self)
-            }
-            fn powf(self, y: Self) -> Self {
-                libm::powf(self, y)
-            }
-            fn acos(self) -> Self {
-                libm::acosf(self)
-            }
-        }
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+impl NoStdFloat for f32 {
+    fn trunc(self) -> Self {
+        libm::truncf(self)
+    }
+    fn sqrt(self) -> Self {
+        libm::sqrtf(self)
+    }
+    fn abs(self) -> Self {
+        libm::fabsf(self)
+    }
+    fn sin(self) -> Self {
+        libm::sinf(self)
+    }
+    fn cos(self) -> Self {
+        libm::cosf(self)
+    }
+    fn ceil(self) -> Self {
+        libm::ceilf(self)
+    }
+    fn floor(self) -> Self {
+        libm::floorf(self)
+    }
+    fn powf(self, y: Self) -> Self {
+        libm::powf(self, y)
+    }
+    fn acos(self) -> Self {
+        libm::acosf(self)
+    }
+}
 
-        impl FloatExt for f64 {
-            fn trunc(self) -> Self {
-                libm::trunc(self)
-            }
-            fn sqrt(self) -> Self {
-                libm::sqrt(self)
-            }
-            fn abs(self) -> Self {
-                libm::fabs(self)
-            }
-            fn sin(self) -> Self {
-                libm::sin(self)
-            }
-            fn cos(self) -> Self {
-                libm::cos(self)
-            }
-            fn ceil(self) -> Self {
-                libm::ceil(self)
-            }
-            fn floor(self) -> Self {
-                libm::floor(self)
-            }
-            fn powf(self, y: Self) -> Self {
-                libm::pow(self, y)
-            }
-            fn acos(self) -> Self {
-                libm::acos(self)
-            }
-        }
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+impl NoStdFloat for f64 {
+    fn trunc(self) -> Self {
+        libm::trunc(self)
+    }
+    fn sqrt(self) -> Self {
+        libm::sqrt(self)
+    }
+    fn abs(self) -> Self {
+        libm::fabs(self)
+    }
+    fn sin(self) -> Self {
+        libm::sin(self)
+    }
+    fn cos(self) -> Self {
+        libm::cos(self)
+    }
+    fn ceil(self) -> Self {
+        libm::ceil(self)
+    }
+    fn floor(self) -> Self {
+        libm::floor(self)
+    }
+    fn powf(self, y: Self) -> Self {
+        libm::pow(self, y)
+    }
+    fn acos(self) -> Self {
+        libm::acos(self)
     }
 }
 

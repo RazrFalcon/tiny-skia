@@ -9,11 +9,11 @@ pub mod path;
 pub mod hairline_aa;
 pub mod hairline;
 
+use tiny_skia_geom::ScreenIntRect;
 
 use crate::{IntRect, Rect};
 
 use crate::blitter::Blitter;
-use crate::geom::ScreenIntRect;
 
 
 pub fn fill_rect(

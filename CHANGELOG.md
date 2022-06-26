@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `tiny-skia-geom` dependency that can be used independently from `tiny-skia`.
+  It provides not only basic geometry primitives, but also provides Bezier path stroking and dashing.
+
+### Changed
+- All geometry primitives, including `Path`, have been moved into a separate crate.
+- When disabling the `std` feature, one have to enable `no-std-float` feature instead of `libm` now.
 
 ## [0.6.6] - 2022-06-23
 ### Fixed

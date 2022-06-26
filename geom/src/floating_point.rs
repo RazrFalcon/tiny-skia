@@ -6,22 +6,23 @@
 
 use crate::scalar::Scalar;
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use crate::NoStdFloat;
 
-pub const FLOAT_PI: f32 = 3.14159265;
+pub(crate) const FLOAT_PI: f32 = 3.14159265;
 
 const MAX_I32_FITS_IN_F32: f32 = 2147483520.0;
 const MIN_I32_FITS_IN_F32: f32 = -MAX_I32_FITS_IN_F32;
 
 // TODO: is there an std alternative?
-
+/// Custom float to integer conversion routines.
 pub trait SaturateCast<T>: Sized {
+    /// Return the closest integer for the given float.
     fn saturate_from(n: T) -> Self;
 }
 
 impl SaturateCast<f32> for i32 {
-    /// Return the closest int for the given float.
+    /// Return the closest integer for the given float.
     ///
     /// Returns MAX_I32_FITS_IN_F32 for NaN.
     fn saturate_from(mut x: f32) -> Self {
@@ -32,7 +33,7 @@ impl SaturateCast<f32> for i32 {
 }
 
 impl SaturateCast<f64> for i32 {
-    /// Return the closest int for the given double.
+    /// Return the closest integer for the given double.
     ///
     /// Returns i32::MAX for NaN.
     fn saturate_from(mut x: f64) -> Self {
@@ -42,7 +43,8 @@ impl SaturateCast<f64> for i32 {
     }
 }
 
-
+/// Custom float to integer rounding routines.
+#[allow(missing_docs)]
 pub trait SaturateRound<T>: SaturateCast<T> {
     fn saturate_floor(n: T) -> Self;
     fn saturate_ceil(n: T) -> Self;
@@ -67,7 +69,7 @@ impl SaturateRound<f32> for i32 {
 /// to each other or against positive float-bit-constants (like 0). This does
 /// not return the int equivalent of the float, just something cheaper for
 /// compares-only.
-pub fn f32_as_2s_compliment(x: f32) -> i32 {
+pub(crate) fn f32_as_2s_compliment(x: f32) -> i32 {
     sign_bit_to_2s_compliment(bytemuck::cast(x))
 }
 
@@ -112,7 +114,9 @@ macro_rules! impl_debug_display {
 pub struct FiniteF32(f32);
 
 impl FiniteF32 {
+    /// A predefined 0 value.
     pub const FINITE_ZERO: FiniteF32 = FiniteF32(0.0);
+    /// A predefined 1 value.
     pub const FINITE_ONE: FiniteF32 = FiniteF32(1.0);
 
     /// Creates a finite f32 number.
@@ -172,7 +176,7 @@ impl NormalizedF32 {
     /// A NormalizedF32 value initialized with one.
     pub const ONE: Self  = NormalizedF32(FiniteF32(1.0));
 
-    /// Creates a `NormalizedF32` if the given value is in a 0..1 range.
+    /// Creates a `NormalizedF32` if the given value is in a 0..=1 range.
     pub fn new(n: f32) -> Option<Self> {
         if n.is_finite() && n >= 0.0 && n <= 1.0 {
             Some(NormalizedF32(FiniteF32(n)))
@@ -181,11 +185,14 @@ impl NormalizedF32 {
         }
     }
 
+    /// Creates a `NormalizedF32` from `u8`.
+    ///
+    /// Where 0 is 0.0 and 255 is 1.0
     pub fn from_u8(n: u8) -> Self {
         NormalizedF32(FiniteF32(f32::from(n) / 255.0))
     }
 
-    /// Creates a `NormalizedValue` clamping the given value to a 0..1 range.
+    /// Creates a `NormalizedValue` clamping the given value to a 0..=1 range.
     ///
     /// Returns zero in case of NaN or infinity.
     pub fn new_bounded(n: f32) -> Self {
@@ -207,18 +214,19 @@ impl NormalizedF32 {
 impl_debug_display!(NormalizedF32);
 
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Default)]
+/// An immutable `f32` that is larger than 0 but less then 1.
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Default, Debug)]
 #[repr(transparent)]
 pub struct NormalizedF32Exclusive(FiniteF32);
 
 impl NormalizedF32Exclusive {
-    // Just a random, valid numbers to init the array.
-    // Will be overwritten anyway.
-    // Perfectly safe.
+    /// Just a random, valid number.
     pub const ANY: Self = NormalizedF32Exclusive(FiniteF32(0.5));
 
+    /// A predefined 0.5 value.
     pub const HALF: Self = NormalizedF32Exclusive(FiniteF32(0.5));
 
+    /// Creates a `NormalizedF32Exclusive`.
     pub fn new(n: f32) -> Option<Self> {
         if n > 0.0 && n < 1.0 {
             // `n` is guarantee to be finite after the bounds check.
@@ -228,6 +236,9 @@ impl NormalizedF32Exclusive {
         }
     }
 
+    /// Creates a `NormalizedF32Exclusive` clamping the given value.
+    ///
+    /// Returns zero in case of NaN or infinity.
     pub fn new_bounded(n: f32) -> Self {
         let n = n.bound(core::f32::EPSILON, 1.0 - core::f32::EPSILON);
         // `n` is guarantee to be finite after clamping.
@@ -235,10 +246,12 @@ impl NormalizedF32Exclusive {
         NormalizedF32Exclusive(FiniteF32(n))
     }
 
+    /// Returns the value as a primitive type.
     pub fn get(self) -> f32 {
         self.0.get()
     }
 
+    /// Returns the value as a `FiniteF32`.
     pub fn to_normalized(self) -> NormalizedF32 {
         // NormalizedF32 is (0,1), while NormalizedF32 is [0,1], so it will always fit.
         NormalizedF32(self.0)

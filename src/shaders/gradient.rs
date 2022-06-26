@@ -6,12 +6,12 @@
 
 use alloc::vec::Vec;
 
+use tiny_skia_geom::{NormalizedF32, Scalar};
+
 use crate::{Color, Transform, SpreadMode};
 
-use crate::floating_point::NormalizedF32;
 use crate::pipeline::{self, EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
 use crate::pipeline::RasterPipelineBuilder;
-use crate::scalar::Scalar;
 
 // The default SCALAR_NEARLY_ZERO threshold of .0024 is too big and causes regressions for svg
 // gradients defined in the wild.

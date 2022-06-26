@@ -10,15 +10,16 @@ use alloc::vec::Vec;
 
 use arrayref::array_ref;
 
-use crate::{Path, PathSegment, PathSegmentsIter, Point, PathBuilder};
+use crate::{Path, Point};
 
 use crate::floating_point::{NormalizedF32, NonZeroPositiveF32, FiniteF32, NormalizedF32Exclusive};
-use crate::path::PathVerb;
+use crate::path::{PathVerb, PathSegment, PathSegmentsIter};
+use crate::path_builder::PathBuilder;
 use crate::path_geometry;
 use crate::scalar::Scalar;
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use crate::NoStdFloat;
 
 /// A stroke dashing properties.
 ///
@@ -107,7 +108,7 @@ mod tests {
 
         let stroke_dash = StrokeDash::new(vec![6.0, 4.5], 0.0).unwrap();
 
-        assert!(dash(&path, &stroke_dash, 1.0).is_some());
+        assert!(path.dash(&stroke_dash, 1.0).is_some());
     }
 }
 
@@ -155,7 +156,17 @@ fn find_first_interval(dash_array: &[f32], mut dash_offset: f32) -> (f32, usize)
     (dash_array[0], 0)
 }
 
-pub fn dash(src: &Path, dash: &StrokeDash, res_scale: f32) -> Option<Path> {
+impl Path {
+    /// Converts the current path into a dashed one.
+    ///
+    /// `resolution_scale` can be obtained via
+    /// [`compute_resolution_scale`](crate::PathStroker::compute_resolution_scale).
+    pub fn dash(&self, dash: &StrokeDash, resolution_scale: f32) -> Option<Path> {
+        dash_impl(self, dash, resolution_scale)
+    }
+}
+
+fn dash_impl(src: &Path, dash: &StrokeDash, res_scale: f32) -> Option<Path> {
     // We do not support the `cull_path` branch here.
     // Skia has a lot of code for cases when a path contains only a single zero-length line
     // or when a path is a rect. Not sure why.

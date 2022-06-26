@@ -6,15 +6,17 @@
 
 // Based on SkStroke.cpp
 
-use crate::{Path, Point, PathBuilder, Transform, PathSegment, PathSegmentsIter, StrokeDash};
+use crate::{Path, Point, Transform};
 
 use crate::floating_point::{NormalizedF32, NonZeroPositiveF32, NormalizedF32Exclusive};
-use crate::path_builder::PathDirection;
+use crate::path_builder::{PathBuilder, PathDirection};
+use crate::path::{PathSegment, PathSegmentsIter};
 use crate::path_geometry;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
+use crate::dash::StrokeDash;
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use crate::NoStdFloat;
 
 struct SwappableBuilders<'a> {
     inner: &'a mut PathBuilder,
@@ -184,6 +186,24 @@ enum IntersectRayType {
     ResultType,
 }
 
+impl Path {
+    /// Returns a stoked path.
+    ///
+    /// `resolution_scale` can be obtained via
+    /// [`compute_resolution_scale`](PathStroker::compute_resolution_scale).
+    ///
+    /// If you plan stroking multiple paths, you can try using [`PathStroker`]
+    /// which will preserve temporary allocations required during stroking.
+    /// This might improve performance a bit.
+    pub fn stroke(
+        &self,
+        stroke: &Stroke,
+        resolution_scale: f32,
+    ) -> Option<Path> {
+        PathStroker::new().stroke(self, stroke, resolution_scale)
+    }
+}
+
 /// A path stroker.
 #[allow(missing_debug_implementations)]
 #[derive(Clone)]
@@ -292,14 +312,17 @@ impl PathStroker {
     /// Stokes the path.
     ///
     /// Can be called multiple times to reuse allocated buffers.
+    ///
+    /// `resolution_scale` can be obtained via
+    /// [`compute_resolution_scale`](Self::compute_resolution_scale).
     pub fn stroke(
         &mut self,
         path: &Path,
         stroke: &Stroke,
-        res_scale: f32,
+        resolution_scale: f32,
     ) -> Option<Path> {
         let width = NonZeroPositiveF32::new(stroke.width)?;
-        self.stroke_inner(path, width, stroke.miter_limit, stroke.line_cap, stroke.line_join, res_scale)
+        self.stroke_inner(path, width, stroke.miter_limit, stroke.line_cap, stroke.line_join, resolution_scale)
     }
 
     fn stroke_inner(

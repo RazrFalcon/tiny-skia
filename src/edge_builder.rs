@@ -6,12 +6,12 @@
 
 use alloc::vec::Vec;
 
+use tiny_skia_geom::{ScreenIntRect, PathVerb};
+
 use crate::{Point, Path};
 
 use crate::edge::{Edge, LineEdge, QuadraticEdge, CubicEdge};
 use crate::edge_clipper::EdgeClipperIter;
-use crate::geom::ScreenIntRect;
-use crate::path::PathEdge;
 use crate::path_geometry;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -129,7 +129,7 @@ impl BasicEdgeBuilder {
                 }
             }
         } else {
-            for edge in path.edge_iter() {
+            for edge in edge_iter(path) {
                 match edge {
                     PathEdge::LineTo(p0, p1) => {
                         self.push_line(&[p0, p1]);
@@ -234,4 +234,113 @@ fn combine_vertical(edge: &LineEdge, last: &mut LineEdge) -> Combine {
     }
 
     Combine::No
+}
+
+pub fn edge_iter(path: &Path) -> PathEdgeIter {
+    PathEdgeIter {
+        path,
+        verb_index: 0,
+        points_index: 0,
+        move_to: Point::zero(),
+        needs_close_line: false,
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum PathEdge {
+    LineTo(Point, Point),
+    QuadTo(Point, Point, Point),
+    CubicTo(Point, Point, Point, Point),
+}
+
+/// Lightweight variant of PathIter that only returns segments (e.g. lines/quads).
+///
+/// Does not return Move or Close. Always "auto-closes" each contour.
+pub struct PathEdgeIter<'a> {
+    path: &'a Path,
+    verb_index: usize,
+    points_index: usize,
+    move_to: Point,
+    needs_close_line: bool,
+}
+
+impl<'a, 'b> PathEdgeIter<'a> {
+    fn close_line(&mut self) -> Option<PathEdge> {
+        self.needs_close_line = false;
+
+        let edge = PathEdge::LineTo(self.path.points()[self.points_index - 1], self.move_to);
+        Some(edge)
+    }
+}
+
+impl<'a> Iterator for PathEdgeIter<'a> {
+    type Item = PathEdge;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.verb_index < self.path.verbs().len() {
+            let verb = self.path.verbs()[self.verb_index];
+            self.verb_index += 1;
+
+            match verb {
+                PathVerb::Move => {
+                    if self.needs_close_line {
+                        let res = self.close_line();
+                        self.move_to = self.path.points()[self.points_index];
+                        self.points_index += 1;
+                        return res;
+                    }
+
+                    self.move_to = self.path.points()[self.points_index];
+                    self.points_index += 1;
+                    self.next()
+                }
+                PathVerb::Close => {
+                    if self.needs_close_line {
+                        return self.close_line();
+                    }
+
+                    self.next()
+                }
+                _ => {
+                    // Actual edge.
+                    self.needs_close_line = true;
+
+                    let edge;
+                    match verb {
+                        PathVerb::Line => {
+                            edge = PathEdge::LineTo(
+                                self.path.points()[self.points_index - 1],
+                                self.path.points()[self.points_index + 0],
+                            );
+                            self.points_index += 1;
+                        }
+                        PathVerb::Quad => {
+                            edge = PathEdge::QuadTo(
+                                self.path.points()[self.points_index - 1],
+                                self.path.points()[self.points_index + 0],
+                                self.path.points()[self.points_index + 1],
+                            );
+                            self.points_index += 2;
+                        }
+                        PathVerb::Cubic => {
+                            edge = PathEdge::CubicTo(
+                                self.path.points()[self.points_index - 1],
+                                self.path.points()[self.points_index + 0],
+                                self.path.points()[self.points_index + 1],
+                                self.path.points()[self.points_index + 2],
+                            );
+                            self.points_index += 3;
+                        }
+                        _ => unreachable!(),
+                    };
+
+                    Some(edge)
+                }
+            }
+        } else if self.needs_close_line {
+            self.close_line()
+        } else {
+            None
+        }
+    }
 }

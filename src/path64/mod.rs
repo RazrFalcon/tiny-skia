@@ -4,10 +4,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::scalar::{SCALAR_MAX, Scalar};
+use tiny_skia_geom::{SCALAR_MAX, Scalar};
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use tiny_skia_geom::NoStdFloat;
 
 // Must be first, because of macro scope rules.
 #[macro_use] pub mod point64;

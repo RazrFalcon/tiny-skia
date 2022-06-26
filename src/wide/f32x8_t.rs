@@ -9,8 +9,8 @@ use bytemuck::cast;
 
 use crate::wide::{u32x8, i32x8};
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use tiny_skia_geom::NoStdFloat;
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "simd", target_feature = "avx"))] {

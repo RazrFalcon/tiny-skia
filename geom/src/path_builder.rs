@@ -17,7 +17,7 @@ use crate::scalar::{Scalar, SCALAR_ROOT_2_OVER_2};
 
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum PathDirection {
+pub(crate) enum PathDirection {
     /// Clockwise direction for adding closed contours.
     CW,
     /// Counter-clockwise direction for adding closed contours.

@@ -8,12 +8,14 @@ use crate::Point;
 
 use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use crate::NoStdFloat;
 
 /// An affine transformation matrix.
 ///
-/// Stores scale, skew and transform coordinates and a type of a transform.
+/// Unlike other types, doesn't guarantee to be valid. This is Skia quirk.
+/// Meaning Transform(0, 0, 0, 0, 0, 0) is ok, while it's technically not.
+/// Non-finite values are also not an error.
 #[allow(missing_docs)]
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Transform {
@@ -85,26 +87,8 @@ impl Transform {
         ts
     }
 
-    pub(crate) fn from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Self {
-        let cos_inv = 1.0 - cos;
-        Transform::from_row(
-            cos, sin, -sin, cos, sdot(sin, py, cos_inv, px), sdot(-sin, px, cos_inv, py)
-        )
-    }
-
-    pub(crate) fn from_poly_to_poly(
-        src1: Point,
-        src2: Point,
-        dst1: Point,
-        dst2: Point,
-    ) -> Option<Self> {
-        let tmp = from_poly2(src1, src2);
-        let res = tmp.invert()?;
-        let tmp = from_poly2(dst1, dst2);
-        Some(concat(tmp, res))
-    }
-
-    pub(crate) fn is_finite(&self) -> bool {
+    /// Checks that transform is finite.
+    pub fn is_finite(&self) -> bool {
         self.sx.is_finite() &&
         self.ky.is_finite() &&
         self.kx.is_finite() &&
@@ -240,7 +224,7 @@ impl Transform {
     }
 
     /// Returns an inverted transform.
-    pub(crate) fn invert(&self) -> Option<Self> {
+    pub fn invert(&self) -> Option<Self> {
         // Allow the trivial case to be inlined.
         if self.is_identity() {
             return Some(*self);
@@ -248,17 +232,6 @@ impl Transform {
 
         invert(self)
     }
-}
-
-fn from_poly2(p0: Point, p1: Point) -> Transform {
-    Transform::from_row(
-        p1.y - p0.y,
-        p0.x - p1.x,
-        p1.x - p0.x,
-        p1.y - p0.y,
-        p0.x,
-        p0.y,
-    )
 }
 
 fn invert(ts: &Transform) -> Option<Transform> {
@@ -328,10 +301,6 @@ fn dcross(a: f64, b: f64, c: f64, d: f64) -> f64 {
 
 fn dcross_dscale(a: f32, b: f32, c: f32, d: f32, scale: f64) -> f32 {
     (dcross(a as f64, b as f64, c as f64, d as f64) * scale) as f32
-}
-
-fn sdot(a: f32, b: f32, c: f32, d: f32) -> f32 {
-    a * b + c * d
 }
 
 fn concat(a: Transform, b: Transform) -> Transform {

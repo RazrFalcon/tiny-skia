@@ -6,16 +6,17 @@
 
 use core::convert::TryFrom;
 
+use tiny_skia_geom::ScreenIntRect;
+
 use crate::{Path, IntRect, FillRule, LengthU32, Rect};
 
 use crate::alpha_runs::AlphaRuns;
 use crate::blitter::Blitter;
 use crate::color::AlphaU8;
-use crate::geom::ScreenIntRect;
 use crate::math::left_shift;
 
-#[cfg(all(not(feature = "std"), feature = "libm"))]
-use crate::scalar::FloatExt;
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use tiny_skia_geom::NoStdFloat;
 
 /// controls how much we super-sample (when we use that scan conversion)
 const SUPERSAMPLE_SHIFT: u32 = 2;
@@ -33,10 +34,10 @@ pub fn fill_path(
     // Unlike `path.bounds.to_rect()?.round_out()`,
     // this method rounds out first and then converts into a Rect.
     let ir = Rect::from_ltrb(
-        path.bounds.left().floor(),
-        path.bounds.top().floor(),
-        path.bounds.right().ceil(),
-        path.bounds.bottom().ceil(),
+        path.bounds().left().floor(),
+        path.bounds().top().floor(),
+        path.bounds().right().ceil(),
+        path.bounds().bottom().ceil(),
     )?.round_out()?;
 
     // If the intersection of the path bounds and the clip bounds

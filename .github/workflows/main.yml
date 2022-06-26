@@ -24,7 +24,7 @@ jobs:
         override: true
 
     - name: Build with minimal features (no_std)
-      run: cargo build --verbose --no-default-features --features libm
+      run: cargo build --verbose --no-default-features --features no-std-float
 
     - name: Run tests without SIMD
       run: cargo test --verbose --no-default-features --features png-format
@@ -68,7 +68,7 @@ jobs:
         echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
 
     - name: Build with minimal features (no_std)
-      run: cargo build --target wasm32-wasi --verbose --no-default-features --features libm
+      run: cargo build --target wasm32-wasi --verbose --no-default-features --features no-std-float
 
     - name: Run tests without SIMD
       run: cargo test --target wasm32-wasi --verbose --no-default-features --features png-format
