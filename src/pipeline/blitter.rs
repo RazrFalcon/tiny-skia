@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use tiny_skia_geom::ScreenIntRect;
+use tiny_skia_path::ScreenIntRect;
 
 use crate::{Paint, BlendMode, LengthU32, PremultipliedColorU8, Shader, PixmapRef};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};

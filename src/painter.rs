@@ -6,14 +6,14 @@
 
 use crate::*;
 
-use tiny_skia_geom::{ScreenIntRect, Scalar, PathStroker,  SCALAR_MAX};
+use tiny_skia_path::{ScreenIntRect, Scalar, PathStroker,  SCALAR_MAX};
 
 use crate::pipeline::RasterPipelineBlitter;
 use crate::pixmap::SubPixmapMut;
 use crate::scan;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
 
 /// A path filling rule.

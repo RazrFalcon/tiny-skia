@@ -6,7 +6,7 @@
 
 use alloc::vec::Vec;
 
-use tiny_skia_geom::Scalar;
+use tiny_skia_path::Scalar;
 
 use crate::{Point, Shader, GradientStop, SpreadMode, Transform, Color};
 

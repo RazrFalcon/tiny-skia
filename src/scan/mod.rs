@@ -9,7 +9,7 @@ pub mod path;
 pub mod hairline_aa;
 pub mod hairline;
 
-use tiny_skia_geom::ScreenIntRect;
+use tiny_skia_path::ScreenIntRect;
 
 use crate::{IntRect, Rect};
 

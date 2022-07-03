@@ -6,7 +6,7 @@
 
 use core::convert::TryFrom;
 
-use tiny_skia_geom::ScreenIntRect;
+use tiny_skia_path::ScreenIntRect;
 
 use crate::{Path, IntRect, FillRule, LengthU32, Rect};
 
@@ -16,7 +16,7 @@ use crate::color::AlphaU8;
 use crate::math::left_shift;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
 /// controls how much we super-sample (when we use that scan conversion)
 const SUPERSAMPLE_SHIFT: u32 = 2;

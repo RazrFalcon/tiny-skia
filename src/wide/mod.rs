@@ -51,7 +51,7 @@ mod u32x8_t;
 mod f32x16_t;
 mod u16x16_t;
 
-pub use tiny_skia_geom::f32x2;
+pub use tiny_skia_path::f32x2;
 pub use f32x4_t::f32x4;
 pub use f32x8_t::f32x8;
 pub use i32x8_t::i32x8;

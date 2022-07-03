@@ -10,7 +10,7 @@ use bytemuck::cast;
 use crate::wide::{u32x8, i32x8};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "simd", target_feature = "avx"))] {

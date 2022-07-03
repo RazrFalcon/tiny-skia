@@ -64,9 +64,9 @@ pub use pixmap::{Pixmap, PixmapRef, PixmapMut, BYTES_PER_PIXEL};
 pub use shaders::{GradientStop, SpreadMode, FilterQuality, PixmapPaint};
 pub use shaders::{Shader, LinearGradient, RadialGradient, Pattern};
 
-pub use tiny_skia_geom::{IntRect, Rect, Point, Transform};
-pub use tiny_skia_geom::{Path, PathSegment, PathSegmentsIter, PathBuilder};
-pub use tiny_skia_geom::{LineCap, LineJoin, Stroke, StrokeDash};
+pub use tiny_skia_path::{IntRect, Rect, Point, Transform};
+pub use tiny_skia_path::{Path, PathSegment, PathSegmentsIter, PathBuilder};
+pub use tiny_skia_path::{LineCap, LineJoin, Stroke, StrokeDash};
 
 /// An integer length that is guarantee to be > 0
 type LengthU32 = core::num::NonZeroU32;

@@ -7,7 +7,7 @@
 use core::convert::TryFrom;
 use core::num::NonZeroU16;
 
-use tiny_skia_geom::ScreenIntRect;
+use tiny_skia_path::ScreenIntRect;
 
 use crate::{IntRect, LengthU32, Path, LineCap, Point, Rect};
 

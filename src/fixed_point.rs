@@ -7,7 +7,7 @@
 // Skia uses fixed points pretty chaotically, therefore we cannot use
 // strongly typed wrappers. Which is unfortunate.
 
-use tiny_skia_geom::SaturateCast;
+use tiny_skia_path::SaturateCast;
 
 use crate::math::{left_shift, left_shift64, bound};
 

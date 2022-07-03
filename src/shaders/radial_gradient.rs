@@ -6,7 +6,7 @@
 
 use alloc::vec::Vec;
 
-use tiny_skia_geom::Scalar;
+use tiny_skia_path::Scalar;
 
 use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
 
@@ -16,7 +16,7 @@ use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::pipeline::RasterPipelineBuilder;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
 #[derive(Copy, Clone, Debug)]
 struct FocalData {

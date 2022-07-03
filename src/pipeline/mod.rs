@@ -48,7 +48,7 @@ use alloc::vec::Vec;
 
 use arrayvec::ArrayVec;
 
-use tiny_skia_geom::{NormalizedF32, ScreenIntRect};
+use tiny_skia_path::{NormalizedF32, ScreenIntRect};
 
 use crate::{LengthU32, Color, SpreadMode, PremultipliedColor, PremultipliedColorU8};
 use crate::{Transform, PixmapRef};

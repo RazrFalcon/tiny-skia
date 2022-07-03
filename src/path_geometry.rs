@@ -4,12 +4,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use tiny_skia_geom::{Point, NormalizedF32Exclusive, NormalizedF32};
+use tiny_skia_path::{Point, NormalizedF32Exclusive, NormalizedF32};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
-pub use tiny_skia_geom::path_geometry::{
+pub use tiny_skia_path::path_geometry::{
     QuadCoeff,
     CubicCoeff,
     chop_quad_at,
@@ -19,7 +19,7 @@ pub use tiny_skia_geom::path_geometry::{
     find_cubic_max_curvature,
 };
 
-use tiny_skia_geom::path_geometry::valid_unit_divide;
+use tiny_skia_path::path_geometry::valid_unit_divide;
 
 // TODO: return custom type
 /// Returns 0 for 1 quad, and 1 for two quads, either way the answer is stored in dst[].

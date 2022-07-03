@@ -6,7 +6,7 @@
 
 use arrayvec::ArrayVec;
 
-use tiny_skia_geom::{NormalizedF32Exclusive, SCALAR_MAX};
+use tiny_skia_path::{NormalizedF32Exclusive, SCALAR_MAX};
 
 use crate::{Path, Point, Rect};
 
@@ -15,7 +15,7 @@ use crate::edge_builder::{PathEdge, PathEdgeIter, edge_iter};
 use crate::path_geometry;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
 // This is a fail-safe `arr[n..n+3].try_into().unwrap()` alternative.
 // Everything is checked at compile-time so there is no bound checking and panics.

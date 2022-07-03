@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use tiny_skia_geom::{NormalizedF32, Scalar};
+use tiny_skia_path::{NormalizedF32, Scalar};
 
 /// 8-bit type for an alpha value. 255 is 100% opaque, zero is 100% transparent.
 pub type AlphaU8 = u8;

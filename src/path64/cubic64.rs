@@ -9,7 +9,7 @@ use super::point64::{Point64, SearchAxis};
 use super::quad64;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
 pub const POINT_COUNT: usize = 4;
 const PI: f64 = 3.141592653589793;

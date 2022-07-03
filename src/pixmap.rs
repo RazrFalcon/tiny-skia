@@ -10,7 +10,7 @@ use alloc::vec::Vec;
 use core::convert::TryFrom;
 use core::num::NonZeroUsize;
 
-use tiny_skia_geom::{IntSize, ScreenIntRect};
+use tiny_skia_path::{IntSize, ScreenIntRect};
 
 use crate::{Color, IntRect};
 

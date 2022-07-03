@@ -6,7 +6,7 @@
 
 use crate::{Point, Rect};
 
-use tiny_skia_geom::Scalar;
+use tiny_skia_path::Scalar;
 
 pub const MAX_POINTS: usize = 4;
 

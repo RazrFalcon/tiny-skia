@@ -5,7 +5,7 @@
 
 use alloc::vec::Vec;
 
-use tiny_skia_geom::ScreenIntRect;
+use tiny_skia_path::ScreenIntRect;
 
 use crate::{Path, LengthU32, FillRule};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};

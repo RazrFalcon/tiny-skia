@@ -6,7 +6,7 @@
 
 use core::convert::TryFrom;
 
-use tiny_skia_geom::{ScreenIntRect, SaturateCast};
+use tiny_skia_path::{ScreenIntRect, SaturateCast};
 
 use crate::{Path, IntRect, FillRule, LengthU32, Rect};
 
@@ -16,7 +16,7 @@ use crate::edge_builder::{BasicEdgeBuilder, ShiftedIntRect};
 use crate::fixed_point::{fdot6, fdot16, FDot16};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
 pub fn fill_path(
     path: &Path,

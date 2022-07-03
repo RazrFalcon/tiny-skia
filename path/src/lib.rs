@@ -4,13 +4,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-//! A collection of geometry primitives used by
-//! [tiny-skia](https://github.com/RazrFalcon/tiny-skia).
+//! A [tiny-skia](https://github.com/RazrFalcon/tiny-skia) Bezier path implementation.
 //!
-//! Almost all types are immutable an validated on creation.
+//! Provides a memory-efficient Bezier path container, path builder, path stroker and path dasher.
 //!
-//! Unlike other crates that provide a Bezier path container, this one supports stroking and dashing,
-//! which takes most of the code.
+//! Also provides some basic geometry types, but they will be moved to an external crate eventually.
 //!
 //! Note that all types use single precision floats (`f32`), just like [Skia](https://skia.org/).
 

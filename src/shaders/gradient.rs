@@ -6,7 +6,7 @@
 
 use alloc::vec::Vec;
 
-use tiny_skia_geom::{NormalizedF32, Scalar};
+use tiny_skia_path::{NormalizedF32, Scalar};
 
 use crate::{Color, Transform, SpreadMode};
 

@@ -9,7 +9,7 @@ mod linear_gradient;
 mod radial_gradient;
 mod pattern;
 
-use tiny_skia_geom::{Scalar, NormalizedF32};
+use tiny_skia_path::{Scalar, NormalizedF32};
 
 pub use gradient::GradientStop;
 pub use linear_gradient::LinearGradient;

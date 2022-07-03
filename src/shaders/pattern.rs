@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use tiny_skia_geom::NormalizedF32;
+use tiny_skia_path::NormalizedF32;
 
 use crate::{Shader, Transform, PixmapRef, SpreadMode, BlendMode};
 
@@ -12,7 +12,7 @@ use crate::pipeline;
 use crate::pipeline::RasterPipelineBuilder;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
 /// Controls how much filtering to be done when transforming images.
 #[derive(Copy, Clone, PartialEq, Debug)]

@@ -6,7 +6,7 @@
 
 use alloc::vec::Vec;
 
-use tiny_skia_geom::{ScreenIntRect, PathVerb};
+use tiny_skia_path::{ScreenIntRect, PathVerb};
 
 use crate::{Point, Path};
 

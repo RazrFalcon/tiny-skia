@@ -6,7 +6,7 @@
 
 use core::convert::TryInto;
 
-use tiny_skia_geom::{PathVerb, Scalar, SaturateCast, ScreenIntRect, f32x2};
+use tiny_skia_path::{PathVerb, Scalar, SaturateCast, ScreenIntRect, f32x2};
 
 use crate::{Path, LineCap, Point, PathSegment, Rect, IntRect};
 
@@ -17,7 +17,7 @@ use crate::math::LENGTH_U32_ONE;
 use crate::path_geometry;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
-use tiny_skia_geom::NoStdFloat;
+use tiny_skia_path::NoStdFloat;
 
 const FLOAT_PI: f32 = 3.14159265;
 
