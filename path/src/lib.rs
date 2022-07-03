@@ -18,17 +18,15 @@
 #![warn(missing_debug_implementations)]
 
 #![allow(clippy::approx_constant)]
-#![allow(clippy::clone_on_copy)]
 #![allow(clippy::collapsible_if)]
-#![allow(clippy::comparison_chain)]
 #![allow(clippy::eq_op)]
 #![allow(clippy::excessive_precision)]
-#![allow(clippy::float_cmp)]
 #![allow(clippy::identity_op)]
-#![allow(clippy::many_single_char_names)]
-#![allow(clippy::needless_range_loop)]
+#![allow(clippy::manual_range_contains)]
 #![allow(clippy::neg_cmp_op_on_partial_ord)]
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::wrong_self_convention)]
 
 #[cfg(not(any(feature = "std", feature = "no-std-float")))]
 compile_error!("You have to activate either the `std` or the `no-std-float` feature.");

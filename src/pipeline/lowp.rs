@@ -135,7 +135,7 @@ pub fn fn_ptr(f: StageFn) -> *const () {
 }
 
 pub fn fn_ptr_eq(f1: StageFn, f2: StageFn) -> bool {
-    f1 as *const () == f2 as *const ()
+    std::ptr::eq(f1 as *const (), f2 as *const ())
 }
 
 #[inline(never)]

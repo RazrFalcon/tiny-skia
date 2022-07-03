@@ -96,7 +96,7 @@ pub fn chop_cubic_at_x_extrema(src: &[Point; 4], dst: &mut [Point; 10]) -> usize
     let mut t_values = new_t_values();
     let t_values = find_cubic_extrema(src[0].x, src[1].x, src[2].x, src[3].x, &mut t_values);
 
-    chop_cubic_at(src, &t_values, dst);
+    chop_cubic_at(src, t_values, dst);
     if !t_values.is_empty() {
         // we do some cleanup to ensure our X extrema are flat
         dst[2].x = dst[3].x;
@@ -124,7 +124,7 @@ pub fn chop_cubic_at_y_extrema(src: &[Point; 4], dst: &mut [Point; 10]) -> usize
     let mut t_values = new_t_values();
     let t_values = find_cubic_extrema(src[0].y, src[1].y, src[2].y, src[3].y, &mut t_values);
 
-    chop_cubic_at(src, &t_values, dst);
+    chop_cubic_at(src, t_values, dst);
     if !t_values.is_empty() {
         // we do some cleanup to ensure our Y extrema are flat
         dst[2].y = dst[3].y;

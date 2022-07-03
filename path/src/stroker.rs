@@ -740,7 +740,7 @@ impl PathStroker {
                 //
                 // Unwrap never fails, because we already checked that `t` is not 0/1,
                 let t = NormalizedF32Exclusive::new(t.get()).unwrap();
-                path_geometry::chop_cubic_at2(&cubic, t, &mut chopped);
+                path_geometry::chop_cubic_at2(cubic, t, &mut chopped);
                 dxy = chopped[3] - chopped[2];
                 if dxy.x == 0.0 && dxy.y == 0.0 {
                     dxy = chopped[3] - chopped[1];
@@ -1145,7 +1145,7 @@ impl PathStroker {
 
         // measure the curve ray distance to the quad-stroke
         let mut roots = path_geometry::new_t_values();
-        let roots = intersect_quad_ray(&ray, stroke, &mut roots);
+        let roots = intersect_quad_ray(ray, stroke, &mut roots);
         if roots.len() != 1 {
             return ResultType::Split;
         }
@@ -1552,7 +1552,7 @@ fn set_normal_unit_normal2(
 }
 
 fn fn_ptr_eq(f1: CapProc, f2: CapProc) -> bool {
-    f1 as *const () == f2 as *const ()
+    std::ptr::eq(f1 as *const (), f2 as *const ())
 }
 
 #[derive(Default, Debug)]

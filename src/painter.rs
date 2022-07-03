@@ -257,9 +257,9 @@ impl PixmapMut<'_> {
                 let mut subpix = self.as_subpixmap();
                 let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut subpix)?;
                 if paint.anti_alias {
-                    scan::path_aa::fill_path(&path, fill_rule, &clip_rect, &mut blitter)
+                    scan::path_aa::fill_path(path, fill_rule, &clip_rect, &mut blitter)
                 } else {
-                    scan::path::fill_path(&path, fill_rule, &clip_rect, &mut blitter)
+                    scan::path::fill_path(path, fill_rule, &clip_rect, &mut blitter)
                 }
             }
         } else {
@@ -307,7 +307,7 @@ impl PixmapMut<'_> {
             path
         };
 
-        if let Some(coverage) = treat_as_hairline(&paint, stroke, transform) {
+        if let Some(coverage) = treat_as_hairline(paint, stroke, transform) {
             let mut paint = paint.clone();
             if coverage == 1.0 {
                 // No changes to the `paint`.
@@ -355,7 +355,7 @@ impl PixmapMut<'_> {
                     let path = path.clone().transform(transform)?; // TODO: avoid clone
                     Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, subpix)
                 } else {
-                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, subpix)
+                    Self::stroke_hairline(path, &paint, stroke.line_cap, clip_mask, subpix)
                 }
             }
         } else {

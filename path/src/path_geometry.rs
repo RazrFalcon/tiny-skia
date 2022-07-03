@@ -607,8 +607,8 @@ impl Conic {
         if points.iter().take(pt_count).any(|n| !n.is_finite()) {
             // if we generated a non-finite, pin ourselves to the middle of the hull,
             // as our first and last are already on the first/last pts of the hull.
-            for i in 1..pt_count-1 {
-                points[i] = self.points[1];
+            for p in points.iter_mut().take(pt_count-1).skip(1) {
+                *p = self.points[1];
             }
         }
 

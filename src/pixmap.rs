@@ -486,7 +486,7 @@ impl<'a> PixmapMut<'a> {
     /// Returns a container that references Pixmap's data.
     pub fn as_ref(&self) -> PixmapRef {
         PixmapRef {
-            data: &self.data,
+            data: self.data,
             size: self.size,
         }
     }
@@ -540,7 +540,7 @@ impl<'a> PixmapMut<'a> {
     /// Returns a mutable reference to the pixmap region that intersects the `rect`.
     ///
     /// Returns `None` when `Pixmap`'s rect doesn't contain `rect`.
-    pub(crate) fn subpixmap<'b>(&'b mut self, rect: IntRect) -> Option<SubPixmapMut<'b>> {
+    pub(crate) fn subpixmap(&mut self, rect: IntRect) -> Option<SubPixmapMut> {
         let rect = self.size.to_int_rect(0, 0).intersect(&rect)?;
         let row_bytes = self.width() as usize * BYTES_PER_PIXEL;
         let offset = rect.top() as usize * row_bytes + rect.left() as usize * BYTES_PER_PIXEL;

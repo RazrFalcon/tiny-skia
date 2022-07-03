@@ -97,7 +97,7 @@ impl BasicEdgeBuilder {
         clip: Option<&ShiftedIntRect>,
         can_cull_to_the_right: bool,
     ) -> Option<()> {
-        if let Some(ref clip) = clip {
+        if let Some(clip) = clip {
             let clip = clip.recover().to_rect();
             for edges in EdgeClipperIter::new(path, clip, can_cull_to_the_right) {
                 for edge in edges {
@@ -264,7 +264,7 @@ pub struct PathEdgeIter<'a> {
     needs_close_line: bool,
 }
 
-impl<'a, 'b> PathEdgeIter<'a> {
+impl<'a> PathEdgeIter<'a> {
     fn close_line(&mut self) -> Option<PathEdge> {
         self.needs_close_line = false;
 

@@ -140,8 +140,7 @@ fn adjust_dash_offset(mut offset: f32, len: f32) -> f32 {
 }
 
 fn find_first_interval(dash_array: &[f32], mut dash_offset: f32) -> (f32, usize) {
-    for i in 0..dash_array.len() {
-        let gap = dash_array[i];
+    for (i, gap) in dash_array.iter().copied().enumerate() {
         if dash_offset > gap || (dash_offset == gap && gap != 0.0) {
             dash_offset -= gap;
         } else {
