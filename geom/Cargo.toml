@@ -8,7 +8,7 @@ documentation = "https://docs.rs/tiny-skia-geom/"
 readme = "README.md"
 repository = "https://github.com/RazrFalcon/tiny-skia/geom"
 license = "BSD-3-Clause"
-keywords = ["graphics", "curve", "curves", "bezier", "geometry"]
+keywords = ["graphics", "bezier", "paths", "dash", "stroke", "geometry"]
 categories = ["graphics"]
 workspace = ".."
 

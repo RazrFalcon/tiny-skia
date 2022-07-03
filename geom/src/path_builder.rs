@@ -253,7 +253,8 @@ impl PathBuilder {
         self.move_to_required = true;
     }
 
-    pub(crate) fn last_point(&self) -> Option<Point> {
+    /// Returns the last point if any.
+    pub fn last_point(&self) -> Option<Point> {
         self.points.last().cloned()
     }
 
