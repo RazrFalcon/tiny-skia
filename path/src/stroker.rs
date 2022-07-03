@@ -1552,7 +1552,7 @@ fn set_normal_unit_normal2(
 }
 
 fn fn_ptr_eq(f1: CapProc, f2: CapProc) -> bool {
-    std::ptr::eq(f1 as *const (), f2 as *const ())
+    core::ptr::eq(f1 as *const (), f2 as *const ())
 }
 
 #[derive(Default, Debug)]
