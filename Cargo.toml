@@ -1,6 +1,6 @@
 [package]
 name = "tiny-skia"
-version = "0.6.6"
+version = "0.7.0"
 authors = ["Yevhenii Reizner <razrfalcon@gmail.com>"]
 edition = "2018"
 description = "A tiny Skia subset ported to Rust."
@@ -23,7 +23,7 @@ cfg-if = "1"
 png = { version = "0.17", optional = true }
 # do not update to 0.6, because it requires Rust >= 1.51
 safe_arch = { version = "0.5.2", features = ["bytemuck"], optional = true }
-tiny-skia-path = { version = "0.6.6", path = "path", default-features = false }
+tiny-skia-path = { version = "0.7.0", path = "path", default-features = false }
 
 [features]
 default = ["std", "simd", "png-format"]
