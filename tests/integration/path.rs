@@ -21,7 +21,7 @@ fn line() {
 
     assert_eq!(format!("{:?}", path),
                "Path { segments: \"M 10 20 L 30 40\", \
-                bounds: Rect { left: 10, top: 20, right: 30, bottom: 40 } }");
+                bounds: Rect { left: 10.0, top: 20.0, right: 30.0, bottom: 40.0 } }");
 }
 
 #[test]

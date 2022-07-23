@@ -1124,7 +1124,7 @@ impl PathStroker {
         ray: &[Point; 2],
         quad_points: &mut QuadConstruct,
     ) -> ResultType {
-        let half = NormalizedF32::new_bounded(0.5);
+        let half = NormalizedF32::new_clamped(0.5);
         let stroke_mid = path_geometry::eval_quad_at(stroke, half);
         // measure the distance from the curve to the quad-stroke midpoint, compare to radius
         if points_within_dist(ray[0], stroke_mid, self.inv_res_scale) {
@@ -1555,7 +1555,7 @@ fn fn_ptr_eq(f1: CapProc, f2: CapProc) -> bool {
     core::ptr::eq(f1 as *const (), f2 as *const ())
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 struct QuadConstruct {       // The state of the quad stroke under construction.
     quad: [Point; 3],        // the stroked quad parallel to the original curve
     tangent_start: Point,    // a point tangent to quad[0]
@@ -1568,11 +1568,27 @@ struct QuadConstruct {       // The state of the quad stroke under construction.
     opposite_tangents: bool, // set if coincident tangents have opposite directions
 }
 
+impl Default for QuadConstruct {
+    fn default() -> Self {
+        Self {
+            quad: Default::default(),
+            tangent_start: Point::default(),
+            tangent_end: Point::default(),
+            start_t: NormalizedF32::ZERO,
+            mid_t: NormalizedF32::ZERO,
+            end_t: NormalizedF32::ZERO,
+            start_set: false,
+            end_set: false,
+            opposite_tangents: false,
+        }
+    }
+}
+
 impl QuadConstruct {
     // return false if start and end are too close to have a unique middle
     fn init(&mut self, start: NormalizedF32, end: NormalizedF32) -> bool {
         self.start_t = start;
-        self.mid_t = NormalizedF32::new_bounded((start.get() + end.get()).half());
+        self.mid_t = NormalizedF32::new_clamped((start.get() + end.get()).half());
         self.end_t = end;
         self.start_set = false;
         self.end_set = false;

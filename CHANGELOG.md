@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- `FiniteF32`, `NormalizedF32` and `NonZeroPositiveF32` types have been moved
+  to the `strict-num` crate.
+- Rename `NormalizedF32::from_u8` into `NormalizedF32::new_u8`.
+- Rename `NormalizedF32::new_bounded` into `NormalizedF32::new_clamped`.
 
 ## [0.7.0] - 2022-07-03
 ### Added

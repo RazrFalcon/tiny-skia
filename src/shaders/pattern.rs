@@ -91,7 +91,7 @@ impl<'a> Pattern<'a> {
             pixmap,
             spread_mode,
             quality,
-            opacity: NormalizedF32::new_bounded(opacity),
+            opacity: NormalizedF32::new_clamped(opacity),
             transform,
         })
     }

@@ -6,6 +6,8 @@
 
 use crate::scalar::Scalar;
 
+pub use strict_num::{FiniteF32, NormalizedF32, NonZeroPositiveF32};
+
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use crate::NoStdFloat;
 
@@ -86,134 +88,6 @@ fn sign_bit_to_2s_compliment(mut x: i32) -> i32 {
 }
 
 
-// f32 wrappers below were not part of Skia.
-
-
-macro_rules! impl_debug_display {
-    ($t:ident) => {
-        impl core::fmt::Debug for $t {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                write!(f, "{}", self.get())
-            }
-        }
-
-        impl core::fmt::Display for $t {
-            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-                write!(f, "{}", self.get())
-            }
-        }
-    };
-}
-
-
-/// A float that is known to be finite.
-///
-/// Unlike `f32`, implements `Ord`, `PartialOrd` and `Hash`.
-#[derive(Copy, Clone, Default)]
-#[repr(transparent)]
-pub struct FiniteF32(f32);
-
-impl FiniteF32 {
-    /// A predefined 0 value.
-    pub const FINITE_ZERO: FiniteF32 = FiniteF32(0.0);
-    /// A predefined 1 value.
-    pub const FINITE_ONE: FiniteF32 = FiniteF32(1.0);
-
-    /// Creates a finite f32 number.
-    ///
-    /// Returns `None` for NaN and infinity.
-    pub fn new(n: f32) -> Option<Self> {
-        if n.is_finite() {
-            Some(FiniteF32(n))
-        } else {
-            None
-        }
-    }
-
-    /// Returns the value as a primitive type.
-    pub const fn get(&self) -> f32 {
-        self.0
-    }
-}
-
-impl Eq for FiniteF32 {}
-
-impl PartialEq for FiniteF32 {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl Ord for FiniteF32 {
-    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
-        if self.0 < other.0 {
-            core::cmp::Ordering::Less
-        } else if self.0 > other.0 {
-            core::cmp::Ordering::Greater
-        } else {
-            core::cmp::Ordering::Equal
-        }
-    }
-}
-
-impl PartialOrd for FiniteF32 {
-    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl_debug_display!(FiniteF32);
-
-
-/// An immutable `f32` in a 0..=1 range.
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Default)]
-#[repr(transparent)]
-pub struct NormalizedF32(FiniteF32);
-
-impl NormalizedF32 {
-    /// A NormalizedF32 value initialized with zero.
-    pub const ZERO: Self = NormalizedF32(FiniteF32(0.0));
-    /// A NormalizedF32 value initialized with one.
-    pub const ONE: Self  = NormalizedF32(FiniteF32(1.0));
-
-    /// Creates a `NormalizedF32` if the given value is in a 0..=1 range.
-    pub fn new(n: f32) -> Option<Self> {
-        if n.is_finite() && n >= 0.0 && n <= 1.0 {
-            Some(NormalizedF32(FiniteF32(n)))
-        } else {
-            None
-        }
-    }
-
-    /// Creates a `NormalizedF32` from `u8`.
-    ///
-    /// Where 0 is 0.0 and 255 is 1.0
-    pub fn from_u8(n: u8) -> Self {
-        NormalizedF32(FiniteF32(f32::from(n) / 255.0))
-    }
-
-    /// Creates a `NormalizedValue` clamping the given value to a 0..=1 range.
-    ///
-    /// Returns zero in case of NaN or infinity.
-    pub fn new_bounded(n: f32) -> Self {
-        NormalizedF32(FiniteF32(n.bound(0.0, 1.0)))
-    }
-
-    /// Returns the value as a primitive type.
-    pub const fn get(self) -> f32 {
-        self.0.get()
-    }
-
-    /// Returns the value as a `FiniteF32`.
-    #[inline]
-    pub const fn get_finite(&self) -> FiniteF32 {
-        self.0
-    }
-}
-
-impl_debug_display!(NormalizedF32);
-
-
 /// An immutable `f32` that is larger than 0 but less then 1.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Default, Debug)]
 #[repr(transparent)]
@@ -221,16 +95,16 @@ pub struct NormalizedF32Exclusive(FiniteF32);
 
 impl NormalizedF32Exclusive {
     /// Just a random, valid number.
-    pub const ANY: Self = NormalizedF32Exclusive(FiniteF32(0.5));
+    pub const ANY: Self = Self::HALF;
 
     /// A predefined 0.5 value.
-    pub const HALF: Self = NormalizedF32Exclusive(FiniteF32(0.5));
+    pub const HALF: Self = NormalizedF32Exclusive(unsafe { FiniteF32::new_unchecked(0.5) });
 
     /// Creates a `NormalizedF32Exclusive`.
     pub fn new(n: f32) -> Option<Self> {
         if n > 0.0 && n < 1.0 {
             // `n` is guarantee to be finite after the bounds check.
-            Some(NormalizedF32Exclusive(FiniteF32(n)))
+            FiniteF32::new(n).map(NormalizedF32Exclusive)
         } else {
             None
         }
@@ -243,7 +117,7 @@ impl NormalizedF32Exclusive {
         let n = n.bound(core::f32::EPSILON, 1.0 - core::f32::EPSILON);
         // `n` is guarantee to be finite after clamping.
         debug_assert!(n.is_finite());
-        NormalizedF32Exclusive(FiniteF32(n))
+        NormalizedF32Exclusive(unsafe { FiniteF32::new_unchecked(n) })
     }
 
     /// Returns the value as a primitive type.
@@ -254,34 +128,6 @@ impl NormalizedF32Exclusive {
     /// Returns the value as a `FiniteF32`.
     pub fn to_normalized(self) -> NormalizedF32 {
         // NormalizedF32 is (0,1), while NormalizedF32 is [0,1], so it will always fit.
-        NormalizedF32(self.0)
+        unsafe { NormalizedF32::new_unchecked(self.0.get()) }
     }
 }
-
-
-/// A float that is known to be > 0.
-///
-/// Doesn't support NonNull memory layout optimization like `std` types.
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-#[repr(transparent)]
-pub struct NonZeroPositiveF32(FiniteF32);
-
-impl NonZeroPositiveF32 {
-    /// Creates a new `NonZeroPositiveF32` if the given value is positive.
-    ///
-    /// Returns `None` for NaN and infinity.
-    pub fn new(n: f32) -> Option<Self> {
-        if n.is_finite() && n > 0.0 {
-            Some(NonZeroPositiveF32(FiniteF32(n)))
-        } else {
-            None
-        }
-    }
-
-    /// Returns the value as a primitive type.
-    pub const fn get(&self) -> f32 {
-        self.0.get()
-    }
-}
-
-impl_debug_display!(NonZeroPositiveF32);

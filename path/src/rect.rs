@@ -378,12 +378,23 @@ mod screen_int_rect_tests {
 /// - Top edge is <= bottom.
 /// - Width and height are <= f32::MAX.
 #[allow(missing_docs)]
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct Rect {
     left: FiniteF32,
     top: FiniteF32,
     right: FiniteF32,
     bottom: FiniteF32,
+}
+
+impl core::fmt::Debug for Rect {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Rect")
+         .field("left", &self.left.get())
+         .field("top", &self.top.get())
+         .field("right", &self.right.get())
+         .field("bottom", &self.bottom.get())
+         .finish()
+    }
 }
 
 impl Rect {

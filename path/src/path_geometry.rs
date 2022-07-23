@@ -339,9 +339,9 @@ fn solve_cubic_poly(coeff: &[f32; 4], t_values: &mut [NormalizedF32; 3]) -> usiz
         let theta = (r / q3.sqrt()).bound(-1.0, 1.0).acos();
         let neg2_root_q = -2.0 * q.sqrt();
 
-        t_values[0] = NormalizedF32::new_bounded(neg2_root_q * (theta / 3.0).cos() - adiv3);
-        t_values[1] = NormalizedF32::new_bounded(neg2_root_q * ((theta + 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
-        t_values[2] = NormalizedF32::new_bounded(neg2_root_q * ((theta - 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
+        t_values[0] = NormalizedF32::new_clamped(neg2_root_q * (theta / 3.0).cos() - adiv3);
+        t_values[1] = NormalizedF32::new_clamped(neg2_root_q * ((theta + 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
+        t_values[2] = NormalizedF32::new_clamped(neg2_root_q * ((theta - 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
 
         // now sort the roots
         sort_array3(t_values);
@@ -357,7 +357,7 @@ fn solve_cubic_poly(coeff: &[f32; 4], t_values: &mut [NormalizedF32; 3]) -> usiz
             a += q / a;
         }
 
-        t_values[0] = NormalizedF32::new_bounded(a - adiv3);
+        t_values[0] = NormalizedF32::new_clamped(a - adiv3);
         1
     }
 }
@@ -869,7 +869,7 @@ mod tests {
 
         assert_eq!(&t_values, &[
             NormalizedF32::ZERO,
-            NormalizedF32::new_bounded(0.5),
+            NormalizedF32::new_clamped(0.5),
             NormalizedF32::ONE,
         ]);
     }

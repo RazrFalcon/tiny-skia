@@ -31,7 +31,7 @@ impl GradientStop {
     ///
     /// `position` will be clamped to a 0..=1 range.
     pub fn new(position: f32, color: Color) -> Self {
-        GradientStop { position: NormalizedF32::new_bounded(position), color }
+        GradientStop { position: NormalizedF32::new_clamped(position), color }
     }
 }
 
@@ -88,7 +88,7 @@ impl Gradient {
             };
 
             has_uniform_stops &= uniform_step.is_nearly_equal(curr - prev);
-            stops[i].position = NormalizedF32::new_bounded(curr);
+            stops[i].position = NormalizedF32::new_clamped(curr);
             prev = curr;
         }
 
@@ -213,7 +213,7 @@ impl Gradient {
                         )
                     );
 
-                    ctx.t_values.push(NormalizedF32::new_bounded(t_l));
+                    ctx.t_values.push(NormalizedF32::new_clamped(t_l));
                 }
 
                 t_l = t_r;
@@ -221,7 +221,7 @@ impl Gradient {
             }
 
             ctx.push_const_color(c_l);
-            ctx.t_values.push(NormalizedF32::new_bounded(t_l));
+            ctx.t_values.push(NormalizedF32::new_clamped(t_l));
 
             ctx.len = ctx.factors.len();
 

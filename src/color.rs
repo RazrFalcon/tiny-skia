@@ -233,10 +233,10 @@ impl Color {
     /// u8 will be divided by 255 to get the float component.
     pub fn from_rgba8(r: u8, g: u8, b: u8, a: u8) -> Self {
         Color {
-            r: NormalizedF32::from_u8(r),
-            g: NormalizedF32::from_u8(g),
-            b: NormalizedF32::from_u8(b),
-            a: NormalizedF32::from_u8(a),
+            r: NormalizedF32::new_u8(r),
+            g: NormalizedF32::new_u8(g),
+            b: NormalizedF32::new_u8(b),
+            a: NormalizedF32::new_u8(a),
         }
     }
 
@@ -272,28 +272,28 @@ impl Color {
     ///
     /// The new value will be clipped to the 0..=1 range.
     pub fn set_red(&mut self, c: f32) {
-        self.r = NormalizedF32::new_bounded(c);
+        self.r = NormalizedF32::new_clamped(c);
     }
 
     /// Sets the green component value.
     ///
     /// The new value will be clipped to the 0..=1 range.
     pub fn set_green(&mut self, c: f32) {
-        self.g = NormalizedF32::new_bounded(c);
+        self.g = NormalizedF32::new_clamped(c);
     }
 
     /// Sets the blue component value.
     ///
     /// The new value will be clipped to the 0..=1 range.
     pub fn set_blue(&mut self, c: f32) {
-        self.b = NormalizedF32::new_bounded(c);
+        self.b = NormalizedF32::new_clamped(c);
     }
 
     /// Sets the alpha component value.
     ///
     /// The new value will be clipped to the 0..=1 range.
     pub fn set_alpha(&mut self, c: f32) {
-        self.a = NormalizedF32::new_bounded(c);
+        self.a = NormalizedF32::new_clamped(c);
     }
 
     /// Shifts color's opacity.
@@ -303,7 +303,7 @@ impl Color {
     /// `opacity` will be clamped to the 0..=1 range first.
     /// The final alpha will also be clamped.
     pub fn apply_opacity(&mut self, opacity: f32) {
-        self.a = NormalizedF32::new_bounded(self.a.get() * opacity.bound(0.0, 1.0));
+        self.a = NormalizedF32::new_clamped(self.a.get() * opacity.bound(0.0, 1.0));
     }
 
     /// Check that color is opaque.
@@ -324,9 +324,9 @@ impl Color {
             }
         } else {
             PremultipliedColor {
-                r: NormalizedF32::new_bounded(self.r.get() * self.a.get()),
-                g: NormalizedF32::new_bounded(self.g.get() * self.a.get()),
-                b: NormalizedF32::new_bounded(self.b.get() * self.a.get()),
+                r: NormalizedF32::new_clamped(self.r.get() * self.a.get()),
+                g: NormalizedF32::new_clamped(self.g.get() * self.a.get()),
+                b: NormalizedF32::new_clamped(self.b.get() * self.a.get()),
                 a: self.a,
             }
         }
@@ -393,9 +393,9 @@ impl PremultipliedColor {
             Color::TRANSPARENT
         } else {
             Color {
-                r: NormalizedF32::new_bounded(self.r.get() / a),
-                g: NormalizedF32::new_bounded(self.g.get() / a),
-                b: NormalizedF32::new_bounded(self.b.get() / a),
+                r: NormalizedF32::new_clamped(self.r.get() / a),
+                g: NormalizedF32::new_clamped(self.g.get() / a),
+                b: NormalizedF32::new_clamped(self.b.get() / a),
                 a: self.a,
             }
         }
