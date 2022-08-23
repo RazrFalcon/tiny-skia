@@ -6,8 +6,14 @@
 use crate::wide::{f32x8, u16x16};
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, Default, PartialEq, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct f32x16(pub [f32x8; 2]);
+
+impl Default for f32x16 {
+    fn default() -> Self {
+        Self::splat(0.0)
+    }
+}
 
 impl f32x16 {
     pub fn splat(n: f32) -> Self {

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   to the `strict-num` crate.
 - Rename `NormalizedF32::from_u8` into `NormalizedF32::new_u8`.
 - Rename `NormalizedF32::new_bounded` into `NormalizedF32::new_clamped`.
+- Use explicit SIMD intrinsic instead of relying on `safe_arch`.
 
 ## [0.7.0] - 2022-07-03
 ### Added

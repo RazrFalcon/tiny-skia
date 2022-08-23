@@ -127,7 +127,7 @@ fn average_gradient_color(points: &[GradientStop]) -> Color {
     // the integral between the two endpoints is 0.5 * (ci + cj) * (pj - pi), which provides that
     // intervals average color. The overall average color is thus the sum of each piece. The thing
     // to keep in mind is that the provided gradient definition may implicitly use p=0 and p=1.
-    let mut blend = f32x4::default();
+    let mut blend = f32x4::splat(0.0);
 
     // Bake 1/(colorCount - 1) uniform stop difference into this scale factor
     let w_scale = f32x4::splat(0.5);

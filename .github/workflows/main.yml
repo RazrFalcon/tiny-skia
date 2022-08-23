@@ -7,7 +7,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         rust:
@@ -32,25 +32,25 @@ jobs:
     - name: Run tests with SSE2
       env:
         RUSTFLAGS: -Ctarget-feature=+sse2
-      run: cargo test --verbose --all-features
+      run: cargo test
 
     - name: Run tests with SSE4.1
       env:
         RUSTFLAGS: -Ctarget-feature=+sse4.1
-      run: cargo test --verbose --all-features
+      run: cargo test
 
     - name: Run tests with AVX
       env:
         RUSTFLAGS: -Ctarget-feature=+avx
-      run: cargo test --verbose --all-features
+      run: cargo test
 
     - name: Run tests with AVX2
       env:
         RUSTFLAGS: -Ctarget-feature=+avx2
-      run: cargo test --verbose --all-features
+      run: cargo test
 
   wasm:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -76,4 +76,4 @@ jobs:
     - name: Run tests with SIMD128
       env:
         RUSTFLAGS: -Ctarget-feature=+simd128,+bulk-memory,+nontrapping-fptoint,+sign-ext
-      run: cargo test --target wasm32-wasi --verbose --all-features
+      run: cargo test --target wasm32-wasi

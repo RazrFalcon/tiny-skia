@@ -12,40 +12,28 @@ use crate::wide::{u32x8, i32x8};
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
 
+#[cfg(all(feature = "simd", target_arch = "x86"))]
+use core::arch::x86::*;
+#[cfg(all(feature = "simd", target_arch = "x86_64"))]
+use core::arch::x86_64::*;
+
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-        use safe_arch::*;
-
-        #[derive(Default, Clone, Copy, PartialEq, Debug)]
+        #[derive(Clone, Copy, Debug)]
         #[repr(C, align(32))]
-        pub struct f32x8(m256);
+        pub struct f32x8(__m256);
     } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-        use safe_arch::*;
-
-        #[derive(Default, Clone, Copy, PartialEq, Debug)]
+        #[derive(Clone, Copy, Debug)]
         #[repr(C, align(32))]
-        pub struct f32x8(m128, m128);
+        pub struct f32x8(__m128, __m128);
     } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
         use core::arch::wasm32::*;
 
         #[derive(Clone, Copy, Debug)]
         #[repr(C, align(32))]
         pub struct f32x8(v128, v128);
-
-        impl Default for f32x8 {
-            fn default() -> Self {
-                Self::splat(0.0)
-            }
-        }
-
-        impl PartialEq for f32x8 {
-            fn eq(&self, other: &Self) -> bool {
-                u32x4_all_true(f32x4_eq(self.0, other.0)) &
-                u32x4_all_true(f32x4_eq(self.1, other.1))
-            }
-        }
     } else {
-        #[derive(Default, Clone, Copy, PartialEq, Debug)]
+        #[derive(Clone, Copy, Debug)]
         #[repr(C, align(32))]
         pub struct f32x8([f32; 8]);
     }
@@ -53,6 +41,12 @@ cfg_if::cfg_if! {
 
 unsafe impl bytemuck::Zeroable for f32x8 {}
 unsafe impl bytemuck::Pod for f32x8 {}
+
+impl Default for f32x8 {
+    fn default() -> Self {
+        Self::splat(0.0)
+    }
+}
 
 impl f32x8 {
     pub fn splat(n: f32) -> Self {
@@ -89,9 +83,12 @@ impl f32x8 {
     pub fn cmp_eq(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(cmp_op_mask_m256!(self.0, EqualOrdered, rhs.0))
+                Self(unsafe { _mm256_cmp_ps(self.0, rhs.0, _CMP_EQ_OQ) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(cmp_eq_mask_m128(self.0, rhs.0), cmp_eq_mask_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_cmpeq_ps(self.0, rhs.0) },
+                    unsafe { _mm_cmpeq_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_eq(self.0, rhs.0), f32x4_eq(self.1, rhs.1))
             } else {
@@ -103,9 +100,12 @@ impl f32x8 {
     pub fn cmp_ge(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(cmp_op_mask_m256!(self.0, GreaterEqualOrdered, rhs.0))
+                Self(unsafe { _mm256_cmp_ps(self.0, rhs.0, _CMP_GE_OQ) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(cmp_ge_mask_m128(self.0, rhs.0), cmp_ge_mask_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_cmpge_ps(self.0, rhs.0) },
+                    unsafe { _mm_cmpge_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_ge(self.0, rhs.0), f32x4_ge(self.1, rhs.1))
             } else {
@@ -117,9 +117,12 @@ impl f32x8 {
     pub fn cmp_gt(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(cmp_op_mask_m256!(self.0, GreaterThanOrdered, rhs.0))
+                Self(unsafe { _mm256_cmp_ps(self.0, rhs.0, _CMP_GT_OQ) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(cmp_gt_mask_m128(self.0, rhs.0), cmp_gt_mask_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_cmpgt_ps(self.0, rhs.0) },
+                    unsafe { _mm_cmpgt_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_gt(self.0, rhs.0), f32x4_gt(self.1, rhs.1))
             } else {
@@ -131,9 +134,12 @@ impl f32x8 {
     pub fn cmp_ne(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(cmp_op_mask_m256!(self.0, NotEqualOrdered, rhs.0))
+                Self(unsafe { _mm256_cmp_ps(self.0, rhs.0, _CMP_NEQ_OQ) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(cmp_neq_mask_m128(self.0, rhs.0), cmp_neq_mask_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_cmpneq_ps(self.0, rhs.0) },
+                    unsafe { _mm_cmpneq_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_ne(self.0, rhs.0), f32x4_ne(self.1, rhs.1))
             } else {
@@ -145,9 +151,12 @@ impl f32x8 {
     pub fn cmp_le(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(cmp_op_mask_m256!(self.0, LessEqualOrdered, rhs.0))
+                Self(unsafe { _mm256_cmp_ps(self.0, rhs.0, _CMP_LE_OQ) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(cmp_le_mask_m128(self.0, rhs.0), cmp_le_mask_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_cmple_ps(self.0, rhs.0) },
+                    unsafe { _mm_cmple_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_le(self.0, rhs.0), f32x4_le(self.1, rhs.1))
             } else {
@@ -159,9 +168,12 @@ impl f32x8 {
     pub fn cmp_lt(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(cmp_op_mask_m256!(self.0, LessThanOrdered, rhs.0))
+                Self(unsafe { _mm256_cmp_ps(self.0, rhs.0, _CMP_LT_OQ) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(cmp_lt_mask_m128(self.0, rhs.0), cmp_lt_mask_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_cmplt_ps(self.0, rhs.0) },
+                    unsafe { _mm_cmplt_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_lt(self.0, rhs.0), f32x4_lt(self.1, rhs.1))
             } else {
@@ -170,12 +182,16 @@ impl f32x8 {
         }
     }
 
+    #[inline]
     pub fn blend(self, t: Self, f: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(blend_varying_m256(f.0, t.0, self.0))
+                Self(unsafe { _mm256_blendv_ps(f.0, t.0, self.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse4.1"))] {
-                Self(blend_varying_m128(f.0, t.0, self.0), blend_varying_m128(f.1, t.1, self.1))
+                Self(
+                    unsafe { _mm_blendv_ps(f.0, t.0, self.0) },
+                    unsafe { _mm_blendv_ps(f.1, t.1, self.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_bitselect(t.0, f.0, self.0), v128_bitselect(t.1, f.1, self.1))
             } else {
@@ -198,9 +214,12 @@ impl f32x8 {
     pub fn max(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(max_m256(self.0, rhs.0))
+                Self(unsafe { _mm256_max_ps(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(max_m128(self.0, rhs.0), max_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_max_ps(self.0, rhs.0) },
+                    unsafe { _mm_max_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_max(self.0, rhs.0), f32x4_max(self.1, rhs.1))
             } else {
@@ -212,9 +231,12 @@ impl f32x8 {
     pub fn min(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(min_m256(self.0, rhs.0))
+                Self(unsafe { _mm256_min_ps(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(min_m128(self.0, rhs.0), min_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_min_ps(self.0, rhs.0) },
+                    unsafe { _mm_min_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_min(self.0, rhs.0), f32x4_min(self.1, rhs.1))
             } else {
@@ -234,9 +256,12 @@ impl f32x8 {
     pub fn round(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(round_m256!(self.0, Nearest))
+                Self(unsafe { _mm256_round_ps(self.0, _MM_FROUND_NO_EXC | _MM_FROUND_TO_NEAREST_INT) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse4.1"))] {
-                Self(round_m128!(self.0, Nearest), round_m128!(self.1, Nearest))
+                Self(
+                    unsafe { _mm_round_ps(self.0, _MM_FROUND_NO_EXC | _MM_FROUND_TO_NEAREST_INT) },
+                    unsafe { _mm_round_ps(self.1, _MM_FROUND_NO_EXC | _MM_FROUND_TO_NEAREST_INT) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_nearest(self.0), f32x4_nearest(self.1))
             } else {
@@ -270,11 +295,11 @@ impl f32x8 {
     pub fn round_int(self) -> i32x8 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                cast(convert_to_i32_m256i_from_m256(self.0))
+                cast(unsafe { _mm256_cvtps_epi32(self.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 i32x8(
-                    convert_to_i32_m128i_from_m128(self.0),
-                    convert_to_i32_m128i_from_m128(self.1),
+                    unsafe { _mm_cvtps_epi32(self.0) },
+                    unsafe { _mm_cvtps_epi32(self.1) },
                 )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 let rounded = self.round();
@@ -302,9 +327,12 @@ impl f32x8 {
     pub fn trunc_int(self) -> i32x8 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                cast(convert_truncate_to_i32_m256i_from_m256(self.0))
+                cast(unsafe { _mm256_cvttps_epi32(self.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                i32x8(truncate_m128_to_m128i(self.0), truncate_m128_to_m128i(self.1))
+                i32x8(
+                    unsafe { _mm_cvttps_epi32(self.0) },
+                    unsafe { _mm_cvttps_epi32(self.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 cast(Self(
                     i32x4_trunc_sat_f32x4(self.0),
@@ -330,9 +358,12 @@ impl f32x8 {
     pub fn recip(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(reciprocal_m256(self.0))
+                Self(unsafe { _mm256_rcp_ps(self.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(reciprocal_m128(self.0), reciprocal_m128(self.1))
+                Self(
+                    unsafe { _mm_rcp_ps(self.0) },
+                    unsafe { _mm_rcp_ps(self.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 let one = f32x4_splat(1.0);
                 Self(
@@ -357,9 +388,12 @@ impl f32x8 {
     pub fn recip_sqrt(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(reciprocal_sqrt_m256(self.0))
+                Self(unsafe { _mm256_rsqrt_ps(self.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(reciprocal_sqrt_m128(self.0), reciprocal_sqrt_m128(self.1))
+                Self(
+                    unsafe { _mm_rsqrt_ps(self.0) },
+                    unsafe { _mm_rsqrt_ps(self.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 let one = f32x4_splat(1.0);
                 Self(
@@ -384,9 +418,12 @@ impl f32x8 {
     pub fn sqrt(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(sqrt_m256(self.0))
+                Self(unsafe { _mm256_sqrt_ps(self.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(sqrt_m128(self.0), sqrt_m128(self.1))
+                Self(
+                    unsafe { _mm_sqrt_ps(self.0) },
+                    unsafe { _mm_sqrt_ps(self.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_sqrt(self.0), f32x4_sqrt(self.1))
             } else {
@@ -423,9 +460,12 @@ impl core::ops::Add for f32x8 {
     fn add(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(add_m256(self.0, rhs.0))
+                Self(unsafe { _mm256_add_ps(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(add_m128(self.0, rhs.0), add_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_add_ps(self.0, rhs.0) },
+                    unsafe { _mm_add_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_add(self.0, rhs.0), f32x4_add(self.1, rhs.1))
             } else {
@@ -447,9 +487,12 @@ impl core::ops::Sub for f32x8 {
     fn sub(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(sub_m256(self.0, rhs.0))
+                Self(unsafe { _mm256_sub_ps(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(sub_m128(self.0, rhs.0), sub_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_sub_ps(self.0, rhs.0) },
+                    unsafe { _mm_sub_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_sub(self.0, rhs.0), f32x4_sub(self.1, rhs.1))
             } else {
@@ -465,9 +508,12 @@ impl core::ops::Mul for f32x8 {
     fn mul(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(mul_m256(self.0, rhs.0))
+                Self(unsafe { _mm256_mul_ps(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(mul_m128(self.0, rhs.0), mul_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_mul_ps(self.0, rhs.0) },
+                    unsafe { _mm_mul_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_mul(self.0, rhs.0), f32x4_mul(self.1, rhs.1))
             } else {
@@ -489,9 +535,12 @@ impl core::ops::Div for f32x8 {
     fn div(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(div_m256(self.0, rhs.0))
+                Self(unsafe { _mm256_div_ps(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(div_m128(self.0, rhs.0), div_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_div_ps(self.0, rhs.0) },
+                    unsafe { _mm_div_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_div(self.0, rhs.0), f32x4_div(self.1, rhs.1))
             } else {
@@ -504,12 +553,16 @@ impl core::ops::Div for f32x8 {
 impl core::ops::BitAnd for f32x8 {
     type Output = Self;
 
+    #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(bitand_m256(self.0, rhs.0))
+                Self(unsafe { _mm256_and_ps(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(bitand_m128(self.0, rhs.0), bitand_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_and_ps(self.0, rhs.0) },
+                    unsafe { _mm_and_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_and(self.0, rhs.0), v128_and(self.1, rhs.1))
             } else {
@@ -531,12 +584,16 @@ impl core::ops::BitAnd for f32x8 {
 impl core::ops::BitOr for f32x8 {
     type Output = Self;
 
+    #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(bitor_m256(self.0, rhs.0))
+                Self(unsafe { _mm256_or_ps(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(bitor_m128(self.0, rhs.0), bitor_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_or_ps(self.0, rhs.0) },
+                    unsafe { _mm_or_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_or(self.0, rhs.0), v128_or(self.1, rhs.1))
             } else {
@@ -558,12 +615,16 @@ impl core::ops::BitOr for f32x8 {
 impl core::ops::BitXor for f32x8 {
     type Output = Self;
 
+    #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(bitxor_m256(self.0, rhs.0))
+                Self(unsafe { _mm256_xor_ps(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(bitxor_m128(self.0, rhs.0), bitxor_m128(self.1, rhs.1))
+                Self(
+                    unsafe { _mm_xor_ps(self.0, rhs.0) },
+                    unsafe { _mm_xor_ps(self.1, rhs.1) },
+                )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_xor(self.0, rhs.0), v128_xor(self.1, rhs.1))
             } else {
@@ -596,13 +657,35 @@ impl core::ops::Not for f32x8 {
     fn not(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx"))] {
-                Self(self.0.not())
+                let all_bits = unsafe { _mm256_set1_ps(f32::from_bits(u32::MAX)) };
+                Self(unsafe { _mm256_xor_ps(self.0, all_bits) })
             } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                Self(self.0.not(), self.1.not())
+                unsafe {
+                    let all_bits = _mm_set1_ps(f32::from_bits(u32::MAX));
+                    Self(_mm_xor_ps(self.0, all_bits), _mm_xor_ps(self.1, all_bits))
+                }
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_not(self.0), v128_not(self.1))
             } else {
                 self ^ Self::splat(cast(u32::MAX))
+            }
+        }
+    }
+}
+
+impl core::cmp::PartialEq for f32x8 {
+    fn eq(&self, rhs: &Self) -> bool {
+        cfg_if::cfg_if! {
+            if #[cfg(all(feature = "simd", target_feature = "avx"))] {
+                let mask = unsafe { _mm256_cmp_ps(self.0, rhs.0, _CMP_EQ_OQ) };
+                unsafe { _mm256_movemask_ps(mask) == 0b1111_1111 }
+            } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
+                unsafe { _mm_movemask_ps(_mm_cmpeq_ps(self.0, rhs.0)) == 0b1111 }
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                u32x4_all_true(f32x4_eq(self.0, rhs.0)) &
+                u32x4_all_true(f32x4_eq(self.1, rhs.1))
+            } else {
+                self.0 == rhs.0
             }
         }
     }
