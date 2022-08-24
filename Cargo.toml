@@ -16,8 +16,7 @@ members = ["path"]
 
 [dependencies]
 arrayref = "0.3.6"
-# do not update to 0.6, because it requires Rust >= 1.51
-arrayvec = { version = "0.5", default-features = false }
+arrayvec = { version = "0.7", default-features = false }
 bytemuck = "1.4"
 cfg-if = "1"
 png = { version = "0.17", optional = true }

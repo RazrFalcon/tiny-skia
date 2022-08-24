@@ -34,7 +34,7 @@ macro_rules! copy_4_points {
 /// Max curvature in X and Y split cubic into 9 pieces, * (line + cubic).
 const MAX_VERBS: usize = 18;
 
-pub type ClippedEdges = ArrayVec<[PathEdge; MAX_VERBS]>;
+pub type ClippedEdges = ArrayVec<PathEdge, MAX_VERBS>;
 
 pub struct EdgeClipper {
     clip: Rect,

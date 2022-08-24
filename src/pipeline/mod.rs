@@ -329,7 +329,7 @@ pub struct TileCtx {
 }
 
 pub struct RasterPipelineBuilder {
-    stages: ArrayVec<[Stage; MAX_STAGES]>,
+    stages: ArrayVec<Stage, MAX_STAGES>,
     force_hq_pipeline: bool,
     pub ctx: Context,
 }
@@ -394,7 +394,7 @@ impl RasterPipelineBuilder {
             .all(|stage| !lowp::fn_ptr_eq(lowp::STAGES[*stage as usize], lowp::null_fn));
 
         if self.force_hq_pipeline || !is_lowp_compatible {
-            let mut functions: ArrayVec<_> = self.stages.iter()
+            let mut functions: ArrayVec<_, MAX_STAGES> = self.stages.iter()
                 .map(|stage| highp::STAGES[*stage as usize] as highp::StageFn)
                 .collect();
             functions.push(highp::just_return as highp::StageFn);
@@ -422,7 +422,7 @@ impl RasterPipelineBuilder {
                 ctx: self.ctx,
             }
         } else {
-            let mut functions: ArrayVec<_> = self.stages.iter()
+            let mut functions: ArrayVec<_, MAX_STAGES> = self.stages.iter()
                 .map(|stage| lowp::STAGES[*stage as usize] as lowp::StageFn)
                 .collect();
             functions.push(lowp::just_return as lowp::StageFn);
@@ -451,12 +451,12 @@ impl RasterPipelineBuilder {
 
 pub enum RasterPipelineKind {
     High {
-        functions: ArrayVec<[highp::StageFn; MAX_STAGES]>,
-        tail_functions: ArrayVec<[highp::StageFn; MAX_STAGES]>,
+        functions: ArrayVec<highp::StageFn, MAX_STAGES>,
+        tail_functions: ArrayVec<highp::StageFn, MAX_STAGES>,
     },
     Low {
-        functions: ArrayVec<[lowp::StageFn; MAX_STAGES]>,
-        tail_functions: ArrayVec<[lowp::StageFn; MAX_STAGES]>,
+        functions: ArrayVec<lowp::StageFn, MAX_STAGES>,
+        tail_functions: ArrayVec<lowp::StageFn, MAX_STAGES>,
     },
 }
 

@@ -2,7 +2,7 @@
 ![Build Status](https://github.com/RazrFalcon/tiny-skia/workflows/Rust/badge.svg)
 [![Crates.io](https://img.shields.io/crates/v/tiny-skia-path.svg)](https://crates.io/crates/tiny-skia-path)
 [![Documentation](https://docs.rs/tiny-skia-path/badge.svg)](https://docs.rs/tiny-skia-path)
-[![Rust 1.46+](https://img.shields.io/badge/rust-1.46+-orange.svg)](https://www.rust-lang.org)
+[![Rust 1.51+](https://img.shields.io/badge/rust-1.51+-orange.svg)](https://www.rust-lang.org)
 
 A [tiny-skia](https://github.com/RazrFalcon/tiny-skia) Bezier path implementation.
 
