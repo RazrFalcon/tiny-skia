@@ -30,8 +30,9 @@ default = ["std", "simd", "png-format"]
 std = ["tiny-skia-path/std"]
 no-std-float = ["tiny-skia-path/no-std-float"]
 
-# Enables x86 SIMD instructions from SSE up to AVX2.
-# Has no effect on non-x86 targets. Present mainly for testing.
+# Enables SIMD instructions on x86 (from SSE up to AVX2), WebAssembly (SIMD128)
+# and Aarch64 (Neon).
+# Has no effect other targets. Present mainly for testing.
 simd = []
 
 # Allows loading and saving `Pixmap` as PNG.

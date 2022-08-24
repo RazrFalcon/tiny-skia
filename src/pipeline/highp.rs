@@ -416,7 +416,7 @@ blend_fn2!(color_burn, |s: f32x8, d: f32x8, sa: f32x8, da: f32x8|
         d + s * inv(da),
         s.cmp_eq(f32x8::default()).blend(
             d * inv(sa),
-            sa * (da - da.min((da - d) * sa * s.recip())) + s * inv(da) + d * inv(sa)
+            sa * (da - da.min((da - d) * sa * s.recip_fast())) + s * inv(da) + d * inv(sa)
         )
     )
 );
@@ -426,7 +426,7 @@ blend_fn2!(color_dodge, |s: f32x8, d: f32x8, sa: f32x8, da: f32x8|
         s * inv(da),
         s.cmp_eq(sa).blend(
             s + d * inv(sa),
-            sa * da.min((d * sa) * (sa - s).recip()) + s * inv(da) + d * inv(sa)
+            sa * da.min((d * sa) * (sa - s).recip_fast()) + s * inv(da) + d * inv(sa)
         )
     )
 );
@@ -456,7 +456,7 @@ blend_fn2!(soft_light, |s: f32x8, d: f32x8, sa: f32x8, da: f32x8| {
     //    3. light src, light dst?
     let dark_src = d * (sa + (s2 - sa) * (f32x8::splat(1.0) - m));
     let dark_dst = (m4 * m4 + m4) * (m - f32x8::splat(1.0)) + f32x8::splat(7.0) * m;
-    let lite_dst = m.recip_sqrt().recip() - m;
+    let lite_dst = m.sqrt() - m;
     let lite_src = d * sa + da * (s2 - sa)
         * two(two(d)).cmp_le(da).blend(dark_dst, lite_dst); // 2 or 3?
 

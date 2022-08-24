@@ -6,7 +6,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  x86:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -77,3 +77,28 @@ jobs:
       env:
         RUSTFLAGS: -Ctarget-feature=+simd128,+bulk-memory,+nontrapping-fptoint,+sign-ext
       run: cargo test --target wasm32-wasi
+
+  aarch64:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        target: aarch64-unknown-linux-gnu
+
+    - name: Install cross
+      run: cargo install cross
+
+    - name: Build with minimal features (no_std)
+      run: cross build --target aarch64-unknown-linux-gnu --verbose --no-default-features --features no-std-float
+
+    - name: Run tests without SIMD
+      run: cross test --target aarch64-unknown-linux-gnu --verbose --no-default-features --features png-format
+
+    - name: Run tests with Neon
+      run: cross test --target aarch64-unknown-linux-gnu

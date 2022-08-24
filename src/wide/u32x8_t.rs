@@ -31,6 +31,12 @@ cfg_if::cfg_if! {
         #[derive(Clone, Copy, Debug)]
         #[repr(C, align(32))]
         pub struct u32x8(v128, v128);
+    } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
+        use core::arch::aarch64::*;
+
+        #[derive(Clone, Copy, Debug)]
+        #[repr(C, align(32))]
+        pub struct u32x8(uint32x4_t, uint32x4_t);
     } else {
         #[derive(Clone, Copy, Debug)]
         #[repr(C, align(32))]
@@ -71,8 +77,78 @@ impl u32x8 {
                 )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(u32x4_eq(self.0, rhs.0), u32x4_eq(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
+                unsafe {
+                    Self(vceqq_u32(self.0, rhs.0), vceqq_u32(self.1, rhs.1))
+                }
             } else {
                 Self(impl_x8_cmp!(self, eq, rhs, u32::MAX, 0))
+            }
+        }
+    }
+
+    pub fn shl<const RHS: i32>(self) -> Self {
+        cfg_if::cfg_if! {
+           if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
+                let shift: __m128i = cast([RHS as u64, 0]);
+                Self(unsafe { _mm256_sll_epi32(self.0, shift) })
+            } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
+                let shift = cast([RHS as u64, 0]);
+                Self(
+                    unsafe { _mm_sll_epi32(self.0, shift) },
+                    unsafe { _mm_sll_epi32(self.1, shift) },
+                )
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(u32x4_shl(self.0, RHS as _), u32x4_shl(self.1, RHS as _))
+            } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
+                unsafe {
+                    Self(vshlq_n_u32::<RHS>(self.0), vshlq_n_u32::<RHS>(self.1))
+                }
+            } else {
+                let u = RHS as u64;
+                Self([
+                    self.0[0] << u,
+                    self.0[1] << u,
+                    self.0[2] << u,
+                    self.0[3] << u,
+                    self.0[4] << u,
+                    self.0[5] << u,
+                    self.0[6] << u,
+                    self.0[7] << u,
+                ])
+            }
+        }
+    }
+
+    pub fn shr<const RHS: i32>(self) -> Self {
+        cfg_if::cfg_if! {
+            if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
+                let shift: __m128i = cast([RHS as u64, 0]);
+                Self(unsafe { _mm256_srl_epi32(self.0, shift) })
+            } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
+                let shift: __m128i = cast([RHS as u64, 0]);
+                Self(
+                    unsafe { _mm_srl_epi32(self.0, shift) },
+                    unsafe { _mm_srl_epi32(self.1, shift) },
+                )
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(u32x4_shr(self.0, RHS as _), u32x4_shr(self.1, RHS as _))
+            } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
+                unsafe {
+                    Self(vshrq_n_u32::<RHS>(self.0), vshrq_n_u32::<RHS>(self.1))
+                }
+            } else {
+                let u = RHS as u64;
+                Self([
+                    self.0[0] >> u,
+                    self.0[1] >> u,
+                    self.0[2] >> u,
+                    self.0[3] >> u,
+                    self.0[4] >> u,
+                    self.0[5] >> u,
+                    self.0[6] >> u,
+                    self.0[7] >> u,
+                ])
             }
         }
     }
@@ -94,6 +170,10 @@ impl core::ops::Not for u32x8 {
                 )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_not(self.0), v128_not(self.1))
+            } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
+                unsafe {
+                    Self(vmvnq_u32(self.0), vmvnq_u32(self.1))
+                }
             } else {
                 Self([
                     !self.0[0],
@@ -124,6 +204,10 @@ impl core::ops::Add for u32x8 {
                 )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(u32x4_add(self.0, rhs.0), u32x4_add(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
+                unsafe {
+                    Self(vaddq_u32(self.0, rhs.0), vaddq_u32(self.1, rhs.1))
+                }
             } else {
                 Self(impl_x8_op!(self, wrapping_add, rhs))
             }
@@ -145,74 +229,12 @@ impl core::ops::BitAnd for u32x8 {
                 )
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_and(self.0, rhs.0), v128_and(self.1, rhs.1))
+            } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
+                unsafe {
+                    Self(vandq_u32(self.0, rhs.0), vandq_u32(self.1, rhs.1))
+                }
             } else {
                 Self(impl_x8_op!(self, bitand, rhs))
-            }
-        }
-    }
-}
-
-impl core::ops::Shl<i32> for u32x8 {
-    type Output = Self;
-
-    fn shl(self, rhs: i32) -> Self::Output {
-        cfg_if::cfg_if! {
-            if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
-                let shift: __m128i = cast([rhs as u64, 0]);
-                Self(unsafe { _mm256_sll_epi32(self.0, shift) })
-            } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                let shift = cast([rhs as u64, 0]);
-                Self(
-                    unsafe { _mm_sll_epi32(self.0, shift) },
-                    unsafe { _mm_sll_epi32(self.1, shift) },
-                )
-            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
-                Self(u32x4_shl(self.0, rhs as _), u32x4_shl(self.1, rhs as _))
-            } else {
-                let u = rhs as u64;
-                Self([
-                    self.0[0] << u,
-                    self.0[1] << u,
-                    self.0[2] << u,
-                    self.0[3] << u,
-                    self.0[4] << u,
-                    self.0[5] << u,
-                    self.0[6] << u,
-                    self.0[7] << u,
-                ])
-            }
-        }
-    }
-}
-
-impl core::ops::Shr<i32> for u32x8 {
-    type Output = Self;
-
-    fn shr(self, rhs: i32) -> Self::Output {
-        cfg_if::cfg_if! {
-            if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
-                let shift: __m128i = cast([rhs as u64, 0]);
-                Self(unsafe { _mm256_srl_epi32(self.0, shift) })
-            } else if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
-                let shift: __m128i = cast([rhs as u64, 0]);
-                Self(
-                    unsafe { _mm_srl_epi32(self.0, shift) },
-                    unsafe { _mm_srl_epi32(self.1, shift) },
-                )
-            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
-                Self(u32x4_shr(self.0, rhs as _), u32x4_shr(self.1, rhs as _))
-            } else {
-                let u = rhs as u64;
-                Self([
-                    self.0[0] >> u,
-                    self.0[1] >> u,
-                    self.0[2] >> u,
-                    self.0[3] >> u,
-                    self.0[4] >> u,
-                    self.0[5] >> u,
-                    self.0[6] >> u,
-                    self.0[7] >> u,
-                ])
             }
         }
     }

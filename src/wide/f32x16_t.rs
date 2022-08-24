@@ -74,7 +74,7 @@ impl f32x16 {
 
     pub fn floor(&self) -> Self {
         // Yes, Skia does it in the same way.
-        let roundtrip = self.round_int();
+        let roundtrip = self.round();
         roundtrip - roundtrip.cmp_gt(self).blend(f32x16::splat(1.0), f32x16::splat(0.0))
     }
 
@@ -85,10 +85,10 @@ impl f32x16 {
         ])
     }
 
-    pub fn round_int(&self) -> Self {
+    pub fn round(&self) -> Self {
         Self([
-            self.0[0].round_int().to_f32x8(),
-            self.0[1].round_int().to_f32x8(),
+            self.0[0].round(),
+            self.0[1].round(),
         ])
     }
 
