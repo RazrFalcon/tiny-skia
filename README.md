@@ -73,11 +73,16 @@ Unless there is a bug, `tiny-skia` must produce exactly the same results as Skia
 
 ## Safety
 
-The library does not rely on unsafe code and all pixels access is checked.
+While a quick search would shown tons of `unsafe`, the library is actually fully safe.
+All pixels access is bound-checked. And all memory-related operations are safe.
 
-It does have a single `unsafe`
-to mark a type as [bytemuck::Pod](https://docs.rs/bytemuck/1.4.1/bytemuck/trait.Pod.html),
-but this is perfectly safe. And all the dangerous casts are handled by `bytemuck`.
+We must use `unsafe` to call SIMD intrinsics, which is perfectly safe,
+but Rust's std still marks them as `unsafe` because they may be missing on the target CPU.
+We do check for that.
+
+We also have to mark some types (to cast `[u32; 1]` to `[u8; 4]` and vise-versa) as
+[bytemuck::Pod](https://docs.rs/bytemuck/1.4.1/bytemuck/trait.Pod.html),
+which is an `unsafe` trait, but still is perfectly safe.
 
 ## Out of scope
 
