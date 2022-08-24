@@ -60,6 +60,16 @@ pub use f32x16_t::f32x16;
 pub use u16x16_t::u16x16;
 
 #[allow(dead_code)]
+fn pmax(a: f32, b: f32) -> f32 {
+    if a < b { b } else { a }
+}
+
+#[allow(dead_code)]
+fn pmin(a: f32, b: f32) -> f32 {
+    if b < a { b } else { a }
+}
+
+#[allow(dead_code)]
 #[inline]
 pub fn generic_bit_blend<T>(mask: T, y: T, n: T) -> T
 where

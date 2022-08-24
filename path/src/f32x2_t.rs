@@ -36,22 +36,22 @@ impl f32x2 {
     /// Returns a minimum value.
     pub fn min(self, other: f32x2) -> f32x2 {
         f32x2([
-            self.x().min(other.x()),
-            self.y().min(other.y()),
+            pmin(self.x(), other.x()),
+            pmin(self.y(), other.y()),
         ])
     }
 
     /// Returns a maximum value.
     pub fn max(self, other: f32x2) -> f32x2 {
         f32x2([
-            self.x().max(other.x()),
-            self.y().max(other.y()),
+            pmax(self.x(), other.x()),
+            pmax(self.y(), other.y()),
         ])
     }
 
     /// Returns a maximum of both values.
     pub fn max_component(self) -> f32 {
-        self.x().max(self.y())
+        pmax(self.x(), self.y())
     }
 
     /// Returns the first value.
@@ -103,4 +103,12 @@ impl core::ops::Div<f32x2> for f32x2 {
             self.y() / other.y(),
         ])
     }
+}
+
+fn pmax(a: f32, b: f32) -> f32 {
+    if a < b { b } else { a }
+}
+
+fn pmin(a: f32, b: f32) -> f32 {
+    if b < a { b } else { a }
 }
