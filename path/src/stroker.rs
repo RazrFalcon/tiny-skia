@@ -1956,7 +1956,7 @@ mod tests {
         stroke.width = 20.0;
         stroke.line_cap = LineCap::Square;
 
-        // A zero-len subpath with a round line cap produces a circle.
+        // A zero-len subpath with a square line cap produces a square.
         let stroke_path = PathStroker::new().stroke(&path, &stroke, 1.0).unwrap();
 
         let expected = {
