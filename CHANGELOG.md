@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.8.0] - 2022-08-27
 ### Added
 - AArch64 Neon SIMD support. Up to 3x faster on Apple M1.
   Thanks to [@CryZe](https://github.com/CryZe)
@@ -116,7 +118,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.6...v0.7.0
 [0.6.6]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.4...v0.6.5
