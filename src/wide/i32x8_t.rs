@@ -90,6 +90,8 @@ impl i32x8 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
                 cast(unsafe { _mm256_cvtepi32_ps(self.0) })
+            } else if #[cfg(all(feature = "simd", target_feature = "avx"))] {
+                cast([self.0.to_f32x4(), self.1.to_f32x4()])
             } else {
                 f32x8(self.0.to_f32x4(), self.1.to_f32x4())
             }

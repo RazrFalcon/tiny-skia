@@ -43,7 +43,8 @@ impl f32x8 {
     }
 
     pub fn floor(self) -> Self {
-        Self(self.0.floor(), self.1.floor())
+        let roundtrip: f32x8 = cast(self.trunc_int().to_f32x8());
+        roundtrip - roundtrip.cmp_gt(self).blend(f32x8::splat(1.0), f32x8::default())
     }
 
     pub fn fract(self) -> Self {
@@ -134,7 +135,8 @@ impl f32x8 {
     }
 
     pub fn abs(self) -> Self {
-        Self(self.0.abs(), self.1.abs())
+        let non_sign_bits = f32x8::splat(f32::from_bits(i32::MAX as u32));
+        self & non_sign_bits
     }
 
     pub fn max(self, rhs: Self) -> Self {

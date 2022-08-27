@@ -12,6 +12,8 @@ cfg_if::cfg_if! {
         #[cfg(target_arch = "x86_64")]
         use core::arch::x86_64::*;
 
+        // unused when AVX is available
+        #[cfg(not(target_feature = "avx2"))]
         use bytemuck::cast;
 
         #[derive(Clone, Copy, Debug)]
@@ -50,12 +52,14 @@ impl u32x4 {
         bytemuck::cast([n, n, n, n])
     }
 
+    // unused when AVX is available
+    #[cfg(not(target_feature = "avx2"))]
     pub fn cmp_eq(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(unsafe { _mm_cmpeq_epi32(self.0, rhs.0) })
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
-                Self(u32x4_eq(self.0, rhs.0), u32x4_eq(self.1, rhs.1))
+                Self(u32x4_eq(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
                 Self(unsafe { vceqq_u32(self.0, rhs.0) })
             } else {
@@ -69,6 +73,8 @@ impl u32x4 {
         }
     }
 
+    // unused when AVX is available
+    #[cfg(not(target_feature = "avx2"))]
     pub fn shl<const RHS: i32>(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
@@ -90,6 +96,8 @@ impl u32x4 {
         }
     }
 
+    // unused when AVX is available
+    #[cfg(not(target_feature = "avx2"))]
     pub fn shr<const RHS: i32>(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
