@@ -2,10 +2,11 @@ Benchmarking is hard... (c)
 
 ## Environment
 
-- All test were run on Gentoo Linux with AMD 3700X.
+- x86-64 test were run on Gentoo Linux with AMD 3700X.
+- ARM test were run on Apple M1.
 - tiny-skia SSE2 is built with `-Ctarget-cpu=x86-64`
 - tiny-skia AVX is built with `-Ctarget-cpu=haswell`
-- Skia v85.
+- Skia v90.
 - Skia SSE2 is built using clang with `-march=x86-64`
 - Skia AVX is built using clang with `-march=haswell`
 - cairo v1.16.0.
@@ -13,12 +14,14 @@ Benchmarking is hard... (c)
 - raqote version can be found at `Cargo.lock`
 - raqote is built with `-Ctarget-cpu=x86-64`.
   Testing with `haswell` doesn't change the results much.
-- Rust 1.53
-- clang 12
+- Rust 1.62
+- clang 13
 
 ## Results
 
-[Results](https://razrfalcon.github.io/tiny-skia/x86_64.html)
+[x86-64 Results](https://razrfalcon.github.io/tiny-skia/x86_64.html)
+
+[ARM Results](https://razrfalcon.github.io/tiny-skia/arm.html)
 
 ## Running benchmarks
 
@@ -49,7 +52,7 @@ You have to install cairo first and built Skia from sources (see below).
 
 ### Building Skia
 
-You will need `git`, `clang`, `ninja` and Python 2.
+You will need `git`, `clang`, `ninja` and Python.
 
 On Windows, use `clang-cl` and `clang-cl++` for `cc` and `cxx` instead.
 
@@ -60,7 +63,7 @@ git clone https://skia.googlesource.com/skia.git
 cd skia
 git fetch --all
 git checkout -b m90 origin/chrome/m90
-python2 tools/git-sync-deps # this will download about 3 GiB of code
+python3 tools/git-sync-deps # this will download about 3 GiB of code
 bin/gn gen out/Shared --args='
     is_official_build=false
     is_component_build=true

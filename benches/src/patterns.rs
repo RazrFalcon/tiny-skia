@@ -337,7 +337,7 @@ fn lq_raqote(bencher: &mut Bencher) {
     use raqote::*;
     pattern_raqote(
         FilterMode::Bilinear,
-        Transform::row_major(1.5, -0.4, 0.0, -0.8, 5.0, 1.0),
+        Transform::new(1.5, -0.4, 0.0, -0.8, 5.0, 1.0),
         bencher,
     )
 }

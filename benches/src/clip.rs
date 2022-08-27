@@ -101,7 +101,7 @@ fn do_clip_path_raqote(aa: raqote::AntialiasMode, bencher: &mut Bencher) {
     };
 
     bencher.iter(|| {
-        dt.set_transform(&Transform::row_major(1.0, -0.3, 0.0, 1.0, 0.0, 150.0));
+        dt.set_transform(&Transform::new(1.0, -0.3, 0.0, 1.0, 0.0, 150.0));
         dt.push_clip(&clip_path);
         dt.set_transform(&Transform::default());
         dt.fill_rect(0.0, 0.0, 1000.0, 1000.0, &src, &draw_opt);

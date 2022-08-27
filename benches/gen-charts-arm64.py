@@ -6,17 +6,13 @@ import subprocess
 import re
 
 TARGETS = [
-    'tiny-skia SSE2',
-    'skia SSE2',
-    'tiny-skia AVX2',
-    'skia AVX2',
+    'tiny-skia',
+    'skia',
     'cairo',
     'raqote',
 ]
 
 COLORS = [
-    '#fc7f37',
-    '#d8317f',
     '#fc7f37',
     '#d8317f',
     '#fcc100',
@@ -96,7 +92,7 @@ SPIRAL_ORDER = [
 ]
 
 
-def parse_output(output, suffix, results):
+def parse_output(output, results):
     for line in output.split('\n'):
         if not line.startswith('test'):
             continue
@@ -111,10 +107,10 @@ def parse_output(output, suffix, results):
 
         if name.endswith('tiny_skia'):
             name = name[:-10]
-            lib = 'tiny-skia ' + suffix
+            lib = 'tiny-skia'
         elif name.endswith('skia'):
             name = name[:-5]
-            lib = 'skia ' + suffix
+            lib = 'skia'
         elif name.endswith('raqote'):
             name = name[:-7]
             lib = 'raqote'
@@ -221,12 +217,11 @@ if len(sys.argv) != 2:
     print(
         'Error: Skia dir is not set.\n'
         '\n'
-        'Use: gen-charts-x86.py /path/to/skia/dir\n'
+        'Use: gen-charts-arm64.py /path/to/skia/dir\n'
         '\n'
         'The Skia dir should have the following structure:\n'
         '- include (directory copy-pasted from Skia sources)\n'
-        '- avx2/libskia.so (skia lib built with -march=haswell)\n'
-        '- sse2/libskia.so (skia lib built with -march=x86-64)'
+        '- libskia.so (skia lib built with -march=native)'
     )
     exit(1)
 
@@ -236,29 +231,15 @@ skia_dir = sys.argv[1]
 results = []
 
 os.environ['SKIA_DIR'] = skia_dir
-os.environ['SKIA_LIB_DIR'] = skia_dir + '/sse2'
-os.environ['LD_LIBRARY_PATH'] = skia_dir + '/sse2'
-os.environ['RUSTFLAGS'] = '-Ctarget-cpu=x86-64'
+os.environ['SKIA_LIB_DIR'] = skia_dir
+os.environ['LD_LIBRARY_PATH'] = skia_dir
+os.environ['RUSTFLAGS'] = '-Ctarget-cpu=native'
 
-subprocess.run(['cargo', 'clean'], check=True)
 output = subprocess.run(
     ['rustup', 'run', 'nightly', 'cargo', 'bench', '--all-features'],
     check=True, capture_output=True).stdout.decode()
 
-parse_output(output, 'SSE2', results)
-
-# collect tiny-skia and Skia results build with AVX2
-os.environ['SKIA_DIR'] = skia_dir
-os.environ['SKIA_LIB_DIR'] = skia_dir + '/avx2'
-os.environ['LD_LIBRARY_PATH'] = skia_dir + '/avx2'
-os.environ['RUSTFLAGS'] = '-Ctarget-cpu=haswell'
-
-subprocess.run(['cargo', 'clean'], check=True)
-output = subprocess.run(
-    ['rustup', 'run', 'nightly', 'cargo', 'bench', '--features', 'skia-rs'],
-    check=True, capture_output=True).stdout.decode()
-
-parse_output(output, 'AVX2', results)
+parse_output(output, results)
 
 header = '''
 <!DOCTYPE html>
@@ -299,7 +280,7 @@ footer = '''
 </html>
 '''
 
-with open('x86_64.html', 'w') as f:
+with open('arm64.html', 'w') as f:
     f.write(header)
     f.write(generate_chart_js('blend', 'Blending modes', BLEND_ORDER, results))
     f.write(generate_chart_js('fill', 'Fill', FILL_ORDER, results))

@@ -191,7 +191,7 @@ fn rect_aa_ts_raqote(bencher: &mut Bencher) {
         antialias: AntialiasMode::Gray,
     };
 
-    dt.set_transform(&Transform::row_major(1.8, 0.3, -0.7, 0.8, 12.0, 15.3));
+    dt.set_transform(&Transform::new(1.8, 0.3, -0.7, 0.8, 12.0, 15.3));
 
     bencher.iter(|| {
         dt.fill_rect(200.3, 100.4, 500.5, 300.2, &src, &draw_opt);

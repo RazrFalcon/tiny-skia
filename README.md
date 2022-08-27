@@ -34,7 +34,7 @@ It consists of 370 KLOC without dependencies (around 7 MLOC with dependencies)
 and requires around 4-8 GiB of disk space to be built from sources.
 And the final binary is 3-8 MiB big, depending on enabled features.
 Not to mention that it requires `clang` and no other compiler
-and uses an obscure build system (`gn`) which still uses Python2.
+and uses an obscure build system (`gn`) which was using Python2 until recently.
 
 `tiny-skia` tries to be small, simple and easy to build.
 Currently, it has around 14 KLOC, compiles in less than 5s on a modern CPU
@@ -42,7 +42,7 @@ and adds around 200KiB to your binary.
 
 ## Performance
 
-Currently, `tiny-skia` is 20-100% slower than Skia.
+Currently, `tiny-skia` is 20-100% slower than Skia on x86-64 and about 200-500% slower on ARM.
 Which is still faster than [cairo] and [raqote] in many cases.
 See benchmark results [here](https://razrfalcon.github.io/tiny-skia/x86_64.html).
 
@@ -61,7 +61,7 @@ Essentially, you will get a decent performance on x86 targets by default.
 But if you are looking for an even better performance, you should compile your application
 with `RUSTFLAGS="-Ctarget-cpu=haswell"` environment variable to enable AVX instructions.
 
-We support ARM NEON as well and there is no need to pass any additional flags.
+We support ARM AArch64 NEON as well and there is no need to pass any additional flags.
 
 You can find more information in [benches/README.md](./benches/README.md).
 

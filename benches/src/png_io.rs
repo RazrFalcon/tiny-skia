@@ -24,7 +24,7 @@ fn decode_raw_rgb(bencher: &mut Bencher) {
     let mut img_data = vec![0; 30000];
     bencher.iter(|| {
         let decoder = png::Decoder::new(data.as_slice());
-        let (_, mut reader) = decoder.read_info().unwrap();
+        let mut reader = decoder.read_info().unwrap();
         let _ = reader.next_frame(&mut img_data).unwrap();
     });
 }
@@ -35,7 +35,7 @@ fn decode_raw_rgba(bencher: &mut Bencher) {
     let mut img_data = vec![0; 40000];
     bencher.iter(|| {
         let decoder = png::Decoder::new(data.as_slice());
-        let (_, mut reader) = decoder.read_info().unwrap();
+        let mut reader = decoder.read_info().unwrap();
         let _ = reader.next_frame(&mut img_data).unwrap();
     });
 }
@@ -55,7 +55,7 @@ fn encode_raw_rgba(bencher: &mut Bencher) {
         let mut data = Vec::new();
 
         let mut encoder = png::Encoder::new(&mut data, pixmap.width(), pixmap.height());
-        encoder.set_color(png::ColorType::RGBA);
+        encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header().unwrap();
 
