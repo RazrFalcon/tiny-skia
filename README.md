@@ -42,7 +42,7 @@ and adds around 200KiB to your binary.
 
 ## Performance
 
-Currently, `tiny-skia` is 20-100% slower than Skia on x86-64 and about 200-500% slower on ARM.
+Currently, `tiny-skia` is 20-100% slower than Skia on x86-64 and about 100-300% slower on ARM.
 Which is still faster than [cairo] and [raqote] in many cases.
 See benchmark results [here](https://razrfalcon.github.io/tiny-skia/x86_64.html).
 

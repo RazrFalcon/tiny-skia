@@ -24,6 +24,8 @@ Therefore we are using scalar u16x16 by default and relying on rustc/llvm auto v
 When targeting a generic CPU, we're just 5-10% slower than Skia. While u16x8 is 30-40% slower.
 And while `-C target-cpu=haswell` boosts our performance by around 25%,
 we are still 40-60% behind Skia built for Haswell.
+
+On ARM AArch64 the story is different and explicit SIMD make our code up to 2-3x faster.
 */
 
 use tiny_skia_path::ScreenIntRect;
@@ -739,6 +741,8 @@ fn store_8888_tail(
 
 #[inline(always)]
 fn div255(v: u16x16) -> u16x16 {
+    // Skia uses `vrshrq_n_u16(vrsraq_n_u16(v, v, 8), 8)` here when NEON is available,
+    // but it doesn't affect performance much and breaks reproducible result. Ignore it.
     (v + u16x16::splat(255)) / u16x16::splat(256)
 }
 
@@ -786,5 +790,6 @@ fn join(lo: &u16x16, hi: &u16x16) -> f32x16 {
 
 #[inline(always)]
 fn mad(f: f32x16, m: f32x16, a: f32x16) -> f32x16 {
+    // NEON vmlaq_f32 doesn't seem to affect performance in any way. Ignore it.
     f * m + a
 }

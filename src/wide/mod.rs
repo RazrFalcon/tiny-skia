@@ -49,17 +49,17 @@ where
 /// Unlike std one, we do not care about NaN.
 #[cfg(not(feature = "simd"))]
 pub trait FasterMinMax {
-    fn faster_min(self, other: f32) -> f32;
-    fn faster_max(self, other: f32) -> f32;
+    fn faster_min(self, rhs: f32) -> f32;
+    fn faster_max(self, rhs: f32) -> f32;
 }
 
 #[cfg(not(feature = "simd"))]
 impl FasterMinMax for f32 {
-    fn faster_min(self, other: f32) -> f32 {
-        if other < self { other } else { self }
+    fn faster_min(self, rhs: f32) -> f32 {
+        if rhs < self { rhs } else { self }
     }
 
-    fn faster_max(self, other: f32) -> f32 {
-        if self < other { other } else { self }
+    fn faster_max(self, rhs: f32) -> f32 {
+        if self < rhs { rhs } else { self }
     }
 }

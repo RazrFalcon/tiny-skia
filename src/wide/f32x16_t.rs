@@ -5,7 +5,6 @@
 
 use super::{f32x8, u16x16};
 
-#[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug)]
 #[repr(C, align(32))]
 pub struct f32x16(pub f32x8, pub f32x8);
@@ -55,10 +54,10 @@ impl f32x16 {
         )
     }
 
-    pub fn cmp_gt(self, other: &Self) -> Self {
+    pub fn cmp_gt(self, rhs: &Self) -> Self {
         Self(
-            self.0.cmp_gt(other.0),
-            self.1.cmp_gt(other.1),
+            self.0.cmp_gt(rhs.0),
+            self.1.cmp_gt(rhs.1),
         )
     }
 
@@ -129,10 +128,10 @@ impl f32x16 {
 impl core::ops::Add<f32x16> for f32x16 {
     type Output = Self;
 
-    fn add(self, other: Self) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Self(
-            self.0 + other.0,
-            self.1 + other.1,
+            self.0 + rhs.0,
+            self.1 + rhs.1,
         )
     }
 }
@@ -140,10 +139,10 @@ impl core::ops::Add<f32x16> for f32x16 {
 impl core::ops::Sub<f32x16> for f32x16 {
     type Output = Self;
 
-    fn sub(self, other: Self) -> Self::Output {
+    fn sub(self, rhs: Self) -> Self::Output {
         Self(
-            self.0 - other.0,
-            self.1 - other.1,
+            self.0 - rhs.0,
+            self.1 - rhs.1,
         )
     }
 }
@@ -151,10 +150,10 @@ impl core::ops::Sub<f32x16> for f32x16 {
 impl core::ops::Mul<f32x16> for f32x16 {
     type Output = Self;
 
-    fn mul(self, other: Self) -> Self::Output {
+    fn mul(self, rhs: Self) -> Self::Output {
         Self(
-            self.0 * other.0,
-            self.1 * other.1,
+            self.0 * rhs.0,
+            self.1 * rhs.1,
         )
     }
 }
