@@ -230,10 +230,10 @@ fn uniform_color(p: &mut Pipeline) {
 }
 
 fn seed_shader(p: &mut Pipeline) {
-    let iota = f32x16([
+    let iota = f32x16(
         f32x8::from([0.5,  1.5,  2.5,  3.5,  4.5,  5.5,  6.5,  7.5]),
         f32x8::from([8.5,  9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5]),
-    ]);
+    );
 
     let x = f32x16::splat(p.dx as f32) + iota;
     let y = f32x16::splat(p.dy as f32 + 0.5);
@@ -509,8 +509,8 @@ fn gradient(p: &mut Pipeline) {
     let mut idx = u16x16::splat(0);
     for i in 1..ctx.len {
         let tt = ctx.t_values[i].get();
-        let t0: [f32; 8] = t.0[0].into();
-        let t1: [f32; 8] = t.0[1].into();
+        let t0: [f32; 8] = t.0.into();
+        let t1: [f32; 8] = t.1.into();
         idx.0[ 0] += (t0[0] >= tt) as u16;
         idx.0[ 1] += (t0[1] >= tt) as u16;
         idx.0[ 2] += (t0[2] >= tt) as u16;
@@ -568,7 +568,7 @@ fn gradient_lookup(
         ($d:expr, $c:ident) => {
             // Surprisingly, but bound checking doesn't affect the performance.
             // And since `idx` can contain any number, we should leave it in place.
-            f32x16([
+            f32x16(
                 f32x8::from([
                     $d[idx.0[ 0] as usize].$c,
                     $d[idx.0[ 1] as usize].$c,
@@ -589,7 +589,7 @@ fn gradient_lookup(
                     $d[idx.0[14] as usize].$c,
                     $d[idx.0[15] as usize].$c,
                 ]),
-            ])
+            )
         };
     }
 
@@ -760,7 +760,7 @@ fn lerp(from: u16x16, to: u16x16, t: u16x16) -> u16x16 {
 #[inline(always)]
 fn split(v: &f32x16, lo: &mut u16x16, hi: &mut u16x16) {
     // We're splitting f32x16 (512bit) into two u16x16 (256 bit).
-    let data: [u8; 64] = bytemuck::cast(v.0);
+    let data: [u8; 64] = bytemuck::cast(*v);
     let d0: &mut [u8; 32] = bytemuck::cast_mut(&mut lo.0);
     let d1: &mut [u8; 32] = bytemuck::cast_mut(&mut hi.0);
 
@@ -776,7 +776,7 @@ fn join(lo: &u16x16, hi: &u16x16) -> f32x16 {
     let d1: [u8; 32] = bytemuck::cast(hi.0);
 
     let mut v = f32x16::default();
-    let data: &mut [u8; 64] = bytemuck::cast_mut(&mut v.0);
+    let data: &mut [u8; 64] = bytemuck::cast_mut(&mut v);
 
     data[0..32].copy_from_slice(&d0);
     data[32..64].copy_from_slice(&d1);

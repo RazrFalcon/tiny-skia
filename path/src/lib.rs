@@ -61,9 +61,6 @@ pub use transform::*;
 /// An integer length that is guarantee to be > 0
 type LengthU32 = core::num::NonZeroU32;
 
-#[cfg(all(not(feature = "std"), feature = "no_std_math"))]
-use NoStdFloat;
-
 /// A point.
 ///
 /// Doesn't guarantee to be finite.

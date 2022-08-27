@@ -3,11 +3,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::wide::{f32x8, u16x16};
+use super::{f32x8, u16x16};
 
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug)]
-pub struct f32x16(pub [f32x8; 2]);
+#[repr(C, align(32))]
+pub struct f32x16(pub f32x8, pub f32x8);
+
+unsafe impl bytemuck::Zeroable for f32x16 {}
+unsafe impl bytemuck::Pod for f32x16 {}
 
 impl Default for f32x16 {
     fn default() -> Self {
@@ -17,7 +21,7 @@ impl Default for f32x16 {
 
 impl f32x16 {
     pub fn splat(n: f32) -> Self {
-        f32x16([f32x8::splat(n), f32x8::splat(n)])
+        Self(f32x8::splat(n), f32x8::splat(n))
     }
 
     #[inline]
@@ -25,9 +29,9 @@ impl f32x16 {
         // Yes, Skia does it in the same way.
         let abs = |x| bytemuck::cast::<i32, f32>(bytemuck::cast::<f32, i32>(x) & 0x7fffffff);
 
-        let n0: [f32; 8] = self.0[0].into();
-        let n1: [f32; 8] = self.0[1].into();
-        f32x16([
+        let n0: [f32; 8] = self.0.into();
+        let n1: [f32; 8] = self.1.into();
+        Self(
             f32x8::from([
                 abs(n0[0]),
                 abs(n0[1]),
@@ -48,28 +52,28 @@ impl f32x16 {
                 abs(n1[6]),
                 abs(n1[7]),
             ]),
-        ])
+        )
     }
 
     pub fn cmp_gt(self, other: &Self) -> Self {
-        f32x16([
-            self.0[0].cmp_gt(other.0[0]),
-            self.0[1].cmp_gt(other.0[1]),
-        ])
+        Self(
+            self.0.cmp_gt(other.0),
+            self.1.cmp_gt(other.1),
+        )
     }
 
     pub fn blend(self, t: Self, f: Self) -> Self {
-        f32x16([
-            self.0[0].blend(t.0[0], f.0[0]),
-            self.0[1].blend(t.0[1], f.0[1]),
-        ])
+        Self(
+            self.0.blend(t.0, f.0),
+            self.1.blend(t.1, f.1),
+        )
     }
 
     pub fn normalize(&self) -> Self {
-        f32x16([
-            self.0[0].normalize(),
-            self.0[1].normalize(),
-        ])
+        Self(
+            self.0.normalize(),
+            self.1.normalize(),
+        )
     }
 
     pub fn floor(&self) -> Self {
@@ -79,17 +83,17 @@ impl f32x16 {
     }
 
     pub fn sqrt(&self) -> Self {
-        f32x16([
-            self.0[0].sqrt(),
-            self.0[1].sqrt(),
-        ])
+        Self(
+            self.0.sqrt(),
+            self.1.sqrt(),
+        )
     }
 
     pub fn round(&self) -> Self {
-        Self([
-            self.0[0].round(),
-            self.0[1].round(),
-        ])
+        Self(
+            self.0.round(),
+            self.1.round(),
+        )
     }
 
     // This method is too heavy and shouldn't be inlined.
@@ -97,8 +101,8 @@ impl f32x16 {
         // Do not use to_i32x8, because it involves rounding,
         // and Skia cast's without it.
 
-        let n0: [f32; 8] = self.0[0].into();
-        let n1: [f32; 8] = self.0[1].into();
+        let n0: [f32; 8] = self.0.into();
+        let n1: [f32; 8] = self.1.into();
 
         dst.0[ 0] = n0[0] as u16;
         dst.0[ 1] = n0[1] as u16;
@@ -125,32 +129,32 @@ impl f32x16 {
 impl core::ops::Add<f32x16> for f32x16 {
     type Output = Self;
 
-    fn add(self, other: f32x16) -> Self::Output {
-        f32x16([
-            self.0[0] + other.0[0],
-            self.0[1] + other.0[1],
-        ])
+    fn add(self, other: Self) -> Self::Output {
+        Self(
+            self.0 + other.0,
+            self.1 + other.1,
+        )
     }
 }
 
 impl core::ops::Sub<f32x16> for f32x16 {
     type Output = Self;
 
-    fn sub(self, other: f32x16) -> Self::Output {
-        f32x16([
-            self.0[0] - other.0[0],
-            self.0[1] - other.0[1],
-        ])
+    fn sub(self, other: Self) -> Self::Output {
+        Self(
+            self.0 - other.0,
+            self.1 - other.1,
+        )
     }
 }
 
 impl core::ops::Mul<f32x16> for f32x16 {
     type Output = Self;
 
-    fn mul(self, other: f32x16) -> Self::Output {
-        f32x16([
-            self.0[0] * other.0[0],
-            self.0[1] * other.0[1],
-        ])
+    fn mul(self, other: Self) -> Self::Output {
+        Self(
+            self.0 * other.0,
+            self.1 * other.1,
+        )
     }
 }

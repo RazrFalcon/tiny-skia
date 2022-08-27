@@ -15,36 +15,9 @@
 
 #![allow(non_camel_case_types)]
 
-#[allow(unused_macros)]
-macro_rules! impl_x8_op {
-    ($a:expr, $op:ident, $b:expr) => {[
-        $a.0[0].$op($b.0[0]),
-        $a.0[1].$op($b.0[1]),
-        $a.0[2].$op($b.0[2]),
-        $a.0[3].$op($b.0[3]),
-        $a.0[4].$op($b.0[4]),
-        $a.0[5].$op($b.0[5]),
-        $a.0[6].$op($b.0[6]),
-        $a.0[7].$op($b.0[7]),
-    ]};
-}
-
-#[allow(unused_macros)]
-macro_rules! impl_x8_cmp {
-    ($a:expr, $op:ident, $b:expr, $passed:expr, $failed:expr) => {[
-        if $a.0[0].$op(&$b.0[0]) { $passed } else { $failed },
-        if $a.0[1].$op(&$b.0[1]) { $passed } else { $failed },
-        if $a.0[2].$op(&$b.0[2]) { $passed } else { $failed },
-        if $a.0[3].$op(&$b.0[3]) { $passed } else { $failed },
-        if $a.0[4].$op(&$b.0[4]) { $passed } else { $failed },
-        if $a.0[5].$op(&$b.0[5]) { $passed } else { $failed },
-        if $a.0[6].$op(&$b.0[6]) { $passed } else { $failed },
-        if $a.0[7].$op(&$b.0[7]) { $passed } else { $failed },
-    ]};
-}
-
-
+mod i32x4_t;
 mod f32x4_t;
+mod u32x4_t;
 mod f32x8_t;
 mod i32x8_t;
 mod u32x8_t;
@@ -52,7 +25,9 @@ mod f32x16_t;
 mod u16x16_t;
 
 pub use tiny_skia_path::f32x2;
+pub use i32x4_t::i32x4;
 pub use f32x4_t::f32x4;
+pub use u32x4_t::u32x4;
 pub use f32x8_t::f32x8;
 pub use i32x8_t::i32x8;
 pub use u32x8_t::u32x8;
