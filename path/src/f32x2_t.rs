@@ -105,6 +105,10 @@ impl core::ops::Div<f32x2> for f32x2 {
     }
 }
 
+// A faster and more forgiving f32 min/max implementation.
+//
+// Unlike std one, we do not care about NaN.
+
 fn pmax(a: f32, b: f32) -> f32 {
     if a < b { b } else { a }
 }

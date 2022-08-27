@@ -60,20 +60,31 @@ pub use f32x16_t::f32x16;
 pub use u16x16_t::u16x16;
 
 #[allow(dead_code)]
-fn pmax(a: f32, b: f32) -> f32 {
-    if a < b { b } else { a }
-}
-
-#[allow(dead_code)]
-fn pmin(a: f32, b: f32) -> f32 {
-    if b < a { b } else { a }
-}
-
-#[allow(dead_code)]
 #[inline]
 pub fn generic_bit_blend<T>(mask: T, y: T, n: T) -> T
 where
     T: Copy + core::ops::BitXor<Output = T> + core::ops::BitAnd<Output = T>,
 {
     n ^ ((n ^ y) & mask)
+}
+
+
+/// A faster and more forgiving f32 min/max implementation.
+///
+/// Unlike std one, we do not care about NaN.
+#[cfg(not(feature = "simd"))]
+pub trait FasterMinMax {
+    fn faster_min(self, other: f32) -> f32;
+    fn faster_max(self, other: f32) -> f32;
+}
+
+#[cfg(not(feature = "simd"))]
+impl FasterMinMax for f32 {
+    fn faster_min(self, other: f32) -> f32 {
+        if other < self { other } else { self }
+    }
+
+    fn faster_max(self, other: f32) -> f32 {
+        if self < other { other } else { self }
+    }
 }

@@ -17,7 +17,7 @@ members = ["path"]
 [dependencies]
 arrayref = "0.3.6"
 arrayvec = { version = "0.7", default-features = false }
-bytemuck = "1.4"
+bytemuck = { version = "1.12", features = ["aarch64_simd"] }
 cfg-if = "1"
 png = { version = "0.17", optional = true }
 tiny-skia-path = { version = "0.7.0", path = "path", default-features = false }
@@ -31,8 +31,8 @@ std = ["tiny-skia-path/std"]
 no-std-float = ["tiny-skia-path/no-std-float"]
 
 # Enables SIMD instructions on x86 (from SSE up to AVX2), WebAssembly (SIMD128)
-# and Aarch64 (Neon).
-# Has no effect other targets. Present mainly for testing.
+# and AArch64 (Neon).
+# Has no effect on other targets. Present mainly for testing.
 simd = []
 
 # Allows loading and saving `Pixmap` as PNG.

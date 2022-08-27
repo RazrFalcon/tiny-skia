@@ -31,6 +31,8 @@ cfg_if::cfg_if! {
         #[repr(C, align(16))]
         pub struct f32x4(float32x4_t);
     } else {
+        use crate::wide::FasterMinMax;
+
         #[derive(Clone, Copy, Debug)]
         #[repr(C, align(16))]
         pub struct f32x4([f32; 4]);
@@ -54,15 +56,13 @@ impl f32x4 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_pmax(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vmaxq_f32(self.0, rhs.0))
-                }
+                Self(unsafe { vmaxq_f32(self.0, rhs.0) })
             } else {
                 Self([
-                    super::pmax(self.0[0], rhs.0[0]),
-                    super::pmax(self.0[1], rhs.0[1]),
-                    super::pmax(self.0[2], rhs.0[2]),
-                    super::pmax(self.0[3], rhs.0[3]),
+                    self.0[0].faster_max(rhs.0[0]),
+                    self.0[1].faster_max(rhs.0[1]),
+                    self.0[2].faster_max(rhs.0[2]),
+                    self.0[3].faster_max(rhs.0[3]),
                 ])
             }
         }
@@ -77,15 +77,13 @@ impl f32x4 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_pmin(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vminq_f32(self.0, rhs.0))
-                }
+                Self(unsafe { vminq_f32(self.0, rhs.0) })
             } else {
                 Self([
-                    super::pmin(self.0[0], rhs.0[0]),
-                    super::pmin(self.0[1], rhs.0[1]),
-                    super::pmin(self.0[2], rhs.0[2]),
-                    super::pmin(self.0[3], rhs.0[3]),
+                    self.0[0].faster_min(rhs.0[0]),
+                    self.0[1].faster_min(rhs.0[1]),
+                    self.0[2].faster_min(rhs.0[2]),
+                    self.0[3].faster_min(rhs.0[3]),
                 ])
             }
         }
@@ -114,9 +112,7 @@ impl core::ops::Add for f32x4 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_add(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vaddq_f32(self.0, rhs.0))
-                }
+                Self(unsafe { vaddq_f32(self.0, rhs.0) })
             } else {
                 Self([
                     self.0[0] + rhs.0[0],
@@ -145,9 +141,7 @@ impl core::ops::Sub for f32x4 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_sub(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vsubq_f32(self.0, rhs.0))
-                }
+                Self(unsafe { vsubq_f32(self.0, rhs.0) })
             } else {
                 Self([
                     self.0[0] - rhs.0[0],
@@ -170,9 +164,7 @@ impl core::ops::Mul for f32x4 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_mul(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vmulq_f32(self.0, rhs.0))
-                }
+                Self(unsafe { vmulq_f32(self.0, rhs.0) })
             } else {
                 Self([
                     self.0[0] * rhs.0[0],

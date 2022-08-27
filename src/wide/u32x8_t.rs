@@ -78,9 +78,7 @@ impl u32x8 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(u32x4_eq(self.0, rhs.0), u32x4_eq(self.1, rhs.1))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vceqq_u32(self.0, rhs.0), vceqq_u32(self.1, rhs.1))
-                }
+                Self(unsafe { vceqq_u32(self.0, rhs.0) }, unsafe { vceqq_u32(self.1, rhs.1) })
             } else {
                 Self(impl_x8_cmp!(self, eq, rhs, u32::MAX, 0))
             }
@@ -101,9 +99,7 @@ impl u32x8 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(u32x4_shl(self.0, RHS as _), u32x4_shl(self.1, RHS as _))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vshlq_n_u32::<RHS>(self.0), vshlq_n_u32::<RHS>(self.1))
-                }
+                Self(unsafe { vshlq_n_u32::<RHS>(self.0) }, unsafe { vshlq_n_u32::<RHS>(self.1) })
             } else {
                 let u = RHS as u64;
                 Self([
@@ -134,9 +130,7 @@ impl u32x8 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(u32x4_shr(self.0, RHS as _), u32x4_shr(self.1, RHS as _))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vshrq_n_u32::<RHS>(self.0), vshrq_n_u32::<RHS>(self.1))
-                }
+                Self(unsafe { vshrq_n_u32::<RHS>(self.0) }, unsafe { vshrq_n_u32::<RHS>(self.1) })
             } else {
                 let u = RHS as u64;
                 Self([
@@ -171,9 +165,7 @@ impl core::ops::Not for u32x8 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_not(self.0), v128_not(self.1))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vmvnq_u32(self.0), vmvnq_u32(self.1))
-                }
+                Self(unsafe { vmvnq_u32(self.0) }, unsafe { vmvnq_u32(self.1) })
             } else {
                 Self([
                     !self.0[0],
@@ -205,9 +197,7 @@ impl core::ops::Add for u32x8 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(u32x4_add(self.0, rhs.0), u32x4_add(self.1, rhs.1))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vaddq_u32(self.0, rhs.0), vaddq_u32(self.1, rhs.1))
-                }
+                Self(unsafe { vaddq_u32(self.0, rhs.0) }, unsafe { vaddq_u32(self.1, rhs.1) })
             } else {
                 Self(impl_x8_op!(self, wrapping_add, rhs))
             }
@@ -230,9 +220,7 @@ impl core::ops::BitAnd for u32x8 {
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_and(self.0, rhs.0), v128_and(self.1, rhs.1))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
-                unsafe {
-                    Self(vandq_u32(self.0, rhs.0), vandq_u32(self.1, rhs.1))
-                }
+                Self(unsafe { vandq_u32(self.0, rhs.0) }, unsafe { vandq_u32(self.1, rhs.1) })
             } else {
                 Self(impl_x8_op!(self, bitand, rhs))
             }

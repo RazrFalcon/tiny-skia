@@ -54,16 +54,14 @@ non-standard vector extensions, which means that it works only with clang.
 You can actually build it with gcc/msvc, but it will simply ignore all the optimizations
 and become 15-30 *times* slower! Which makes it kinda useless.
 
-Skia also supports ARM NEON instructions, which are unavailable in a stable Rust at the moment.
-Therefore a fallback scalar implementation will be used instead on ARM and other non-x86 targets.
-So if you're targeting ARM, you better stick with Skia.
-
 Also note, that neither Skia or `tiny-skia` are supporting dynamic CPU detection,
 so by enabling newer instructions you're making the resulting binary non-portable.
 
 Essentially, you will get a decent performance on x86 targets by default.
 But if you are looking for an even better performance, you should compile your application
-with `RUSTFLAGS="-Ctarget-cpu=haswell"` env variables to enable AVX instructions.
+with `RUSTFLAGS="-Ctarget-cpu=haswell"` environment variable to enable AVX instructions.
+
+We support ARM NEON as well and there is no need to pass any additional flags.
 
 You can find more information in [benches/README.md](./benches/README.md).
 

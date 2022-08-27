@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- AArch64 Neon SIMD support. Up to 3x faster on Apple M1.
+  Thanks to [@CryZe](https://github.com/CryZe)
+
 ### Changed
 - `FiniteF32`, `NormalizedF32` and `NonZeroPositiveF32` types have been moved
   to the `strict-num` crate.
