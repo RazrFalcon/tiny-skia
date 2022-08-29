@@ -47,13 +47,13 @@ where
 /// A faster and more forgiving f32 min/max implementation.
 ///
 /// Unlike std one, we do not care about NaN.
-#[cfg(not(feature = "simd"))]
+#[allow(dead_code)]
 pub trait FasterMinMax {
     fn faster_min(self, rhs: f32) -> f32;
     fn faster_max(self, rhs: f32) -> f32;
 }
 
-#[cfg(not(feature = "simd"))]
+#[allow(dead_code)]
 impl FasterMinMax for f32 {
     fn faster_min(self, rhs: f32) -> f32 {
         if rhs < self { rhs } else { self }
