@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.1] - 2022-08-29
+### Fixed
+- Conditional compilation of `FasterMinMax` on fallback platforms.
+  Thanks to [@CryZe](https://github.com/CryZe)
+
 ## [0.8.0] - 2022-08-27
 ### Added
 - AArch64 Neon SIMD support. Up to 3x faster on Apple M1.
@@ -118,7 +123,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.6...v0.7.0
 [0.6.6]: https://github.com/RazrFalcon/tiny-skia/compare/v0.6.5...v0.6.6
