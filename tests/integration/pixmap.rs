@@ -1,6 +1,7 @@
 use tiny_skia::*;
 
 #[test]
+#[cfg(feature = "png-format")]
 fn clone_rect_1() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
@@ -22,6 +23,7 @@ fn clone_rect_1() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn clone_rect_2() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
@@ -73,6 +75,7 @@ fn fill() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn draw_pixmap() {
     // Tests that painting algorithm will switch `Bicubic`/`Bilinear` to `Nearest`.
     // Otherwise we will get a blurry image.
@@ -100,6 +103,7 @@ fn draw_pixmap() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn draw_pixmap_ts() {
     let triangle = {
         let mut paint = Paint::default();
@@ -135,6 +139,7 @@ fn draw_pixmap_ts() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn draw_pixmap_opacity() {
     let triangle = {
         let mut paint = Paint::default();

@@ -1,6 +1,7 @@
 use tiny_skia::*;
 
 #[test]
+#[cfg(feature = "png-format")]
 fn decode_grayscale() {
     let pixmap = Pixmap::load_png("tests/images/pngs/grayscale.png").unwrap();
     assert_eq!(pixmap.pixel(10, 10).unwrap(), ColorU8::from_rgba(255, 255, 255, 255).premultiply());
@@ -8,6 +9,7 @@ fn decode_grayscale() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn decode_grayscale_alpha() {
     let pixmap = Pixmap::load_png("tests/images/pngs/grayscale-alpha.png").unwrap();
     assert_eq!(pixmap.pixel(10, 10).unwrap(), ColorU8::from_rgba(0, 0, 0, 0).premultiply());
@@ -15,6 +17,7 @@ fn decode_grayscale_alpha() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn decode_rgb() {
     let pixmap = Pixmap::load_png("tests/images/pngs/rgb.png").unwrap();
     assert_eq!(pixmap.pixel(10, 10).unwrap(), ColorU8::from_rgba(255, 255, 255, 255).premultiply());
@@ -22,6 +25,7 @@ fn decode_rgb() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn decode_rgba() {
     let pixmap = Pixmap::load_png("tests/images/pngs/rgba.png").unwrap();
     assert_eq!(pixmap.pixel(10, 10).unwrap(), ColorU8::from_rgba(0, 0, 0, 0).premultiply());

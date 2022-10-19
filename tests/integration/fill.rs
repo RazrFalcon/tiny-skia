@@ -1,6 +1,7 @@
 use tiny_skia::*;
 
 #[test]
+#[cfg(feature = "png-format")]
 fn horizontal_line() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -18,6 +19,7 @@ fn horizontal_line() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn vertical_line() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -35,6 +37,7 @@ fn vertical_line() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn single_line() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -52,6 +55,7 @@ fn single_line() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn int_rect() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -66,6 +70,7 @@ fn int_rect() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn float_rect() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -80,6 +85,7 @@ fn float_rect() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn int_rect_aa() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -95,6 +101,7 @@ fn int_rect_aa() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn float_rect_aa() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -110,6 +117,7 @@ fn float_rect_aa() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn float_rect_aa_highp() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -182,6 +190,7 @@ fn tiny_float_rect_aa() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn float_rect_clip_top_left_aa() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -197,6 +206,7 @@ fn float_rect_clip_top_left_aa() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn float_rect_clip_top_right_aa() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -212,6 +222,7 @@ fn float_rect_clip_top_right_aa() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn float_rect_clip_bottom_right_aa() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -227,6 +238,7 @@ fn float_rect_clip_bottom_right_aa() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn int_rect_with_ts_clip_right() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -241,6 +253,7 @@ fn int_rect_with_ts_clip_right() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn open_polygon() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -262,6 +275,7 @@ fn open_polygon() {
 
 // Must be the same a open.
 #[test]
+#[cfg(feature = "png-format")]
 fn closed_polygon() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -283,6 +297,7 @@ fn closed_polygon() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn winding_star() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -303,6 +318,7 @@ fn winding_star() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn even_odd_star() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -323,6 +339,7 @@ fn even_odd_star() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn quad_curve() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -340,6 +357,7 @@ fn quad_curve() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn cubic_curve() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -357,6 +375,7 @@ fn cubic_curve() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn memset2d() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
@@ -372,6 +391,7 @@ fn memset2d() {
 
 // Make sure we do not write past pixmap memory.
 #[test]
+#[cfg(feature = "png-format")]
 fn memset2d_out_of_bounds() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
@@ -388,6 +408,7 @@ fn memset2d_out_of_bounds() {
 // Not sure how to properly test anti-aliasing,
 // so for now simply check that it actually applied.
 #[test]
+#[cfg(feature = "png-format")]
 fn fill_aa() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -424,6 +445,7 @@ fn overflow_in_walk_edges_1() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn clip_line_1() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -444,6 +466,7 @@ fn clip_line_1() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn clip_line_2() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -465,6 +488,7 @@ fn clip_line_2() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn clip_quad() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -482,6 +506,7 @@ fn clip_quad() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn clip_cubic_1() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -500,6 +525,7 @@ fn clip_cubic_1() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn clip_cubic_2() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -534,6 +560,7 @@ fn aa_endless_loop() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn clear_aa() {
     // Make sure that Clear with AA doesn't fallback to memset.
     let mut paint = Paint::default();
@@ -573,6 +600,7 @@ fn line_curve() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn vertical_lines_merging_bug() {
     // This path must not trigger edge_builder::combine_vertical,
     // otherwise AlphaRuns::add will crash later.
@@ -597,6 +625,7 @@ fn vertical_lines_merging_bug() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn fill_rect() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);

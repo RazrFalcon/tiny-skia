@@ -1,6 +1,7 @@
 use tiny_skia::*;
 
 #[test]
+#[cfg(feature = "png-format")]
 fn line() {
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 20.0);
@@ -22,6 +23,7 @@ fn line() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn quad() {
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 20.0);
@@ -43,6 +45,7 @@ fn quad() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn cubic() {
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 20.0);
@@ -64,6 +67,7 @@ fn cubic() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn hairline() {
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 20.0);
@@ -86,6 +90,7 @@ fn hairline() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn complex() {
     let mut pb = PathBuilder::new();
     pb.move_to(28.7, 23.9);
@@ -114,6 +119,7 @@ fn complex() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn multi_subpaths() {
     let mut pb = PathBuilder::new();
     pb.move_to(49.0, 76.0);
@@ -143,6 +149,7 @@ fn multi_subpaths() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn closed() {
     let mut pb = PathBuilder::new();
     pb.move_to(22.0, 22.0);

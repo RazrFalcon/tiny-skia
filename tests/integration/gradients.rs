@@ -1,6 +1,7 @@
 use tiny_skia::*;
 
 #[test]
+#[cfg(feature = "png-format")]
 fn two_stops_linear_pad_lq() {
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
@@ -24,6 +25,7 @@ fn two_stops_linear_pad_lq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn two_stops_linear_repeat_lq() {
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
@@ -47,6 +49,7 @@ fn two_stops_linear_repeat_lq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn two_stops_linear_reflect_lq() {
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
@@ -70,6 +73,7 @@ fn two_stops_linear_reflect_lq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn three_stops_evenly_spaced_lq() {
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
@@ -95,6 +99,7 @@ fn three_stops_evenly_spaced_lq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn two_stops_unevenly_spaced_lq() {
     let mut paint = Paint::default();
     paint.shader = LinearGradient::new(
@@ -119,6 +124,7 @@ fn two_stops_unevenly_spaced_lq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn two_stops_linear_pad_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
@@ -143,6 +149,7 @@ fn two_stops_linear_pad_hq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn two_stops_linear_repeat_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
@@ -167,6 +174,7 @@ fn two_stops_linear_repeat_hq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn two_stops_linear_reflect_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
@@ -191,6 +199,7 @@ fn two_stops_linear_reflect_hq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn three_stops_evenly_spaced_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
@@ -217,6 +226,7 @@ fn three_stops_evenly_spaced_hq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn two_stops_unevenly_spaced_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
@@ -245,6 +255,7 @@ fn two_stops_unevenly_spaced_hq() {
 // Therefore we do not have a lq/hq split.
 
 #[test]
+#[cfg(feature = "png-format")]
 fn well_behaved_radial() {
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
@@ -269,6 +280,7 @@ fn well_behaved_radial() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn focal_on_circle_radial() {
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
@@ -293,6 +305,7 @@ fn focal_on_circle_radial() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn conical_greater_radial() {
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
@@ -317,6 +330,7 @@ fn conical_greater_radial() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn simple_radial_lq() {
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(
@@ -341,6 +355,7 @@ fn simple_radial_lq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn simple_radial_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
@@ -366,6 +381,7 @@ fn simple_radial_hq() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn simple_radial_with_ts_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
@@ -393,6 +409,7 @@ fn simple_radial_with_ts_hq() {
 // Gradient doesn't add the Premultiply stage when all stops are opaque.
 // But it checks colors only on creation, so we have to recheck them after calling `apply_opacity`.
 #[test]
+#[cfg(feature = "png-format")]
 fn global_opacity() {
     let mut paint = Paint::default();
     paint.shader = RadialGradient::new(

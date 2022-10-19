@@ -18,6 +18,7 @@ fn crate_triangle() -> Pixmap {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn pad_nearest() {
     let triangle = crate_triangle();
 
@@ -40,6 +41,7 @@ fn pad_nearest() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn repeat_nearest() {
     let triangle = crate_triangle();
 
@@ -62,6 +64,7 @@ fn repeat_nearest() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn reflect_nearest() {
     let triangle = crate_triangle();
 
@@ -86,6 +89,7 @@ fn reflect_nearest() {
 // We have to test tile mode for bilinear/bicubic separately,
 // because they're using a different algorithm from nearest.
 #[test]
+#[cfg(feature = "png-format")]
 fn pad_bicubic() {
     let triangle = crate_triangle();
 
@@ -109,6 +113,7 @@ fn pad_bicubic() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn repeat_bicubic() {
     let triangle = crate_triangle();
 
@@ -132,6 +137,7 @@ fn repeat_bicubic() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn reflect_bicubic() {
     let triangle = crate_triangle();
 
@@ -155,6 +161,7 @@ fn reflect_bicubic() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn filter_nearest_no_ts() {
     let triangle = crate_triangle();
 
@@ -177,6 +184,7 @@ fn filter_nearest_no_ts() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn filter_nearest() {
     let triangle = crate_triangle();
 
@@ -199,6 +207,7 @@ fn filter_nearest() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn filter_bilinear() {
     let triangle = crate_triangle();
 
@@ -221,6 +230,7 @@ fn filter_bilinear() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn filter_bicubic() {
     let triangle = crate_triangle();
 

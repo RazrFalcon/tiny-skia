@@ -1,6 +1,7 @@
 use tiny_skia::*;
 
 #[test]
+#[cfg(feature = "png-format")]
 fn rect() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
     let mut clip_mask = ClipMask::new();
@@ -18,6 +19,7 @@ fn rect() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn rect_aa() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.5, 10.0, 80.0, 80.5).unwrap());
     let mut clip_mask = ClipMask::new();
@@ -35,6 +37,7 @@ fn rect_aa() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn rect_ts() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
 
@@ -55,6 +58,7 @@ fn rect_ts() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn circle_bottom_right_aa() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
 
@@ -73,6 +77,7 @@ fn circle_bottom_right_aa() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn stroke() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
 
@@ -95,6 +100,7 @@ fn stroke() {
 
 // Make sure we're clipping only source and not source and destination
 #[test]
+#[cfg(feature = "png-format")]
 fn skip_dest() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
 
@@ -129,6 +135,7 @@ fn skip_dest() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn intersect_aa() {
     let circle1 = PathBuilder::from_circle(75.0, 75.0, 50.0).unwrap();
     let circle2 = PathBuilder::from_circle(125.0, 125.0, 50.0).unwrap();
@@ -153,6 +160,7 @@ fn intersect_aa() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn ignore_memset() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
 
@@ -175,6 +183,7 @@ fn ignore_memset() {
 }
 
 #[test]
+#[cfg(feature = "png-format")]
 fn ignore_source() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
 
