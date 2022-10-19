@@ -23,8 +23,8 @@ jobs:
         toolchain: ${{ matrix.rust }}
         override: true
 
-    - name: Build with minimal features (no_std)
-      run: cargo build --verbose --no-default-features --features no-std-float
+    - name: Run tests with minimal features (no_std)
+      run: cargo test --verbose --no-default-features --features no-std-float
 
     - name: Run tests without SIMD
       run: cargo test --verbose --no-default-features --features png-format
@@ -67,8 +67,8 @@ jobs:
         curl https://wasmtime.dev/install.sh -sSf | bash
         echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
 
-    - name: Build with minimal features (no_std)
-      run: cargo build --target wasm32-wasi --verbose --no-default-features --features no-std-float
+    - name: Run tests with minimal features (no_std)
+      run: cargo test --target wasm32-wasi --verbose --no-default-features --features no-std-float
 
     - name: Run tests without SIMD
       run: cargo test --target wasm32-wasi --verbose --no-default-features --features png-format
@@ -94,8 +94,8 @@ jobs:
     - name: Install cross
       run: cargo install cross
 
-    - name: Build with minimal features (no_std)
-      run: cross build --target aarch64-unknown-linux-gnu --verbose --no-default-features --features no-std-float
+    - name: Run tests with minimal features (no_std)
+      run: cross test --target aarch64-unknown-linux-gnu --verbose --no-default-features --features no-std-float
 
     - name: Run tests without SIMD
       run: cross test --target aarch64-unknown-linux-gnu --verbose --no-default-features --features png-format
