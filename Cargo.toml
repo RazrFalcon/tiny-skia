@@ -37,3 +37,35 @@ simd = []
 
 # Allows loading and saving `Pixmap` as PNG.
 png-format = ["std", "png"]
+
+[[example]]
+name = "clip_path"
+required-features = ["png-format"]
+
+[[example]]
+name = "fill"
+required-features = ["png-format"]
+
+[[example]]
+name = "hairline"
+required-features = ["png-format"]
+
+[[example]]
+name = "image_on_image"
+required-features = ["png-format"]
+
+[[example]]
+name = "large_image"
+required-features = ["png-format"]
+
+[[example]]
+name = "linear_gradient"
+required-features = ["png-format"]
+
+[[example]]
+name = "pattern"
+required-features = ["png-format"]
+
+[[example]]
+name = "stroke"
+required-features = ["png-format"]
