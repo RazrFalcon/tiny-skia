@@ -26,6 +26,10 @@ jobs:
     - name: Build with minimal features (no_std)
       run: cargo build --verbose --no-default-features --features no-std-float
 
+    - name: Run tests for tiny-skia-path
+      working-directory: path
+      run: cargo test --verbose
+
     - name: Run tests without SIMD
       run: cargo test --verbose --no-default-features --features png-format
 
