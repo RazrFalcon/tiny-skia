@@ -53,8 +53,13 @@ impl Pixmap {
         })
     }
 
-    #[cfg(feature = "png-format")]
-    pub(crate) fn from_vec(data: Vec<u8>, size: IntSize) -> Option<Self> {
+    /// Creates a new pixmap by taking ownership over an image buffer
+    /// (premultiplied RGBA pixels).
+    ///
+    /// The size needs to match the data provided.
+    ///
+    /// Pixmap's width is limited by i32::MAX/4.
+    pub fn from_vec(data: Vec<u8>, size: IntSize) -> Option<Self> {
         let data_len = data_len_for_size(size)?;
         if data.len() != data_len {
             return None;
