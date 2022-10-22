@@ -9,7 +9,7 @@
 
 use tiny_skia_path::SaturateCast;
 
-use crate::math::{left_shift, left_shift64, bound};
+use crate::math::{bound, left_shift, left_shift64};
 
 /// A 26.6 fixed point.
 pub type FDot6 = i32;

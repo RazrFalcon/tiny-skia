@@ -6,20 +6,19 @@
 
 mod gradient;
 mod linear_gradient;
-mod radial_gradient;
 mod pattern;
+mod radial_gradient;
 
-use tiny_skia_path::{Scalar, NormalizedF32};
+use tiny_skia_path::{NormalizedF32, Scalar};
 
 pub use gradient::GradientStop;
 pub use linear_gradient::LinearGradient;
+pub use pattern::{FilterQuality, Pattern, PixmapPaint};
 pub use radial_gradient::RadialGradient;
-pub use pattern::{Pattern, FilterQuality, PixmapPaint};
 
 use crate::{Color, Transform};
 
 use crate::pipeline::RasterPipelineBuilder;
-
 
 /// A shader spreading mode.
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -41,7 +40,6 @@ impl Default for SpreadMode {
         SpreadMode::Pad
     }
 }
-
 
 /// A shader specifies the source color(s) for what is being drawn.
 ///

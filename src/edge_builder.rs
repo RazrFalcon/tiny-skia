@@ -6,11 +6,11 @@
 
 use alloc::vec::Vec;
 
-use tiny_skia_path::{ScreenIntRect, PathVerb};
+use tiny_skia_path::{PathVerb, ScreenIntRect};
 
-use crate::{Point, Path};
+use crate::{Path, Point};
 
-use crate::edge::{Edge, LineEdge, QuadraticEdge, CubicEdge};
+use crate::edge::{CubicEdge, Edge, LineEdge, QuadraticEdge};
 use crate::edge_clipper::EdgeClipperIter;
 use crate::path_geometry;
 
@@ -20,7 +20,6 @@ enum Combine {
     Partial,
     Total,
 }
-
 
 #[derive(Copy, Clone, Debug)]
 pub struct ShiftedIntRect {
@@ -51,10 +50,10 @@ impl ShiftedIntRect {
             self.shifted.y() >> self.shift,
             self.shifted.width() >> self.shift,
             self.shifted.height() >> self.shift,
-        ).unwrap() // cannot fail, because the original rect was valid
+        )
+        .unwrap() // cannot fail, because the original rect was valid
     }
 }
-
 
 pub struct BasicEdgeBuilder {
     edges: Vec<Edge>,
@@ -117,8 +116,10 @@ impl BasicEdgeBuilder {
                             self.push_quad(&[p0, p1, p2])
                         }
                         PathEdge::CubicTo(p0, p1, p2, p3) => {
-                            if !p0.is_finite() || !p1.is_finite() ||
-                               !p2.is_finite() || !p3.is_finite()
+                            if !p0.is_finite()
+                                || !p1.is_finite()
+                                || !p2.is_finite()
+                                || !p3.is_finite()
                             {
                                 return None;
                             }
@@ -170,7 +171,9 @@ impl BasicEdgeBuilder {
             };
 
             match combine {
-                Combine::Total => { self.edges.pop(); },
+                Combine::Total => {
+                    self.edges.pop();
+                }
                 Combine::Partial => {}
                 Combine::No => self.edges.push(Edge::Line(edge)),
             }

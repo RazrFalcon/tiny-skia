@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 
 use tiny_skia_path::Scalar;
 
-use crate::{Point, Shader, GradientStop, SpreadMode, Transform, Color};
+use crate::{Color, GradientStop, Point, Shader, SpreadMode, Transform};
 
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::pipeline::RasterPipelineBuilder;
@@ -44,7 +44,7 @@ impl LinearGradient {
         }
 
         if stops.len() == 1 {
-            return Some(Shader::SolidColor(stops[0].color))
+            return Some(Shader::SolidColor(stops[0].color));
         }
 
         let length = (end - start).length();
@@ -132,7 +132,7 @@ fn average_gradient_color(points: &[GradientStop]) -> Color {
     // Bake 1/(colorCount - 1) uniform stop difference into this scale factor
     let w_scale = f32x4::splat(0.5);
 
-    for i in 0..points.len()-1 {
+    for i in 0..points.len() - 1 {
         // Calculate the average color for the interval between pos(i) and pos(i+1)
         let c0 = load_color(points[i].color);
         let c1 = load_color(points[i + 1].color);
@@ -164,7 +164,12 @@ fn average_gradient_color(points: &[GradientStop]) -> Color {
 fn ts_from_sin_cos_at(sin: f32, cos: f32, px: f32, py: f32) -> Transform {
     let cos_inv = 1.0 - cos;
     Transform::from_row(
-        cos, sin, -sin, cos, sdot(sin, py, cos_inv, px), sdot(-sin, px, cos_inv, py)
+        cos,
+        sin,
+        -sin,
+        cos,
+        sdot(sin, py, cos_inv, px),
+        sdot(-sin, px, cos_inv, py),
     )
 }
 

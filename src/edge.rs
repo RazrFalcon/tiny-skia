@@ -6,7 +6,7 @@
 
 use crate::Point;
 
-use crate::fixed_point::{fdot6, fdot16, FDot6, FDot16};
+use crate::fixed_point::{fdot16, fdot6, FDot16, FDot6};
 use crate::math::left_shift;
 
 /// We store 1<<shift in a (signed) byte, so its maximum value is 1<<6 == 64.
@@ -55,7 +55,6 @@ impl core::ops::DerefMut for Edge {
     }
 }
 
-
 #[derive(Clone, Default, Debug)]
 pub struct LineEdge {
     // Imitate a linked list.
@@ -66,7 +65,7 @@ pub struct LineEdge {
     pub dx: FDot16,
     pub first_y: i32,
     pub last_y: i32,
-    pub winding: i8,        // 1 or -1
+    pub winding: i8, // 1 or -1
 }
 
 impl LineEdge {
@@ -135,13 +134,12 @@ impl LineEdge {
 
         self.x = fdot6::to_fdot16(x0 + fdot16::mul(slope, dy));
         self.dx = slope;
-        self.first_y= top;
+        self.first_y = top;
         self.last_y = bottom - 1;
 
         true
     }
 }
-
 
 #[derive(Clone, Debug)]
 pub struct QuadraticEdge {
@@ -231,19 +229,19 @@ impl QuadraticEdge {
 
         let curve_shift = (shift - 1) as u8;
 
-        let mut a = fdot6_to_fixed_div2(x0 - x1 - x1 + x2);  // 1/2 the real value
-        let mut b = fdot6::to_fdot16(x1 - x0);               // 1/2 the real value
+        let mut a = fdot6_to_fixed_div2(x0 - x1 - x1 + x2); // 1/2 the real value
+        let mut b = fdot6::to_fdot16(x1 - x0); // 1/2 the real value
 
-        let qx     = fdot6::to_fdot16(x0);
-        let qdx    = b + (a >> shift);     // biased by shift
-        let qddx   = a >> (shift - 1);     // biased by shift
+        let qx = fdot6::to_fdot16(x0);
+        let qdx = b + (a >> shift); // biased by shift
+        let qddx = a >> (shift - 1); // biased by shift
 
-        a = fdot6_to_fixed_div2(y0 - y1 - y1 + y2);  // 1/2 the real value
-        b = fdot6::to_fdot16(y1 - y0);               // 1/2 the real value
+        a = fdot6_to_fixed_div2(y0 - y1 - y1 + y2); // 1/2 the real value
+        b = fdot6::to_fdot16(y1 - y0); // 1/2 the real value
 
-        let qy     = fdot6::to_fdot16(y0);
-        let qdy    = b + (a >> shift);     // biased by shift
-        let qddy   = a >> (shift - 1);     // biased by shift
+        let qy = fdot6::to_fdot16(y0);
+        let qdy = b + (a >> shift); // biased by shift
+        let qddy = a >> (shift - 1); // biased by shift
 
         let q_last_x = fdot6::to_fdot16(x2);
         let q_last_y = fdot6::to_fdot16(y2);
@@ -315,13 +313,12 @@ impl QuadraticEdge {
     }
 }
 
-
 #[derive(Clone, Debug)]
 pub struct CubicEdge {
     pub line: LineEdge,
     pub curve_count: i8,
     curve_shift: u8, // applied to all dx/ddx/dddx except for dshift exception
-    dshift: u8, // applied to cdx and cdy
+    dshift: u8,      // applied to cdx and cdy
     cx: FDot16,
     cy: FDot16,
     cdx: FDot16,
@@ -391,7 +388,7 @@ impl CubicEdge {
         // Since our in coming data is initially shifted down by 10 (or 8 in
         // antialias). That means the most we can shift up is 8. However, we
         // compute coefficients with a 3*, so the safest upshift is really 6
-        let mut up_shift = 6;    // largest safe value
+        let mut up_shift = 6; // largest safe value
         let mut down_shift = shift + up_shift - 10;
         if down_shift < 0 {
             down_shift = 0;
@@ -406,19 +403,19 @@ impl CubicEdge {
         let mut c = fdot6_up_shift(3 * (x0 - x1 - x1 + x2), up_shift);
         let mut d = fdot6_up_shift(x3 + 3 * (x1 - x2) - x0, up_shift);
 
-        let cx     = fdot6::to_fdot16(x0);
-        let cdx    = b + (c >> shift) + (d >> (2*shift));    // biased by shift
-        let cddx   = 2 * c + ((3 * d) >> (shift - 1));       // biased by 2*shift
-        let cdddx  = (3 * d) >> (shift - 1);                 // biased by 2*shift
+        let cx = fdot6::to_fdot16(x0);
+        let cdx = b + (c >> shift) + (d >> (2 * shift)); // biased by shift
+        let cddx = 2 * c + ((3 * d) >> (shift - 1)); // biased by 2*shift
+        let cdddx = (3 * d) >> (shift - 1); // biased by 2*shift
 
         b = fdot6_up_shift(3 * (y1 - y0), up_shift);
         c = fdot6_up_shift(3 * (y0 - y1 - y1 + y2), up_shift);
         d = fdot6_up_shift(y3 + 3 * (y1 - y2) - y0, up_shift);
 
-        let cy     = fdot6::to_fdot16(y0);
-        let cdy    = b + (c >> shift) + (d >> (2*shift));    // biased by shift
-        let cddy   = 2 * c + ((3 * d) >> (shift - 1));       // biased by 2*shift
-        let cdddy  = (3 * d) >> (shift - 1);                 // biased by 2*shift
+        let cy = fdot6::to_fdot16(y0);
+        let cdy = b + (c >> shift) + (d >> (2 * shift)); // biased by shift
+        let cddy = 2 * c + ((3 * d) >> (shift - 1)); // biased by 2*shift
+        let cdddy = (3 * d) >> (shift - 1); // biased by 2*shift
 
         let c_last_x = fdot6::to_fdot16(x3);
         let c_last_y = fdot6::to_fdot16(y3);
@@ -464,17 +461,17 @@ impl CubicEdge {
         loop {
             count += 1;
             if count < 0 {
-                newx        = oldx + (self.cdx >> dshift);
-                self.cdx   += self.cddx >> ddshift;
-                self.cddx  += self.cdddx;
+                newx = oldx + (self.cdx >> dshift);
+                self.cdx += self.cddx >> ddshift;
+                self.cddx += self.cdddx;
 
-                newy        = oldy + (self.cdy >> dshift);
-                self.cdy   += self.cddy >> ddshift;
-                self.cddy  += self.cdddy;
+                newy = oldy + (self.cdy >> dshift);
+                self.cdy += self.cddy >> ddshift;
+                self.cddy += self.cdddy;
             } else {
                 // last segment
-                newx        = self.c_last_x;
-                newy        = self.c_last_y;
+                newx = self.c_last_x;
+                newy = self.c_last_y;
             }
 
             // we want to say debug_assert(oldy <= newy), but our finite fixedpoint
@@ -499,7 +496,6 @@ impl CubicEdge {
         success
     }
 }
-
 
 // This correctly favors the lower-pixel when y0 is on a 1/2 pixel boundary
 fn compute_dy(top: FDot6, y0: FDot6) -> FDot6 {
@@ -562,8 +558,8 @@ fn fdot6_up_shift(x: FDot6, up_shift: i32) -> i32 {
 // use 16/512 to approximate 1/27
 fn cubic_delta_from_line(a: FDot6, b: FDot6, c: FDot6, d: FDot6) -> FDot6 {
     // since our parameters may be negative, we don't use <<
-    let one_third = ((a*8 - b*15 + 6*c + d) * 19) >> 9;
-    let two_third = ((a + 6*b - c*15 + d*8) * 19) >> 9;
+    let one_third = ((a * 8 - b * 15 + 6 * c + d) * 19) >> 9;
+    let two_third = ((a + 6 * b - c * 15 + d * 8) * 19) >> 9;
 
     one_third.abs().max(two_third.abs())
 }

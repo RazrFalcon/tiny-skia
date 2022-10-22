@@ -11,14 +11,18 @@ fn main() {
     paint.quality = FilterQuality::Bicubic;
 
     pixmap.draw_pixmap(
-        20, 20,
+        20,
+        20,
         triangle.as_ref(),
         &paint,
         Transform::from_row(1.2, 0.5, 0.5, 1.2, 0.0, 0.0),
-        None
+        None,
     );
 
-    println!("Rendered in {:.2}ms", now.elapsed().as_micros() as f64 / 1000.0);
+    println!(
+        "Rendered in {:.2}ms",
+        now.elapsed().as_micros() as f64 / 1000.0
+    );
 
     pixmap.save_png("image.png").unwrap();
 }
@@ -37,7 +41,13 @@ fn create_triangle() -> Pixmap {
 
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
-    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
+    pixmap.fill_path(
+        &path,
+        &paint,
+        FillRule::Winding,
+        Transform::identity(),
+        None,
+    );
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(0.0, 0.0, 200.0, 200.0).unwrap());
     let stroke = Stroke::default();

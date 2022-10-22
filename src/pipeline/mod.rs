@@ -50,8 +50,8 @@ use arrayvec::ArrayVec;
 
 use tiny_skia_path::{NormalizedF32, ScreenIntRect};
 
-use crate::{LengthU32, Color, SpreadMode, PremultipliedColor, PremultipliedColorU8};
-use crate::{Transform, PixmapRef};
+use crate::{Color, LengthU32, PremultipliedColor, PremultipliedColorU8, SpreadMode};
+use crate::{PixmapRef, Transform};
 
 pub use blitter::RasterPipelineBlitter;
 
@@ -60,8 +60,8 @@ use crate::pixmap::SubPixmapMut;
 use crate::wide::u32x8;
 
 mod blitter;
-mod lowp;
-mod highp;
+#[rustfmt::skip] mod highp;
+#[rustfmt::skip] mod lowp;
 
 const MAX_STAGES: usize = 32; // More than enough.
 
@@ -131,7 +131,6 @@ pub enum Stage {
 
 pub const STAGES_COUNT: usize = Stage::ApplyVectorMask as usize + 1;
 
-
 impl<'a> PixmapRef<'a> {
     #[inline(always)]
     pub(crate) fn gather(&self, index: u32x8) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
@@ -181,11 +180,10 @@ impl<'a> SubPixmapMut<'a> {
     }
 }
 
-
 #[derive(Default, Debug)]
 pub struct AAMaskCtx {
     pub pixels: [u8; 2],
-    pub stride: u32, // can be zero
+    pub stride: u32,  // can be zero
     pub shift: usize, // mask offset/position in pixmap coordinates
 }
 
@@ -198,11 +196,10 @@ impl AAMaskCtx {
             (0, 1) => [self.pixels[0], 0],
             (0, 2) => [self.pixels[0], self.pixels[1]],
             (1, 1) => [self.pixels[1], 0],
-            _ => [0, 0] // unreachable
+            _ => [0, 0], // unreachable
         }
     }
 }
-
 
 #[derive(Copy, Clone, Debug)]
 pub struct ClipMaskCtx<'a> {
@@ -226,7 +223,6 @@ impl ClipMaskCtx<'_> {
     }
 }
 
-
 #[derive(Default)]
 pub struct Context {
     pub current_coverage: f32,
@@ -240,14 +236,12 @@ pub struct Context {
     pub transform: Transform,
 }
 
-
 #[derive(Copy, Clone, Default, Debug)]
 pub struct SamplerCtx {
     pub spread_mode: SpreadMode,
     pub inv_width: f32,
     pub inv_height: f32,
 }
-
 
 #[derive(Copy, Clone, Default, Debug)]
 pub struct UniformColorCtx {
@@ -257,7 +251,6 @@ pub struct UniformColorCtx {
     pub a: f32,
     pub rgba: [u16; 4], // [0,255] in a 16-bit lane.
 }
-
 
 // A gradient color is an unpremultiplied RGBA not in a 0..1 range.
 // It basically can have any float value.
@@ -286,13 +279,11 @@ impl From<Color> for GradientColor {
     }
 }
 
-
 #[derive(Copy, Clone, Default, Debug)]
 pub struct EvenlySpaced2StopGradientCtx {
     pub factor: GradientColor,
     pub bias: GradientColor,
 }
-
 
 #[derive(Clone, Default, Debug)]
 pub struct GradientCtx {
@@ -313,14 +304,12 @@ impl GradientCtx {
     }
 }
 
-
 #[derive(Copy, Clone, Default, Debug)]
 pub struct TwoPointConicalGradientCtx {
     // This context is used only in highp, where we use Tx4.
     pub mask: u32x8,
     pub p0: f32,
 }
-
 
 #[derive(Copy, Clone, Default, Debug)]
 pub struct TileCtx {
@@ -370,10 +359,7 @@ impl RasterPipelineBuilder {
             (a * 255.0 + 0.5) as u16,
         ];
 
-        let ctx = UniformColorCtx {
-            r, g, b, a,
-            rgba,
-        };
+        let ctx = UniformColorCtx { r, g, b, a, rgba };
 
         self.stages.push(Stage::UniformColor);
         self.ctx.uniform_color = ctx;
@@ -390,11 +376,15 @@ impl RasterPipelineBuilder {
             };
         }
 
-        let is_lowp_compatible = self.stages.iter()
+        let is_lowp_compatible = self
+            .stages
+            .iter()
             .all(|stage| !lowp::fn_ptr_eq(lowp::STAGES[*stage as usize], lowp::null_fn));
 
         if self.force_hq_pipeline || !is_lowp_compatible {
-            let mut functions: ArrayVec<_, MAX_STAGES> = self.stages.iter()
+            let mut functions: ArrayVec<_, MAX_STAGES> = self
+                .stages
+                .iter()
                 .map(|stage| highp::STAGES[*stage as usize] as highp::StageFn)
                 .collect();
             functions.push(highp::just_return as highp::StageFn);
@@ -418,11 +408,16 @@ impl RasterPipelineBuilder {
             }
 
             RasterPipeline {
-                kind: RasterPipelineKind::High { functions, tail_functions },
+                kind: RasterPipelineKind::High {
+                    functions,
+                    tail_functions,
+                },
                 ctx: self.ctx,
             }
         } else {
-            let mut functions: ArrayVec<_, MAX_STAGES> = self.stages.iter()
+            let mut functions: ArrayVec<_, MAX_STAGES> = self
+                .stages
+                .iter()
                 .map(|stage| lowp::STAGES[*stage as usize] as lowp::StageFn)
                 .collect();
             functions.push(lowp::just_return as lowp::StageFn);
@@ -442,7 +437,10 @@ impl RasterPipelineBuilder {
             }
 
             RasterPipeline {
-                kind: RasterPipelineKind::Low { functions, tail_functions },
+                kind: RasterPipelineKind::Low {
+                    functions,
+                    tail_functions,
+                },
                 ctx: self.ctx,
             }
         }
@@ -475,7 +473,10 @@ impl RasterPipeline {
         pixmap_dst: &mut SubPixmapMut,
     ) {
         match self.kind {
-            RasterPipelineKind::High { ref functions, ref tail_functions } => {
+            RasterPipelineKind::High {
+                ref functions,
+                ref tail_functions,
+            } => {
                 highp::start(
                     functions.as_slice(),
                     tail_functions.as_slice(),
@@ -487,7 +488,10 @@ impl RasterPipeline {
                     pixmap_dst,
                 );
             }
-            RasterPipelineKind::Low { ref functions, ref tail_functions } => {
+            RasterPipelineKind::Low {
+                ref functions,
+                ref tail_functions,
+            } => {
                 lowp::start(
                     functions.as_slice(),
                     tail_functions.as_slice(),
@@ -503,7 +507,7 @@ impl RasterPipeline {
     }
 }
 
-
+#[rustfmt::skip]
 #[cfg(test)]
 mod blend_tests {
     // Test blending modes.
@@ -515,7 +519,7 @@ mod blend_tests {
     // due rounding.
 
     use super::*;
-    use crate::{Pixmap, Color, PremultipliedColorU8, BlendMode};
+    use crate::{BlendMode, Color, Pixmap, PremultipliedColorU8};
 
     macro_rules! test_blend {
         ($name:ident, $mode:expr, $is_highp:expr, $r:expr, $g:expr, $b:expr, $a:expr) => {

@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 
 use tiny_skia_path::ScreenIntRect;
 
-use crate::{Path, LengthU32, FillRule};
+use crate::{FillRule, LengthU32, Path};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
@@ -32,7 +32,6 @@ impl ClipMaskData {
     }
 }
 
-
 /// A clipping mask.
 ///
 /// Unlike Skia, we're using just a simple 8bit alpha mask.
@@ -49,7 +48,7 @@ impl Default for ClipMask {
                 data: Vec::new(),
                 width: LENGTH_U32_ONE,
                 height: LENGTH_U32_ONE,
-            }
+            },
         }
     }
 }
@@ -86,7 +85,9 @@ impl ClipMask {
 
         // Reuse the existing allocation.
         self.mask.data.clear();
-        self.mask.data.resize((width.get() * height.get()) as usize, 0);
+        self.mask
+            .data
+            .resize((width.get() * height.get()) as usize, 0);
 
         let clip = ScreenIntRect::from_xywh_safe(0, 0, width, height);
 
@@ -109,7 +110,13 @@ impl ClipMask {
         anti_alias: bool,
     ) -> Option<()> {
         let mut submask = ClipMask::new();
-        submask.set_path(self.mask.width.get(), self.mask.height.get(), path, fill_rule, anti_alias)?;
+        submask.set_path(
+            self.mask.width.get(),
+            self.mask.height.get(),
+            path,
+            fill_rule,
+            anti_alias,
+        )?;
 
         for (a, b) in self.mask.data.iter_mut().zip(submask.mask.data.iter()) {
             *a = crate::color::premultiply_u8(*a, *b);
@@ -127,7 +134,6 @@ impl ClipMask {
     }
 }
 
-
 struct ClipBuilder<'a>(&'a mut ClipMaskData);
 
 impl Blitter for ClipBuilder<'_> {
@@ -138,7 +144,6 @@ impl Blitter for ClipBuilder<'_> {
         }
     }
 }
-
 
 struct ClipBuilderAA<'a>(&'a mut ClipMaskData);
 

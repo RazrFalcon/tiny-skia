@@ -4,19 +4,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use tiny_skia_path::{Point, NormalizedF32Exclusive, NormalizedF32};
+use tiny_skia_path::{NormalizedF32, NormalizedF32Exclusive, Point};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
 
 pub use tiny_skia_path::path_geometry::{
-    QuadCoeff,
-    CubicCoeff,
-    chop_quad_at,
-    new_t_values,
-    find_unit_quad_roots,
-    chop_cubic_at2,
-    find_cubic_max_curvature,
+    chop_cubic_at2, chop_quad_at, find_cubic_max_curvature, find_unit_quad_roots, new_t_values,
+    CubicCoeff, QuadCoeff,
 };
 
 use tiny_skia_path::path_geometry::valid_unit_divide;
@@ -144,7 +139,11 @@ pub fn chop_cubic_at_y_extrema(src: &[Point; 4], dst: &mut [Point; 10]) -> usize
 // C = 3(b - a)
 // Solve for t, keeping only those that fit between 0 < t < 1
 fn find_cubic_extrema(
-    a: f32, b: f32, c: f32, d: f32, t_values: &mut [NormalizedF32Exclusive; 3],
+    a: f32,
+    b: f32,
+    c: f32,
+    d: f32,
+    t_values: &mut [NormalizedF32Exclusive; 3],
 ) -> &[NormalizedF32Exclusive] {
     // we divide A,B,C by 3 to simplify
     let na = d - a + 3.0 * (b - c);
@@ -195,7 +194,7 @@ pub fn chop_cubic_at(src: &[Point; 4], t_values: &[NormalizedF32Exclusive], dst:
 
             // watch out in case the renormalized t isn't in range
             let n = valid_unit_divide(
-                t_values[i+1].get() - t_values[i].get(),
+                t_values[i + 1].get() - t_values[i].get(),
                 1.0 - t_values[i].get(),
             );
 
@@ -253,7 +252,7 @@ fn cubic_dchop_at_intercept(
     is_vertical: bool,
     dst: &mut [Point; 7],
 ) -> bool {
-    use crate::path64::{cubic64::Cubic64, point64::Point64, line_cubic_intersections};
+    use crate::path64::{cubic64::Cubic64, line_cubic_intersections, point64::Point64};
 
     let src = [
         Point64::from_point(src[0]),

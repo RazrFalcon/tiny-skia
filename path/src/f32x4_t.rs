@@ -28,7 +28,6 @@ impl f32x4 {
     }
 }
 
-
 impl core::ops::Add for f32x4 {
     type Output = Self;
 

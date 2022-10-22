@@ -29,7 +29,19 @@ fn main() {
     };
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-    pixmap.fill_path(&path1, &paint1, FillRule::Winding, Transform::identity(), None);
-    pixmap.fill_path(&path2, &paint2, FillRule::Winding, Transform::identity(), None);
+    pixmap.fill_path(
+        &path1,
+        &paint1,
+        FillRule::Winding,
+        Transform::identity(),
+        None,
+    );
+    pixmap.fill_path(
+        &path2,
+        &paint2,
+        FillRule::Winding,
+        Transform::identity(),
+        None,
+    );
     pixmap.save_png("image.png").unwrap();
 }

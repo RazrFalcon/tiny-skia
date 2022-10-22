@@ -6,7 +6,7 @@
 
 use crate::scalar::Scalar;
 
-pub use strict_num::{FiniteF32, NormalizedF32, NonZeroPositiveF32};
+pub use strict_num::{FiniteF32, NonZeroPositiveF32, NormalizedF32};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use crate::NoStdFloat;
@@ -28,8 +28,16 @@ impl SaturateCast<f32> for i32 {
     ///
     /// Returns MAX_I32_FITS_IN_F32 for NaN.
     fn saturate_from(mut x: f32) -> Self {
-        x = if x < MAX_I32_FITS_IN_F32 { x } else { MAX_I32_FITS_IN_F32 };
-        x = if x > MIN_I32_FITS_IN_F32 { x } else { MIN_I32_FITS_IN_F32 };
+        x = if x < MAX_I32_FITS_IN_F32 {
+            x
+        } else {
+            MAX_I32_FITS_IN_F32
+        };
+        x = if x > MIN_I32_FITS_IN_F32 {
+            x
+        } else {
+            MIN_I32_FITS_IN_F32
+        };
         x as i32
     }
 }
@@ -39,8 +47,16 @@ impl SaturateCast<f64> for i32 {
     ///
     /// Returns i32::MAX for NaN.
     fn saturate_from(mut x: f64) -> Self {
-        x = if x < i32::MAX as f64 { x } else { i32::MAX as f64 };
-        x = if x > i32::MIN as f64 { x } else { i32::MIN as f64 };
+        x = if x < i32::MAX as f64 {
+            x
+        } else {
+            i32::MAX as f64
+        };
+        x = if x > i32::MIN as f64 {
+            x
+        } else {
+            i32::MIN as f64
+        };
         x as i32
     }
 }
@@ -86,7 +102,6 @@ fn sign_bit_to_2s_compliment(mut x: i32) -> i32 {
 
     x
 }
-
 
 /// An immutable `f32` that is larger than 0 but less then 1.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Default, Debug)]

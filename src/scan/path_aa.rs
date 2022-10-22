@@ -8,7 +8,7 @@ use core::convert::TryFrom;
 
 use tiny_skia_path::ScreenIntRect;
 
-use crate::{Path, IntRect, FillRule, LengthU32, Rect};
+use crate::{FillRule, IntRect, LengthU32, Path, Rect};
 
 use crate::alpha_runs::AlphaRuns;
 use crate::blitter::Blitter;
@@ -23,7 +23,7 @@ const SUPERSAMPLE_SHIFT: u32 = 2;
 
 const SHIFT: u32 = SUPERSAMPLE_SHIFT;
 const SCALE: u32 = 1 << SHIFT;
-const MASK: u32  = SCALE - 1;
+const MASK: u32 = SCALE - 1;
 
 pub fn fill_path(
     path: &Path,
@@ -38,7 +38,8 @@ pub fn fill_path(
         path.bounds().top().floor(),
         path.bounds().right().ceil(),
         path.bounds().bottom().ceil(),
-    )?.round_out()?;
+    )?
+    .round_out()?;
 
     // If the intersection of the path bounds and the clip bounds
     // will overflow 32767 when << by SHIFT, we can't supersample,
@@ -73,10 +74,10 @@ fn rect_overflows_short_shift(rect: &IntRect, shift: i32) -> i32 {
 
     // Since we expect these to succeed, we bit-or together
     // for a tiny extra bit of speed.
-    overflows_short_shift(rect.left(), shift) |
-    overflows_short_shift(rect.top(), shift) |
-    overflows_short_shift(rect.right(), shift) |
-    overflows_short_shift(rect.bottom(), shift)
+    overflows_short_shift(rect.left(), shift)
+        | overflows_short_shift(rect.top(), shift)
+        | overflows_short_shift(rect.right(), shift)
+        | overflows_short_shift(rect.bottom(), shift)
 }
 
 fn overflows_short_shift(value: i32, shift: i32) -> i32 {
@@ -140,7 +141,9 @@ impl<'a> BaseSuperBlitter<'a> {
         clip_rect: &ScreenIntRect,
         blitter: &'a mut dyn Blitter,
     ) -> Option<Self> {
-        let sect = bounds.intersect(&clip_rect.to_int_rect())?.to_screen_int_rect()?;
+        let sect = bounds
+            .intersect(&clip_rect.to_int_rect())?
+            .to_screen_int_rect()?;
         Some(BaseSuperBlitter {
             real_blitter: blitter,
             curr_iy: sect.top() as i32 - 1,
@@ -152,7 +155,6 @@ impl<'a> BaseSuperBlitter<'a> {
         })
     }
 }
-
 
 struct SuperBlitter<'a> {
     base: BaseSuperBlitter<'a>,
@@ -268,6 +270,6 @@ impl Blitter for SuperBlitter<'_> {
 // itself, with the same (alpha - (alpha >> 8)) correction as
 // coverage_to_exact_alpha().
 fn coverage_to_partial_alpha(mut aa: u32) -> AlphaU8 {
-    aa <<= 8 - 2*SHIFT;
+    aa <<= 8 - 2 * SHIFT;
     aa as AlphaU8
 }

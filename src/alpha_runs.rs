@@ -9,8 +9,8 @@ use alloc::vec::Vec;
 use core::convert::TryFrom;
 use core::num::NonZeroU16;
 
-use crate::LengthU32;
 use crate::color::AlphaU8;
+use crate::LengthU32;
 
 pub type AlphaRun = Option<NonZeroU16>;
 
@@ -86,7 +86,12 @@ impl AlphaRuns {
         x -= offset_x;
 
         if start_alpha != 0 {
-            Self::break_run(&mut self.runs[runs_offset..], &mut self.alpha[alpha_offset..], x, 1);
+            Self::break_run(
+                &mut self.runs[runs_offset..],
+                &mut self.alpha[alpha_offset..],
+                x,
+                1,
+            );
             // I should be able to just add alpha[x] + start_alpha.
             // However, if the trailing edge of the previous span and the leading
             // edge of the current span round to the same super-sampled x value,
@@ -113,7 +118,7 @@ impl AlphaRuns {
             x = 0;
             loop {
                 let a = Self::catch_overflow(
-                    u16::from(self.alpha[alpha_offset]) + u16::from(max_value)
+                    u16::from(self.alpha[alpha_offset]) + u16::from(max_value),
                 );
                 self.alpha[alpha_offset] = a;
 

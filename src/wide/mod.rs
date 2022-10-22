@@ -15,24 +15,24 @@
 
 #![allow(non_camel_case_types)]
 
-mod i32x4_t;
-mod f32x4_t;
-mod u32x4_t;
-mod f32x8_t;
-mod i32x8_t;
-mod u32x8_t;
 mod f32x16_t;
+mod f32x4_t;
+mod f32x8_t;
+mod i32x4_t;
+mod i32x8_t;
 mod u16x16_t;
+mod u32x4_t;
+mod u32x8_t;
 
-pub use tiny_skia_path::f32x2;
-pub use i32x4_t::i32x4;
-pub use f32x4_t::f32x4;
-pub use u32x4_t::u32x4;
-pub use f32x8_t::f32x8;
-pub use i32x8_t::i32x8;
-pub use u32x8_t::u32x8;
 pub use f32x16_t::f32x16;
+pub use f32x4_t::f32x4;
+pub use f32x8_t::f32x8;
+pub use i32x4_t::i32x4;
+pub use i32x8_t::i32x8;
+pub use tiny_skia_path::f32x2;
 pub use u16x16_t::u16x16;
+pub use u32x4_t::u32x4;
+pub use u32x8_t::u32x8;
 
 #[allow(dead_code)]
 #[inline]
@@ -42,7 +42,6 @@ where
 {
     n ^ ((n ^ y) & mask)
 }
-
 
 /// A faster and more forgiving f32 min/max implementation.
 ///
@@ -56,10 +55,18 @@ pub trait FasterMinMax {
 #[allow(dead_code)]
 impl FasterMinMax for f32 {
     fn faster_min(self, rhs: f32) -> f32 {
-        if rhs < self { rhs } else { self }
+        if rhs < self {
+            rhs
+        } else {
+            self
+        }
     }
 
     fn faster_max(self, rhs: f32) -> f32 {
-        if self < rhs { rhs } else { self }
+        if self < rhs {
+            rhs
+        } else {
+            self
+        }
     }
 }

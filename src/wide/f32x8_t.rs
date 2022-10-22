@@ -7,7 +7,7 @@
 
 use bytemuck::cast;
 
-use super::{u32x8, i32x8};
+use super::{i32x8, u32x8};
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "simd", target_feature = "avx"))] {
@@ -44,7 +44,10 @@ impl f32x8 {
 
     pub fn floor(self) -> Self {
         let roundtrip: f32x8 = cast(self.trunc_int().to_f32x8());
-        roundtrip - roundtrip.cmp_gt(self).blend(f32x8::splat(1.0), f32x8::default())
+        roundtrip
+            - roundtrip
+                .cmp_gt(self)
+                .blend(f32x8::splat(1.0), f32x8::default())
     }
 
     pub fn fract(self) -> Self {

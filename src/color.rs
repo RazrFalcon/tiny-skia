@@ -93,7 +93,6 @@ impl core::fmt::Debug for ColorU8 {
     }
 }
 
-
 /// A 32-bit premultiplied RGBA color value.
 ///
 /// Byteorder: ABGR
@@ -191,7 +190,6 @@ impl core::fmt::Debug for PremultipliedColorU8 {
     }
 }
 
-
 /// An RGBA color value, holding four floating point components.
 ///
 /// # Guarantees
@@ -206,15 +204,30 @@ pub struct Color {
 }
 
 const NV_ZERO: NormalizedF32 = NormalizedF32::ZERO;
-const NV_ONE: NormalizedF32  = NormalizedF32::ONE;
+const NV_ONE: NormalizedF32 = NormalizedF32::ONE;
 
 impl Color {
     /// A transparent color.
-    pub const TRANSPARENT: Color    = Color { r: NV_ZERO, g: NV_ZERO, b: NV_ZERO, a: NV_ZERO };
+    pub const TRANSPARENT: Color = Color {
+        r: NV_ZERO,
+        g: NV_ZERO,
+        b: NV_ZERO,
+        a: NV_ZERO,
+    };
     /// A black color.
-    pub const BLACK: Color          = Color { r: NV_ZERO, g: NV_ZERO, b: NV_ZERO, a: NV_ONE };
+    pub const BLACK: Color = Color {
+        r: NV_ZERO,
+        g: NV_ZERO,
+        b: NV_ZERO,
+        a: NV_ONE,
+    };
     /// A white color.
-    pub const WHITE: Color          = Color { r: NV_ONE, g: NV_ONE, b: NV_ONE, a: NV_ONE };
+    pub const WHITE: Color = Color {
+        r: NV_ONE,
+        g: NV_ONE,
+        b: NV_ONE,
+        a: NV_ONE,
+    };
 
     /// Creates a new color from 4 components.
     ///
@@ -338,7 +351,6 @@ impl Color {
         ColorU8::from_rgba(c[0], c[1], c[2], c[3])
     }
 }
-
 
 /// A premultiplied RGBA color value, holding four floating point components.
 ///

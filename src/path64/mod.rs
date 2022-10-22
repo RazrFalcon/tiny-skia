@@ -4,18 +4,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use tiny_skia_path::{SCALAR_MAX, Scalar};
+use tiny_skia_path::{Scalar, SCALAR_MAX};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
 
 // Must be first, because of macro scope rules.
-#[macro_use] pub mod point64;
+#[macro_use]
+pub mod point64;
 
 pub mod cubic64;
 pub mod line_cubic_intersections;
 mod quad64;
-
 
 // The code below is from SkPathOpsTypes.
 
@@ -48,8 +48,11 @@ impl Scalar64 for f64 {
 
     /// Returns true if (a <= self <= b) || (a >= self >= b).
     fn between(self, a: f64, b: f64) -> bool {
-        debug_assert!(((a <= self && self <= b) || (a >= self && self >= b)) == ((a - self) * (b - self) <= 0.0) ||
-            (a.precisely_zero() && self.precisely_zero() && b.precisely_zero()));
+        debug_assert!(
+            ((a <= self && self <= b) || (a >= self && self >= b))
+                == ((a - self) * (b - self) <= 0.0)
+                || (a.precisely_zero() && self.precisely_zero() && b.precisely_zero())
+        );
 
         (a - self) * (b - self) <= 0.0
     }
@@ -104,7 +107,6 @@ impl Scalar64 for f64 {
         }
     }
 }
-
 
 pub fn cube_root(x: f64) -> f64 {
     if x.approximately_zero_cubed() {

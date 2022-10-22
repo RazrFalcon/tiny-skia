@@ -6,9 +6,12 @@
 
 use crate::floating_point::f32_as_2s_compliment;
 
-#[allow(missing_docs)] pub const SCALAR_MAX: f32           = 3.402823466e+38;
-#[allow(missing_docs)] pub const SCALAR_NEARLY_ZERO: f32   = 1.0 / (1 << 12) as f32;
-#[allow(missing_docs)] pub const SCALAR_ROOT_2_OVER_2: f32 = 0.707106781;
+#[allow(missing_docs)]
+pub const SCALAR_MAX: f32 = 3.402823466e+38;
+#[allow(missing_docs)]
+pub const SCALAR_NEARLY_ZERO: f32 = 1.0 / (1 << 12) as f32;
+#[allow(missing_docs)]
+pub const SCALAR_ROOT_2_OVER_2: f32 = 0.707106781;
 
 /// Float number extension methods.
 ///

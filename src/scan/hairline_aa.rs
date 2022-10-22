@@ -9,12 +9,12 @@ use core::num::NonZeroU16;
 
 use tiny_skia_path::ScreenIntRect;
 
-use crate::{IntRect, LengthU32, Path, LineCap, Point, Rect};
+use crate::{IntRect, LengthU32, LineCap, Path, Point, Rect};
 
 use crate::alpha_runs::{AlphaRun, AlphaRuns};
 use crate::blitter::Blitter;
 use crate::color::AlphaU8;
-use crate::fixed_point::{fdot6, fdot8, fdot16, FDot6, FDot8, FDot16};
+use crate::fixed_point::{fdot16, fdot6, fdot8, FDot16, FDot6, FDot8};
 use crate::line_clipper;
 use crate::math::LENGTH_U32_ONE;
 
@@ -37,7 +37,6 @@ impl FixedRect {
     }
 }
 
-
 /// Multiplies value by 0..256, and shift the result down 8
 /// (i.e. return (value * alpha256) >> 8)
 fn alpha_mul(value: AlphaU8, alpha256: i32) -> u8 {
@@ -46,12 +45,7 @@ fn alpha_mul(value: AlphaU8, alpha256: i32) -> u8 {
     a as u8
 }
 
-
-pub fn fill_rect(
-    rect: &Rect,
-    clip: &ScreenIntRect,
-    blitter: &mut dyn Blitter,
-) -> Option<()> {
+pub fn fill_rect(rect: &Rect, clip: &ScreenIntRect, blitter: &mut dyn Blitter) -> Option<()> {
     let rect = rect.intersect(&clip.to_rect())?;
     let fr = FixedRect::from_rect(&rect);
     fill_fixed_rect(&fr, blitter);
@@ -229,7 +223,6 @@ fn call_hline_blitter(
     }
 }
 
-
 pub fn stroke_path(
     path: &Path,
     line_cap: LineCap,
@@ -265,7 +258,7 @@ fn anti_hair_line_rgn(
         let mut pts = [Point::zero(); 2];
 
         // We have to pre-clip the line to fit in a Fixed, so we just chop the line.
-        if !line_clipper::intersect(&[points[i], points[i+1]], &fixed_bounds, &mut pts) {
+        if !line_clipper::intersect(&[points[i], points[i + 1]], &fixed_bounds, &mut pts) {
             continue;
         }
 
@@ -299,7 +292,8 @@ fn anti_hair_line_rgn(
             }
 
             if !clip.to_int_rect().contains(&ir) {
-                let subclip = ir.intersect(&clip.to_int_rect())
+                let subclip = ir
+                    .intersect(&clip.to_int_rect())
                     .and_then(|r| r.to_screen_int_rect());
 
                 if let Some(subclip) = subclip {
@@ -434,12 +428,14 @@ fn do_anti_hairline(
             let (mut top, mut bottom) = if slope >= 0 {
                 // T2B
                 let top = fdot16::floor_to_i32(fstart - fdot16::HALF);
-                let bottom = fdot16::ceil_to_i32(fstart + (istop - istart - 1) * slope + fdot16::HALF);
+                let bottom =
+                    fdot16::ceil_to_i32(fstart + (istop - istart - 1) * slope + fdot16::HALF);
                 (top, bottom)
             } else {
                 // B2T
                 let bottom = fdot16::ceil_to_i32(fstart + fdot16::HALF);
-                let top = fdot16::floor_to_i32(fstart + (istop - istart - 1) * slope - fdot16::HALF);
+                let top =
+                    fdot16::floor_to_i32(fstart + (istop - istart - 1) * slope - fdot16::HALF);
                 (top, bottom)
             };
 
@@ -523,12 +519,14 @@ fn do_anti_hairline(
             let (mut left, mut right) = if slope >= 0 {
                 // L2R
                 let left = fdot16::floor_to_i32(fstart - fdot16::HALF);
-                let right = fdot16::ceil_to_i32(fstart + (istop - istart - 1) * slope + fdot16::HALF);
+                let right =
+                    fdot16::ceil_to_i32(fstart + (istop - istart - 1) * slope + fdot16::HALF);
                 (left, right)
             } else {
                 // R2L
                 let right = fdot16::ceil_to_i32(fstart + fdot16::HALF);
-                let left = fdot16::floor_to_i32(fstart + (istop - istart - 1) * slope - fdot16::HALF);
+                let left =
+                    fdot16::floor_to_i32(fstart + (istop - istart - 1) * slope - fdot16::HALF);
                 (left, right)
             };
 
@@ -562,19 +560,19 @@ fn do_anti_hairline(
         BlitterKind::HLine => {
             hline_blitter = HLineAntiHairBlitter(blitter);
             &mut hline_blitter
-        },
+        }
         BlitterKind::Horish => {
             horish_blitter = HorishAntiHairBlitter(blitter);
             &mut horish_blitter
-        },
+        }
         BlitterKind::VLine => {
             vline_blitter = VLineAntiHairBlitter(blitter);
             &mut vline_blitter
-        },
+        }
         BlitterKind::Vertish => {
             vertish_blitter = VertishAntiHairBlitter(blitter);
             &mut vertish_blitter
-        },
+        }
     };
 
     debug_assert!(istart >= 0);
@@ -616,12 +614,10 @@ fn contribution_64(ordinate: FDot6) -> i32 {
     result
 }
 
-
 trait AntiHairBlitter {
     fn draw_cap(&mut self, x: u32, fy: FDot16, slope: FDot16, mod64: i32) -> FDot16;
     fn draw_line(&mut self, x: u32, stopx: u32, fy: FDot16, slope: FDot16) -> FDot16;
 }
-
 
 struct HLineAntiHairBlitter<'a>(&'a mut dyn Blitter);
 
@@ -675,7 +671,6 @@ impl AntiHairBlitter for HLineAntiHairBlitter<'_> {
     }
 }
 
-
 struct HorishAntiHairBlitter<'a>(&'a mut dyn Blitter);
 
 impl AntiHairBlitter for HorishAntiHairBlitter<'_> {
@@ -712,7 +707,6 @@ impl AntiHairBlitter for HorishAntiHairBlitter<'_> {
         fy - fdot16::ONE / 2
     }
 }
-
 
 struct VLineAntiHairBlitter<'a>(&'a mut dyn Blitter);
 
@@ -764,7 +758,6 @@ impl AntiHairBlitter for VLineAntiHairBlitter<'_> {
     }
 }
 
-
 struct VertishAntiHairBlitter<'a>(&'a mut dyn Blitter);
 
 impl AntiHairBlitter for VertishAntiHairBlitter<'_> {
@@ -774,7 +767,12 @@ impl AntiHairBlitter for VertishAntiHairBlitter<'_> {
 
         let x = (fx >> 16) as u32;
         let a = i32_to_alpha(fx >> 8);
-        self.0.blit_anti_h2(x.max(1) - 1, y, fdot6::small_scale(255 - a, mod64), fdot6::small_scale(a, mod64));
+        self.0.blit_anti_h2(
+            x.max(1) - 1,
+            y,
+            fdot6::small_scale(255 - a, mod64),
+            fdot6::small_scale(a, mod64),
+        );
 
         fx + dx - fdot16::ONE / 2
     }
@@ -803,7 +801,6 @@ impl AntiHairBlitter for VertishAntiHairBlitter<'_> {
 fn i32_to_alpha(a: i32) -> u8 {
     (a & 0xFF) as u8
 }
-
 
 struct RectClipBlitter<'a> {
     blitter: &'a mut dyn Blitter,
@@ -884,24 +881,17 @@ impl Blitter for RectClipBlitter<'_> {
 
     fn blit_anti_h2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8) {
         self.blit_anti_h(
-            x, y,
+            x,
+            y,
             &mut [alpha0, alpha1],
             &mut [NonZeroU16::new(1), NonZeroU16::new(1), None],
         );
     }
 
     fn blit_anti_v2(&mut self, x: u32, y: u32, alpha0: AlphaU8, alpha1: AlphaU8) {
-        self.blit_anti_h(
-            x, y,
-            &mut [alpha0],
-            &mut [NonZeroU16::new(1), None],
-        );
+        self.blit_anti_h(x, y, &mut [alpha0], &mut [NonZeroU16::new(1), None]);
 
-        self.blit_anti_h(
-            x, y + 1,
-            &mut [alpha1],
-            &mut [NonZeroU16::new(1), None],
-        );
+        self.blit_anti_h(x, y + 1, &mut [alpha1], &mut [NonZeroU16::new(1), None]);
     }
 }
 

@@ -8,12 +8,12 @@
 
 use crate::{Path, Point, Transform};
 
-use crate::floating_point::{NormalizedF32, NonZeroPositiveF32, NormalizedF32Exclusive};
-use crate::path_builder::{PathBuilder, PathDirection};
+use crate::dash::StrokeDash;
+use crate::floating_point::{NonZeroPositiveF32, NormalizedF32, NormalizedF32Exclusive};
 use crate::path::{PathSegment, PathSegmentsIter};
+use crate::path_builder::{PathBuilder, PathDirection};
 use crate::path_geometry;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
-use crate::dash::StrokeDash;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use crate::NoStdFloat;
@@ -33,7 +33,6 @@ impl<'a> SwappableBuilders<'a> {
         core::mem::swap(&mut self.inner, &mut self.outer);
     }
 }
-
 
 /// Stroke properties.
 #[derive(Clone, PartialEq, Debug)]
@@ -80,7 +79,6 @@ impl Default for Stroke {
     }
 }
 
-
 /// Draws at the beginning and end of an open path contour.
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum LineCap {
@@ -97,7 +95,6 @@ impl Default for LineCap {
         LineCap::Butt
     }
 }
-
 
 /// Specifies how corners are drawn when a shape is stroked.
 ///
@@ -127,7 +124,6 @@ impl Default for LineJoin {
     }
 }
 
-
 // const TANGENT_RECURSIVE_LIMIT: usize = 0;
 // const CUBIC_RECURSIVE_LIMIT: usize = 1;
 // const CONIC_RECURSIVE_LIMIT: usize = 2;
@@ -136,7 +132,7 @@ const QUAD_RECURSIVE_LIMIT: usize = 3;
 // quads with extreme widths (e.g. (0,1) (1,6) (0,3) width=5e7) recurse to point of failure
 // largest seen for normal cubics: 5, 26
 // largest seen for normal quads: 11
-const RECURSIVE_LIMITS: [i32; 4] = [5*3, 26*3, 11*3, 11*3]; // 3x limits seen in practice
+const RECURSIVE_LIMITS: [i32; 4] = [5 * 3, 26 * 3, 11 * 3, 11 * 3]; // 3x limits seen in practice
 
 type CapProc = fn(
     pivot: Point,
@@ -169,7 +165,7 @@ enum ReductionType {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 enum StrokeType {
-    Outer = 1,   // use sign-opposite values later to flip perpendicular axis
+    Outer = 1, // use sign-opposite values later to flip perpendicular axis
     Inner = -1,
 }
 
@@ -195,11 +191,7 @@ impl Path {
     /// If you plan stroking multiple paths, you can try using [`PathStroker`]
     /// which will preserve temporary allocations required during stroking.
     /// This might improve performance a bit.
-    pub fn stroke(
-        &self,
-        stroke: &Stroke,
-        resolution_scale: f32,
-    ) -> Option<Path> {
+    pub fn stroke(&self, stroke: &Stroke, resolution_scale: f32) -> Option<Path> {
         PathStroker::new().stroke(self, stroke, resolution_scale)
     }
 }
@@ -315,14 +307,16 @@ impl PathStroker {
     ///
     /// `resolution_scale` can be obtained via
     /// [`compute_resolution_scale`](Self::compute_resolution_scale).
-    pub fn stroke(
-        &mut self,
-        path: &Path,
-        stroke: &Stroke,
-        resolution_scale: f32,
-    ) -> Option<Path> {
+    pub fn stroke(&mut self, path: &Path, stroke: &Stroke, resolution_scale: f32) -> Option<Path> {
         let width = NonZeroPositiveF32::new(stroke.width)?;
-        self.stroke_inner(path, width, stroke.miter_limit, stroke.line_cap, stroke.line_join, resolution_scale)
+        self.stroke_inner(
+            path,
+            width,
+            stroke.miter_limit,
+            stroke.line_cap,
+            stroke.line_join,
+            resolution_scale,
+        )
     }
 
     fn stroke_inner(
@@ -380,7 +374,8 @@ impl PathStroker {
 
         // 3x for result == inner + outer + join (swag)
         self.outer.clear();
-        self.outer.reserve(path.verbs.len() * 3, path.points.len() * 3);
+        self.outer
+            .reserve(path.verbs.len() * 3, path.points.len() * 3);
 
         self.cusper.clear();
 
@@ -461,14 +456,14 @@ impl PathStroker {
     }
 
     fn line_to(&mut self, p: Point, iter: Option<&PathSegmentsIter>) {
-        let teeny_line = self.prev_pt
+        let teeny_line = self
+            .prev_pt
             .equals_within_tolerance(p, SCALAR_NEARLY_ZERO * self.inv_res_scale);
         if fn_ptr_eq(self.capper, butt_capper) && teeny_line {
             return;
         }
 
-        if  teeny_line &&
-            (self.join_completed || iter.map(|i| i.has_valid_tangent()) == Some(true))
+        if teeny_line && (self.join_completed || iter.map(|i| i.has_valid_tangent()) == Some(true))
         {
             return;
         }
@@ -571,8 +566,8 @@ impl PathStroker {
             return;
         }
 
-        if ReductionType::Degenerate <= reduction_type &&
-           ReductionType::Degenerate3 >= reduction_type
+        if ReductionType::Degenerate <= reduction_type
+            && ReductionType::Degenerate3 >= reduction_type
         {
             self.line_to(reduction[0], None);
             let save_joiner = self.joiner;
@@ -604,7 +599,10 @@ impl PathStroker {
         let t_values = path_geometry::find_cubic_inflections(&cubic, &mut t_values);
         let mut last_t = NormalizedF32::ZERO;
         for index in 0..=t_values.len() {
-            let next_t = t_values.get(index).cloned().map(|n| n.to_normalized())
+            let next_t = t_values
+                .get(index)
+                .cloned()
+                .map(|n| n.to_normalized())
                 .unwrap_or(NormalizedF32::ONE);
 
             let mut quad_points = QuadConstruct::default();
@@ -636,8 +634,8 @@ impl PathStroker {
                     quad_points.quad[2],
                     self.inv_res_scale,
                 );
-                if (result_type == ResultType::Degenerate || ok) &&
-                    self.cubic_mid_on_line(cubic, quad_points)
+                if (result_type == ResultType::Degenerate || ok)
+                    && self.cubic_mid_on_line(cubic, quad_points)
                 {
                     self.add_degenerate_line(quad_points);
                     return true;
@@ -652,9 +650,11 @@ impl PathStroker {
             if result_type == ResultType::Quad {
                 let stroke = &quad_points.quad;
                 if self.stroke_type == StrokeType::Outer {
-                    self.outer.quad_to(stroke[1].x, stroke[1].y, stroke[2].x, stroke[2].y);
+                    self.outer
+                        .quad_to(stroke[1].x, stroke[1].y, stroke[2].x, stroke[2].y);
                 } else {
-                    self.inner.quad_to(stroke[1].x, stroke[1].y, stroke[2].x, stroke[2].y);
+                    self.inner
+                        .quad_to(stroke[1].x, stroke[1].y, stroke[2].x, stroke[2].y);
                 }
 
                 return true;
@@ -872,7 +872,11 @@ impl PathStroker {
 
                 // cap the end
                 let pt = self.inner.last_point().unwrap_or_default();
-                let other_path = if curr_is_line { Some(&self.inner) } else { None };
+                let other_path = if curr_is_line {
+                    Some(&self.inner)
+                } else {
+                    None
+                };
                 (self.capper)(
                     self.prev_pt,
                     self.prev_normal,
@@ -883,7 +887,11 @@ impl PathStroker {
                 self.outer.reverse_path_to(&self.inner);
 
                 // cap the start
-                let other_path = if self.prev_is_line { Some(&self.inner) } else { None };
+                let other_path = if self.prev_is_line {
+                    Some(&self.inner)
+                } else {
+                    None
+                };
                 (self.capper)(
                     self.first_pt,
                     -self.first_normal,
@@ -944,7 +952,8 @@ impl PathStroker {
             self.first_unit_normal = *unit_normal;
             self.first_outer_pt = Point::from_xy(prev_x + normal.x, prev_y + normal.y);
 
-            self.outer.move_to(self.first_outer_pt.x, self.first_outer_pt.y);
+            self.outer
+                .move_to(self.first_outer_pt.x, self.first_outer_pt.y);
             self.inner.move_to(prev_x - normal.x, prev_y - normal.y);
         } else {
             // we have a previous segment
@@ -993,8 +1002,10 @@ impl PathStroker {
             };
 
             path.quad_to(
-                quad_points.quad[1].x, quad_points.quad[1].y,
-                quad_points.quad[2].x, quad_points.quad[2].y,
+                quad_points.quad[1].x,
+                quad_points.quad[1].y,
+                quad_points.quad[2].x,
+                quad_points.quad[2].y,
             );
 
             return true;
@@ -1112,9 +1123,11 @@ impl PathStroker {
 
     fn add_degenerate_line(&mut self, quad_points: &QuadConstruct) {
         if self.stroke_type == StrokeType::Outer {
-            self.outer.line_to(quad_points.quad[2].x, quad_points.quad[2].y);
+            self.outer
+                .line_to(quad_points.quad[2].x, quad_points.quad[2].y);
         } else {
-            self.inner.line_to(quad_points.quad[2].x, quad_points.quad[2].y);
+            self.inner
+                .line_to(quad_points.quad[2].x, quad_points.quad[2].y);
         }
     }
 
@@ -1215,10 +1228,10 @@ impl PathStroker {
             if intersect_ray_type == IntersectRayType::CtrlPt {
                 // the intersection of the tangents need not be on the tangent segment
                 // so 0 <= numerA <= 1 is not necessarily true
-                quad_points.quad[1].x
-                    = start.x * (1.0 - numer_a) + quad_points.tangent_start.x * numer_a;
-                quad_points.quad[1].y
-                    = start.y * (1.0 - numer_a) + quad_points.tangent_start.y * numer_a;
+                quad_points.quad[1].x =
+                    start.x * (1.0 - numer_a) + quad_points.tangent_start.x * numer_a;
+                quad_points.quad[1].y =
+                    start.y * (1.0 - numer_a) + quad_points.tangent_start.y * numer_a;
             }
 
             return ResultType::Quad;
@@ -1251,8 +1264,10 @@ impl PathStroker {
     }
 
     fn is_current_contour_empty(&self) -> bool {
-        self.inner.is_zero_length_since_point(0) &&
-        self.outer.is_zero_length_since_point(self.first_outer_pt_index_in_contour)
+        self.inner.is_zero_length_since_point(0)
+            && self
+                .outer
+                .is_zero_length_since_point(self.first_outer_pt_index_in_contour)
     }
 }
 
@@ -1264,13 +1279,7 @@ fn cap_factory(cap: LineCap) -> CapProc {
     }
 }
 
-fn butt_capper(
-    _: Point,
-    _: Point,
-    stop: Point,
-    _: Option<&PathBuilder>,
-    path: &mut PathBuilder,
-) {
+fn butt_capper(_: Point, _: Point, stop: Point, _: Option<&PathBuilder>, path: &mut PathBuilder) {
     path.line_to(stop.x, stop.y);
 }
 
@@ -1286,7 +1295,11 @@ fn round_capper(
 
     let projected_center = pivot + parallel;
 
-    path.conic_points_to(projected_center + normal, projected_center, SCALAR_ROOT_2_OVER_2);
+    path.conic_points_to(
+        projected_center + normal,
+        projected_center,
+        SCALAR_ROOT_2_OVER_2,
+    );
     path.conic_points_to(projected_center - normal, stop, SCALAR_ROOT_2_OVER_2);
 }
 
@@ -1305,10 +1318,19 @@ fn square_capper(
             pivot.x + normal.x + parallel.x,
             pivot.y + normal.y + parallel.y,
         ));
-        path.line_to(pivot.x - normal.x + parallel.x, pivot.y - normal.y + parallel.y);
+        path.line_to(
+            pivot.x - normal.x + parallel.x,
+            pivot.y - normal.y + parallel.y,
+        );
     } else {
-        path.line_to(pivot.x + normal.x + parallel.x, pivot.y + normal.y + parallel.y);
-        path.line_to(pivot.x - normal.x + parallel.x, pivot.y - normal.y + parallel.y);
+        path.line_to(
+            pivot.x + normal.x + parallel.x,
+            pivot.y + normal.y + parallel.y,
+        );
+        path.line_to(
+            pivot.x - normal.x + parallel.x,
+            pivot.y - normal.y + parallel.y,
+        );
         path.line_to(stop.x, stop.y);
     }
 }
@@ -1417,7 +1439,9 @@ fn round_joiner(
     let conics = path_geometry::Conic::build_unit_arc(before, after, dir, ts, &mut conics);
     if let Some(conics) = conics {
         for conic in conics {
-            builders.outer.conic_points_to(conic.points[1], conic.points[2], conic.weight);
+            builders
+                .outer
+                .conic_points_to(conic.points[1], conic.points[2], conic.weight);
         }
 
         after.scale(radius);
@@ -1435,8 +1459,13 @@ fn miter_joiner(
     mut curr_is_line: bool,
     mut builders: SwappableBuilders,
 ) {
-    fn do_blunt(builders: SwappableBuilders, pivot: Point, radius: f32,
-                curr_is_line: bool, mut after: Point) {
+    fn do_blunt(
+        builders: SwappableBuilders,
+        pivot: Point,
+        radius: f32,
+        curr_is_line: bool,
+        mut after: Point,
+    ) {
         after.scale(radius);
         if !curr_is_line {
             builders.outer.line_to(pivot.x + after.x, pivot.y + after.y);
@@ -1445,10 +1474,19 @@ fn miter_joiner(
         handle_inner_join(pivot, after, builders.inner);
     }
 
-    fn do_miter(builders: SwappableBuilders, pivot: Point, radius: f32,
-                prev_is_line: bool, curr_is_line: bool, mid: Point, after: Point) {
+    fn do_miter(
+        builders: SwappableBuilders,
+        pivot: Point,
+        radius: f32,
+        prev_is_line: bool,
+        curr_is_line: bool,
+        mid: Point,
+        after: Point,
+    ) {
         if prev_is_line {
-            builders.outer.set_last_point(Point::from_xy(pivot.x + mid.x, pivot.y + mid.y));
+            builders
+                .outer
+                .set_last_point(Point::from_xy(pivot.x + mid.x, pivot.y + mid.y));
         } else {
             builders.outer.line_to(pivot.x + mid.x, pivot.y + mid.y);
         }
@@ -1487,7 +1525,15 @@ fn miter_joiner(
     // Note: we only need to check one normal if dot==0
     if dot_prod == 0.0 && inv_miter_limit <= SCALAR_ROOT_2_OVER_2 {
         mid = (before + after).scaled(radius);
-        do_miter(builders, pivot, radius, prev_is_line, curr_is_line, mid, after);
+        do_miter(
+            builders,
+            pivot,
+            radius,
+            prev_is_line,
+            curr_is_line,
+            mid,
+            after,
+        );
         return;
     }
 
@@ -1516,7 +1562,15 @@ fn miter_joiner(
     }
 
     mid.set_length(radius / sin_half_angle);
-    do_miter(builders, pivot, radius, prev_is_line, curr_is_line, mid, after);
+    do_miter(
+        builders,
+        pivot,
+        radius,
+        prev_is_line,
+        curr_is_line,
+        mid,
+        after,
+    );
 }
 
 fn set_normal_unit_normal(
@@ -1556,14 +1610,15 @@ fn fn_ptr_eq(f1: CapProc, f2: CapProc) -> bool {
 }
 
 #[derive(Debug)]
-struct QuadConstruct {       // The state of the quad stroke under construction.
-    quad: [Point; 3],        // the stroked quad parallel to the original curve
-    tangent_start: Point,    // a point tangent to quad[0]
-    tangent_end: Point,      // a point tangent to quad[2]
-    start_t: NormalizedF32,  // a segment of the original curve
+struct QuadConstruct {
+    // The state of the quad stroke under construction.
+    quad: [Point; 3],       // the stroked quad parallel to the original curve
+    tangent_start: Point,   // a point tangent to quad[0]
+    tangent_end: Point,     // a point tangent to quad[2]
+    start_t: NormalizedF32, // a segment of the original curve
     mid_t: NormalizedF32,
     end_t: NormalizedF32,
-    start_set: bool,         // state to share common points across structs
+    start_set: bool, // state to share common points across structs
     end_set: bool,
     opposite_tangents: bool, // set if coincident tangents have opposite directions
 }
@@ -1638,7 +1693,10 @@ fn check_quad_linear(quad: &[Point; 3]) -> (Point, ReductionType) {
         return (Point::zero(), ReductionType::Line);
     }
 
-    (path_geometry::eval_quad_at(quad, t), ReductionType::Degenerate)
+    (
+        path_geometry::eval_quad_at(quad, t),
+        ReductionType::Degenerate,
+    )
 }
 
 fn degenerate_vector(v: Point) -> bool {
@@ -1656,7 +1714,7 @@ fn quad_in_line(quad: &[Point; 3]) -> bool {
     let mut outer1 = 0;
     let mut outer2 = 0;
     for index in 0..2 {
-        for inner in index+1..3 {
+        for inner in index + 1..3 {
             let test_diff = quad[inner] - quad[index];
             let test_max = test_diff.x.abs().max(test_diff.y.abs());
             if pt_max < test_max {
@@ -1843,7 +1901,7 @@ fn cubic_in_line(cubic: &[Point; 4]) -> bool {
     let mut outer1 = 0;
     let mut outer2 = 0;
     for index in 0..3 {
-        for inner in index+1..4 {
+        for inner in index + 1..4 {
             let test_diff = cubic[inner] - cubic[index];
             let test_max = test_diff.x.abs().max(test_diff.y.abs());
             if pt_max < test_max {
@@ -1865,10 +1923,11 @@ fn cubic_in_line(cubic: &[Point; 4]) -> bool {
     debug_assert!(((1 << outer1) | (1 << outer2) | (1 << mid1) | (1 << mid2)) == 0x0f);
     let line_slop = pt_max * pt_max * 0.00001; // this multiplier is pulled out of the air
 
-    pt_to_line(cubic[mid1], cubic[outer1], cubic[outer2]) <= line_slop &&
-    pt_to_line(cubic[mid2], cubic[outer1], cubic[outer2]) <= line_slop
+    pt_to_line(cubic[mid1], cubic[outer1], cubic[outer2]) <= line_slop
+        && pt_to_line(cubic[mid2], cubic[outer1], cubic[outer2]) <= line_slop
 }
 
+#[rustfmt::skip]
 #[cfg(test)]
 mod tests {
     use super::*;

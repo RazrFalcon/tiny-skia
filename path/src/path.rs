@@ -10,7 +10,6 @@ use crate::path_builder::PathBuilder;
 use crate::transform::Transform;
 use crate::{Point, Rect};
 
-
 /// A path verb.
 #[allow(missing_docs)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
@@ -21,7 +20,6 @@ pub enum PathVerb {
     Cubic,
     Close,
 }
-
 
 /// A Bezier path.
 ///
@@ -128,16 +126,16 @@ impl core::fmt::Debug for Path {
         let mut s = alloc::string::String::new();
         for segment in self.segments() {
             match segment {
-                PathSegment::MoveTo(p) =>
-                    s.write_fmt(format_args!("M {} {} ", p.x, p.y))?,
-                PathSegment::LineTo(p) =>
-                    s.write_fmt(format_args!("L {} {} ", p.x, p.y))?,
-                PathSegment::QuadTo(p0, p1) =>
-                    s.write_fmt(format_args!("Q {} {} {} {} ", p0.x, p0.y, p1.x, p1.y))?,
-                PathSegment::CubicTo(p0, p1, p2) =>
-                    s.write_fmt(format_args!("C {} {} {} {} {} {} ", p0.x, p0.y, p1.x, p1.y, p2.x, p2.y))?,
-                PathSegment::Close =>
-                    s.write_fmt(format_args!("Z "))?,
+                PathSegment::MoveTo(p) => s.write_fmt(format_args!("M {} {} ", p.x, p.y))?,
+                PathSegment::LineTo(p) => s.write_fmt(format_args!("L {} {} ", p.x, p.y))?,
+                PathSegment::QuadTo(p0, p1) => {
+                    s.write_fmt(format_args!("Q {} {} {} {} ", p0.x, p0.y, p1.x, p1.y))?
+                }
+                PathSegment::CubicTo(p0, p1, p2) => s.write_fmt(format_args!(
+                    "C {} {} {} {} {} {} ",
+                    p0.x, p0.y, p1.x, p1.y, p2.x, p2.y
+                ))?,
+                PathSegment::Close => s.write_fmt(format_args!("Z "))?,
             }
         }
 
@@ -150,7 +148,6 @@ impl core::fmt::Debug for Path {
     }
 }
 
-
 /// A path segment.
 #[allow(missing_docs)]
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -161,7 +158,6 @@ pub enum PathSegment {
     CubicTo(Point, Point, Point),
     Close,
 }
-
 
 /// A path segments iterator.
 #[allow(missing_debug_implementations)]
@@ -276,7 +272,7 @@ impl<'a> Iterator for PathSegmentsIter<'a> {
                     Some(PathSegment::CubicTo(
                         self.path.points[self.points_index - 3],
                         self.path.points[self.points_index - 2],
-                        self.last_point
+                        self.last_point,
                     ))
                 }
                 PathVerb::Close => {

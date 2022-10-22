@@ -6,14 +6,14 @@
 
 use core::convert::TryFrom;
 
-use tiny_skia_path::{ScreenIntRect, SaturateCast};
+use tiny_skia_path::{SaturateCast, ScreenIntRect};
 
-use crate::{Path, IntRect, FillRule, LengthU32, Rect};
+use crate::{FillRule, IntRect, LengthU32, Path, Rect};
 
 use crate::blitter::Blitter;
 use crate::edge::{Edge, LineEdge};
 use crate::edge_builder::{BasicEdgeBuilder, ShiftedIntRect};
-use crate::fixed_point::{fdot6, fdot16, FDot16};
+use crate::fixed_point::{fdot16, fdot6, FDot16};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
@@ -36,7 +36,16 @@ pub fn fill_path(
 
     // TODO: SkScanClipper
 
-    fill_path_impl(path, fill_rule, clip, ir.y(), ir.bottom(), 0, path_contained_in_clip, blitter)
+    fill_path_impl(
+        path,
+        fill_rule,
+        clip,
+        ir.y(),
+        ir.bottom(),
+        0,
+        path_contained_in_clip,
+        blitter,
+    )
 }
 
 // Conservative rounding function, which effectively nudges the int-rect to be slightly larger
@@ -95,7 +104,11 @@ pub fn fill_path_impl(
     blitter: &mut dyn Blitter,
 ) -> Option<()> {
     let shifted_clip = ShiftedIntRect::new(clip_rect, shift_edges_up)?;
-    let clip = if path_contained_in_clip { None } else { Some(&shifted_clip) };
+    let clip = if path_contained_in_clip {
+        None
+    } else {
+        Some(&shifted_clip)
+    };
     let mut edges = BasicEdgeBuilder::build_edges(path, clip, shift_edges_up)?;
 
     edges.sort_by(|a, b| {
@@ -119,13 +132,16 @@ pub fn fill_path_impl(
     const EDGE_HEAD_Y: i32 = i32::MIN;
     const EDGE_TAIL_Y: i32 = i32::MAX;
 
-    edges.insert(0, Edge::Line(LineEdge {
-        prev: None,
-        next: Some(1),
-        x: i32::MIN,
-        first_y: EDGE_HEAD_Y,
-        ..LineEdge::default()
-    }));
+    edges.insert(
+        0,
+        Edge::Line(LineEdge {
+            prev: None,
+            next: Some(1),
+            x: i32::MIN,
+            first_y: EDGE_HEAD_Y,
+            ..LineEdge::default()
+        }),
+    );
 
     edges.push(Edge::Line(LineEdge {
         prev: Some(edges.len() as u32 - 1),
@@ -152,7 +168,14 @@ pub fn fill_path_impl(
 
     // TODO: walk_simple_edges
 
-    walk_edges(fill_rule, start_y, stop_y, shifted_clip.shifted().right(), &mut edges, blitter);
+    walk_edges(
+        fill_rule,
+        start_y,
+        stop_y,
+        shifted_clip.shifted().right(),
+        &mut edges,
+        blitter,
+    );
     Some(())
 }
 
@@ -166,7 +189,11 @@ fn walk_edges(
     blitter: &mut dyn Blitter,
 ) {
     let mut curr_y = start_y;
-    let winding_mask = if fill_rule == FillRule::EvenOdd { 1 } else { -1 };
+    let winding_mask = if fill_rule == FillRule::EvenOdd {
+        1
+    } else {
+        -1
+    };
 
     loop {
         let mut w = 0i32;

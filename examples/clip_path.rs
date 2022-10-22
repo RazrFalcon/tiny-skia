@@ -8,7 +8,9 @@ fn main() {
         pb.finish().unwrap()
     };
 
-    let clip_path = clip_path.transform(Transform::from_row(1.0, -0.3, 0.0, 1.0, 0.0, 75.0)).unwrap();
+    let clip_path = clip_path
+        .transform(Transform::from_row(1.0, -0.3, 0.0, 1.0, 0.0, 75.0))
+        .unwrap();
 
     let mut clip_mask = ClipMask::new();
     clip_mask.set_path(500, 500, &clip_path, FillRule::EvenOdd, true);

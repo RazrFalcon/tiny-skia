@@ -6,7 +6,7 @@
 
 use crate::Point;
 
-use crate::scalar::{SCALAR_NEARLY_ZERO, Scalar};
+use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use crate::NoStdFloat;
@@ -50,7 +50,14 @@ impl Transform {
     ///
     /// We are using column-major-column-vector matrix notation, therefore it's ky-kx, not kx-ky.
     pub fn from_row(sx: f32, ky: f32, kx: f32, sy: f32, tx: f32, ty: f32) -> Self {
-        Transform { sx, ky, kx, sy, tx, ty }
+        Transform {
+            sx,
+            ky,
+            kx,
+            sy,
+            tx,
+            ty,
+        }
     }
 
     /// Creates a new translating `Transform`.
@@ -71,10 +78,10 @@ impl Transform {
     /// Creates a new rotating `Transform`.
     pub fn from_rotate(angle: f32) -> Self {
         let v = angle.to_radians();
-        let a =  v.cos();
-        let b =  v.sin();
+        let a = v.cos();
+        let b = v.sin();
         let c = -b;
-        let d =  a;
+        let d = a;
         Transform::from_row(a, b, c, d, 0.0, 0.0)
     }
 
@@ -89,12 +96,12 @@ impl Transform {
 
     /// Checks that transform is finite.
     pub fn is_finite(&self) -> bool {
-        self.sx.is_finite() &&
-        self.ky.is_finite() &&
-        self.kx.is_finite() &&
-        self.sy.is_finite() &&
-        self.tx.is_finite() &&
-        self.ty.is_finite()
+        self.sx.is_finite()
+            && self.ky.is_finite()
+            && self.kx.is_finite()
+            && self.sy.is_finite()
+            && self.tx.is_finite()
+            && self.ty.is_finite()
     }
 
     /// Checks that transform is identity.
@@ -241,7 +248,14 @@ fn invert(ts: &Transform) -> Option<Transform> {
         if ts.has_scale() {
             let inv_x = ts.sx.invert();
             let inv_y = ts.sy.invert();
-            Some(Transform::from_row(inv_x, 0.0, 0.0, inv_y, -ts.tx * inv_x, -ts.ty * inv_y))
+            Some(Transform::from_row(
+                inv_x,
+                0.0,
+                0.0,
+                inv_y,
+                -ts.tx * inv_x,
+                -ts.ty * inv_y,
+            ))
         } else {
             // translate only
             Some(Transform::from_translate(-ts.tx, -ts.ty))
@@ -278,20 +292,8 @@ fn compute_inv(ts: &Transform, inv_det: f64) -> Transform {
         (-ts.ky as f64 * inv_det) as f32,
         (-ts.kx as f64 * inv_det) as f32,
         (ts.sx as f64 * inv_det) as f32,
-        dcross_dscale(
-            ts.kx,
-            ts.ty,
-            ts.sy,
-            ts.tx,
-            inv_det,
-        ),
-        dcross_dscale(
-            ts.ky,
-            ts.tx,
-            ts.sx,
-            ts.ty,
-            inv_det,
-        ),
+        dcross_dscale(ts.kx, ts.ty, ts.sy, ts.tx, inv_det),
+        dcross_dscale(ts.ky, ts.tx, ts.sx, ts.ty, inv_det),
     )
 }
 
@@ -340,17 +342,25 @@ mod tests {
 
     #[test]
     fn transform() {
-        assert_eq!(Transform::identity(),
-                   Transform::from_row(1.0, 0.0, 0.0, 1.0, 0.0, 0.0));
+        assert_eq!(
+            Transform::identity(),
+            Transform::from_row(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+        );
 
-        assert_eq!(Transform::from_scale(1.0, 2.0),
-                   Transform::from_row(1.0, 0.0, 0.0, 2.0, 0.0, 0.0));
+        assert_eq!(
+            Transform::from_scale(1.0, 2.0),
+            Transform::from_row(1.0, 0.0, 0.0, 2.0, 0.0, 0.0)
+        );
 
-        assert_eq!(Transform::from_skew(2.0, 3.0),
-                   Transform::from_row(1.0, 3.0, 2.0, 1.0, 0.0, 0.0));
+        assert_eq!(
+            Transform::from_skew(2.0, 3.0),
+            Transform::from_row(1.0, 3.0, 2.0, 1.0, 0.0, 0.0)
+        );
 
-        assert_eq!(Transform::from_translate(5.0, 6.0),
-                   Transform::from_row(1.0, 0.0, 0.0, 1.0, 5.0, 6.0));
+        assert_eq!(
+            Transform::from_translate(5.0, 6.0),
+            Transform::from_row(1.0, 0.0, 0.0, 1.0, 5.0, 6.0)
+        );
 
         let ts = Transform::identity();
         assert_eq!(ts.is_identity(), true);

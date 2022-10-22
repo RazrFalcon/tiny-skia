@@ -11,7 +11,8 @@ fn main() {
         ],
         SpreadMode::Pad,
         Transform::identity(),
-    ).unwrap();
+    )
+    .unwrap();
 
     let mut pb = PathBuilder::new();
     pb.move_to(60.0, 60.0);
@@ -22,6 +23,12 @@ fn main() {
     let path = pb.finish().unwrap();
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
-    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
+    pixmap.fill_path(
+        &path,
+        &paint,
+        FillRule::Winding,
+        Transform::identity(),
+        None,
+    );
     pixmap.save_png("image.png").unwrap();
 }

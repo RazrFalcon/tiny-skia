@@ -12,12 +12,12 @@
 
 use crate::{Point, Transform};
 
+use crate::f32x2_t::f32x2;
 use crate::floating_point::FLOAT_PI;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
-use crate::f32x2_t::f32x2;
 
-use crate::path_builder::PathDirection;
 use crate::floating_point::{NormalizedF32, NormalizedF32Exclusive};
+use crate::path_builder::PathDirection;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use crate::NoStdFloat;
@@ -45,7 +45,6 @@ impl QuadCoeff {
         (self.a * t + self.b) * t + self.c
     }
 }
-
 
 #[derive(Clone, Copy, Default, Debug)]
 pub struct CubicCoeff {
@@ -76,10 +75,13 @@ impl CubicCoeff {
     }
 }
 
-
 // TODO: to a custom type?
 pub fn new_t_values() -> [NormalizedF32Exclusive; 3] {
-    [NormalizedF32Exclusive::ANY, NormalizedF32Exclusive::ANY, NormalizedF32Exclusive::ANY]
+    [
+        NormalizedF32Exclusive::ANY,
+        NormalizedF32Exclusive::ANY,
+        NormalizedF32Exclusive::ANY,
+    ]
 }
 
 pub fn chop_quad_at(src: &[Point], t: NormalizedF32Exclusive, dst: &mut [Point; 5]) {
@@ -103,7 +105,12 @@ pub fn chop_quad_at(src: &[Point], t: NormalizedF32Exclusive, dst: &mut [Point; 
 // Q = -1/2 (B + sign(B) sqrt[B*B - 4*A*C])
 // x1 = Q / A
 // x2 = C / Q
-pub fn find_unit_quad_roots(a: f32, b: f32, c: f32, roots: &mut [NormalizedF32Exclusive; 3]) -> usize {
+pub fn find_unit_quad_roots(
+    a: f32,
+    b: f32,
+    c: f32,
+    roots: &mut [NormalizedF32Exclusive; 3],
+) -> usize {
     if a == 0.0 {
         if let Some(r) = valid_unit_divide(-c, b) {
             roots[0] = r;
@@ -124,7 +131,11 @@ pub fn find_unit_quad_roots(a: f32, b: f32, c: f32, roots: &mut [NormalizedF32Ex
         return 0;
     }
 
-    let q = if b < 0.0 { -(b - r) / 2.0 } else { -(b + r) / 2.0 };
+    let q = if b < 0.0 {
+        -(b - r) / 2.0
+    } else {
+        -(b + r) / 2.0
+    };
 
     let mut roots_offset = 0;
     if let Some(r) = valid_unit_divide(q, a) {
@@ -140,7 +151,8 @@ pub fn find_unit_quad_roots(a: f32, b: f32, c: f32, roots: &mut [NormalizedF32Ex
     if roots_offset == 2 {
         if roots[0].get() > roots[1].get() {
             roots.swap(0, 1);
-        } else if roots[0] == roots[1] { // nearly-equal?
+        } else if roots[0] == roots[1] {
+            // nearly-equal?
             roots_offset -= 1; // skip the double root
         }
     }
@@ -238,8 +250,8 @@ pub(crate) fn eval_quad_tangent_at(src: &[Point; 3], tol: NormalizedF32) -> Poin
     // The derivative equation is 2(b - a +(a - 2b +c)t). This returns a
     // zero tangent vector when t is 0 or 1, and the control point is equal
     // to the end point. In this case, use the quad end points to compute the tangent.
-    if (tol == NormalizedF32::ZERO && src[0] == src[1]) ||
-       (tol == NormalizedF32::ONE && src[1] == src[2])
+    if (tol == NormalizedF32::ZERO && src[0] == src[1])
+        || (tol == NormalizedF32::ONE && src[1] == src[2])
     {
         return src[2] - src[0];
     }
@@ -295,12 +307,7 @@ fn formulate_f1_dot_f2(src: &[f32; 4]) -> [f32; 4] {
     let b = src[2] - 2.0 * src[1] + src[0];
     let c = src[3] + 3.0 * (src[1] - src[2]) - src[0];
 
-    [
-        c * c,
-        3.0 * b * c,
-        2.0 * b * b + c * a,
-        a * b,
-    ]
+    [c * c, 3.0 * b * c, 2.0 * b * b + c * a, a * b]
 }
 
 /// Solve coeff(t) == 0, returning the number of roots that lie withing 0 < t < 1.
@@ -327,26 +334,32 @@ fn solve_cubic_poly(coeff: &[f32; 4], t_values: &mut [NormalizedF32; 3]) -> usiz
     let b = coeff[2] * inva;
     let c = coeff[3] * inva;
 
-    let q = (a*a - b*3.0) / 9.0;
-    let r = (2.0*a*a*a - 9.0*a*b + 27.0*c) / 54.0;
+    let q = (a * a - b * 3.0) / 9.0;
+    let r = (2.0 * a * a * a - 9.0 * a * b + 27.0 * c) / 54.0;
 
     let q3 = q * q * q;
     let r2_minus_q3 = r * r - q3;
     let adiv3 = a / 3.0;
 
-    if r2_minus_q3 < 0.0 { // we have 3 real roots
+    if r2_minus_q3 < 0.0 {
+        // we have 3 real roots
         // the divide/root can, due to finite precisions, be slightly outside of -1...1
         let theta = (r / q3.sqrt()).bound(-1.0, 1.0).acos();
         let neg2_root_q = -2.0 * q.sqrt();
 
         t_values[0] = NormalizedF32::new_clamped(neg2_root_q * (theta / 3.0).cos() - adiv3);
-        t_values[1] = NormalizedF32::new_clamped(neg2_root_q * ((theta + 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
-        t_values[2] = NormalizedF32::new_clamped(neg2_root_q * ((theta - 2.0*FLOAT_PI) / 3.0).cos() - adiv3);
+        t_values[1] = NormalizedF32::new_clamped(
+            neg2_root_q * ((theta + 2.0 * FLOAT_PI) / 3.0).cos() - adiv3,
+        );
+        t_values[2] = NormalizedF32::new_clamped(
+            neg2_root_q * ((theta - 2.0 * FLOAT_PI) / 3.0).cos() - adiv3,
+        );
 
         // now sort the roots
         sort_array3(t_values);
         collapse_duplicates3(t_values)
-    } else { // we have 1 real root
+    } else {
+        // we have 1 real root
         let mut a = r.abs() + r2_minus_q3.sqrt();
         a = scalar_cube_root(a);
         if r > 0.0 {
@@ -447,7 +460,8 @@ fn eval_cubic_derivative(src: &[Point; 4], t: NormalizedF32) -> Point {
 // C = d - 3c + 3b - a
 // (BxCy - ByCx)t^2 + (AxCy - AyCx)t + AxBy - AyBx == 0
 pub(crate) fn find_cubic_inflections<'a>(
-    src: &[Point; 4], t_values: &'a mut [NormalizedF32Exclusive; 3]
+    src: &[Point; 4],
+    t_values: &'a mut [NormalizedF32Exclusive; 3],
 ) -> &'a [NormalizedF32Exclusive] {
     let ax = src[1].x - src[0].x;
     let ay = src[1].y - src[0].y;
@@ -531,11 +545,11 @@ fn on_same_side(src: &[Point; 4], test_index: usize, line_index: usize) -> bool 
 // Returns a constant proportional to the dimensions of the cubic.
 // Constant found through experimentation -- maybe there's a better way....
 fn calc_cubic_precision(src: &[Point; 4]) -> f32 {
-    (  src[1].distance_to_sqd(src[0])
-     + src[2].distance_to_sqd(src[1])
-     + src[3].distance_to_sqd(src[2])) * 1e-8
+    (src[1].distance_to_sqd(src[0])
+        + src[2].distance_to_sqd(src[1])
+        + src[3].distance_to_sqd(src[2]))
+        * 1e-8
 }
-
 
 #[derive(Copy, Clone, Default, Debug)]
 pub(crate) struct Conic {
@@ -563,9 +577,7 @@ impl Conic {
             return None;
         }
 
-        if  !self.points[0].is_finite() ||
-            !self.points[1].is_finite() ||
-            !self.points[2].is_finite()
+        if !self.points[0].is_finite() || !self.points[1].is_finite() || !self.points[2].is_finite()
         {
             return None;
         }
@@ -607,7 +619,7 @@ impl Conic {
         if points.iter().take(pt_count).any(|n| !n.is_finite()) {
             // if we generated a non-finite, pin ourselves to the middle of the hull,
             // as our first and last are already on the first/last pts of the hull.
-            for p in points.iter_mut().take(pt_count-1).skip(1) {
+            for p in points.iter_mut().take(pt_count - 1).skip(1) {
                 *p = self.points[1];
             }
         }
@@ -631,11 +643,15 @@ impl Conic {
             let w_d = self.weight as f64;
             let w_2 = w_d * 2.0;
             let scale_half = 1.0 / (1.0 + w_d) * 0.5;
-            m_pt.x = ((self.points[0].x as f64 + w_2 * self.points[1].x as f64
-                + self.points[2].x as f64) * scale_half) as f32;
+            m_pt.x = ((self.points[0].x as f64
+                + w_2 * self.points[1].x as f64
+                + self.points[2].x as f64)
+                * scale_half) as f32;
 
-            m_pt.y = ((self.points[0].y as f64 + w_2 * self.points[1].y as f64
-                + self.points[2].y as f64) * scale_half) as f32;
+            m_pt.y = ((self.points[0].y as f64
+                + w_2 * self.points[1].y as f64
+                + self.points[2].y as f64)
+                * scale_half) as f32;
         }
 
         (
@@ -666,9 +682,9 @@ impl Conic {
         // check for (effectively) coincident vectors
         // this can happen if our angle is nearly 0 or nearly 180 (y == 0)
         // ... we use the dot-prod to distinguish between 0 and 180 (x > 0)
-        if  abs_y <= SCALAR_NEARLY_ZERO &&
-            x > 0.0 &&
-            ((y >= 0.0 && dir == PathDirection::CW) || (y <= 0.0 && dir == PathDirection::CCW))
+        if abs_y <= SCALAR_NEARLY_ZERO
+            && x > 0.0
+            && ((y >= 0.0 && dir == PathDirection::CW) || (y <= 0.0 && dir == PathDirection::CCW))
         {
             return None;
         }
@@ -801,7 +817,11 @@ fn subdivide<'a>(src: &Conic, mut points: &'a mut [Point], mut level: u8) -> &'a
 
             // Verify that all five points are in order.
             debug_assert!(between(start_y, dst.0.points[1].y, dst.0.points[2].y));
-            debug_assert!(between(dst.0.points[1].y, dst.0.points[2].y, dst.1.points[1].y));
+            debug_assert!(between(
+                dst.0.points[1].y,
+                dst.0.points[2].y,
+                dst.1.points[1].y
+            ));
             debug_assert!(between(dst.0.points[2].y, dst.1.points[1].y, end_y));
         }
 
@@ -817,7 +837,6 @@ fn between(a: f32, b: f32, c: f32) -> bool {
     (a - b) * (c - b) <= 0.0
 }
 
-
 pub(crate) struct AutoConicToQuads {
     pub points: [Point; 64],
     pub len: u8, // the number of quads
@@ -831,10 +850,7 @@ impl AutoConicToQuads {
         let pow2 = conic.compute_quad_pow2(Self::TOLERANCE)?;
         let mut points = [Point::zero(); 64];
         let len = conic.chop_into_quads_pow2(pow2, &mut points);
-        Some(AutoConicToQuads {
-            points,
-            len,
-        })
+        Some(AutoConicToQuads { points, len })
     }
 }
 
@@ -851,8 +867,14 @@ mod tests {
             Point::from_xy(180.0, 155.0),
         ];
 
-        assert_eq!(eval_cubic_pos_at(&src, NormalizedF32::ZERO), Point::from_xy(30.0, 40.0));
-        assert_eq!(eval_cubic_tangent_at(&src, NormalizedF32::ZERO), Point::from_xy(141.0, 5.0));
+        assert_eq!(
+            eval_cubic_pos_at(&src, NormalizedF32::ZERO),
+            Point::from_xy(30.0, 40.0)
+        );
+        assert_eq!(
+            eval_cubic_tangent_at(&src, NormalizedF32::ZERO),
+            Point::from_xy(141.0, 5.0)
+        );
     }
 
     #[test]
@@ -867,10 +889,13 @@ mod tests {
         let mut t_values = [NormalizedF32::ZERO; 3];
         let t_values = find_cubic_max_curvature(&src, &mut t_values);
 
-        assert_eq!(&t_values, &[
-            NormalizedF32::ZERO,
-            NormalizedF32::new_clamped(0.5),
-            NormalizedF32::ONE,
-        ]);
+        assert_eq!(
+            &t_values,
+            &[
+                NormalizedF32::ZERO,
+                NormalizedF32::new_clamped(0.5),
+                NormalizedF32::ONE,
+            ]
+        );
     }
 }

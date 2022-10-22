@@ -6,7 +6,7 @@
 
 use crate::*;
 
-use tiny_skia_path::{ScreenIntRect, Scalar, PathStroker,  SCALAR_MAX};
+use tiny_skia_path::{PathStroker, Scalar, ScreenIntRect, SCALAR_MAX};
 
 use crate::pipeline::RasterPipelineBlitter;
 use crate::pixmap::SubPixmapMut;
@@ -14,7 +14,6 @@ use crate::scan;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
-
 
 /// A path filling rule.
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -30,7 +29,6 @@ impl Default for FillRule {
         FillRule::Winding
     }
 }
-
 
 /// Controls how a shape should be painted.
 #[derive(Clone, Debug)]
@@ -99,7 +97,6 @@ impl<'a> Paint<'a> {
     }
 }
 
-
 impl Pixmap {
     /// Draws a filled rectangle onto the pixmap.
     ///
@@ -125,7 +122,8 @@ impl Pixmap {
         transform: Transform,
         clip_mask: Option<&ClipMask>,
     ) -> Option<()> {
-        self.as_mut().fill_path(path, paint, fill_rule, transform, clip_mask)
+        self.as_mut()
+            .fill_path(path, paint, fill_rule, transform, clip_mask)
     }
 
     /// Strokes a path.
@@ -139,7 +137,8 @@ impl Pixmap {
         transform: Transform,
         clip_mask: Option<&ClipMask>,
     ) -> Option<()> {
-        self.as_mut().stroke_path(path, paint, stroke, transform, clip_mask)
+        self.as_mut()
+            .stroke_path(path, paint, stroke, transform, clip_mask)
     }
 
     /// Draws a `Pixmap` on top of the current `Pixmap`.
@@ -154,7 +153,8 @@ impl Pixmap {
         transform: Transform,
         clip_mask: Option<&ClipMask>,
     ) -> Option<()> {
-        self.as_mut().draw_pixmap(x, y, pixmap, paint, transform, clip_mask)
+        self.as_mut()
+            .draw_pixmap(x, y, pixmap, paint, transform, clip_mask)
     }
 }
 
@@ -414,7 +414,7 @@ impl PixmapMut<'_> {
                 patt_transform,
             ),
             blend_mode: paint.blend_mode,
-            anti_alias: false, // Skia doesn't use it too.
+            anti_alias: false,        // Skia doesn't use it too.
             force_hq_pipeline: false, // Pattern will use hq anyway.
         };
 
@@ -448,7 +448,10 @@ fn treat_as_hairline(paint: &Paint, stroke: &Stroke, mut ts: Transform) -> Optio
     ts.ty = 0.0;
 
     // We need to try to fake a thick-stroke with a modulated hairline.
-    let mut points = [Point::from_xy(stroke.width, 0.0), Point::from_xy(0.0, stroke.width)];
+    let mut points = [
+        Point::from_xy(stroke.width, 0.0),
+        Point::from_xy(0.0, stroke.width),
+    ];
     ts.map_points(&mut points);
 
     let len0 = fast_len(points[0]);
@@ -569,7 +572,10 @@ mod tests {
     fn horizontal() {
         let mut iter = DrawTiler::new(10000, 500).unwrap();
         assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, 0, MAX_DIM, 500));
-        assert_eq!(iter.next(), ScreenIntRect::from_xywh(MAX_DIM, 0, 10000-MAX_DIM, 500));
+        assert_eq!(
+            iter.next(),
+            ScreenIntRect::from_xywh(MAX_DIM, 0, 10000 - MAX_DIM, 500)
+        );
         assert_eq!(iter.next(), None);
     }
 
@@ -577,7 +583,10 @@ mod tests {
     fn vertical() {
         let mut iter = DrawTiler::new(500, 10000).unwrap();
         assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, 0, 500, MAX_DIM));
-        assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, MAX_DIM, 500, 10000-MAX_DIM));
+        assert_eq!(
+            iter.next(),
+            ScreenIntRect::from_xywh(0, MAX_DIM, 500, 10000 - MAX_DIM)
+        );
         assert_eq!(iter.next(), None);
     }
 
@@ -585,11 +594,23 @@ mod tests {
     fn rect() {
         let mut iter = DrawTiler::new(10000, 10000).unwrap();
         // Row 1
-        assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, 0, MAX_DIM, MAX_DIM));
-        assert_eq!(iter.next(), ScreenIntRect::from_xywh(MAX_DIM, 0, 10000-MAX_DIM, MAX_DIM));
+        assert_eq!(
+            iter.next(),
+            ScreenIntRect::from_xywh(0, 0, MAX_DIM, MAX_DIM)
+        );
+        assert_eq!(
+            iter.next(),
+            ScreenIntRect::from_xywh(MAX_DIM, 0, 10000 - MAX_DIM, MAX_DIM)
+        );
         // Row 2
-        assert_eq!(iter.next(), ScreenIntRect::from_xywh(0, MAX_DIM, MAX_DIM, 10000-MAX_DIM));
-        assert_eq!(iter.next(), ScreenIntRect::from_xywh(MAX_DIM, MAX_DIM, 10000-MAX_DIM, 10000-MAX_DIM));
+        assert_eq!(
+            iter.next(),
+            ScreenIntRect::from_xywh(0, MAX_DIM, MAX_DIM, 10000 - MAX_DIM)
+        );
+        assert_eq!(
+            iter.next(),
+            ScreenIntRect::from_xywh(MAX_DIM, MAX_DIM, 10000 - MAX_DIM, 10000 - MAX_DIM)
+        );
         assert_eq!(iter.next(), None);
     }
 }

@@ -6,12 +6,12 @@
 
 use core::convert::TryInto;
 
-use tiny_skia_path::{PathVerb, Scalar, SaturateCast, ScreenIntRect, f32x2};
+use tiny_skia_path::{f32x2, PathVerb, SaturateCast, Scalar, ScreenIntRect};
 
-use crate::{Path, LineCap, Point, PathSegment, Rect, IntRect};
+use crate::{IntRect, LineCap, Path, PathSegment, Point, Rect};
 
 use crate::blitter::Blitter;
-use crate::fixed_point::{fdot6, fdot16};
+use crate::fixed_point::{fdot16, fdot6};
 use crate::line_clipper;
 use crate::math::LENGTH_U32_ONE;
 use crate::path_geometry;
@@ -49,7 +49,7 @@ fn hair_line_rgn(
         let mut pts = [Point::zero(); 2];
 
         // We have to pre-clip the line to fit in a Fixed, so we just chop the line.
-        if !line_clipper::intersect(&[points[i], points[i+1]], &fixed_bounds, &mut pts) {
+        if !line_clipper::intersect(&[points[i], points[i + 1]], &fixed_bounds, &mut pts) {
             continue;
         }
 
@@ -155,7 +155,6 @@ fn hair_line_rgn(
 
     Some(())
 }
-
 
 pub fn stroke_path_impl(
     path: &Path,
@@ -265,8 +264,8 @@ pub fn stroke_path_impl(
         }
 
         if line_cap != LineCap::Butt {
-            if prev_verb == PathVerb::Move &&
-                matches!(verb, PathVerb::Line | PathVerb::Quad | PathVerb::Cubic)
+            if prev_verb == PathVerb::Move
+                && matches!(verb, PathVerb::Line | PathVerb::Quad | PathVerb::Cubic)
             {
                 first_pt = last_pt2; // the curve moved the initial point, so close to it instead
             }
@@ -294,7 +293,11 @@ fn extend_pts(
     debug_assert!(line_cap != LineCap::Butt);
 
     // The area of a circle is PI*R*R. For a unit circle, R=1/2, and the cap covers half of that.
-    let cap_outset = if line_cap == LineCap::Square { 0.5 } else { FLOAT_PI / 8.0 };
+    let cap_outset = if line_cap == LineCap::Square {
+        0.5
+    } else {
+        FLOAT_PI / 8.0
+    };
     if prev_verb == PathVerb::Move {
         let first = points[0];
         let mut offset = 0;
@@ -335,7 +338,10 @@ fn extend_pts(
         }
     }
 
-    if matches!(next_verb, Some(PathVerb::Move) | Some(PathVerb::Close) | None) {
+    if matches!(
+        next_verb,
+        Some(PathVerb::Move) | Some(PathVerb::Close) | None
+    ) {
         let last = points.last().unwrap().clone();
         let mut offset = points.len() - 1;
         let mut controls = points.len() - 1;
@@ -418,13 +424,14 @@ fn compute_nocheck_quad_bounds(points: &[Point; 3]) -> Option<Rect> {
 }
 
 fn geometric_overlap(a: &Rect, b: &Rect) -> bool {
-    a.left() < b.right() && b.left() < a.right() &&
-    a.top() < b.bottom() && b.top() < a.bottom()
+    a.left() < b.right() && b.left() < a.right() && a.top() < b.bottom() && b.top() < a.bottom()
 }
 
 fn geometric_contains(outer: &Rect, inner: &Rect) -> bool {
-    inner.right() <= outer.right() && inner.left() >= outer.left() &&
-    inner.bottom() <= outer.bottom() && inner.top() >= outer.top()
+    inner.right() <= outer.right()
+        && inner.left() >= outer.left()
+        && inner.bottom() <= outer.bottom()
+        && inner.top() >= outer.top()
 }
 
 fn hair_quad2(
@@ -549,10 +556,10 @@ fn compute_nocheck_cubic_bounds(points: &[Point; 4]) -> Option<Rect> {
 
 // The off-curve points are "inside" the limits of the on-curve points.
 fn quick_cubic_niceness_check(points: &[Point; 4]) -> bool {
-    lt_90(points[1], points[0], points[3]) &&
-    lt_90(points[2], points[0], points[3]) &&
-    lt_90(points[1], points[3], points[0]) &&
-    lt_90(points[2], points[3], points[0])
+    lt_90(points[1], points[0], points[3])
+        && lt_90(points[2], points[0], points[3])
+        && lt_90(points[1], points[3], points[0])
+        && lt_90(points[2], points[3], points[0])
 }
 
 fn lt_90(p0: Point, pivot: Point, p2: Point) -> bool {

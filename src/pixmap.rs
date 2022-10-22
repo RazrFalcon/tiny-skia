@@ -22,7 +22,6 @@ use crate::color::{premultiply_u8, ALPHA_U8_OPAQUE};
 /// Number of bytes per pixel.
 pub const BYTES_PER_PIXEL: usize = 4;
 
-
 /// A container that owns premultiplied RGBA pixels.
 ///
 /// The data is not aligned, therefore width == stride.
@@ -65,10 +64,7 @@ impl Pixmap {
             return None;
         }
 
-        Some(Pixmap {
-            data,
-            size,
-        })
+        Some(Pixmap { data, size })
     }
 
     /// Decodes a PNG data into a `Pixmap`.
@@ -93,8 +89,8 @@ impl Pixmap {
 
         let size = IntSize::from_wh(info.width, info.height)
             .ok_or_else(|| make_custom_png_error("invalid image size"))?;
-        let data_len = data_len_for_size(size)
-            .ok_or_else(|| make_custom_png_error("image is too big"))?;
+        let data_len =
+            data_len_for_size(size).ok_or_else(|| make_custom_png_error("image is too big"))?;
 
         img_data = match info.color_type {
             png::ColorType::Rgb => {
@@ -108,9 +104,7 @@ impl Pixmap {
 
                 rgba_data
             }
-            png::ColorType::Rgba => {
-                img_data
-            }
+            png::ColorType::Rgba => img_data,
             png::ColorType::Grayscale => {
                 let mut rgba_data = Vec::with_capacity(data_len);
                 for gray in img_data {
@@ -283,7 +277,6 @@ impl core::fmt::Debug for Pixmap {
     }
 }
 
-
 /// A container that references premultiplied RGBA pixels.
 ///
 /// Can be created from `Pixmap` or from a user provided data.
@@ -309,10 +302,7 @@ impl<'a> PixmapRef<'a> {
             return None;
         }
 
-        Some(PixmapRef {
-            data,
-            size,
-        })
+        Some(PixmapRef { data, size })
     }
 
     /// Creates a new `Pixmap` from the current data.
@@ -411,8 +401,8 @@ impl<'a> PixmapRef<'a> {
         // due to rounding. So we stick with this method for now.
         for pixel in tmp_pixmap.pixels_mut() {
             let c = pixel.demultiply();
-            *pixel = PremultipliedColorU8::from_rgba_unchecked(
-                c.red(), c.green(), c.blue(), c.alpha());
+            *pixel =
+                PremultipliedColorU8::from_rgba_unchecked(c.red(), c.green(), c.blue(), c.alpha());
         }
 
         let mut data = Vec::new();
@@ -446,7 +436,6 @@ impl core::fmt::Debug for PixmapRef<'_> {
     }
 }
 
-
 /// A container that references mutable premultiplied RGBA pixels.
 ///
 /// Can be created from `Pixmap` or from a user provided data.
@@ -472,10 +461,7 @@ impl<'a> PixmapMut<'a> {
             return None;
         }
 
-        Some(PixmapMut {
-            data,
-            size,
-        })
+        Some(PixmapMut { data, size })
     }
 
     /// Creates a new `Pixmap` from the current data.
@@ -568,7 +554,6 @@ impl core::fmt::Debug for PixmapMut<'_> {
     }
 }
 
-
 /// A `PixmapMut` subregion.
 ///
 /// Unlike `PixmapMut`, contains `real_width` which references the parent `PixmapMut` width.
@@ -591,7 +576,6 @@ impl<'a> SubPixmapMut<'a> {
         bytemuck::cast_slice_mut(self.data)
     }
 }
-
 
 /// Returns minimum bytes per row as usize.
 ///

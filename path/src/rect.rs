@@ -5,7 +5,7 @@
 
 use core::convert::TryFrom;
 
-use crate::{LengthU32, IntSize, FiniteF32, SaturateRound, Point};
+use crate::{FiniteF32, IntSize, LengthU32, Point, SaturateRound};
 
 /// An integer rectangle.
 ///
@@ -95,10 +95,10 @@ impl IntRect {
 
     /// Checks that the rect is completely includes `other` Rect.
     pub fn contains(&self, other: &Self) -> bool {
-        self.x <= other.x &&
-            self.y <= other.y &&
-            self.right() >= other.right() &&
-            self.bottom() >= other.bottom()
+        self.x <= other.x
+            && self.y <= other.y
+            && self.right() >= other.right()
+            && self.bottom() >= other.bottom()
     }
 
     /// Returns an intersection of two rectangles.
@@ -145,7 +145,8 @@ impl IntRect {
             self.y as f32,
             self.x as f32 + self.width.get() as f32,
             self.y as f32 + self.height.get() as f32,
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     /// Converts into `ScreenIntRect`.
@@ -171,7 +172,10 @@ mod int_rect_tests {
         assert_eq!(IntRect::from_xywh(0, 0, 1, 0), None);
         assert_eq!(IntRect::from_xywh(0, 0, 0, 1), None);
 
-        assert_eq!(IntRect::from_xywh(0, 0, core::u32::MAX, core::u32::MAX), None);
+        assert_eq!(
+            IntRect::from_xywh(0, 0, core::u32::MAX, core::u32::MAX),
+            None
+        );
         assert_eq!(IntRect::from_xywh(0, 0, 1, core::u32::MAX), None);
         assert_eq!(IntRect::from_xywh(0, 0, core::u32::MAX, 1), None);
 
@@ -179,7 +183,10 @@ mod int_rect_tests {
         assert_eq!(IntRect::from_xywh(0, core::i32::MAX, 1, 1), None);
 
         let r = IntRect::from_xywh(1, 2, 3, 4).unwrap();
-        assert_eq!(r.to_screen_int_rect().unwrap(), ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap());
+        assert_eq!(
+            r.to_screen_int_rect().unwrap(),
+            ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap()
+        );
 
         let r = IntRect::from_xywh(-1, -1, 3, 4).unwrap();
         assert_eq!(r.to_screen_int_rect(), None);
@@ -206,7 +213,6 @@ mod int_rect_tests {
         }
     }
 }
-
 
 /// A screen `IntRect`.
 ///
@@ -238,12 +244,22 @@ impl ScreenIntRect {
         let width = LengthU32::new(width)?;
         let height = LengthU32::new(height)?;
 
-        Some(ScreenIntRect { x, y, width, height })
+        Some(ScreenIntRect {
+            x,
+            y,
+            width,
+            height,
+        })
     }
 
     /// Creates a new `ScreenIntRect`.
     pub const fn from_xywh_safe(x: u32, y: u32, width: LengthU32, height: LengthU32) -> Self {
-        ScreenIntRect { x, y, width, height }
+        ScreenIntRect {
+            x,
+            y,
+            width,
+            height,
+        }
     }
 
     /// Returns rect's X position.
@@ -307,10 +323,10 @@ impl ScreenIntRect {
 
     /// Checks that the rect is completely includes `other` Rect.
     pub fn contains(&self, other: &Self) -> bool {
-        self.x <= other.x &&
-            self.y <= other.y &&
-            self.right() >= other.right() &&
-            self.bottom() >= other.bottom()
+        self.x <= other.x
+            && self.y <= other.y
+            && self.right() >= other.right()
+            && self.bottom() >= other.bottom()
     }
 
     /// Converts into a `IntRect`.
@@ -321,7 +337,8 @@ impl ScreenIntRect {
             self.y as i32,
             self.width.get(),
             self.height.get(),
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     /// Converts into a `Rect`.
@@ -333,7 +350,8 @@ impl ScreenIntRect {
             self.y as f32,
             self.x as f32 + self.width.get() as f32,
             self.y as f32 + self.height.get() as f32,
-        ).unwrap()
+        )
+        .unwrap()
     }
 }
 
@@ -347,14 +365,25 @@ mod screen_int_rect_tests {
         assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, 0), None);
         assert_eq!(ScreenIntRect::from_xywh(0, 0, 0, 1), None);
 
-        assert_eq!(ScreenIntRect::from_xywh(0, 0, core::u32::MAX, core::u32::MAX), None);
+        assert_eq!(
+            ScreenIntRect::from_xywh(0, 0, core::u32::MAX, core::u32::MAX),
+            None
+        );
         assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, core::u32::MAX), None);
         assert_eq!(ScreenIntRect::from_xywh(0, 0, core::u32::MAX, 1), None);
 
         assert_eq!(ScreenIntRect::from_xywh(core::u32::MAX, 0, 1, 1), None);
         assert_eq!(ScreenIntRect::from_xywh(0, core::u32::MAX, 1, 1), None);
 
-        assert_eq!(ScreenIntRect::from_xywh(core::u32::MAX, core::u32::MAX, core::u32::MAX, core::u32::MAX), None);
+        assert_eq!(
+            ScreenIntRect::from_xywh(
+                core::u32::MAX,
+                core::u32::MAX,
+                core::u32::MAX,
+                core::u32::MAX
+            ),
+            None
+        );
 
         let r = ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap();
         assert_eq!(r.x(), 1);
@@ -365,7 +394,6 @@ mod screen_int_rect_tests {
         assert_eq!(r.bottom(), 6);
     }
 }
-
 
 /// A rectangle defined by left, top, right and bottom edges.
 ///
@@ -389,11 +417,11 @@ pub struct Rect {
 impl core::fmt::Debug for Rect {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Rect")
-         .field("left", &self.left.get())
-         .field("top", &self.top.get())
-         .field("right", &self.right.get())
-         .field("bottom", &self.bottom.get())
-         .finish()
+            .field("left", &self.left.get())
+            .field("top", &self.top.get())
+            .field("right", &self.right.get())
+            .field("bottom", &self.bottom.get())
+            .finish()
     }
 }
 
@@ -410,7 +438,12 @@ impl Rect {
             checked_f32_sub(right.get(), left.get())?;
             checked_f32_sub(bottom.get(), top.get())?;
 
-            Some(Rect { left, top, right, bottom })
+            Some(Rect {
+                left,
+                top,
+                right,
+                bottom,
+            })
         } else {
             None
         }
@@ -581,7 +614,6 @@ fn checked_f32_sub(a: f32, b: f32) -> Option<f32> {
         None
     }
 }
-
 
 #[cfg(test)]
 mod rect_tests {

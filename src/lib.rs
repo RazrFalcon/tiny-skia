@@ -13,7 +13,6 @@ See the `examples/` directory for usage examples.
 #![warn(missing_docs)]
 #![warn(missing_copy_implementations)]
 #![warn(missing_debug_implementations)]
-
 #![allow(clippy::approx_constant)]
 #![allow(clippy::clone_on_copy)]
 #![allow(clippy::collapsible_else_if)]
@@ -47,26 +46,27 @@ mod fixed_point;
 mod line_clipper;
 mod math;
 mod path64;
+mod path_geometry;
 mod pipeline;
 mod pixmap;
-mod painter; // Keep it under `pixmap` for a better order in the docs.
-mod path_geometry;
 mod scan;
 mod shaders;
 mod wide;
 
+mod painter; // Keep it under `pixmap` for a better order in the docs.
+
 pub use blend_mode::BlendMode;
 pub use clip::ClipMask;
-pub use color::{ALPHA_U8_TRANSPARENT, ALPHA_U8_OPAQUE, ALPHA_TRANSPARENT, ALPHA_OPAQUE};
 pub use color::{Color, ColorU8, PremultipliedColor, PremultipliedColorU8};
-pub use painter::{Paint, FillRule};
-pub use pixmap::{Pixmap, PixmapRef, PixmapMut, BYTES_PER_PIXEL};
-pub use shaders::{GradientStop, SpreadMode, FilterQuality, PixmapPaint};
-pub use shaders::{Shader, LinearGradient, RadialGradient, Pattern};
+pub use color::{ALPHA_OPAQUE, ALPHA_TRANSPARENT, ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
+pub use painter::{FillRule, Paint};
+pub use pixmap::{Pixmap, PixmapMut, PixmapRef, BYTES_PER_PIXEL};
+pub use shaders::{FilterQuality, GradientStop, PixmapPaint, SpreadMode};
+pub use shaders::{LinearGradient, Pattern, RadialGradient, Shader};
 
-pub use tiny_skia_path::{IntRect, Rect, Point, Transform};
-pub use tiny_skia_path::{Path, PathSegment, PathSegmentsIter, PathBuilder};
+pub use tiny_skia_path::{IntRect, Point, Rect, Transform};
 pub use tiny_skia_path::{LineCap, LineJoin, Stroke, StrokeDash};
+pub use tiny_skia_path::{Path, PathBuilder, PathSegment, PathSegmentsIter};
 
 /// An integer length that is guarantee to be > 0
 type LengthU32 = core::num::NonZeroU32;

@@ -27,26 +27,17 @@ impl f32x2 {
 
     /// Returns an absolute value.
     pub fn abs(self) -> f32x2 {
-        f32x2([
-            self.x().abs(),
-            self.y().abs(),
-        ])
+        f32x2([self.x().abs(), self.y().abs()])
     }
 
     /// Returns a minimum value.
     pub fn min(self, other: f32x2) -> f32x2 {
-        f32x2([
-            pmin(self.x(), other.x()),
-            pmin(self.y(), other.y()),
-        ])
+        f32x2([pmin(self.x(), other.x()), pmin(self.y(), other.y())])
     }
 
     /// Returns a maximum value.
     pub fn max(self, other: f32x2) -> f32x2 {
-        f32x2([
-            pmax(self.x(), other.x()),
-            pmax(self.y(), other.y()),
-        ])
+        f32x2([pmax(self.x(), other.x()), pmax(self.y(), other.y())])
     }
 
     /// Returns a maximum of both values.
@@ -55,20 +46,21 @@ impl f32x2 {
     }
 
     /// Returns the first value.
-    pub fn x(&self) -> f32 { self.0[0] }
+    pub fn x(&self) -> f32 {
+        self.0[0]
+    }
 
     /// Returns the second value.
-    pub fn y(&self) -> f32 { self.0[1] }
+    pub fn y(&self) -> f32 {
+        self.0[1]
+    }
 }
 
 impl core::ops::Add<f32x2> for f32x2 {
     type Output = f32x2;
 
     fn add(self, other: f32x2) -> f32x2 {
-        f32x2([
-            self.x() + other.x(),
-            self.y() + other.y(),
-        ])
+        f32x2([self.x() + other.x(), self.y() + other.y()])
     }
 }
 
@@ -76,10 +68,7 @@ impl core::ops::Sub<f32x2> for f32x2 {
     type Output = f32x2;
 
     fn sub(self, other: f32x2) -> f32x2 {
-        f32x2([
-            self.x() - other.x(),
-            self.y() - other.y(),
-        ])
+        f32x2([self.x() - other.x(), self.y() - other.y()])
     }
 }
 
@@ -87,10 +76,7 @@ impl core::ops::Mul<f32x2> for f32x2 {
     type Output = f32x2;
 
     fn mul(self, other: f32x2) -> f32x2 {
-        f32x2([
-            self.x() * other.x(),
-            self.y() * other.y(),
-        ])
+        f32x2([self.x() * other.x(), self.y() * other.y()])
     }
 }
 
@@ -98,10 +84,7 @@ impl core::ops::Div<f32x2> for f32x2 {
     type Output = f32x2;
 
     fn div(self, other: f32x2) -> f32x2 {
-        f32x2([
-            self.x() / other.x(),
-            self.y() / other.y(),
-        ])
+        f32x2([self.x() / other.x(), self.y() / other.y()])
     }
 }
 
@@ -110,9 +93,17 @@ impl core::ops::Div<f32x2> for f32x2 {
 // Unlike std one, we do not care about NaN.
 
 fn pmax(a: f32, b: f32) -> f32 {
-    if a < b { b } else { a }
+    if a < b {
+        b
+    } else {
+        a
+    }
 }
 
 fn pmin(a: f32, b: f32) -> f32 {
-    if b < a { b } else { a }
+    if b < a {
+        b
+    } else {
+        a
+    }
 }

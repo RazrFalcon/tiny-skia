@@ -70,9 +70,9 @@ For horizontal lines:
        e t^3 + 3 f t^3 - 3 g t^3 + h t^3
 */
 
-use super::Scalar64;
 use super::cubic64::{self, Cubic64};
 use super::point64::SearchAxis;
+use super::Scalar64;
 
 pub fn horizontal_intersect(cubic: &Cubic64, axis_intercept: f64, roots: &mut [f64; 3]) -> usize {
     let (a, b, c, mut d) = cubic64::coefficients(&cubic.as_f64_slice()[1..]);
@@ -84,7 +84,13 @@ pub fn horizontal_intersect(cubic: &Cubic64, axis_intercept: f64, roots: &mut [f
         if !calc_pt.y.approximately_equal(axis_intercept) {
             let mut extreme_ts = [0.0; 6];
             let extrema = cubic64::find_extrema(&cubic.as_f64_slice()[1..], &mut extreme_ts);
-            count = cubic.search_roots(extrema, axis_intercept, SearchAxis::Y, &mut extreme_ts, roots);
+            count = cubic.search_roots(
+                extrema,
+                axis_intercept,
+                SearchAxis::Y,
+                &mut extreme_ts,
+                roots,
+            );
             break;
         }
 
@@ -104,7 +110,13 @@ pub fn vertical_intersect(cubic: &Cubic64, axis_intercept: f64, roots: &mut [f64
         if !calc_pt.x.approximately_equal(axis_intercept) {
             let mut extreme_ts = [0.0; 6];
             let extrema = cubic64::find_extrema(&cubic.as_f64_slice(), &mut extreme_ts);
-            count = cubic.search_roots(extrema, axis_intercept, SearchAxis::X, &mut extreme_ts, roots);
+            count = cubic.search_roots(
+                extrema,
+                axis_intercept,
+                SearchAxis::X,
+                &mut extreme_ts,
+                roots,
+            );
             break;
         }
 

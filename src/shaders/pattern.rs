@@ -6,7 +6,7 @@
 
 use tiny_skia_path::NormalizedF32;
 
-use crate::{Shader, Transform, PixmapRef, SpreadMode, BlendMode};
+use crate::{BlendMode, PixmapRef, Shader, SpreadMode, Transform};
 
 use crate::pipeline;
 use crate::pipeline::RasterPipelineBuilder;
@@ -24,7 +24,6 @@ pub enum FilterQuality {
     /// Bicubic. High quality, but slow.
     Bicubic,
 }
-
 
 /// Controls how a pixmap should be blended.
 ///
@@ -58,7 +57,6 @@ impl Default for PixmapPaint {
         }
     }
 }
-
 
 /// A pattern shader.
 ///
@@ -164,7 +162,11 @@ impl<'a> Pattern<'a> {
 
         // Unlike Skia, we do not support global opacity and only Pattern allows it.
         if self.opacity != NormalizedF32::ONE {
-            debug_assert_eq!(core::mem::size_of_val(&self.opacity), 4, "alpha must be f32");
+            debug_assert_eq!(
+                core::mem::size_of_val(&self.opacity),
+                4,
+                "alpha must be f32"
+            );
             p.ctx.current_coverage = self.opacity.get();
             p.push(pipeline::Stage::Scale1Float);
         }

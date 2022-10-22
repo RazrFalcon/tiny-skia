@@ -5,7 +5,7 @@
 
 // Based on https://github.com/Lokathor/wide (Zlib)
 
-use super::{i32x8, f32x8};
+use super::{f32x8, i32x8};
 
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "simd", target_feature = "avx2"))] {

@@ -12,8 +12,8 @@ use arrayref::array_ref;
 
 use crate::{Path, Point};
 
-use crate::floating_point::{NormalizedF32, NonZeroPositiveF32, FiniteF32, NormalizedF32Exclusive};
-use crate::path::{PathVerb, PathSegment, PathSegmentsIter};
+use crate::floating_point::{FiniteF32, NonZeroPositiveF32, NormalizedF32, NormalizedF32Exclusive};
+use crate::path::{PathSegment, PathSegmentsIter, PathVerb};
 use crate::path_builder::PathBuilder;
 use crate::path_geometry;
 use crate::scalar::Scalar;
@@ -97,13 +97,13 @@ mod tests {
     #[test]
     fn bug_26() {
         let mut pb = PathBuilder::new();
-        pb.move_to(665.54,287.3);
-        pb.line_to(675.67,273.04);
-        pb.line_to(675.52,271.32);
-        pb.line_to(674.79,269.61);
-        pb.line_to(674.05,268.04);
-        pb.line_to(672.88,266.47);
-        pb.line_to(671.27,264.9);
+        pb.move_to(665.54, 287.3);
+        pb.line_to(675.67, 273.04);
+        pb.line_to(675.52, 271.32);
+        pb.line_to(674.79, 269.61);
+        pb.line_to(674.05, 268.04);
+        pb.line_to(672.88, 266.47);
+        pb.line_to(671.27, 264.9);
         let path = pb.finish().unwrap();
 
         let stroke_dash = StrokeDash::new(vec![6.0, 4.5], 0.0).unwrap();
@@ -111,7 +111,6 @@ mod tests {
         assert!(path.dash(&stroke_dash, 1.0).is_some());
     }
 }
-
 
 // Adjust phase to be between 0 and len, "flipping" phase if negative.
 // e.g., if len is 100, then phase of -20 (or -120) is equivalent to 80.
@@ -238,7 +237,6 @@ fn dash_impl(src: &Path, dash: &StrokeDash, res_scale: f32) -> Option<Path> {
     pb.finish()
 }
 
-
 const MAX_T_VALUE: u32 = 0x3FFFFFFF;
 
 struct ContourMeasureIter<'a> {
@@ -255,7 +253,7 @@ impl<'a> ContourMeasureIter<'a> {
 
         ContourMeasureIter {
             iter: path.segments(),
-            tolerance: CHEAP_DIST_LIMIT * res_scale.invert()
+            tolerance: CHEAP_DIST_LIMIT * res_scale.invert(),
         }
     }
 }
@@ -286,8 +284,7 @@ impl Iterator for ContourMeasureIter<'_> {
                 }
                 PathSegment::LineTo(p0) => {
                     let prev_d = distance;
-                    distance = contour.compute_line_seg(
-                        prev_p, p0, distance, point_index);
+                    distance = contour.compute_line_seg(prev_p, p0, distance, point_index);
 
                     if distance > prev_d {
                         contour.points.push(p0);
@@ -299,7 +296,15 @@ impl Iterator for ContourMeasureIter<'_> {
                 PathSegment::QuadTo(p0, p1) => {
                     let prev_d = distance;
                     distance = contour.compute_quad_segs(
-                        prev_p, p0, p1, distance, 0, MAX_T_VALUE, point_index, self.tolerance);
+                        prev_p,
+                        p0,
+                        p1,
+                        distance,
+                        0,
+                        MAX_T_VALUE,
+                        point_index,
+                        self.tolerance,
+                    );
 
                     if distance > prev_d {
                         contour.points.push(p0);
@@ -312,7 +317,16 @@ impl Iterator for ContourMeasureIter<'_> {
                 PathSegment::CubicTo(p0, p1, p2) => {
                     let prev_d = distance;
                     distance = contour.compute_cubic_segs(
-                        prev_p, p0, p1, p2, distance, 0, MAX_T_VALUE, point_index, self.tolerance);
+                        prev_p,
+                        p0,
+                        p1,
+                        p2,
+                        distance,
+                        0,
+                        MAX_T_VALUE,
+                        point_index,
+                        self.tolerance,
+                    );
 
                     if distance > prev_d {
                         contour.points.push(p0);
@@ -342,7 +356,11 @@ impl Iterator for ContourMeasureIter<'_> {
             let prev_d = distance;
             let first_pt = contour.points[0];
             distance = contour.compute_line_seg(
-                contour.points[point_index], first_pt, distance, point_index);
+                contour.points[point_index],
+                first_pt,
+                distance,
+                point_index,
+            );
 
             if distance > prev_d {
                 contour.points.push(first_pt);
@@ -360,7 +378,6 @@ impl Iterator for ContourMeasureIter<'_> {
     }
 }
 
-
 #[derive(Copy, Clone, PartialEq, Debug)]
 enum SegmentType {
     Line,
@@ -370,7 +387,7 @@ enum SegmentType {
 
 #[derive(Copy, Clone, Debug)]
 struct Segment {
-    distance: f32, // total distance up to this point
+    distance: f32,      // total distance up to this point
     point_index: usize, // index into the ContourMeasure::points array
     t_value: u32,
     kind: SegmentType,
@@ -384,7 +401,6 @@ impl Segment {
         self.t_value as f32 * MAX_T_RECIPROCAL
     }
 }
-
 
 #[derive(Default, Debug)]
 struct ContourMeasure {
@@ -428,16 +444,34 @@ impl ContourMeasure {
         debug_assert!(stop_seg_index <= stop_seg_index);
         let mut p = Point::zero();
         if start_with_move_to {
-            compute_pos_tan(&self.points[seg.point_index..], seg.kind, start_t, Some(&mut p), None);
+            compute_pos_tan(
+                &self.points[seg.point_index..],
+                seg.kind,
+                start_t,
+                Some(&mut p),
+                None,
+            );
             pb.move_to(p.x, p.y);
         }
 
         if seg.point_index == stop_seg.point_index {
-            segment_to(&self.points[seg.point_index..], seg.kind, start_t, stop_t, pb);
+            segment_to(
+                &self.points[seg.point_index..],
+                seg.kind,
+                start_t,
+                stop_t,
+                pb,
+            );
         } else {
             let mut new_seg_index = seg_index;
             loop {
-                segment_to(&self.points[seg.point_index..], seg.kind, start_t, NormalizedF32::ONE, pb);
+                segment_to(
+                    &self.points[seg.point_index..],
+                    seg.kind,
+                    start_t,
+                    NormalizedF32::ONE,
+                    pb,
+                );
 
                 let old_point_index = seg.point_index;
                 loop {
@@ -455,7 +489,13 @@ impl ContourMeasure {
                 }
             }
 
-            segment_to(&self.points[seg.point_index..], seg.kind, NormalizedF32::ZERO, stop_t, pb);
+            segment_to(
+                &self.points[seg.point_index..],
+                seg.kind,
+                NormalizedF32::ZERO,
+                stop_t,
+                pb,
+            );
         }
 
         Some(())
@@ -486,7 +526,8 @@ impl ContourMeasure {
         debug_assert!(distance >= start_d);
         debug_assert!(seg.distance > start_d);
 
-        let t = start_t + (seg.scalar_t() - start_t) * (distance - start_d) / (seg.distance - start_d);
+        let t =
+            start_t + (seg.scalar_t() - start_t) * (distance - start_d) / (seg.distance - start_d);
         let t = NormalizedF32::new(t)?;
         Some((index, t))
     }
@@ -532,9 +573,25 @@ impl ContourMeasure {
 
             path_geometry::chop_quad_at(&[p0, p1, p2], NormalizedF32Exclusive::HALF, &mut tmp);
             distance = self.compute_quad_segs(
-                tmp[0], tmp[1], tmp[2], distance, min_t, half_t, point_index, tolerance);
+                tmp[0],
+                tmp[1],
+                tmp[2],
+                distance,
+                min_t,
+                half_t,
+                point_index,
+                tolerance,
+            );
             distance = self.compute_quad_segs(
-                tmp[2], tmp[3], tmp[4], distance, half_t, max_t, point_index, tolerance);
+                tmp[2],
+                tmp[3],
+                tmp[4],
+                distance,
+                half_t,
+                max_t,
+                point_index,
+                tolerance,
+            );
         } else {
             let d = p0.distance(p2);
             let prev_d = distance;
@@ -569,11 +626,33 @@ impl ContourMeasure {
             let mut tmp = [Point::zero(); 7];
             let half_t = (min_t + max_t) >> 1;
 
-            path_geometry::chop_cubic_at2(&[p0, p1, p2, p3], NormalizedF32Exclusive::HALF, &mut tmp);
+            path_geometry::chop_cubic_at2(
+                &[p0, p1, p2, p3],
+                NormalizedF32Exclusive::HALF,
+                &mut tmp,
+            );
             distance = self.compute_cubic_segs(
-                tmp[0], tmp[1], tmp[2], tmp[3], distance, min_t, half_t, point_index, tolerance);
+                tmp[0],
+                tmp[1],
+                tmp[2],
+                tmp[3],
+                distance,
+                min_t,
+                half_t,
+                point_index,
+                tolerance,
+            );
             distance = self.compute_cubic_segs(
-                tmp[3], tmp[4], tmp[5], tmp[6], distance, half_t, max_t, point_index, tolerance);
+                tmp[3],
+                tmp[4],
+                tmp[5],
+                tmp[6],
+                distance,
+                half_t,
+                max_t,
+                point_index,
+                tolerance,
+            );
         } else {
             let d = p0.distance(p3);
             let prev_d = distance;

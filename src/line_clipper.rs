@@ -95,22 +95,26 @@ pub fn clip<'a>(
         if tmp[index0].x < clip.left() {
             result_storage[offset] = Point::from_xy(clip.left(), tmp[index0].y);
             offset += 1;
-            result_storage[offset] = Point::from_xy(
-                clip.left(),
-                sect_clamp_with_vertical(&tmp, clip.left()),
-            );
-            debug_assert!(is_between_unsorted(result_storage[offset].y, tmp[0].y, tmp[1].y));
+            result_storage[offset] =
+                Point::from_xy(clip.left(), sect_clamp_with_vertical(&tmp, clip.left()));
+            debug_assert!(is_between_unsorted(
+                result_storage[offset].y,
+                tmp[0].y,
+                tmp[1].y
+            ));
         } else {
             result_storage[offset] = tmp[index0];
         }
         offset += 1;
 
         if tmp[index1].x > clip.right() {
-            result_storage[offset] = Point::from_xy(
-                clip.right(),
-                sect_clamp_with_vertical(&tmp, clip.right()),
-            );
-            debug_assert!(is_between_unsorted(result_storage[offset].y, tmp[0].y, tmp[1].y));
+            result_storage[offset] =
+                Point::from_xy(clip.right(), sect_clamp_with_vertical(&tmp, clip.right()));
+            debug_assert!(is_between_unsorted(
+                result_storage[offset].y,
+                tmp[0].y,
+                tmp[1].y
+            ));
             offset += 1;
             result_storage[offset] = Point::from_xy(clip.right(), tmp[index1].y);
         } else {
@@ -132,7 +136,7 @@ pub fn clip<'a>(
         points[0..len].copy_from_slice(&result[0..len]);
     }
 
-    &points[0..line_count+1]
+    &points[0..line_count + 1]
 }
 
 /// Returns X coordinate of intersection with horizontal line at Y.
@@ -246,10 +250,10 @@ pub fn intersect(src: &[Point; 2], clip: &Rect, dst: &mut [Point; 2]) -> bool {
 
         // check for no overlap, and only permit coincident edges if the line
         // and the edge are colinear
-        if  nested_lt(bounds.right(), clip.left(), bounds.width()) ||
-            nested_lt(clip.right(), bounds.left(), bounds.width()) ||
-            nested_lt(bounds.bottom(), clip.top(), bounds.height()) ||
-            nested_lt(clip.bottom(), bounds.top(), bounds.height())
+        if nested_lt(bounds.right(), clip.left(), bounds.width())
+            || nested_lt(clip.right(), bounds.left(), bounds.width())
+            || nested_lt(bounds.bottom(), clip.top(), bounds.height())
+            || nested_lt(clip.bottom(), bounds.top(), bounds.height())
         {
             return false;
         }
@@ -297,8 +301,8 @@ fn nested_lt(a: f32, b: f32, dim: f32) -> bool {
 
 // returns true if outer contains inner, even if inner is empty.
 fn contains_no_empty_check(outer: &Rect, inner: &Rect) -> bool {
-    outer.left() <= inner.left() &&
-    outer.top() <= inner.top() &&
-    outer.right() >= inner.right() &&
-    outer.bottom() >= inner.bottom()
+    outer.left() <= inner.left()
+        && outer.top() <= inner.top()
+        && outer.right() >= inner.right()
+        && outer.bottom() >= inner.bottom()
 }

@@ -9,12 +9,11 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::{Point, Rect, Path};
+use crate::{Path, Point, Rect};
 
-use crate::path_geometry;
 use crate::path::PathVerb;
+use crate::path_geometry;
 use crate::scalar::{Scalar, SCALAR_ROOT_2_OVER_2};
-
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub(crate) enum PathDirection {
@@ -23,7 +22,6 @@ pub(crate) enum PathDirection {
     /// Counter-clockwise direction for adding closed contours.
     CCW,
 }
-
 
 /// A path builder.
 #[derive(Clone, Default, Debug)]
@@ -195,7 +193,10 @@ impl PathBuilder {
 
             let last = self.last_point().unwrap();
             let quadder = path_geometry::AutoConicToQuads::compute(
-                last, Point::from_xy(x1, y1), Point::from_xy(x, y), weight,
+                last,
+                Point::from_xy(x1, y1),
+                Point::from_xy(x, y),
+                weight,
             );
             if let Some(quadder) = quadder {
                 // Points are ordered as: 0 - 1 2 - 3 4 - 5 6 - ..

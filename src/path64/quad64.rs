@@ -55,7 +55,8 @@ pub fn roots_real(a: f64, b: f64, c: f64, s: &mut [f64; 3]) -> usize {
 
     let p = b / (2.0 * a);
     let q = c / a;
-    if a.approximately_zero() && (p.approximately_zero_inverse() || q.approximately_zero_inverse()) {
+    if a.approximately_zero() && (p.approximately_zero_inverse() || q.approximately_zero_inverse())
+    {
         return handle_zero(b, c, s);
     }
 

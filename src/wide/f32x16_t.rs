@@ -55,44 +55,32 @@ impl f32x16 {
     }
 
     pub fn cmp_gt(self, rhs: &Self) -> Self {
-        Self(
-            self.0.cmp_gt(rhs.0),
-            self.1.cmp_gt(rhs.1),
-        )
+        Self(self.0.cmp_gt(rhs.0), self.1.cmp_gt(rhs.1))
     }
 
     pub fn blend(self, t: Self, f: Self) -> Self {
-        Self(
-            self.0.blend(t.0, f.0),
-            self.1.blend(t.1, f.1),
-        )
+        Self(self.0.blend(t.0, f.0), self.1.blend(t.1, f.1))
     }
 
     pub fn normalize(&self) -> Self {
-        Self(
-            self.0.normalize(),
-            self.1.normalize(),
-        )
+        Self(self.0.normalize(), self.1.normalize())
     }
 
     pub fn floor(&self) -> Self {
         // Yes, Skia does it in the same way.
         let roundtrip = self.round();
-        roundtrip - roundtrip.cmp_gt(self).blend(f32x16::splat(1.0), f32x16::splat(0.0))
+        roundtrip
+            - roundtrip
+                .cmp_gt(self)
+                .blend(f32x16::splat(1.0), f32x16::splat(0.0))
     }
 
     pub fn sqrt(&self) -> Self {
-        Self(
-            self.0.sqrt(),
-            self.1.sqrt(),
-        )
+        Self(self.0.sqrt(), self.1.sqrt())
     }
 
     pub fn round(&self) -> Self {
-        Self(
-            self.0.round(),
-            self.1.round(),
-        )
+        Self(self.0.round(), self.1.round())
     }
 
     // This method is too heavy and shouldn't be inlined.
@@ -103,18 +91,18 @@ impl f32x16 {
         let n0: [f32; 8] = self.0.into();
         let n1: [f32; 8] = self.1.into();
 
-        dst.0[ 0] = n0[0] as u16;
-        dst.0[ 1] = n0[1] as u16;
-        dst.0[ 2] = n0[2] as u16;
-        dst.0[ 3] = n0[3] as u16;
+        dst.0[0] = n0[0] as u16;
+        dst.0[1] = n0[1] as u16;
+        dst.0[2] = n0[2] as u16;
+        dst.0[3] = n0[3] as u16;
 
-        dst.0[ 4] = n0[4] as u16;
-        dst.0[ 5] = n0[5] as u16;
-        dst.0[ 6] = n0[6] as u16;
-        dst.0[ 7] = n0[7] as u16;
+        dst.0[4] = n0[4] as u16;
+        dst.0[5] = n0[5] as u16;
+        dst.0[6] = n0[6] as u16;
+        dst.0[7] = n0[7] as u16;
 
-        dst.0[ 8] = n1[0] as u16;
-        dst.0[ 9] = n1[1] as u16;
+        dst.0[8] = n1[0] as u16;
+        dst.0[9] = n1[1] as u16;
         dst.0[10] = n1[2] as u16;
         dst.0[11] = n1[3] as u16;
 
@@ -129,10 +117,7 @@ impl core::ops::Add<f32x16> for f32x16 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Self(
-            self.0 + rhs.0,
-            self.1 + rhs.1,
-        )
+        Self(self.0 + rhs.0, self.1 + rhs.1)
     }
 }
 
@@ -140,10 +125,7 @@ impl core::ops::Sub<f32x16> for f32x16 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Self(
-            self.0 - rhs.0,
-            self.1 - rhs.1,
-        )
+        Self(self.0 - rhs.0, self.1 - rhs.1)
     }
 }
 
@@ -151,9 +133,6 @@ impl core::ops::Mul<f32x16> for f32x16 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        Self(
-            self.0 * rhs.0,
-            self.1 * rhs.1,
-        )
+        Self(self.0 * rhs.0, self.1 * rhs.1)
     }
 }

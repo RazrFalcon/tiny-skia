@@ -8,15 +8,14 @@ use alloc::vec::Vec;
 
 use tiny_skia_path::{NormalizedF32, Scalar};
 
-use crate::{Color, Transform, SpreadMode};
+use crate::{Color, SpreadMode, Transform};
 
-use crate::pipeline::{self, EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
 use crate::pipeline::RasterPipelineBuilder;
+use crate::pipeline::{self, EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
 
 // The default SCALAR_NEARLY_ZERO threshold of .0024 is too big and causes regressions for svg
 // gradients defined in the wild.
 pub const DEGENERATE_THRESHOLD: f32 = 1.0 / (1 << 15) as f32;
-
 
 /// A gradient point.
 #[allow(missing_docs)]
@@ -31,10 +30,12 @@ impl GradientStop {
     ///
     /// `position` will be clamped to a 0..=1 range.
     pub fn new(position: f32, color: Color) -> Self {
-        GradientStop { position: NormalizedF32::new_clamped(position), color }
+        GradientStop {
+            position: NormalizedF32::new_clamped(position),
+            color,
+        }
     }
 }
-
 
 #[derive(Clone, Debug)]
 pub struct Gradient {
@@ -171,7 +172,11 @@ impl Gradient {
             // Remove the dummy stops inserted by Gradient::new
             // because they are naturally handled by the search method.
             let (first_stop, last_stop) = if self.stops.len() > 2 {
-                let first = if self.stops[0].color != self.stops[1].color { 0 } else { 1 };
+                let first = if self.stops[0].color != self.stops[1].color {
+                    0
+                } else {
+                    1
+                };
 
                 let len = self.stops.len();
                 let last = if self.stops[len - 2].color != self.stops[len - 1].color {
@@ -204,14 +209,12 @@ impl Gradient {
                     );
                     ctx.factors.push(f);
 
-                    ctx.biases.push(
-                        GradientColor::new(
-                            c_l.r - f.r * t_l,
-                            c_l.g - f.g * t_l,
-                            c_l.b - f.b * t_l,
-                            c_l.a - f.a * t_l,
-                        )
-                    );
+                    ctx.biases.push(GradientColor::new(
+                        c_l.r - f.r * t_l,
+                        c_l.g - f.g * t_l,
+                        c_l.b - f.b * t_l,
+                        c_l.a - f.a * t_l,
+                    ));
 
                     ctx.t_values.push(NormalizedF32::new_clamped(t_l));
                 }

@@ -8,12 +8,12 @@ use alloc::vec::Vec;
 
 use tiny_skia_path::Scalar;
 
-use crate::{Point, Shader, GradientStop, SpreadMode, Transform};
+use crate::{GradientStop, Point, Shader, SpreadMode, Transform};
 
-use crate::pipeline;
-use crate::wide::u32x8;
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
+use crate::pipeline;
 use crate::pipeline::RasterPipelineBuilder;
+use crate::wide::u32x8;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
@@ -38,7 +38,6 @@ impl FocalData {
         !self.is_focal_on_circle() && self.r1 > 1.0
     }
 }
-
 
 /// A radial gradient shader.
 ///
@@ -81,7 +80,7 @@ impl RadialGradient {
         }
 
         if stops.len() == 1 {
-            return Some(Shader::SolidColor(stops[0].color))
+            return Some(Shader::SolidColor(stops[0].color));
         }
 
         transform.invert()?;
@@ -110,8 +109,10 @@ impl RadialGradient {
         } else {
             // From SkTwoPointConicalGradient::Create
             let mut ts = ts_from_poly_to_poly(
-                start, end,
-                Point::from_xy(0.0, 0.0), Point::from_xy(1.0, 0.0),
+                start,
+                end,
+                Point::from_xy(0.0, 0.0),
+                Point::from_xy(1.0, 0.0),
             )?;
 
             let d_center = (start - end).length();
@@ -145,7 +146,8 @@ impl RadialGradient {
             p0,
         };
 
-        self.base.push_stages(p,
+        self.base.push_stages(
+            p,
             &|p| {
                 if let Some(focal_data) = self.focal_data {
                     // Unlike Skia, we have only the Focal radial gradient type.
@@ -176,12 +178,7 @@ impl RadialGradient {
     }
 }
 
-fn ts_from_poly_to_poly(
-    src1: Point,
-    src2: Point,
-    dst1: Point,
-    dst2: Point,
-) -> Option<Transform> {
+fn ts_from_poly_to_poly(src1: Point, src2: Point, dst1: Point, dst2: Point) -> Option<Transform> {
     let tmp = from_poly2(src1, src2);
     let res = tmp.invert()?;
     let tmp = from_poly2(dst1, dst2);

@@ -16,7 +16,6 @@
 #![warn(missing_docs)]
 #![warn(missing_copy_implementations)]
 #![warn(missing_debug_implementations)]
-
 #![allow(clippy::approx_constant)]
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::eq_op)]
@@ -36,26 +35,26 @@ extern crate std;
 
 extern crate alloc;
 
+mod dash;
 mod f32x2_t;
 mod f32x4_t;
 mod floating_point;
-mod scalar;
 mod path;
 mod path_builder;
 pub mod path_geometry;
 mod rect;
+mod scalar;
 mod stroker;
-mod dash;
 mod transform;
 
+pub use dash::StrokeDash;
 pub use f32x2_t::f32x2;
 pub use floating_point::*;
-pub use scalar::*;
 pub use path::*;
 pub use path_builder::*;
 pub use rect::*;
+pub use scalar::*;
 pub use stroker::*;
-pub use dash::StrokeDash;
 pub use transform::*;
 
 /// An integer length that is guarantee to be > 0
@@ -119,8 +118,8 @@ impl Point {
 
     /// Checks that two `Point`s are almost equal using the specified tolerance.
     pub(crate) fn equals_within_tolerance(&self, other: Point, tolerance: f32) -> bool {
-        (self.x - other.x).is_nearly_zero_within_tolerance(tolerance) &&
-            (self.y - other.y).is_nearly_zero_within_tolerance(tolerance)
+        (self.x - other.x).is_nearly_zero_within_tolerance(tolerance)
+            && (self.y - other.y).is_nearly_zero_within_tolerance(tolerance)
     }
 
     /// Scales (fX, fY) so that length() returns one, while preserving ratio of fX to fY,
@@ -285,10 +284,7 @@ impl core::ops::Add for Point {
     type Output = Point;
 
     fn add(self, other: Point) -> Self::Output {
-        Point::from_xy(
-            self.x + other.x,
-            self.y + other.y,
-        )
+        Point::from_xy(self.x + other.x, self.y + other.y)
     }
 }
 
@@ -303,10 +299,7 @@ impl core::ops::Sub for Point {
     type Output = Point;
 
     fn sub(self, other: Point) -> Self::Output {
-        Point::from_xy(
-            self.x - other.x,
-            self.y - other.y,
-        )
+        Point::from_xy(self.x - other.x, self.y - other.y)
     }
 }
 
@@ -321,10 +314,7 @@ impl core::ops::Mul for Point {
     type Output = Point;
 
     fn mul(self, other: Point) -> Self::Output {
-        Point::from_xy(
-            self.x * other.x,
-            self.y * other.y,
-        )
+        Point::from_xy(self.x * other.x, self.y * other.y)
     }
 }
 
@@ -334,7 +324,6 @@ impl core::ops::MulAssign for Point {
         self.y *= other.y;
     }
 }
-
 
 /// An integer size.
 ///
@@ -377,7 +366,6 @@ impl IntSize {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -389,7 +377,13 @@ mod tests {
         assert_eq!(IntSize::from_wh(0, 1), None);
 
         let size = IntSize::from_wh(3, 4).unwrap();
-        assert_eq!(size.to_int_rect(1, 2), IntRect::from_xywh(1, 2, 3, 4).unwrap());
-        assert_eq!(size.to_screen_int_rect(1, 2), ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap());
+        assert_eq!(
+            size.to_int_rect(1, 2),
+            IntRect::from_xywh(1, 2, 3, 4).unwrap()
+        );
+        assert_eq!(
+            size.to_screen_int_rect(1, 2),
+            ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap()
+        );
     }
 }

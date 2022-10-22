@@ -10,8 +10,8 @@ use tiny_skia_path::{NormalizedF32Exclusive, SCALAR_MAX};
 
 use crate::{Path, Point, Rect};
 
+use crate::edge_builder::{edge_iter, PathEdge, PathEdgeIter};
 use crate::line_clipper;
-use crate::edge_builder::{PathEdge, PathEdgeIter, edge_iter};
 use crate::path_geometry;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
@@ -21,13 +21,13 @@ use tiny_skia_path::NoStdFloat;
 // Everything is checked at compile-time so there is no bound checking and panics.
 macro_rules! copy_3_points {
     ($arr:expr, $i:expr) => {
-        [$arr[$i], $arr[$i+1], $arr[$i+2]]
+        [$arr[$i], $arr[$i + 1], $arr[$i + 2]]
     };
 }
 
 macro_rules! copy_4_points {
     ($arr:expr, $i:expr) => {
-        [$arr[$i], $arr[$i+1], $arr[$i+2], $arr[$i+3]]
+        [$arr[$i], $arr[$i + 1], $arr[$i + 2], $arr[$i + 3]]
     };
 }
 
@@ -60,7 +60,7 @@ impl EdgeClipper {
             &mut points,
         );
         if !points.is_empty() {
-            for i in 0..points.len()-1 {
+            for i in 0..points.len() - 1 {
                 self.push_line(points[i], points[i + 1]);
             }
         }
@@ -81,7 +81,10 @@ impl EdgeClipper {
             core::mem::swap(&mut y0, &mut y1);
         }
 
-        self.edges.push(PathEdge::LineTo(Point::from_xy(x, y0), Point::from_xy(x, y1)));
+        self.edges.push(PathEdge::LineTo(
+            Point::from_xy(x, y0),
+            Point::from_xy(x, y1),
+        ));
     }
 
     fn clip_quad(mut self, p0: Point, p1: Point, p2: Point) -> Option<ClippedEdges> {
@@ -185,7 +188,8 @@ impl EdgeClipper {
                 pts[2].x = pts[2].x.min(self.clip.right());
                 self.push_quad(&pts, reverse);
             }
-        } else {    // wholly inside the clip
+        } else {
+            // wholly inside the clip
             self.push_quad(&pts, reverse);
         }
     }
@@ -303,13 +307,14 @@ impl EdgeClipper {
 
     fn push_cubic(&mut self, pts: &[Point; 4], reverse: bool) {
         if reverse {
-            self.edges.push(PathEdge::CubicTo(pts[3], pts[2], pts[1], pts[0]));
+            self.edges
+                .push(PathEdge::CubicTo(pts[3], pts[2], pts[1], pts[0]));
         } else {
-            self.edges.push(PathEdge::CubicTo(pts[0], pts[1], pts[2], pts[3]));
+            self.edges
+                .push(PathEdge::CubicTo(pts[0], pts[1], pts[2], pts[3]));
         }
     }
 }
-
 
 pub struct EdgeClipperIter<'a> {
     edge_iter: PathEdgeIter<'a>,
@@ -337,17 +342,17 @@ impl Iterator for EdgeClipperIter<'_> {
             match edge {
                 PathEdge::LineTo(p0, p1) => {
                     if let Some(edges) = clipper.clip_line(p0, p1) {
-                        return Some(edges)
+                        return Some(edges);
                     }
                 }
                 PathEdge::QuadTo(p0, p1, p2) => {
                     if let Some(edges) = clipper.clip_quad(p0, p1, p2) {
-                        return Some(edges)
+                        return Some(edges);
                     }
                 }
                 PathEdge::CubicTo(p0, p1, p2, p3) => {
                     if let Some(edges) = clipper.clip_cubic(p0, p1, p2, p3) {
-                        return Some(edges)
+                        return Some(edges);
                     }
                 }
             }
@@ -436,7 +441,13 @@ fn chop_mono_quad_at_y(pts: &[Point; 3], y: f32, t: &mut NormalizedF32Exclusive)
     chop_mono_quad_at(pts[0].y, pts[1].y, pts[2].y, y, t)
 }
 
-fn chop_mono_quad_at(c0: f32, c1: f32, c2: f32, target: f32, t: &mut NormalizedF32Exclusive) -> bool {
+fn chop_mono_quad_at(
+    c0: f32,
+    c1: f32,
+    c2: f32,
+    target: f32,
+    t: &mut NormalizedF32Exclusive,
+) -> bool {
     // Solve F(t) = y where F(t) := [0](1-t)^2 + 2[1]t(1-t) + [2]t^2
     // We solve for t, using quadratic equation, hence we have to rearrange
     // our coefficients to look like At^2 + Bt + C
@@ -532,9 +543,9 @@ fn mono_cubic_closest_t(src: &[f32; 4], mut x: f32) -> NormalizedF32Exclusive {
     let mut best_t = t;
     let mut step = 0.25;
     let d = src[0];
-    let a = src[3] + 3.0*(src[1] - src[2]) - d;
-    let b = 3.0*(src[2] - src[1] - src[1] + d);
-    let c = 3.0*(src[1] - d);
+    let a = src[3] + 3.0 * (src[1] - src[2]) - d;
+    let b = 3.0 * (src[2] - src[1] - src[1] + d);
+    let c = 3.0 * (src[1] - d);
     x -= d;
     let mut closest = SCALAR_MAX;
     loop {

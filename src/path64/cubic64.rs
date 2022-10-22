@@ -4,9 +4,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use super::Scalar64;
 use super::point64::{Point64, SearchAxis};
 use super::quad64;
+use super::Scalar64;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
@@ -14,11 +14,9 @@ use tiny_skia_path::NoStdFloat;
 pub const POINT_COUNT: usize = 4;
 const PI: f64 = 3.141592653589793;
 
-
 pub struct Cubic64Pair {
     pub points: [Point64; 7],
 }
-
 
 pub struct Cubic64 {
     pub points: [Point64; POINT_COUNT],
@@ -29,12 +27,16 @@ impl Cubic64 {
         Cubic64 { points }
     }
 
-    pub fn as_f64_slice(&self) -> [f64; POINT_COUNT*2] {
+    pub fn as_f64_slice(&self) -> [f64; POINT_COUNT * 2] {
         [
-            self.points[0].x, self.points[0].y,
-            self.points[1].x, self.points[1].y,
-            self.points[2].x, self.points[2].y,
-            self.points[3].x, self.points[3].y,
+            self.points[0].x,
+            self.points[0].y,
+            self.points[1].x,
+            self.points[1].y,
+            self.points[2].x,
+            self.points[2].y,
+            self.points[3].x,
+            self.points[3].y,
         ]
     }
 
@@ -55,8 +57,14 @@ impl Cubic64 {
         let c = 3.0 * one_t * t2;
         let d = t2 * t;
         Point64::from_xy(
-            a * self.points[0].x + b * self.points[1].x + c * self.points[2].x + d * self.points[3].x,
-            a * self.points[0].y + b * self.points[1].y + c * self.points[2].y + d * self.points[3].y,
+            a * self.points[0].x
+                + b * self.points[1].x
+                + c * self.points[2].x
+                + d * self.points[3].x,
+            a * self.points[0].y
+                + b * self.points[1].y
+                + c * self.points[2].y
+                + d * self.points[3].y,
         )
     }
 
@@ -105,7 +113,12 @@ impl Cubic64 {
         let by = self.points[2].y - 2.0 * self.points[1].y + self.points[0].y;
         let cx = self.points[3].x + 3.0 * (self.points[1].x - self.points[2].x) - self.points[0].x;
         let cy = self.points[3].y + 3.0 * (self.points[1].y - self.points[2].y) - self.points[0].y;
-        quad64::roots_valid_t(bx * cy - by * cx, ax * cy - ay * cx, ax * by - ay * bx, t_values)
+        quad64::roots_valid_t(
+            bx * cy - by * cx,
+            ax * cy - ay * cx,
+            ax * by - ay * bx,
+            t_values,
+        )
     }
 
     // give up when changing t no longer moves point
@@ -119,8 +132,8 @@ impl Cubic64 {
         loop {
             let prior_t = min.max(t - step);
             let less_pt = self.point_at_t(prior_t);
-            if  less_pt.x.approximately_equal_half(cubic_at_t.x) &&
-                less_pt.y.approximately_equal_half(cubic_at_t.y)
+            if less_pt.x.approximately_equal_half(cubic_at_t.x)
+                && less_pt.y.approximately_equal_half(cubic_at_t.y)
             {
                 return -1.0; // binary search found no point at this axis intercept
             }
@@ -128,7 +141,11 @@ impl Cubic64 {
             let less_dist = less_pt.axis_coord(x_axis) - axis_intercept;
             let last_step = step;
             step /= 2.0;
-            let ok = if calc_dist > 0.0 { calc_dist > less_dist } else { calc_dist < less_dist };
+            let ok = if calc_dist > 0.0 {
+                calc_dist > less_dist
+            } else {
+                calc_dist < less_dist
+            };
             if ok {
                 t = prior_t;
             } else {
@@ -138,14 +155,18 @@ impl Cubic64 {
                 }
 
                 let more_pt = self.point_at_t(next_t);
-                if  more_pt.x.approximately_equal_half(cubic_at_t.x) &&
-                    more_pt.y.approximately_equal_half(cubic_at_t.y)
+                if more_pt.x.approximately_equal_half(cubic_at_t.x)
+                    && more_pt.y.approximately_equal_half(cubic_at_t.y)
                 {
-                    return -1.0;  // binary search found no point at this axis intercept
+                    return -1.0; // binary search found no point at this axis intercept
                 }
 
                 let more_dist = more_pt.axis_coord(x_axis) - axis_intercept;
-                let ok = if calc_dist > 0.0 { calc_dist <= more_dist } else { calc_dist >= more_dist };
+                let ok = if calc_dist > 0.0 {
+                    calc_dist <= more_dist
+                } else {
+                    calc_dist >= more_dist
+                };
                 if ok {
                     continue;
                 }
@@ -174,8 +195,12 @@ impl Cubic64 {
             dst[1].y = (self.points[0].y + self.points[1].y) / 2.0;
             dst[2].x = (self.points[0].x + 2.0 * self.points[1].x + self.points[2].x) / 4.0;
             dst[2].y = (self.points[0].y + 2.0 * self.points[1].y + self.points[2].y) / 4.0;
-            dst[3].x = (self.points[0].x + 3.0 * (self.points[1].x + self.points[2].x) + self.points[3].x) / 8.0;
-            dst[3].y = (self.points[0].y + 3.0 * (self.points[1].y + self.points[2].y) + self.points[3].y) / 8.0;
+            dst[3].x =
+                (self.points[0].x + 3.0 * (self.points[1].x + self.points[2].x) + self.points[3].x)
+                    / 8.0;
+            dst[3].y =
+                (self.points[0].y + 3.0 * (self.points[1].y + self.points[2].y) + self.points[3].y)
+                    / 8.0;
             dst[4].x = (self.points[1].x + 2.0 * self.points[2].x + self.points[3].x) / 4.0;
             dst[4].y = (self.points[1].y + 2.0 * self.points[2].y + self.points[3].y) / 4.0;
             dst[5].x = (self.points[2].x + self.points[3].x) / 2.0;
@@ -191,15 +216,14 @@ impl Cubic64 {
     }
 }
 
-
 pub fn coefficients(src: &[f64]) -> (f64, f64, f64, f64) {
-    let mut a = src[6];         // d
-    let mut b = src[4] * 3.0;   // 3*c
-    let mut c = src[2] * 3.0;   // 3*b
-    let d = src[0];             // a
-    a -= d - c + b;             // A =   -a + 3*b - 3*c + d
-    b += 3.0 * d - 2.0 * c;     // B =  3*a - 6*b + 3*c
-    c -= 3.0 * d;               // C = -3*a + 3*b
+    let mut a = src[6]; // d
+    let mut b = src[4] * 3.0; // 3*c
+    let mut c = src[2] * 3.0; // 3*b
+    let d = src[0]; // a
+    a -= d - c + b; // A =   -a + 3*b - 3*c + d
+    b += 3.0 * d - 2.0 * c; // B =  3*a - 6*b + 3*c
+    c -= 3.0 * d; // C = -3*a + 3*b
 
     (a, b, c, d)
 }
@@ -238,18 +262,18 @@ pub fn roots_valid_t(a: f64, b: f64, c: f64, d: f64, t: &mut [f64; 3]) -> usize 
 }
 
 fn roots_real(a: f64, b: f64, c: f64, d: f64, s: &mut [f64; 3]) -> usize {
-    if  a.approximately_zero() &&
-        a.approximately_zero_when_compared_to(b) &&
-        a.approximately_zero_when_compared_to(c) &&
-        a.approximately_zero_when_compared_to(d)
+    if a.approximately_zero()
+        && a.approximately_zero_when_compared_to(b)
+        && a.approximately_zero_when_compared_to(c)
+        && a.approximately_zero_when_compared_to(d)
     {
         // we're just a quadratic
         return quad64::roots_real(b, c, d, s);
     }
 
-    if  d.approximately_zero_when_compared_to(a) &&
-        d.approximately_zero_when_compared_to(b) &&
-        d.approximately_zero_when_compared_to(c)
+    if d.approximately_zero_when_compared_to(a)
+        && d.approximately_zero_when_compared_to(b)
+        && d.approximately_zero_when_compared_to(c)
     {
         // 0 is one root
         let mut num = quad64::roots_real(a, b, c, s);

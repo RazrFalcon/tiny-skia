@@ -84,48 +84,49 @@ impl BlendMode {
         // than as a separate stage that'd come after the lerp.
         //
         // This function is a finer-grained breakdown of SkBlendMode_SupportsCoverageAsAlpha().
-        matches!(self,
+        matches!(
+            self,
             BlendMode::Destination |        // d              --> no sa term, ok!
             BlendMode::DestinationOver |    // d + s*inv(da)  --> no sa term, ok!
             BlendMode::Plus |               // clamp(s+d)     --> no sa term, ok!
             BlendMode::DestinationOut |     // d * inv(sa)
             BlendMode::SourceAtop |         // s*da + d*inv(sa)
             BlendMode::SourceOver |         // s + d*inv(sa)
-            BlendMode::Xor                  // s*inv(da) + d*inv(sa)
+            BlendMode::Xor // s*inv(da) + d*inv(sa)
         )
     }
 
     pub(crate) fn to_stage(self) -> Option<pipeline::Stage> {
         match self {
-            BlendMode::Clear            => Some(pipeline::Stage::Clear),
-            BlendMode::Source           => None, // This stage is a no-op.
-            BlendMode::Destination      => Some(pipeline::Stage::MoveDestinationToSource),
-            BlendMode::SourceOver       => Some(pipeline::Stage::SourceOver),
-            BlendMode::DestinationOver  => Some(pipeline::Stage::DestinationOver),
-            BlendMode::SourceIn         => Some(pipeline::Stage::SourceIn),
-            BlendMode::DestinationIn    => Some(pipeline::Stage::DestinationIn),
-            BlendMode::SourceOut        => Some(pipeline::Stage::SourceOut),
-            BlendMode::DestinationOut   => Some(pipeline::Stage::DestinationOut),
-            BlendMode::SourceAtop       => Some(pipeline::Stage::SourceAtop),
-            BlendMode::DestinationAtop  => Some(pipeline::Stage::DestinationAtop),
-            BlendMode::Xor              => Some(pipeline::Stage::Xor),
-            BlendMode::Plus             => Some(pipeline::Stage::Plus),
-            BlendMode::Modulate         => Some(pipeline::Stage::Modulate),
-            BlendMode::Screen           => Some(pipeline::Stage::Screen),
-            BlendMode::Overlay          => Some(pipeline::Stage::Overlay),
-            BlendMode::Darken           => Some(pipeline::Stage::Darken),
-            BlendMode::Lighten          => Some(pipeline::Stage::Lighten),
-            BlendMode::ColorDodge       => Some(pipeline::Stage::ColorDodge),
-            BlendMode::ColorBurn        => Some(pipeline::Stage::ColorBurn),
-            BlendMode::HardLight        => Some(pipeline::Stage::HardLight),
-            BlendMode::SoftLight        => Some(pipeline::Stage::SoftLight),
-            BlendMode::Difference       => Some(pipeline::Stage::Difference),
-            BlendMode::Exclusion        => Some(pipeline::Stage::Exclusion),
-            BlendMode::Multiply         => Some(pipeline::Stage::Multiply),
-            BlendMode::Hue              => Some(pipeline::Stage::Hue),
-            BlendMode::Saturation       => Some(pipeline::Stage::Saturation),
-            BlendMode::Color            => Some(pipeline::Stage::Color),
-            BlendMode::Luminosity       => Some(pipeline::Stage::Luminosity),
+            BlendMode::Clear => Some(pipeline::Stage::Clear),
+            BlendMode::Source => None, // This stage is a no-op.
+            BlendMode::Destination => Some(pipeline::Stage::MoveDestinationToSource),
+            BlendMode::SourceOver => Some(pipeline::Stage::SourceOver),
+            BlendMode::DestinationOver => Some(pipeline::Stage::DestinationOver),
+            BlendMode::SourceIn => Some(pipeline::Stage::SourceIn),
+            BlendMode::DestinationIn => Some(pipeline::Stage::DestinationIn),
+            BlendMode::SourceOut => Some(pipeline::Stage::SourceOut),
+            BlendMode::DestinationOut => Some(pipeline::Stage::DestinationOut),
+            BlendMode::SourceAtop => Some(pipeline::Stage::SourceAtop),
+            BlendMode::DestinationAtop => Some(pipeline::Stage::DestinationAtop),
+            BlendMode::Xor => Some(pipeline::Stage::Xor),
+            BlendMode::Plus => Some(pipeline::Stage::Plus),
+            BlendMode::Modulate => Some(pipeline::Stage::Modulate),
+            BlendMode::Screen => Some(pipeline::Stage::Screen),
+            BlendMode::Overlay => Some(pipeline::Stage::Overlay),
+            BlendMode::Darken => Some(pipeline::Stage::Darken),
+            BlendMode::Lighten => Some(pipeline::Stage::Lighten),
+            BlendMode::ColorDodge => Some(pipeline::Stage::ColorDodge),
+            BlendMode::ColorBurn => Some(pipeline::Stage::ColorBurn),
+            BlendMode::HardLight => Some(pipeline::Stage::HardLight),
+            BlendMode::SoftLight => Some(pipeline::Stage::SoftLight),
+            BlendMode::Difference => Some(pipeline::Stage::Difference),
+            BlendMode::Exclusion => Some(pipeline::Stage::Exclusion),
+            BlendMode::Multiply => Some(pipeline::Stage::Multiply),
+            BlendMode::Hue => Some(pipeline::Stage::Hue),
+            BlendMode::Saturation => Some(pipeline::Stage::Saturation),
+            BlendMode::Color => Some(pipeline::Stage::Color),
+            BlendMode::Luminosity => Some(pipeline::Stage::Luminosity),
         }
     }
 }

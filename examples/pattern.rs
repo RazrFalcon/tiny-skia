@@ -16,7 +16,13 @@ fn main() {
     let path = PathBuilder::from_circle(200.0, 200.0, 180.0).unwrap();
 
     let mut pixmap = Pixmap::new(400, 400).unwrap();
-    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
+    pixmap.fill_path(
+        &path,
+        &paint,
+        FillRule::Winding,
+        Transform::identity(),
+        None,
+    );
     pixmap.save_png("image.png").unwrap();
 }
 
@@ -33,6 +39,12 @@ fn crate_triangle() -> Pixmap {
     let path = pb.finish().unwrap();
 
     let mut pixmap = Pixmap::new(20, 20).unwrap();
-    pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), None);
+    pixmap.fill_path(
+        &path,
+        &paint,
+        FillRule::Winding,
+        Transform::identity(),
+        None,
+    );
     pixmap
 }
