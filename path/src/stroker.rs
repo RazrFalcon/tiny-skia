@@ -124,9 +124,6 @@ impl Default for LineJoin {
     }
 }
 
-// const TANGENT_RECURSIVE_LIMIT: usize = 0;
-// const CUBIC_RECURSIVE_LIMIT: usize = 1;
-// const CONIC_RECURSIVE_LIMIT: usize = 2;
 const QUAD_RECURSIVE_LIMIT: usize = 3;
 
 // quads with extreme widths (e.g. (0,1) (1,6) (0,3) width=5e7) recurse to point of failure
@@ -1299,9 +1296,8 @@ fn round_capper(
         projected_center + normal,
         projected_center,
         SCALAR_ROOT_2_OVER_2,
-        0.125,
     );
-    path.conic_points_to(projected_center - normal, stop, SCALAR_ROOT_2_OVER_2, 0.125);
+    path.conic_points_to(projected_center - normal, stop, SCALAR_ROOT_2_OVER_2);
 }
 
 fn square_capper(
@@ -1442,7 +1438,7 @@ fn round_joiner(
         for conic in conics {
             builders
                 .outer
-                .conic_points_to(conic.points[1], conic.points[2], conic.weight, 0.125);
+                .conic_points_to(conic.points[1], conic.points[2], conic.weight);
         }
 
         after.scale(radius);
@@ -1942,9 +1938,9 @@ mod tests {
             PathSegment::LineTo(Point::from_xy(x, y))
         }
 
-        fn new_quad_to(x1: f32, y1: f32, x: f32, y: f32) -> Self {
-            PathSegment::QuadTo(Point::from_xy(x1, y1), Point::from_xy(x, y))
-        }
+        // fn new_quad_to(x1: f32, y1: f32, x: f32, y: f32) -> Self {
+        //     PathSegment::QuadTo(Point::from_xy(x1, y1), Point::from_xy(x, y))
+        // }
 
         // fn new_cubic_to(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) -> Self {
         //     PathSegment::CubicTo(Point::from_xy(x1, y1), Point::from_xy(x2, y2), Point::from_xy(x, y))
@@ -1953,91 +1949,6 @@ mod tests {
         fn new_close() -> Self {
             PathSegment::Close
         }
-    }
-
-    #[test]
-    fn zero_len_subpath_butt_cap() {
-        let mut pb = PathBuilder::new();
-        pb.move_to(100.0, 100.0);
-        pb.line_to(100.0, 100.0);
-        let path = pb.finish().unwrap();
-
-        let mut stroke = Stroke::default();
-        stroke.width = 20.0;
-        stroke.line_cap = LineCap::Butt;
-
-        // A zero-len subpath with a butt line cap produces nothing.
-        assert_eq!(PathStroker::new().stroke(&path, &stroke, 1.0), None);
-    }
-
-    #[test]
-    fn zero_len_subpath_round_cap() {
-        let mut pb = PathBuilder::new();
-        pb.move_to(100.0, 100.0);
-        pb.line_to(100.0, 100.0);
-        let path = pb.finish().unwrap();
-
-        let mut stroke = Stroke::default();
-        stroke.width = 20.0;
-        stroke.line_cap = LineCap::Round;
-
-        // A zero-len subpath with a round line cap produces a circle.
-        let stroke_path = PathStroker::new().stroke(&path, &stroke, 1.0).unwrap();
-
-        let expected = {
-            let mut pb = PathBuilder::new();
-            pb.move_to(110.0, 100.0);
-            pb.line_to(110.0, 100.0);
-            pb.quad_to(109.999985, 101.98911, 109.23878, 103.82682);
-            pb.quad_to(108.47758, 105.66453, 107.07106, 107.07106);
-            pb.quad_to(105.66453, 108.47758, 103.82682, 109.238785);
-            pb.quad_to(101.98911, 109.999985, 100.0, 110.0);
-            pb.quad_to(98.01087, 109.999985, 96.17316, 109.23878);
-            pb.quad_to(94.33545, 108.47758, 92.92893, 107.07106);
-            pb.quad_to(91.5224, 105.66453, 90.7612, 103.82682);
-            pb.quad_to(90.0, 101.98911, 90.0, 100.0);
-            pb.line_to(90.0, 100.0);
-            pb.quad_to(90.0, 98.01087, 90.7612, 96.17316);
-            pb.quad_to(91.5224, 94.33545, 92.92893, 92.92893);
-            pb.quad_to(94.33545, 91.5224, 96.17316, 90.7612);
-            pb.quad_to(98.01087, 90.0, 100.0, 90.0);
-            pb.quad_to(101.98911, 90.0, 103.82682, 90.7612);
-            pb.quad_to(105.66453, 91.5224, 107.07106, 92.92893);
-            pb.quad_to(108.47758, 94.33545, 109.238785, 96.17316);
-            pb.quad_to(109.999985, 98.01087, 110.0, 100.0);
-            pb.close();
-            pb.finish().unwrap()
-        };
-
-        assert_eq!(stroke_path, expected);
-    }
-
-    #[test]
-    fn zero_len_subpath_square_cap() {
-        let mut pb = PathBuilder::new();
-        pb.move_to(100.0, 100.0);
-        pb.line_to(100.0, 100.0);
-        let path = pb.finish().unwrap();
-
-        let mut stroke = Stroke::default();
-        stroke.width = 20.0;
-        stroke.line_cap = LineCap::Square;
-
-        // A zero-len subpath with a square line cap produces a square.
-        let stroke_path = PathStroker::new().stroke(&path, &stroke, 1.0).unwrap();
-
-        let expected = {
-            let mut pb = PathBuilder::new();
-            pb.move_to(110.0, 100.0);
-            pb.line_to(110.0, 110.0);
-            pb.line_to(90.0, 110.0);
-            pb.line_to(90.0, 90.0);
-            pb.line_to(110.0, 90.0);
-            pb.close();
-            pb.finish().unwrap()
-        };
-
-        assert_eq!(stroke_path, expected);
     }
 
     // Make sure that subpath auto-closing is enabled.
@@ -2075,99 +1986,6 @@ mod tests {
         assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(9.514929, 10.121268));
         assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(9.3596115, 9.5));
         assert_eq!(iter.next().unwrap(), PathSegment::new_close());
-    }
-
-    #[test]
-    fn circle() {
-        let path = PathBuilder::from_circle(100.0, 100.0, 50.0).unwrap();
-        let stroke = Stroke::default();
-        let stroke_path = PathStroker::new().stroke(&path, &stroke, 1.0).unwrap();
-
-        let mut iter = stroke_path.segments();
-        assert_eq!(iter.next().unwrap(), PathSegment::new_move_to(150.5, 100.0));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(150.5, 110.04529, 146.6559, 119.3255));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(142.81177, 128.60547, 135.7089, 135.70888));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(128.60571, 142.81201, 119.32549, 146.6559));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(110.045166, 150.5, 100.0, 150.5));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(89.95471, 150.5, 80.674484, 146.6559));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(71.394165, 142.81177, 64.2911, 135.70888));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(57.188354, 128.6062, 53.344074, 119.3255));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(49.49994, 110.045166, 49.5, 100.0));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(49.5, 89.954834, 53.344074, 80.67448));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(57.188232, 71.39404, 64.2911, 64.2911));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(71.39392, 57.18811, 80.67448, 53.344078));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(89.954834, 49.49994, 100.0, 49.5));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(110.045044, 49.5, 119.32551, 53.344078));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(128.60645, 57.188354, 135.70888, 64.2911));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(142.81177, 71.39404, 146.6559, 80.674484));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(150.5, 89.954834, 150.5, 100.0));
-        assert_eq!(iter.next().unwrap(), PathSegment::Close);
-        assert_eq!(iter.next().unwrap(), PathSegment::new_move_to(149.5, 100.0));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(149.5, 90.15369, 145.73201, 81.05716));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(141.96411, 71.96057, 135.00179, 64.99821));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(128.0398, 58.03607, 118.94282, 54.26796));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(109.84631, 50.5, 100.0, 50.5));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(90.15381, 50.50006, 81.05717, 54.26796));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(71.96045, 58.03589, 64.99821, 64.99821));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(58.03595, 71.96045, 54.267956, 81.05717));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(50.5, 90.15381, 50.5, 100.0));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(50.50006, 109.84619, 54.267956, 118.94281));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(58.036133, 128.0398, 64.99821, 135.00179));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(71.96057, 141.96387, 81.05716, 145.73201));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(90.153564, 149.5, 100.0, 149.5));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(109.84619, 149.5, 118.94282, 145.73201));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(128.03906, 141.96411, 135.00177, 135.00179));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(141.96411, 128.03906, 145.73201, 118.942825));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(149.5, 109.84631, 149.5, 100.0));
-        assert_eq!(iter.next().unwrap(), PathSegment::Close);
-    }
-
-    #[test]
-    fn round_cap_join() {
-        let mut pb = PathBuilder::new();
-        pb.move_to(170.0, 30.0);
-        pb.line_to(30.553378, 99.048418);
-        pb.cubic_to(30.563658, 99.066835, 30.546308, 99.280724, 30.557592, 99.305282);
-        let path = pb.finish().unwrap();
-
-        let mut stroke = Stroke::default();
-        stroke.width = 30.0;
-        stroke.line_cap = LineCap::Round;
-        stroke.line_join = LineJoin::Round;
-        let stroke_path = PathStroker::new().stroke(&path, &stroke, 1.0).unwrap();
-
-        let mut iter = stroke_path.segments();
-        assert_eq!(iter.next().unwrap(), PathSegment::new_move_to(176.65611, 43.44233));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(37.209484, 112.490746));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(30.553377, 99.048416));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(43.650993, 91.7373));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(45.667908, 95.35053, 45.549374, 99.58929));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(45.64382, 96.21188, 44.187744, 93.04278));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(45.43343, 95.75397, 45.546764, 98.735504));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(45.660095, 101.71703, 44.62382, 104.514984));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(43.58754, 107.31292, 41.559418, 109.50132));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(39.531296, 111.68973, 36.820095, 112.93543));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(34.108887, 114.18111, 31.12735, 114.29445));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(28.145819, 114.407776, 25.347874, 113.371506));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(22.549925, 112.33522, 20.361526, 110.3071));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(18.173124, 108.278984, 16.927439, 105.56779));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(15.459791, 102.373505, 15.561099, 98.750694));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(15.448862, 102.76424, 17.455761, 106.359535));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(17.275322, 106.036285, 17.111046, 105.70452));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(15.787062, 103.03066, 15.587098, 100.053696));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(15.387135, 97.07671, 16.341633, 94.24983));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(17.29613, 91.42293, 19.259775, 89.1765));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(21.223421, 86.93006, 23.89727, 85.60609));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_line_to(163.34389, 16.55767));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(166.01772, 15.233687, 168.99469, 15.033723));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(171.97166, 14.833759, 174.79857, 15.788258));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(177.62544, 16.742754, 179.87189, 18.706398));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(182.11835, 20.670044, 183.44234, 23.343893));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(184.7663, 26.017736, 184.96626, 28.994713));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(185.16623, 31.971691, 184.21175, 34.798584));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(183.25723, 37.62547, 181.2936, 39.87191));
-        assert_eq!(iter.next().unwrap(), PathSegment::new_quad_to(179.32994, 42.118343, 176.65611, 43.44233));
-        assert_eq!(iter.next().unwrap(), PathSegment::Close);
     }
 
     // From skia/tests/StrokeTest.cpp

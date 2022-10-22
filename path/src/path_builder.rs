@@ -179,15 +179,7 @@ impl PathBuilder {
 
     // We do not support conic segments, but Skia still relies on them from time to time.
     // This method will simply convert the input data into quad segments.
-    pub(crate) fn conic_to(
-        &mut self,
-        x1: f32,
-        y1: f32,
-        x: f32,
-        y: f32,
-        weight: f32,
-        tolerance: f32,
-    ) {
+    pub(crate) fn conic_to(&mut self, x1: f32, y1: f32, x: f32, y: f32, weight: f32) {
         // check for <= 0 or NaN with this test
         if !(weight > 0.0) {
             self.line_to(x, y);
@@ -205,7 +197,6 @@ impl PathBuilder {
                 Point::from_xy(x1, y1),
                 Point::from_xy(x, y),
                 weight,
-                tolerance,
             );
             if let Some(quadder) = quadder {
                 // Points are ordered as: 0 - 1 2 - 3 4 - 5 6 - ..
@@ -221,8 +212,8 @@ impl PathBuilder {
         }
     }
 
-    pub(crate) fn conic_points_to(&mut self, pt1: Point, pt2: Point, weight: f32, tolerance: f32) {
-        self.conic_to(pt1.x, pt1.y, pt2.x, pt2.y, weight, tolerance);
+    pub(crate) fn conic_points_to(&mut self, pt1: Point, pt2: Point, weight: f32) {
+        self.conic_to(pt1.x, pt1.y, pt2.x, pt2.y, weight);
     }
 
     /// Adds a cubic curve from the last point to `x`, `y`.
@@ -331,7 +322,7 @@ impl PathBuilder {
         let weight = SCALAR_ROOT_2_OVER_2;
         self.move_to(oval_points[3].x, oval_points[3].y);
         for (p1, p2) in rect_points.iter().zip(oval_points.iter()) {
-            self.conic_points_to(*p1, *p2, weight, 0.25);
+            self.conic_points_to(*p1, *p2, weight);
         }
         self.close();
     }

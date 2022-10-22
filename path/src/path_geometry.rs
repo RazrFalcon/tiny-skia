@@ -603,7 +603,9 @@ impl Conic {
             pow2 += 1;
         }
 
-        Some(pow2)
+        // Unlike Skia, we always expect `pow2` to be at least 1.
+        // Otherwise it produces ugly results.
+        Some(pow2.max(1))
     }
 
     // Chop this conic into N quads, stored continuously in pts[], where
@@ -843,15 +845,9 @@ pub(crate) struct AutoConicToQuads {
 }
 
 impl AutoConicToQuads {
-    pub fn compute(
-        pt0: Point,
-        pt1: Point,
-        pt2: Point,
-        weight: f32,
-        tolerance: f32,
-    ) -> Option<Self> {
+    pub fn compute(pt0: Point, pt1: Point, pt2: Point, weight: f32) -> Option<Self> {
         let conic = Conic::new(pt0, pt1, pt2, weight);
-        let pow2 = conic.compute_quad_pow2(tolerance)?;
+        let pow2 = conic.compute_quad_pow2(0.25)?;
         let mut points = [Point::zero(); 64];
         let len = conic.chop_into_quads_pow2(pow2, &mut points);
         Some(AutoConicToQuads { points, len })
