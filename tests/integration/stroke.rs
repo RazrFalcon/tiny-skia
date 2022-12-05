@@ -61,8 +61,6 @@ fn zero_len_subpath_butt_cap() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
     pixmap.stroke_path(&path, &paint, &stroke, Transform::default(), None);
 
-    pixmap.save_png("tests/images/stroke/zero-len-subpath-butt-cap.png").unwrap();
-
     let expected = Pixmap::load_png("tests/images/stroke/zero-len-subpath-butt-cap.png").unwrap();
     assert_eq!(pixmap, expected);
 }
