@@ -239,3 +239,12 @@ impl core::ops::Not for u16x16 {
         ])
     }
 }
+
+impl core::ops::Shr for u16x16 {
+    type Output = Self;
+
+    #[inline]
+    fn shr(self, rhs: Self) -> Self::Output {
+        impl_u16x16_op!(self, shr, rhs)
+    }
+}
