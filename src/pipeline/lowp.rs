@@ -743,7 +743,8 @@ fn store_8888_tail(
 fn div255(v: u16x16) -> u16x16 {
     // Skia uses `vrshrq_n_u16(vrsraq_n_u16(v, v, 8), 8)` here when NEON is available,
     // but it doesn't affect performance much and breaks reproducible result. Ignore it.
-    (v + u16x16::splat(255)) / u16x16::splat(256)
+    // NOTE: the compiler does not replace the devision with a shift.
+    (v + u16x16::splat(255)) >> u16x16::splat(8) // / u16x16::splat(256)
 }
 
 #[inline(always)]
