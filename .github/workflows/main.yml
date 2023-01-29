@@ -106,3 +106,6 @@ jobs:
 
     - name: Run tests with Neon
       run: cross test --target aarch64-unknown-linux-gnu
+
+    - name: Rust tests on PowerPC (big endian)
+      run: cross test --target powerpc-unknown-linux-gnu
