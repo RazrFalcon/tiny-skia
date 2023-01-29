@@ -36,22 +36,22 @@ impl ColorU8 {
 
     /// Returns color's red component.
     pub const fn red(self) -> u8 {
-        ((self.0 >> 0) & 0xFF) as u8
+        self.0.to_ne_bytes()[0]
     }
 
     /// Returns color's green component.
     pub const fn green(self) -> u8 {
-        ((self.0 >> 8) & 0xFF) as u8
+        self.0.to_ne_bytes()[1]
     }
 
     /// Returns color's blue component.
     pub const fn blue(self) -> u8 {
-        ((self.0 >> 16) & 0xFF) as u8
+        self.0.to_ne_bytes()[2]
     }
 
     /// Returns color's alpha component.
     pub const fn alpha(self) -> u8 {
-        ((self.0 >> 24) & 0xFF) as u8
+        self.0.to_ne_bytes()[3]
     }
 
     /// Check that color is opaque.
@@ -128,26 +128,26 @@ impl PremultipliedColorU8 {
     ///
     /// The value is <= alpha.
     pub const fn red(self) -> u8 {
-        ((self.0 >> 0) & 0xFF) as u8
+        self.0.to_ne_bytes()[0]
     }
 
     /// Returns color's green component.
     ///
     /// The value is <= alpha.
     pub const fn green(self) -> u8 {
-        ((self.0 >> 8) & 0xFF) as u8
+        self.0.to_ne_bytes()[1]
     }
 
     /// Returns color's blue component.
     ///
     /// The value is <= alpha.
     pub const fn blue(self) -> u8 {
-        ((self.0 >> 16) & 0xFF) as u8
+        self.0.to_ne_bytes()[2]
     }
 
     /// Returns color's alpha component.
     pub const fn alpha(self) -> u8 {
-        ((self.0 >> 24) & 0xFF) as u8
+        self.0.to_ne_bytes()[3]
     }
 
     /// Check that color is opaque.
@@ -427,7 +427,7 @@ pub fn premultiply_u8(c: u8, a: u8) -> u8 {
 }
 
 const fn pack_rgba(r: u8, g: u8, b: u8, a: u8) -> u32 {
-    ((a as u32) << 24) | ((b as u32) << 16) | ((g as u32) << 8) | ((r as u32) << 0)
+    u32::from_ne_bytes([r, g, b, a])
 }
 
 fn color_f32_to_u8(
