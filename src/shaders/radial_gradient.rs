@@ -18,7 +18,7 @@ use crate::wide::u32x8;
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 struct FocalData {
     r1: f32, // r1 after mapping focal point to (0, 0)
 }
@@ -43,7 +43,7 @@ impl FocalData {
 ///
 /// This is not `SkRadialGradient` like in Skia, but rather `SkTwoPointConicalGradient`
 /// without the start radius.
-#[derive(Clone, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct RadialGradient {
     pub(crate) base: Gradient,
     focal_data: Option<FocalData>,

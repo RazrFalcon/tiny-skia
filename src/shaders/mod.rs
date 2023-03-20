@@ -49,7 +49,7 @@ impl Default for SpreadMode {
 /// once (e.g. bitmap tiling or gradient) and then change its transparency
 /// without having to modify the original shader. Only the paint's alpha needs
 /// to be modified.
-#[derive(Clone, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Shader<'a> {
     /// A solid color shader.
     SolidColor(Color),
