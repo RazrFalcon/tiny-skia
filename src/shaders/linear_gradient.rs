@@ -14,7 +14,7 @@ use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::pipeline::RasterPipelineBuilder;
 
 /// A linear gradient shader.
-#[derive(Clone, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct LinearGradient {
     pub(crate) base: Gradient,
 }

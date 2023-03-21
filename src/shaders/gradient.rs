@@ -37,7 +37,7 @@ impl GradientStop {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Gradient {
     stops: Vec<GradientStop>,
     tile_mode: SpreadMode,

@@ -31,7 +31,7 @@ impl Default for FillRule {
 }
 
 /// Controls how a shape should be painted.
-#[derive(Clone, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Paint<'a> {
     /// A paint shader.
     ///

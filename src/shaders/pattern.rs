@@ -28,7 +28,7 @@ pub enum FilterQuality {
 /// Controls how a pixmap should be blended.
 ///
 /// Like `Paint`, but for `Pixmap`.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct PixmapPaint {
     /// Pixmap opacity.
     ///
@@ -64,7 +64,7 @@ impl Default for PixmapPaint {
 ///
 /// Unlike Skia, we do not support FilterQuality::Medium, because it involves
 /// mipmap generation, which adds too much complexity.
-#[derive(Clone, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Pattern<'a> {
     pub(crate) pixmap: PixmapRef<'a>,
     quality: FilterQuality,
