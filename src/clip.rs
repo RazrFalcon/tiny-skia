@@ -107,9 +107,21 @@ impl ClipMask {
         path: &Path,
         fill_rule: FillRule,
         anti_alias: bool,
-    ) -> Option<()> {
-        let width = NonZeroU32::new(width)?;
-        let height = NonZeroU32::new(height)?;
+    ) {
+        let width = match NonZeroU32::new(width) {
+            Some(v) => v,
+            None => {
+                log::warn!("mask width cannot be zero");
+                return;
+            }
+        };
+        let height = match NonZeroU32::new(height) {
+            Some(v) => v,
+            None => {
+                log::warn!("mask height cannot be zero");
+                return;
+            }
+        };
 
         self.width = width;
         self.height = height;
@@ -123,9 +135,18 @@ impl ClipMask {
 
             for tile in tiler {
                 let ts = Transform::from_translate(-(tile.x() as f32), -(tile.y() as f32));
-                path = path.transform(ts)?;
+                path = match path.transform(ts) {
+                    Some(v) => v,
+                    None => {
+                        log::warn!("path transformation failed");
+                        return;
+                    }
+                };
 
-                let submax = self.submask_mut(tile.to_int_rect())?;
+                let submax = match self.submask_mut(tile.to_int_rect()) {
+                    Some(v) => v,
+                    None => return, // technically unreachable
+                };
 
                 // We're ignoring "errors" here, because `fill_path` will return `None`
                 // when rendering a tile that doesn't have a path on it.
@@ -133,27 +154,26 @@ impl ClipMask {
                 let clip_rect = tile.size().to_screen_int_rect(0, 0);
                 if anti_alias {
                     let mut builder = ClipBuilderAA(submax);
-                    let _ =
-                        crate::scan::path_aa::fill_path(&path, fill_rule, &clip_rect, &mut builder);
+                    crate::scan::path_aa::fill_path(&path, fill_rule, &clip_rect, &mut builder);
                 } else {
                     let mut builder = ClipBuilder(submax);
-                    let _ =
-                        crate::scan::path::fill_path(&path, fill_rule, &clip_rect, &mut builder);
+                    crate::scan::path::fill_path(&path, fill_rule, &clip_rect, &mut builder);
                 }
 
                 let ts = Transform::from_translate(tile.x() as f32, tile.y() as f32);
-                path = path.transform(ts)?;
+                path = match path.transform(ts) {
+                    Some(v) => v,
+                    None => return,
+                };
             }
-
-            Some(())
         } else {
             let clip = ScreenIntRect::from_xywh_safe(0, 0, width, height);
             if anti_alias {
                 let mut builder = ClipBuilderAA(self.as_submask_mut());
-                crate::scan::path_aa::fill_path(path, fill_rule, &clip, &mut builder)
+                crate::scan::path_aa::fill_path(path, fill_rule, &clip, &mut builder);
             } else {
                 let mut builder = ClipBuilder(self.as_submask_mut());
-                crate::scan::path::fill_path(path, fill_rule, &clip, &mut builder)
+                crate::scan::path::fill_path(path, fill_rule, &clip, &mut builder);
             }
         }
     }
@@ -161,12 +181,7 @@ impl ClipMask {
     /// Intersects the provided path with the current clipping path.
     ///
     /// Path must be transformed beforehand.
-    pub fn intersect_path(
-        &mut self,
-        path: &Path,
-        fill_rule: FillRule,
-        anti_alias: bool,
-    ) -> Option<()> {
+    pub fn intersect_path(&mut self, path: &Path, fill_rule: FillRule, anti_alias: bool) {
         let mut submask = ClipMask::new();
         submask.set_path(
             self.width.get(),
@@ -174,13 +189,11 @@ impl ClipMask {
             path,
             fill_rule,
             anti_alias,
-        )?;
+        );
 
         for (a, b) in self.data.iter_mut().zip(submask.data.iter()) {
             *a = crate::color::premultiply_u8(*a, *b);
         }
-
-        Some(())
     }
 
     /// Clears the mask.

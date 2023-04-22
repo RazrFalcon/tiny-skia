@@ -94,8 +94,14 @@ impl<'a> Pattern<'a> {
         })
     }
 
-    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> Option<()> {
-        let ts = self.transform.invert()?;
+    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> bool {
+        let ts = match self.transform.invert() {
+            Some(v) => v,
+            None => {
+                log::warn!("failed to invert a pattern transform. Nothing will be rendered");
+                return false;
+            }
+        };
 
         p.push(pipeline::Stage::SeedShader);
 
@@ -171,6 +177,6 @@ impl<'a> Pattern<'a> {
             p.push(pipeline::Stage::Scale1Float);
         }
 
-        Some(())
+        true
     }
 }

@@ -45,11 +45,14 @@ fn alpha_mul(value: AlphaU8, alpha256: i32) -> u8 {
     a as u8
 }
 
-pub fn fill_rect(rect: &Rect, clip: &ScreenIntRect, blitter: &mut dyn Blitter) -> Option<()> {
-    let rect = rect.intersect(&clip.to_rect())?;
+pub fn fill_rect(rect: &Rect, clip: &ScreenIntRect, blitter: &mut dyn Blitter) {
+    let rect = match rect.intersect(&clip.to_rect()) {
+        Some(v) => v,
+        None => return, // everything was clipped out
+    };
+
     let fr = FixedRect::from_rect(&rect);
     fill_fixed_rect(&fr, blitter);
-    Some(())
 }
 
 fn fill_fixed_rect(rect: &FixedRect, blitter: &mut dyn Blitter) {
@@ -228,17 +231,13 @@ pub fn stroke_path(
     line_cap: LineCap,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
-    super::hairline::stroke_path_impl(path, line_cap, clip, anti_hair_line_rgn, blitter)
+) {
+    super::hairline::stroke_path_impl(path, line_cap, clip, anti_hair_line_rgn, blitter);
 }
 
-fn anti_hair_line_rgn(
-    points: &[Point],
-    clip: Option<&ScreenIntRect>,
-    blitter: &mut dyn Blitter,
-) -> Option<()> {
+fn anti_hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut dyn Blitter) {
     let max = 32767.0;
-    let fixed_bounds = Rect::from_ltrb(-max, -max, max, max)?;
+    let fixed_bounds = Rect::from_ltrb(-max, -max, max, max).unwrap();
 
     let clip_bounds = if let Some(clip) = clip {
         // We perform integral clipping later on, but we do a scalar clip first
@@ -285,7 +284,11 @@ fn anti_hair_line_rgn(
                 fdot6::floor(top) - 1,
                 fdot6::ceil(right) + 1,
                 fdot6::ceil(bottom) + 1,
-            )?;
+            );
+            let ir = match ir {
+                Some(v) => v,
+                None => return,
+            };
 
             if clip.to_int_rect().intersect(&ir).is_none() {
                 continue;
@@ -308,8 +311,6 @@ fn anti_hair_line_rgn(
 
         do_anti_hairline(x0, y0, x1, y1, None, blitter);
     }
-
-    Some(())
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -327,12 +328,12 @@ fn do_anti_hairline(
     mut y1: FDot6,
     mut clip_opt: Option<ScreenIntRect>,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
+) {
     // check for integer NaN (0x80000000) which we can't handle (can't negate it)
     // It appears typically from a huge float (inf or nan) being converted to int.
     // If we see it, just don't draw.
     if any_bad_ints(x0, y0, x1, y1) != 0 {
-        return None;
+        return;
     }
 
     // The caller must clip the line to [-32767.0 ... 32767.0] ahead of time  (in dot6 format)
@@ -351,7 +352,7 @@ fn do_anti_hairline(
         let hy = (y0 >> 1) + (y1 >> 1);
         do_anti_hairline(x0, y0, hx, hy, clip_opt, blitter);
         do_anti_hairline(hx, hy, x1, y1, clip_opt, blitter);
-        return Some(());
+        return; // we're done
     }
 
     let mut scale_start;
@@ -400,7 +401,7 @@ fn do_anti_hairline(
             let clip = clip.to_int_rect();
 
             if istart >= clip.right() || istop <= clip.left() {
-                return Some(());
+                return; // we're done
             }
 
             if istart < clip.left() {
@@ -421,7 +422,7 @@ fn do_anti_hairline(
 
             debug_assert!(istart <= istop);
             if istart == istop {
-                return Some(());
+                return; // we're done
             }
 
             // now test if our Y values are completely inside the clip
@@ -443,7 +444,7 @@ fn do_anti_hairline(
             bottom += 1;
 
             if top >= clip.bottom() || bottom <= clip.top() {
-                return Some(());
+                return; // we're done
             }
 
             if clip.top() <= top && clip.bottom() >= bottom {
@@ -465,7 +466,7 @@ fn do_anti_hairline(
         if x0 == x1 {
             if y0 == y1 {
                 // are we zero length? nothing to do
-                return Some(());
+                return; // we're done
             }
 
             slope = 0;
@@ -492,7 +493,7 @@ fn do_anti_hairline(
             let clip = clip.to_int_rect();
 
             if istart >= clip.bottom() || istop <= clip.top() {
-                return Some(());
+                return; // we're done
             }
 
             if istart < clip.top() {
@@ -512,7 +513,7 @@ fn do_anti_hairline(
 
             debug_assert!(istart <= istop);
             if istart == istop {
-                return Some(());
+                return; // we're done
             }
 
             // now test if our X values are completely inside the clip
@@ -534,7 +535,7 @@ fn do_anti_hairline(
             right += 1;
 
             if left >= clip.right() || right <= clip.left() {
-                return Some(());
+                return; // we're done
             }
 
             if clip.left() <= left && clip.right() >= right {
@@ -551,12 +552,17 @@ fn do_anti_hairline(
         blitter
     };
 
+    let blitter_kind = match blitter_kind {
+        Some(v) => v,
+        None => return,
+    };
+
     // A bit ugly, but looks like this is the only way to have stack allocated object trait.
     let mut hline_blitter;
     let mut horish_blitter;
     let mut vline_blitter;
     let mut vertish_blitter;
-    let hair_blitter: &mut dyn AntiHairBlitter = match blitter_kind? {
+    let hair_blitter: &mut dyn AntiHairBlitter = match blitter_kind {
         BlitterKind::HLine => {
             hline_blitter = HLineAntiHairBlitter(blitter);
             &mut hline_blitter
@@ -591,8 +597,6 @@ fn do_anti_hairline(
     if scale_stop > 0 {
         hair_blitter.draw_cap(istop - 1, fstart, slope, scale_stop);
     }
-
-    Some(())
 }
 
 // returns high-bit set if x == 0x8000

@@ -75,11 +75,12 @@ impl<'a> Shader<'a> {
     // Unlike Skia, we do not have is_constant, because we don't have Color shaders.
 
     /// If this returns false, then we draw nothing (do not fall back to shader context)
-    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> Option<()> {
+    #[must_use]
+    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> bool {
         match self {
             Shader::SolidColor(color) => {
                 p.push_uniform_color(color.premultiply());
-                Some(())
+                true
             }
             Shader::LinearGradient(ref g) => g.push_stages(p),
             Shader::RadialGradient(ref g) => g.push_stages(p),

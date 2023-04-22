@@ -23,8 +23,11 @@ pub fn fill_path(
     fill_rule: FillRule,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
-    let ir = conservative_round_to_int(&path.bounds())?;
+) {
+    let ir = match conservative_round_to_int(&path.bounds()) {
+        Some(v) => v,
+        None => return,
+    };
 
     let path_contained_in_clip = if let Some(bounds) = ir.to_screen_int_rect() {
         clip.contains(&bounds)
@@ -45,7 +48,7 @@ pub fn fill_path(
         0,
         path_contained_in_clip,
         blitter,
-    )
+    );
 }
 
 // Conservative rounding function, which effectively nudges the int-rect to be slightly larger
@@ -102,14 +105,21 @@ pub fn fill_path_impl(
     shift_edges_up: i32,
     path_contained_in_clip: bool,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
-    let shifted_clip = ShiftedIntRect::new(clip_rect, shift_edges_up)?;
+) {
+    let shifted_clip = match ShiftedIntRect::new(clip_rect, shift_edges_up) {
+        Some(v) => v,
+        None => return,
+    };
+
     let clip = if path_contained_in_clip {
         None
     } else {
         Some(&shifted_clip)
     };
-    let mut edges = BasicEdgeBuilder::build_edges(path, clip, shift_edges_up)?;
+    let mut edges = match BasicEdgeBuilder::build_edges(path, clip, shift_edges_up) {
+        Some(v) => v,
+        None => return, // no edges to render, just return
+    };
 
     edges.sort_by(|a, b| {
         let mut value_a = a.as_line().first_y;
@@ -163,8 +173,14 @@ pub fn fill_path_impl(
         stop_y = bottom as i32;
     }
 
-    let start_y = u32::try_from(start_y).ok()?;
-    let stop_y = u32::try_from(stop_y).ok()?;
+    let start_y = match u32::try_from(start_y) {
+        Ok(v) => v,
+        Err(_) => return,
+    };
+    let stop_y = match u32::try_from(stop_y) {
+        Ok(v) => v,
+        Err(_) => return,
+    };
 
     // TODO: walk_simple_edges
 
@@ -176,7 +192,6 @@ pub fn fill_path_impl(
         &mut edges,
         blitter,
     );
-    Some(())
 }
 
 // TODO: simplify!

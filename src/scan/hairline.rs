@@ -21,7 +21,7 @@ use tiny_skia_path::NoStdFloat;
 
 const FLOAT_PI: f32 = 3.14159265;
 
-pub type LineProc = fn(&[Point], Option<&ScreenIntRect>, &mut dyn Blitter) -> Option<()>;
+pub type LineProc = fn(&[Point], Option<&ScreenIntRect>, &mut dyn Blitter);
 
 const MAX_CUBIC_SUBDIVIDE_LEVEL: u8 = 9;
 const MAX_QUAD_SUBDIVIDE_LEVEL: u8 = 5;
@@ -31,17 +31,13 @@ pub fn stroke_path(
     line_cap: LineCap,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
+) {
     super::hairline::stroke_path_impl(path, line_cap, clip, hair_line_rgn, blitter)
 }
 
-fn hair_line_rgn(
-    points: &[Point],
-    clip: Option<&ScreenIntRect>,
-    blitter: &mut dyn Blitter,
-) -> Option<()> {
+fn hair_line_rgn(points: &[Point], clip: Option<&ScreenIntRect>, blitter: &mut dyn Blitter) {
     let max = 32767.0;
-    let fixed_bounds = Rect::from_ltrb(-max, -max, max, max)?;
+    let fixed_bounds = Rect::from_ltrb(-max, -max, max, max).unwrap();
 
     let clip_bounds = clip.map(|c| c.to_rect());
 
@@ -152,8 +148,6 @@ fn hair_line_rgn(
             }
         }
     }
-
-    Some(())
 }
 
 pub fn stroke_path_impl(
@@ -162,14 +156,23 @@ pub fn stroke_path_impl(
     clip: &ScreenIntRect,
     line_proc: LineProc,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
+) {
     let mut inset_clip = None;
     let mut outset_clip = None;
 
     {
         let cap_out = if line_cap == LineCap::Butt { 1.0 } else { 2.0 };
-        let ibounds = path.bounds().outset(cap_out, cap_out)?.round_out()?;
-        clip.to_int_rect().intersect(&ibounds)?;
+        let ibounds = match path
+            .bounds()
+            .outset(cap_out, cap_out)
+            .and_then(|r| r.round_out())
+        {
+            Some(v) => v,
+            None => return,
+        };
+        if clip.to_int_rect().intersect(&ibounds).is_none() {
+            return;
+        }
 
         if !clip.to_int_rect().contains(&ibounds) {
             // We now cache two scalar rects, to use for culling per-segment (e.g. cubic).
@@ -184,8 +187,14 @@ pub fn stroke_path_impl(
             //
             // outsetClip is used for quick-reject (i.e. the segment is entirely outside), so we
             // outset it from the clip-bounds.
-            outset_clip = Some(clip.to_int_rect().make_outset(1, 1)?);
-            inset_clip = Some(clip.to_int_rect().inset(1, 1)?);
+            match clip.to_int_rect().make_outset(1, 1) {
+                Some(v) => outset_clip = Some(v),
+                None => return,
+            }
+            match clip.to_int_rect().inset(1, 1) {
+                Some(v) => inset_clip = Some(v),
+                None => return,
+            }
         }
     }
 
@@ -273,8 +282,6 @@ pub fn stroke_path_impl(
             prev_verb = verb;
         }
     }
-
-    Some(())
 }
 
 /// Extend the points in the direction of the starting or ending tangent by 1/2 unit to
@@ -389,22 +396,27 @@ fn hair_quad(
     level: u8,
     line_proc: LineProc,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
+) {
     if let Some(inset_clip) = inset_clip {
         debug_assert!(outset_clip.is_some());
         let inset_clip = inset_clip.to_rect();
-        let outset_clip = outset_clip?.to_rect();
+        let outset_clip = match outset_clip {
+            Some(v) => v.to_rect(),
+            None => return,
+        };
 
-        let bounds = compute_nocheck_quad_bounds(points)?;
+        let bounds = match compute_nocheck_quad_bounds(points) {
+            Some(v) => v,
+            None => return,
+        };
         if !geometric_overlap(&outset_clip, &bounds) {
-            return Some(());
+            return; // nothing to do
         } else if geometric_contains(&inset_clip, &bounds) {
             clip = None;
         }
     }
 
     hair_quad2(points, clip, level, line_proc, blitter);
-    Some(())
 }
 
 fn compute_nocheck_quad_bounds(points: &[Point; 3]) -> Option<Rect> {
@@ -506,15 +518,21 @@ fn hair_cubic(
     outset_clip: Option<&IntRect>,
     line_proc: LineProc,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
+) {
     if let Some(inset_clip) = inset_clip {
         debug_assert!(outset_clip.is_some());
         let inset_clip = inset_clip.to_rect();
-        let outset_clip = outset_clip?.to_rect();
+        let outset_clip = match outset_clip {
+            Some(v) => v.to_rect(),
+            None => return,
+        };
 
-        let bounds = compute_nocheck_cubic_bounds(points)?;
+        let bounds = match compute_nocheck_cubic_bounds(points) {
+            Some(v) => v,
+            None => return,
+        };
         if !geometric_overlap(&outset_clip, &bounds) {
-            return Some(());
+            return; // noting to do
         } else if geometric_contains(&inset_clip, &bounds) {
             clip = None;
         }
@@ -533,8 +551,6 @@ fn hair_cubic(
             hair_cubic2(&new_points, clip, line_proc, blitter);
         }
     }
-
-    Some(())
 }
 
 fn compute_nocheck_cubic_bounds(points: &[Point; 4]) -> Option<Rect> {

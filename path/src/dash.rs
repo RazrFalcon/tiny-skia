@@ -159,6 +159,9 @@ impl Path {
     ///
     /// `resolution_scale` can be obtained via
     /// [`compute_resolution_scale`](crate::PathStroker::compute_resolution_scale).
+    ///
+    /// Returns `None` when more than 1_000_000 dashes had to be produced
+    /// or when the final path has an invalid bounding box.
     pub fn dash(&self, dash: &StrokeDash, resolution_scale: f32) -> Option<Path> {
         dash_impl(self, dash, resolution_scale)
     }
@@ -417,7 +420,7 @@ impl ContourMeasure {
         mut stop_d: f32,
         start_with_move_to: bool,
         pb: &mut PathBuilder,
-    ) -> Option<()> {
+    ) {
         if start_d < 0.0 {
             start_d = 0.0;
         }
@@ -428,17 +431,23 @@ impl ContourMeasure {
 
         if !(start_d <= stop_d) {
             // catch NaN values as well
-            return None;
+            return;
         }
 
         if self.segments.is_empty() {
-            return None;
+            return;
         }
 
-        let (seg_index, mut start_t) = self.distance_to_segment(start_d)?;
+        let (seg_index, mut start_t) = match self.distance_to_segment(start_d) {
+            Some(v) => v,
+            None => return,
+        };
         let mut seg = self.segments[seg_index];
 
-        let (stop_seg_index, stop_t) = self.distance_to_segment(stop_d)?;
+        let (stop_seg_index, stop_t) = match self.distance_to_segment(stop_d) {
+            Some(v) => v,
+            None => return,
+        };
         let stop_seg = self.segments[stop_seg_index];
 
         debug_assert!(stop_seg_index <= stop_seg_index);
@@ -497,8 +506,6 @@ impl ContourMeasure {
                 pb,
             );
         }
-
-        Some(())
     }
 
     fn distance_to_segment(&self, distance: f32) -> Option<(usize, NormalizedF32)> {

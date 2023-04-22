@@ -108,10 +108,16 @@ impl Gradient {
         p: &mut RasterPipelineBuilder,
         push_stages_pre: &dyn Fn(&mut RasterPipelineBuilder),
         push_stages_post: &dyn Fn(&mut RasterPipelineBuilder),
-    ) -> Option<()> {
+    ) -> bool {
         p.push(pipeline::Stage::SeedShader);
 
-        let ts = self.transform.invert()?;
+        let ts = match self.transform.invert() {
+            Some(v) => v,
+            None => {
+                log::warn!("failed to invert a gradient transform. Nothing will be rendered");
+                return false;
+            }
+        };
         let ts = ts.post_concat(self.points_to_unit);
         p.push_transform(ts);
 
@@ -248,7 +254,7 @@ impl Gradient {
 
         push_stages_post(p);
 
-        Some(())
+        true
     }
 
     pub fn apply_opacity(&mut self, opacity: f32) {

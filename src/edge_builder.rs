@@ -29,15 +29,13 @@ pub struct ShiftedIntRect {
 
 impl ShiftedIntRect {
     pub fn new(rect: &ScreenIntRect, shift: i32) -> Option<Self> {
-        Some(ShiftedIntRect {
-            shifted: ScreenIntRect::from_xywh(
-                rect.x() << shift,
-                rect.y() << shift,
-                rect.width() << shift,
-                rect.height() << shift,
-            )?,
-            shift,
-        })
+        let shifted = ScreenIntRect::from_xywh(
+            rect.x() << shift,
+            rect.y() << shift,
+            rect.width() << shift,
+            rect.height() << shift,
+        )?;
+        Some(ShiftedIntRect { shifted, shift })
     }
 
     pub fn shifted(&self) -> &ScreenIntRect {
@@ -80,7 +78,10 @@ impl BasicEdgeBuilder {
         let can_cull_to_the_right = false; // TODO: this
 
         let mut builder = BasicEdgeBuilder::new(clip_shift);
-        builder.build(path, clip, can_cull_to_the_right)?;
+        if !builder.build(path, clip, can_cull_to_the_right) {
+            log::warn!("infinite or NaN segments detected during edges building");
+            return None;
+        }
 
         if builder.edges.len() < 2 {
             return None;
@@ -95,7 +96,7 @@ impl BasicEdgeBuilder {
         path: &Path,
         clip: Option<&ShiftedIntRect>,
         can_cull_to_the_right: bool,
-    ) -> Option<()> {
+    ) -> bool {
         if let Some(clip) = clip {
             let clip = clip.recover().to_rect();
             for edges in EdgeClipperIter::new(path, clip, can_cull_to_the_right) {
@@ -103,14 +104,14 @@ impl BasicEdgeBuilder {
                     match edge {
                         PathEdge::LineTo(p0, p1) => {
                             if !p0.is_finite() || !p1.is_finite() {
-                                return None;
+                                return false;
                             }
 
                             self.push_line(&[p0, p1])
                         }
                         PathEdge::QuadTo(p0, p1, p2) => {
                             if !p0.is_finite() || !p1.is_finite() || !p2.is_finite() {
-                                return None;
+                                return false;
                             }
 
                             self.push_quad(&[p0, p1, p2])
@@ -121,7 +122,7 @@ impl BasicEdgeBuilder {
                                 || !p2.is_finite()
                                 || !p3.is_finite()
                             {
-                                return None;
+                                return false;
                             }
 
                             self.push_cubic(&[p0, p1, p2, p3])
@@ -155,7 +156,7 @@ impl BasicEdgeBuilder {
             }
         }
 
-        Some(())
+        true
     }
 
     fn push_line(&mut self, points: &[Point; 2]) {

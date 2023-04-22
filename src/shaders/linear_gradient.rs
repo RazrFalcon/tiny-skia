@@ -91,7 +91,7 @@ impl LinearGradient {
         self.base.colors_are_opaque
     }
 
-    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> Option<()> {
+    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> bool {
         self.base.push_stages(p, &|_| {}, &|_| {})
     }
 }

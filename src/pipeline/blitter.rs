@@ -38,6 +38,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
             if mask.size.width() != pixmap.size.width()
                 || mask.size.height() != pixmap.size.height()
             {
+                log::warn!("Pixmap and ClipMask are expected to have the same");
                 return None;
             }
         }
@@ -78,7 +79,9 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         let blit_anti_h_rp = {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(paint.force_hq_pipeline);
-            paint.shader.push_stages(&mut p);
+            if !paint.shader.push_stages(&mut p) {
+                return None;
+            }
 
             if clip_mask.is_some() {
                 p.push(pipeline::Stage::MaskU8);
@@ -107,7 +110,9 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         let blit_rect_rp = {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(paint.force_hq_pipeline);
-            paint.shader.push_stages(&mut p);
+            if !paint.shader.push_stages(&mut p) {
+                return None;
+            }
 
             if clip_mask.is_some() {
                 p.push(pipeline::Stage::MaskU8);
@@ -133,7 +138,9 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         let blit_mask_rp = {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(paint.force_hq_pipeline);
-            paint.shader.push_stages(&mut p);
+            if !paint.shader.push_stages(&mut p) {
+                return None;
+            }
 
             if clip_mask.is_some() {
                 p.push(pipeline::Stage::MaskU8);

@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Painting API no longer returns `Option<()>`, but simply adds a warning to the log.
 
 ## [0.8.4] - 2023-04-22
 ### Added

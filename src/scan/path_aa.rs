@@ -30,7 +30,7 @@ pub fn fill_path(
     fill_rule: FillRule,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
+) {
     // Unlike `path.bounds.to_rect()?.round_out()`,
     // this method rounds out first and then converts into a Rect.
     let ir = Rect::from_ltrb(
@@ -38,23 +38,33 @@ pub fn fill_path(
         path.bounds().top().floor(),
         path.bounds().right().ceil(),
         path.bounds().bottom().ceil(),
-    )?
-    .round_out()?;
+    )
+    .and_then(|r| r.round_out());
+    let ir = match ir {
+        Some(v) => v,
+        None => return,
+    };
 
+    // TODO: remove
     // If the intersection of the path bounds and the clip bounds
     // will overflow 32767 when << by SHIFT, we can't supersample,
     // so draw without antialiasing.
-    let clipped_ir = ir.intersect(&clip.to_int_rect())?;
+    let clipped_ir = match ir.intersect(&clip.to_int_rect()) {
+        Some(v) => v,
+        None => return,
+    };
     if rect_overflows_short_shift(&clipped_ir, SHIFT as i32) != 0 {
-        return super::path::fill_path(path, fill_rule, clip, blitter);
+        super::path::fill_path(path, fill_rule, clip, blitter);
+        return;
     }
 
+    // TODO: remove
     // Our antialiasing can't handle a clip larger than 32767.
     // TODO: skia actually limits the clip to 32767
     {
         const MAX_CLIP_COORD: u32 = 32767;
         if clip.right() > MAX_CLIP_COORD || clip.bottom() > MAX_CLIP_COORD {
-            return None;
+            return;
         }
     }
 
@@ -91,11 +101,14 @@ fn fill_path_impl(
     bounds: &IntRect,
     clip: &ScreenIntRect,
     blitter: &mut dyn Blitter,
-) -> Option<()> {
+) {
     // TODO: MaskSuperBlitter
 
     // TODO: 15% slower than skia, find out why
-    let mut blitter = SuperBlitter::new(bounds, clip, blitter)?;
+    let mut blitter = match SuperBlitter::new(bounds, clip, blitter) {
+        Some(v) => v,
+        None => return, // clipped out, nothing else to do
+    };
 
     let path_contained_in_clip = if let Some(bounds) = bounds.to_screen_int_rect() {
         clip.contains(&bounds)
@@ -114,7 +127,7 @@ fn fill_path_impl(
         SHIFT as i32,
         path_contained_in_clip,
         &mut blitter,
-    )
+    );
 }
 
 struct BaseSuperBlitter<'a> {

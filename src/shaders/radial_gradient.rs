@@ -134,7 +134,7 @@ impl RadialGradient {
         }
     }
 
-    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> Option<()> {
+    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> bool {
         let p0 = if let Some(focal_data) = self.focal_data {
             1.0 / focal_data.r1
         } else {

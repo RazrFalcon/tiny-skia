@@ -39,9 +39,7 @@ fn main() {
     paint.set_color_rgba8(90, 175, 100, 150);
     paint.anti_alias = true;
     let large_rect = Rect::from_xywh(500.0, 500.0, 19000.0, 19000.0).unwrap();
-    pixmap
-        .fill_rect(large_rect, &paint, Transform::identity(), None)
-        .unwrap();
+    pixmap.fill_rect(large_rect, &paint, Transform::identity(), None);
 
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.anti_alias = true;
