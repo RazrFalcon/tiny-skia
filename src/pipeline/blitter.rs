@@ -11,14 +11,14 @@ use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
-use crate::clip::ClipMaskData;
+use crate::clip::SubClipMaskRef;
 use crate::color::AlphaU8;
 use crate::math::LENGTH_U32_ONE;
 use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder};
 use crate::pixmap::SubPixmapMut;
 
 pub struct RasterPipelineBlitter<'a, 'b: 'a> {
-    clip_mask: Option<&'a ClipMaskData>,
+    clip_mask: Option<SubClipMaskRef<'a>>,
     pixmap_src: PixmapRef<'a>,
     pixmap: &'a mut SubPixmapMut<'b>,
     memset2d_color: Option<PremultipliedColorU8>,
@@ -30,12 +30,13 @@ pub struct RasterPipelineBlitter<'a, 'b: 'a> {
 impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
     pub fn new(
         paint: &Paint<'a>,
-        clip_mask: Option<&'a ClipMaskData>,
+        clip_mask: Option<SubClipMaskRef<'a>>,
         pixmap: &'a mut SubPixmapMut<'b>,
     ) -> Option<Self> {
         // Make sure that `clip_mask` has the same size as `pixmap`.
         if let Some(mask) = clip_mask {
-            if mask.width.get() != pixmap.size.width() || mask.height.get() != pixmap.size.height()
+            if mask.size.width() != pixmap.size.width()
+                || mask.size.height() != pixmap.size.height()
             {
                 return None;
             }

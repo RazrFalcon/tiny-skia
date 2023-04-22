@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- `ClipMask`s larger than 8191x8191 pixels.
+  Previously, the creation of a large mask via `ClipMask::set_path`
+  would have created an empty mask.
 
 ## [0.8.3] - 2023-02-05
 ### Fixed

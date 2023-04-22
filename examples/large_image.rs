@@ -26,6 +26,15 @@ fn main() {
 
     let mut pixmap = Pixmap::new(20000, 20000).unwrap();
 
+    let clip_path = {
+        let mut pb = PathBuilder::new();
+        pb.push_circle(10000.0, 10000.0, 7000.0);
+        pb.finish().unwrap()
+    };
+
+    let mut clip = ClipMask::new();
+    clip.set_path(20000, 20000, &clip_path, FillRule::Winding, true);
+
     let mut paint = Paint::default();
     paint.set_color_rgba8(90, 175, 100, 150);
     paint.anti_alias = true;
@@ -41,7 +50,7 @@ fn main() {
         &paint,
         FillRule::Winding,
         Transform::default(),
-        None,
+        Some(&clip),
     );
 
     paint.set_color_rgba8(220, 140, 75, 180);

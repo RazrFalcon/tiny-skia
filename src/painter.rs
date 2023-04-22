@@ -8,6 +8,7 @@ use crate::*;
 
 use tiny_skia_path::{PathStroker, Scalar, ScreenIntRect, SCALAR_MAX};
 
+use crate::clip::SubClipMaskRef;
 use crate::pipeline::RasterPipelineBlitter;
 use crate::pixmap::SubPixmapMut;
 use crate::scan;
@@ -181,7 +182,7 @@ impl PixmapMut<'_> {
 
             let clip = self.size().to_screen_int_rect(0, 0);
 
-            let clip_mask = clip_mask.map(|mask| &mask.mask);
+            let clip_mask = clip_mask.map(|mask| mask.as_submask());
             let mut subpix = self.as_subpixmap();
             let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut subpix)?;
 
@@ -234,8 +235,8 @@ impl PixmapMut<'_> {
                     let clip_rect = tile.size().to_screen_int_rect(0, 0);
                     let mut subpix = self.subpixmap(tile.to_int_rect())?;
 
-                    let clip_mask = clip_mask.map(|mask| &mask.mask);
-                    let mut blitter = RasterPipelineBlitter::new(&paint, clip_mask, &mut subpix)?;
+                    let submask = clip_mask.and_then(|mask| mask.submask(tile.to_int_rect()));
+                    let mut blitter = RasterPipelineBlitter::new(&paint, submask, &mut subpix)?;
                     // We're ignoring "errors" here, because `fill_path` will return `None`
                     // when rendering a tile that doesn't have a path on it.
                     // Which is not an error in this case.
@@ -253,9 +254,9 @@ impl PixmapMut<'_> {
                 Some(())
             } else {
                 let clip_rect = self.size().to_screen_int_rect(0, 0);
-                let clip_mask = clip_mask.map(|mask| &mask.mask);
+                let submask = clip_mask.map(|mask| mask.as_submask());
                 let mut subpix = self.as_subpixmap();
-                let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, &mut subpix)?;
+                let mut blitter = RasterPipelineBlitter::new(paint, submask, &mut subpix)?;
                 if paint.anti_alias {
                     scan::path_aa::fill_path(path, fill_rule, &clip_rect, &mut blitter)
                 } else {
@@ -335,11 +336,12 @@ impl PixmapMut<'_> {
                     paint.shader.transform(ts);
 
                     let mut subpix = self.subpixmap(tile.to_int_rect())?;
+                    let submask = clip_mask.and_then(|mask| mask.submask(tile.to_int_rect()));
 
                     // We're ignoring "errors" here, because `stroke_hairline` will return `None`
                     // when rendering a tile that doesn't have a path on it.
                     // Which is not an error in this case.
-                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, &mut subpix);
+                    Self::stroke_hairline(&path, &paint, stroke.line_cap, submask, &mut subpix);
 
                     let ts = Transform::from_translate(tile.x() as f32, tile.y() as f32);
                     path = path.transform(ts)?;
@@ -349,13 +351,14 @@ impl PixmapMut<'_> {
                 Some(())
             } else {
                 let subpix = &mut self.as_subpixmap();
+                let submask = clip_mask.map(|mask| mask.as_submask());
                 if !transform.is_identity() {
                     paint.shader.transform(transform);
 
                     let path = path.clone().transform(transform)?; // TODO: avoid clone
-                    Self::stroke_hairline(&path, &paint, stroke.line_cap, clip_mask, subpix)
+                    Self::stroke_hairline(&path, &paint, stroke.line_cap, submask, subpix)
                 } else {
-                    Self::stroke_hairline(path, &paint, stroke.line_cap, clip_mask, subpix)
+                    Self::stroke_hairline(path, &paint, stroke.line_cap, submask, subpix)
                 }
             }
         } else {
@@ -369,12 +372,11 @@ impl PixmapMut<'_> {
         path: &Path,
         paint: &Paint,
         line_cap: LineCap,
-        clip_mask: Option<&ClipMask>,
+        clip_mask: Option<SubClipMaskRef>,
         pixmap: &mut SubPixmapMut,
     ) -> Option<()> {
         let clip = pixmap.size.to_screen_int_rect(0, 0);
 
-        let clip_mask = clip_mask.map(|mask| &mask.mask);
         let mut blitter = RasterPipelineBlitter::new(paint, clip_mask, pixmap)?;
 
         if paint.anti_alias {
@@ -490,7 +492,7 @@ fn is_too_big_for_math(path: &Path) -> bool {
 /// Which means that we cannot render a path larger than 8192 onto a pixmap.
 /// When pixmap is smaller than 8192, the path will be automatically clipped anyway,
 /// but for large pixmaps we have to render in tiles.
-struct DrawTiler {
+pub(crate) struct DrawTiler {
     image_width: u32,
     image_height: u32,
     x_offset: u32,
@@ -506,7 +508,7 @@ impl DrawTiler {
         image_width > Self::MAX_DIMENSIONS || image_height > Self::MAX_DIMENSIONS
     }
 
-    fn new(image_width: u32, image_height: u32) -> Option<Self> {
+    pub(crate) fn new(image_width: u32, image_height: u32) -> Option<Self> {
         if Self::required(image_width, image_height) {
             Some(DrawTiler {
                 image_width,
