@@ -7,11 +7,11 @@ env:
 
 jobs:
   x86:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         rust:
-          - 1.51.0
+          - 1.57.0
           - stable
     steps:
     - name: Checkout

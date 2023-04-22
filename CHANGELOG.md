@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- MSRV bumped to 1.57, mainly because of the `png` crate.
+
 ### Fixed
 - `ClipMask`s larger than 8191x8191 pixels.
   Previously, the creation of a large mask via `ClipMask::set_path`
