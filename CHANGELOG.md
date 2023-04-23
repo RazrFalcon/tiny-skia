@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.9.0] - 2023-04-23
 ### Added
 - `Mask::from_vec`
 - `Mask::from_pixmap` to convert `Pixmap` into `Mask` by extracting alpha or luminance.
@@ -177,7 +179,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.4...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.4...v0.9.0
 [0.8.4]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.1...v0.8.2
