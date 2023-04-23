@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - Painting API no longer returns `Option<()>`, but simply adds a warning to the log.
+- Rename `ClipMask` into `Mask`.
 
 ## [0.8.4] - 2023-04-22
 ### Added

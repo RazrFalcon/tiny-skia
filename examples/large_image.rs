@@ -32,7 +32,7 @@ fn main() {
         pb.finish().unwrap()
     };
 
-    let mut clip = ClipMask::new();
+    let mut clip = Mask::new();
     clip.set_path(20000, 20000, &clip_path, FillRule::Winding, true);
 
     let mut paint = Paint::default();

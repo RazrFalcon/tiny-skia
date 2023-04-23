@@ -202,21 +202,21 @@ impl AAMaskCtx {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct ClipMaskCtx<'a> {
+pub struct MaskCtx<'a> {
     pub data: &'a [u8],
     pub stride: LengthU32,
 }
 
-impl Default for ClipMaskCtx<'_> {
+impl Default for MaskCtx<'_> {
     fn default() -> Self {
-        ClipMaskCtx {
+        MaskCtx {
             data: &[],
             stride: LENGTH_U32_ONE,
         }
     }
 }
 
-impl ClipMaskCtx<'_> {
+impl MaskCtx<'_> {
     #[inline(always)]
     fn offset(&self, dx: usize, dy: usize) -> usize {
         self.stride.get() as usize * dy + dx
@@ -467,8 +467,8 @@ impl RasterPipeline {
     pub fn run(
         &mut self,
         rect: &ScreenIntRect,
-        mask_ctx: AAMaskCtx,
-        clip_mask_ctx: ClipMaskCtx,
+        aa_mask_ctx: AAMaskCtx,
+        mask_ctx: MaskCtx,
         pixmap_src: PixmapRef,
         pixmap_dst: &mut SubPixmapMut,
     ) {
@@ -481,8 +481,8 @@ impl RasterPipeline {
                     functions.as_slice(),
                     tail_functions.as_slice(),
                     rect,
+                    aa_mask_ctx,
                     mask_ctx,
-                    clip_mask_ctx,
                     &mut self.ctx,
                     pixmap_src,
                     pixmap_dst,
@@ -496,8 +496,8 @@ impl RasterPipeline {
                     functions.as_slice(),
                     tail_functions.as_slice(),
                     rect,
+                    aa_mask_ctx,
                     mask_ctx,
-                    clip_mask_ctx,
                     &mut self.ctx,
                     // lowp doesn't support pattern, so no `pixmap_src` for it.
                     pixmap_dst,
@@ -538,7 +538,7 @@ mod blend_tests {
                 p.push(Stage::Store);
                 let mut p = p.compile();
                 let rect = pixmap.size().to_screen_int_rect(0, 0);
-                p.run(&rect, AAMaskCtx::default(), ClipMaskCtx::default(), pixmap_src,
+                p.run(&rect, AAMaskCtx::default(), MaskCtx::default(), pixmap_src,
                       &mut pixmap.as_mut().as_subpixmap());
 
                 assert_eq!(

@@ -11,14 +11,14 @@ use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
 use crate::blitter::{Blitter, Mask};
-use crate::clip::SubClipMaskRef;
 use crate::color::AlphaU8;
+use crate::mask::SubMaskRef;
 use crate::math::LENGTH_U32_ONE;
 use crate::pipeline::{self, RasterPipeline, RasterPipelineBuilder};
 use crate::pixmap::SubPixmapMut;
 
 pub struct RasterPipelineBlitter<'a, 'b: 'a> {
-    clip_mask: Option<SubClipMaskRef<'a>>,
+    mask: Option<SubMaskRef<'a>>,
     pixmap_src: PixmapRef<'a>,
     pixmap: &'a mut SubPixmapMut<'b>,
     memset2d_color: Option<PremultipliedColorU8>,
@@ -30,11 +30,11 @@ pub struct RasterPipelineBlitter<'a, 'b: 'a> {
 impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
     pub fn new(
         paint: &Paint<'a>,
-        clip_mask: Option<SubClipMaskRef<'a>>,
+        mask: Option<SubMaskRef<'a>>,
         pixmap: &'a mut SubPixmapMut<'b>,
     ) -> Option<Self> {
-        // Make sure that `clip_mask` has the same size as `pixmap`.
-        if let Some(mask) = clip_mask {
+        // Make sure that `mask` has the same size as `pixmap`.
+        if let Some(mask) = mask {
             if mask.size.width() != pixmap.size.width()
                 || mask.size.height() != pixmap.size.height()
             {
@@ -56,13 +56,13 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
 
         // We can strength-reduce SourceOver into Source when opaque.
         let mut blend_mode = paint.blend_mode;
-        if paint.shader.is_opaque() && blend_mode == BlendMode::SourceOver && clip_mask.is_none() {
+        if paint.shader.is_opaque() && blend_mode == BlendMode::SourceOver && mask.is_none() {
             blend_mode = BlendMode::Source;
         }
 
         // When we're drawing a constant color in Source mode, we can sometimes just memset.
         let mut memset2d_color = None;
-        if paint.is_solid_color() && blend_mode == BlendMode::Source && clip_mask.is_none() {
+        if paint.is_solid_color() && blend_mode == BlendMode::Source && mask.is_none() {
             // Unlike Skia, our shader cannot be constant.
             // Therefore there is no need to run a raster pipeline to get shader's color.
             if let Shader::SolidColor(ref color) = paint.shader {
@@ -71,7 +71,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         };
 
         // Clear is just a transparent color memset.
-        if blend_mode == BlendMode::Clear && !paint.anti_alias && clip_mask.is_none() {
+        if blend_mode == BlendMode::Clear && !paint.anti_alias && mask.is_none() {
             blend_mode = BlendMode::Source;
             memset2d_color = Some(PremultipliedColorU8::TRANSPARENT);
         }
@@ -83,7 +83,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
                 return None;
             }
 
-            if clip_mask.is_some() {
+            if mask.is_some() {
                 p.push(pipeline::Stage::MaskU8);
             }
 
@@ -114,11 +114,11 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
                 return None;
             }
 
-            if clip_mask.is_some() {
+            if mask.is_some() {
                 p.push(pipeline::Stage::MaskU8);
             }
 
-            if blend_mode == BlendMode::SourceOver && clip_mask.is_none() {
+            if blend_mode == BlendMode::SourceOver && mask.is_none() {
                 // TODO: ignore when dither_rate is non-zero
                 p.push(pipeline::Stage::SourceOverRgba);
             } else {
@@ -142,7 +142,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
                 return None;
             }
 
-            if clip_mask.is_some() {
+            if mask.is_some() {
                 p.push(pipeline::Stage::MaskU8);
             }
 
@@ -173,7 +173,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         };
 
         Some(RasterPipelineBlitter {
-            clip_mask,
+            mask,
             pixmap_src,
             pixmap,
             memset2d_color,
@@ -191,10 +191,7 @@ impl Blitter for RasterPipelineBlitter<'_, '_> {
     }
 
     fn blit_anti_h(&mut self, mut x: u32, y: u32, aa: &mut [AlphaU8], runs: &mut [AlphaRun]) {
-        let clip_mask_ctx = self
-            .clip_mask
-            .map(|c| c.clip_mask_ctx())
-            .unwrap_or_default();
+        let mask_ctx = self.mask.map(|c| c.mask_ctx()).unwrap_or_default();
 
         let mut aa_offset = 0;
         let mut run_offset = 0;
@@ -214,7 +211,7 @@ impl Blitter for RasterPipelineBlitter<'_, '_> {
                     self.blit_anti_h_rp.run(
                         &rect,
                         pipeline::AAMaskCtx::default(),
-                        clip_mask_ctx,
+                        mask_ctx,
                         self.pixmap_src,
                         self.pixmap,
                     );
@@ -279,15 +276,12 @@ impl Blitter for RasterPipelineBlitter<'_, '_> {
             return;
         }
 
-        let clip_mask_ctx = self
-            .clip_mask
-            .map(|c| c.clip_mask_ctx())
-            .unwrap_or_default();
+        let mask_ctx = self.mask.map(|c| c.mask_ctx()).unwrap_or_default();
 
         self.blit_rect_rp.run(
             rect,
             pipeline::AAMaskCtx::default(),
-            clip_mask_ctx,
+            mask_ctx,
             self.pixmap_src,
             self.pixmap,
         );
@@ -300,17 +294,9 @@ impl Blitter for RasterPipelineBlitter<'_, '_> {
             shift: (mask.bounds.left() + mask.bounds.top() * mask.row_bytes) as usize,
         };
 
-        let clip_mask_ctx = self
-            .clip_mask
-            .map(|c| c.clip_mask_ctx())
-            .unwrap_or_default();
+        let mask_ctx = self.mask.map(|c| c.mask_ctx()).unwrap_or_default();
 
-        self.blit_mask_rp.run(
-            clip,
-            aa_mask_ctx,
-            clip_mask_ctx,
-            self.pixmap_src,
-            self.pixmap,
-        );
+        self.blit_mask_rp
+            .run(clip, aa_mask_ctx, mask_ctx, self.pixmap_src, self.pixmap);
     }
 }

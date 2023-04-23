@@ -8,7 +8,7 @@ use crate::*;
 
 use tiny_skia_path::{PathStroker, Scalar, ScreenIntRect, SCALAR_MAX};
 
-use crate::clip::SubClipMaskRef;
+use crate::mask::SubMaskRef;
 use crate::pipeline::RasterPipelineBlitter;
 use crate::pixmap::SubPixmapMut;
 use crate::scan;
@@ -107,9 +107,9 @@ impl Pixmap {
         rect: Rect,
         paint: &Paint,
         transform: Transform,
-        clip_mask: Option<&ClipMask>,
+        mask: Option<&Mask>,
     ) {
-        self.as_mut().fill_rect(rect, paint, transform, clip_mask);
+        self.as_mut().fill_rect(rect, paint, transform, mask);
     }
 
     /// Draws a filled path onto the pixmap.
@@ -121,10 +121,10 @@ impl Pixmap {
         paint: &Paint,
         fill_rule: FillRule,
         transform: Transform,
-        clip_mask: Option<&ClipMask>,
+        mask: Option<&Mask>,
     ) {
         self.as_mut()
-            .fill_path(path, paint, fill_rule, transform, clip_mask);
+            .fill_path(path, paint, fill_rule, transform, mask);
     }
 
     /// Strokes a path.
@@ -136,10 +136,10 @@ impl Pixmap {
         paint: &Paint,
         stroke: &Stroke,
         transform: Transform,
-        clip_mask: Option<&ClipMask>,
+        mask: Option<&Mask>,
     ) {
         self.as_mut()
-            .stroke_path(path, paint, stroke, transform, clip_mask);
+            .stroke_path(path, paint, stroke, transform, mask);
     }
 
     /// Draws a `Pixmap` on top of the current `Pixmap`.
@@ -152,10 +152,10 @@ impl Pixmap {
         pixmap: PixmapRef,
         paint: &PixmapPaint,
         transform: Transform,
-        clip_mask: Option<&ClipMask>,
+        mask: Option<&Mask>,
     ) {
         self.as_mut()
-            .draw_pixmap(x, y, pixmap, paint, transform, clip_mask);
+            .draw_pixmap(x, y, pixmap, paint, transform, mask);
     }
 }
 
@@ -174,7 +174,7 @@ impl PixmapMut<'_> {
         rect: Rect,
         paint: &Paint,
         transform: Transform,
-        clip_mask: Option<&ClipMask>,
+        mask: Option<&Mask>,
     ) {
         // TODO: we probably can use tiler for rect too
         if transform.is_identity() && !DrawTiler::required(self.width(), self.height()) {
@@ -182,9 +182,9 @@ impl PixmapMut<'_> {
 
             let clip = self.size().to_screen_int_rect(0, 0);
 
-            let clip_mask = clip_mask.map(|mask| mask.as_submask());
+            let mask = mask.map(|mask| mask.as_submask());
             let mut subpix = self.as_subpixmap();
-            let mut blitter = match RasterPipelineBlitter::new(paint, clip_mask, &mut subpix) {
+            let mut blitter = match RasterPipelineBlitter::new(paint, mask, &mut subpix) {
                 Some(v) => v,
                 None => return, // nothing to do, all good
             };
@@ -196,7 +196,7 @@ impl PixmapMut<'_> {
             }
         } else {
             let path = PathBuilder::from_rect(rect);
-            self.fill_path(&path, paint, FillRule::Winding, transform, clip_mask);
+            self.fill_path(&path, paint, FillRule::Winding, transform, mask);
         }
     }
 
@@ -207,7 +207,7 @@ impl PixmapMut<'_> {
         paint: &Paint,
         fill_rule: FillRule,
         transform: Transform,
-        clip_mask: Option<&ClipMask>,
+        mask: Option<&Mask>,
     ) {
         if transform.is_identity() {
             // This is sort of similar to SkDraw::drawPath
@@ -247,7 +247,7 @@ impl PixmapMut<'_> {
                         None => continue, // technically unreachable
                     };
 
-                    let submask = clip_mask.and_then(|mask| mask.submask(tile.to_int_rect()));
+                    let submask = mask.and_then(|mask| mask.submask(tile.to_int_rect()));
                     let mut blitter = match RasterPipelineBlitter::new(&paint, submask, &mut subpix)
                     {
                         Some(v) => v,
@@ -272,7 +272,7 @@ impl PixmapMut<'_> {
                 }
             } else {
                 let clip_rect = self.size().to_screen_int_rect(0, 0);
-                let submask = clip_mask.map(|mask| mask.as_submask());
+                let submask = mask.map(|mask| mask.as_submask());
                 let mut subpix = self.as_subpixmap();
                 let mut blitter = match RasterPipelineBlitter::new(paint, submask, &mut subpix) {
                     Some(v) => v,
@@ -297,7 +297,7 @@ impl PixmapMut<'_> {
             let mut paint = paint.clone();
             paint.shader.transform(transform);
 
-            self.fill_path(&path, &paint, fill_rule, Transform::identity(), clip_mask)
+            self.fill_path(&path, &paint, fill_rule, Transform::identity(), mask)
         }
     }
 
@@ -320,7 +320,7 @@ impl PixmapMut<'_> {
         paint: &Paint,
         stroke: &Stroke,
         transform: Transform,
-        clip_mask: Option<&ClipMask>,
+        mask: Option<&Mask>,
     ) {
         if stroke.width < 0.0 {
             log::warn!("negative stroke width isn't allowed");
@@ -386,7 +386,7 @@ impl PixmapMut<'_> {
                         Some(v) => v,
                         None => continue, // technically unreachable
                     };
-                    let submask = clip_mask.and_then(|mask| mask.submask(tile.to_int_rect()));
+                    let submask = mask.and_then(|mask| mask.submask(tile.to_int_rect()));
 
                     // We're ignoring "errors" here, because `stroke_hairline` will return `None`
                     // when rendering a tile that doesn't have a path on it.
@@ -402,7 +402,7 @@ impl PixmapMut<'_> {
                 }
             } else {
                 let subpix = &mut self.as_subpixmap();
-                let submask = clip_mask.map(|mask| mask.as_submask());
+                let submask = mask.map(|mask| mask.as_submask());
                 if !transform.is_identity() {
                     paint.shader.transform(transform);
 
@@ -429,7 +429,7 @@ impl PixmapMut<'_> {
                 }
             };
 
-            self.fill_path(&path, paint, FillRule::Winding, transform, clip_mask);
+            self.fill_path(&path, paint, FillRule::Winding, transform, mask);
         }
     }
 
@@ -438,11 +438,11 @@ impl PixmapMut<'_> {
         path: &Path,
         paint: &Paint,
         line_cap: LineCap,
-        clip_mask: Option<SubClipMaskRef>,
+        mask: Option<SubMaskRef>,
         pixmap: &mut SubPixmapMut,
     ) {
         let clip = pixmap.size.to_screen_int_rect(0, 0);
-        let mut blitter = match RasterPipelineBlitter::new(paint, clip_mask, pixmap) {
+        let mut blitter = match RasterPipelineBlitter::new(paint, mask, pixmap) {
             Some(v) => v,
             None => return, // nothing to do, all good
         };
@@ -463,7 +463,7 @@ impl PixmapMut<'_> {
         pixmap: PixmapRef,
         paint: &PixmapPaint,
         transform: Transform,
-        clip_mask: Option<&ClipMask>,
+        mask: Option<&Mask>,
     ) {
         let rect = pixmap.size().to_int_rect(x, y).to_rect();
 
@@ -487,7 +487,7 @@ impl PixmapMut<'_> {
             force_hq_pipeline: false, // Pattern will use hq anyway.
         };
 
-        self.fill_rect(rect, &paint, transform, clip_mask);
+        self.fill_rect(rect, &paint, transform, mask);
     }
 }
 

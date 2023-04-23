@@ -18,20 +18,20 @@ use crate::painter::DrawTiler;
 
 use core::num::NonZeroU32;
 
-/// A clipping mask.
+/// A mask.
 ///
 /// Unlike Skia, we're using just a simple 8bit alpha mask.
 /// It's way slower, but easier to implement.
 #[derive(Clone, Debug)]
-pub struct ClipMask {
+pub struct Mask {
     data: Vec<u8>,
     width: LengthU32,
     height: LengthU32,
 }
 
-impl Default for ClipMask {
+impl Default for Mask {
     fn default() -> Self {
-        ClipMask {
+        Mask {
             data: Vec::new(),
             width: LENGTH_U32_ONE,
             height: LENGTH_U32_ONE,
@@ -39,10 +39,10 @@ impl Default for ClipMask {
     }
 }
 
-impl ClipMask {
+impl Mask {
     /// Creates a new, empty mask.
     pub fn new() -> Self {
-        ClipMask::default()
+        Mask::default()
     }
 
     /// Checks that mask is empty.
@@ -55,40 +55,40 @@ impl ClipMask {
         IntSize::from_wh(self.width.get(), self.height.get()).unwrap()
     }
 
-    pub(crate) fn as_submask<'a>(&'a self) -> SubClipMaskRef<'a> {
-        SubClipMaskRef {
+    pub(crate) fn as_submask<'a>(&'a self) -> SubMaskRef<'a> {
+        SubMaskRef {
             size: self.size(),
             real_width: self.width,
             data: &self.data,
         }
     }
 
-    pub(crate) fn submask<'a>(&'a self, rect: IntRect) -> Option<SubClipMaskRef<'a>> {
+    pub(crate) fn submask<'a>(&'a self, rect: IntRect) -> Option<SubMaskRef<'a>> {
         let rect = self.size().to_int_rect(0, 0).intersect(&rect)?;
         let row_bytes = self.width.get() as usize;
         let offset = rect.top() as usize * row_bytes + rect.left() as usize;
 
-        Some(SubClipMaskRef {
+        Some(SubMaskRef {
             size: rect.size(),
             real_width: self.width,
             data: &self.data[offset..],
         })
     }
 
-    pub(crate) fn as_submask_mut<'a>(&'a mut self) -> SubClipMaskMut<'a> {
-        SubClipMaskMut {
+    pub(crate) fn as_submask_mut<'a>(&'a mut self) -> SubMaskMut<'a> {
+        SubMaskMut {
             size: self.size(),
             real_width: self.width,
             data: &mut self.data,
         }
     }
 
-    pub(crate) fn submask_mut<'a>(&'a mut self, rect: IntRect) -> Option<SubClipMaskMut<'a>> {
+    pub(crate) fn submask_mut<'a>(&'a mut self, rect: IntRect) -> Option<SubMaskMut<'a>> {
         let rect = self.size().to_int_rect(0, 0).intersect(&rect)?;
         let row_bytes = self.width.get() as usize;
         let offset = rect.top() as usize * row_bytes + rect.left() as usize;
 
-        Some(SubClipMaskMut {
+        Some(SubMaskMut {
             size: rect.size(),
             real_width: self.width,
             data: &mut self.data[offset..],
@@ -182,7 +182,7 @@ impl ClipMask {
     ///
     /// Path must be transformed beforehand.
     pub fn intersect_path(&mut self, path: &Path, fill_rule: FillRule, anti_alias: bool) {
-        let mut submask = ClipMask::new();
+        let mut submask = Mask::new();
         submask.set_path(
             self.width.get(),
             self.height.get(),
@@ -206,15 +206,15 @@ impl ClipMask {
 }
 
 #[derive(Clone, Copy)]
-pub struct SubClipMaskRef<'a> {
+pub struct SubMaskRef<'a> {
     pub data: &'a [u8],
     pub size: IntSize,
     pub real_width: LengthU32,
 }
 
-impl<'a> SubClipMaskRef<'a> {
-    pub(crate) fn clip_mask_ctx(&self) -> crate::pipeline::ClipMaskCtx<'a> {
-        crate::pipeline::ClipMaskCtx {
+impl<'a> SubMaskRef<'a> {
+    pub(crate) fn mask_ctx(&self) -> crate::pipeline::MaskCtx<'a> {
+        crate::pipeline::MaskCtx {
             data: &self.data,
             stride: self.real_width,
         }
@@ -222,13 +222,13 @@ impl<'a> SubClipMaskRef<'a> {
 }
 
 // Similar to SubPixmapMut.
-pub struct SubClipMaskMut<'a> {
+pub struct SubMaskMut<'a> {
     pub data: &'a mut [u8],
     pub size: IntSize,
     pub real_width: LengthU32,
 }
 
-struct ClipBuilder<'a>(SubClipMaskMut<'a>);
+struct ClipBuilder<'a>(SubMaskMut<'a>);
 
 impl Blitter for ClipBuilder<'_> {
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32) {
@@ -239,7 +239,7 @@ impl Blitter for ClipBuilder<'_> {
     }
 }
 
-struct ClipBuilderAA<'a>(SubClipMaskMut<'a>);
+struct ClipBuilderAA<'a>(SubMaskMut<'a>);
 
 impl Blitter for ClipBuilderAA<'_> {
     fn blit_h(&mut self, x: u32, y: u32, width: LengthU32) {

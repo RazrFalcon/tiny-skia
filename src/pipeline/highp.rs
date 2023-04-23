@@ -32,8 +32,8 @@ pub struct Pipeline<'a, 'b: 'a> {
     pixmap_src: PixmapRef<'a>,
     pixmap_dst: &'a mut SubPixmapMut<'b>,
     ctx: &'a mut super::Context, // TODO: remove mut
-    clip_mask_ctx: super::ClipMaskCtx<'a>,
-    mask_ctx: super::AAMaskCtx,
+    mask_ctx: super::MaskCtx<'a>,
+    aa_mask_ctx: super::AAMaskCtx,
     r: f32x8,
     g: f32x8,
     b: f32x8,
@@ -128,8 +128,8 @@ pub fn start(
     functions: &[StageFn],
     functions_tail: &[StageFn],
     rect: &ScreenIntRect,
-    mask_ctx: super::AAMaskCtx,
-    clip_mask_ctx: super::ClipMaskCtx,
+    aa_mask_ctx: super::AAMaskCtx,
+    mask_ctx: super::MaskCtx,
     ctx: &mut super::Context,
     pixmap_src: PixmapRef,
     pixmap_dst: &mut SubPixmapMut,
@@ -139,8 +139,8 @@ pub fn start(
         functions: &[],
         pixmap_src,
         pixmap_dst,
-        clip_mask_ctx,
         mask_ctx,
+        aa_mask_ctx,
         ctx,
         r: f32x8::default(),
         g: f32x8::default(),
@@ -295,10 +295,10 @@ pub fn store_tail(p: &mut Pipeline) {
 }
 
 fn mask_u8(p: &mut Pipeline) {
-    let offset = p.clip_mask_ctx.offset(p.dx, p.dy);
+    let offset = p.mask_ctx.offset(p.dx, p.dy);
     let mut c = [0.0; 8];
     for i in 0..p.tail {
-        c[i] = p.clip_mask_ctx.data[offset + i] as f32;
+        c[i] = p.mask_ctx.data[offset + i] as f32;
     }
     let c = f32x8::from(c) / f32x8::splat(255.0);
 
@@ -316,7 +316,7 @@ fn mask_u8(p: &mut Pipeline) {
 
 fn scale_u8(p: &mut Pipeline) {
     // Load u8xTail and cast it to f32x8.
-    let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
+    let data = p.aa_mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = f32x8::from([data[0] as f32, data[1] as f32, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
     let c = c / f32x8::splat(255.0);
 
@@ -330,7 +330,7 @@ fn scale_u8(p: &mut Pipeline) {
 
 fn lerp_u8(p: &mut Pipeline) {
     // Load u8xTail and cast it to f32x8.
-    let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
+    let data = p.aa_mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = f32x8::from([data[0] as f32, data[1] as f32, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
     let c = c / f32x8::splat(255.0);
 

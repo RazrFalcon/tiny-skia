@@ -43,8 +43,8 @@ pub struct Pipeline<'a, 'b: 'a> {
     index: usize,
     functions: &'a [StageFn],
     pixmap: &'a mut SubPixmapMut<'b>,
-    clip_mask_ctx: super::ClipMaskCtx<'a>,
-    mask_ctx: super::AAMaskCtx,
+    mask_ctx: super::MaskCtx<'a>,
+    aa_mask_ctx: super::AAMaskCtx,
     ctx: &'a mut super::Context,
     r: u16x16,
     g: u16x16,
@@ -145,8 +145,8 @@ pub fn start(
     functions: &[StageFn],
     functions_tail: &[StageFn],
     rect: &ScreenIntRect,
-    mask_ctx: super::AAMaskCtx,
-    clip_mask_ctx: super::ClipMaskCtx,
+    aa_mask_ctx: super::AAMaskCtx,
+    mask_ctx: super::MaskCtx,
     ctx: &mut super::Context,
     pixmap: &mut SubPixmapMut,
 ) {
@@ -154,8 +154,8 @@ pub fn start(
         index: 0,
         functions: &[],
         pixmap,
-        clip_mask_ctx,
         mask_ctx,
+        aa_mask_ctx,
         ctx,
         r: u16x16::default(),
         g: u16x16::default(),
@@ -266,11 +266,11 @@ pub fn store_tail(p: &mut Pipeline) {
 }
 
 fn mask_u8(p: &mut Pipeline) {
-    let offset = p.clip_mask_ctx.offset(p.dx, p.dy);
+    let offset = p.mask_ctx.offset(p.dx, p.dy);
 
     let mut c = u16x16::default();
     for i in 0..p.tail {
-        c.0[i] = u16::from(p.clip_mask_ctx.data[offset + i]);
+        c.0[i] = u16::from(p.mask_ctx.data[offset + i]);
     }
 
     if c == u16x16::default() {
@@ -287,7 +287,7 @@ fn mask_u8(p: &mut Pipeline) {
 
 fn scale_u8(p: &mut Pipeline) {
     // Load u8xTail and cast it to u16x16.
-    let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
+    let data = p.aa_mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = u16x16([
         u16::from(data[0]),
         u16::from(data[1]),
@@ -317,7 +317,7 @@ fn scale_u8(p: &mut Pipeline) {
 
 fn lerp_u8(p: &mut Pipeline) {
     // Load u8xTail and cast it to u16x16.
-    let data = p.mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
+    let data = p.aa_mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
     let c = u16x16([
         u16::from(data[0]),
         u16::from(data[1]),

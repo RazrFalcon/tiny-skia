@@ -37,13 +37,13 @@ extern crate alloc;
 mod alpha_runs;
 mod blend_mode;
 mod blitter;
-mod clip;
 mod color;
 mod edge;
 mod edge_builder;
 mod edge_clipper;
 mod fixed_point;
 mod line_clipper;
+mod mask;
 mod math;
 mod path64;
 mod path_geometry;
@@ -56,9 +56,9 @@ mod wide;
 mod painter; // Keep it under `pixmap` for a better order in the docs.
 
 pub use blend_mode::BlendMode;
-pub use clip::ClipMask;
 pub use color::{Color, ColorU8, PremultipliedColor, PremultipliedColorU8};
 pub use color::{ALPHA_OPAQUE, ALPHA_TRANSPARENT, ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
+pub use mask::Mask;
 pub use painter::{FillRule, Paint};
 pub use pixmap::{Pixmap, PixmapMut, PixmapRef, BYTES_PER_PIXEL};
 pub use shaders::{FilterQuality, GradientStop, PixmapPaint, SpreadMode};

@@ -3,34 +3,34 @@ use tiny_skia::*;
 #[test]
 fn rect() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new();
+    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let mut pixmap = Pixmap::new(100, 100).unwrap();
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
-    pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&clip_mask));
+    pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&mask));
 
-    let expected = Pixmap::load_png("tests/images/clip/rect.png").unwrap();
+    let expected = Pixmap::load_png("tests/images/mask/rect.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
 #[test]
 fn rect_aa() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.5, 10.0, 80.0, 80.5).unwrap());
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(100, 100, &clip_path, FillRule::Winding, true);
+    let mut mask = Mask::new();
+    mask.set_path(100, 100, &clip_path, FillRule::Winding, true);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let mut pixmap = Pixmap::new(100, 100).unwrap();
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
-    pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&clip_mask));
+    pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&mask));
 
-    let expected = Pixmap::load_png("tests/images/clip/rect-aa.png").unwrap();
+    let expected = Pixmap::load_png("tests/images/mask/rect-aa.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -41,16 +41,16 @@ fn rect_ts() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
     let clip_path = clip_path.transform(Transform::from_row(1.0, -0.3, 0.0, 1.0, 0.0, 15.0)).unwrap();
 
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new();
+    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
-    pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&clip_mask));
+    pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&mask));
 
-    let expected = Pixmap::load_png("tests/images/clip/rect-ts.png").unwrap();
+    let expected = Pixmap::load_png("tests/images/mask/rect-ts.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -59,16 +59,16 @@ fn circle_bottom_right_aa() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
 
     let clip_path = PathBuilder::from_circle(100.0, 100.0, 50.0).unwrap();
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(100, 100, &clip_path, FillRule::Winding, true);
+    let mut mask = Mask::new();
+    mask.set_path(100, 100, &clip_path, FillRule::Winding, true);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
-    pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&clip_mask));
+    pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&mask));
 
-    let expected = Pixmap::load_png("tests/images/clip/circle-bottom-right-aa.png").unwrap();
+    let expected = Pixmap::load_png("tests/images/mask/circle-bottom-right-aa.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -77,8 +77,8 @@ fn stroke() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
 
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new();
+    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -87,9 +87,9 @@ fn stroke() {
     stroke.width = 10.0;
 
     let path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
-    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), Some(&clip_mask));
+    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), Some(&mask));
 
-    let expected = Pixmap::load_png("tests/images/clip/stroke.png").unwrap();
+    let expected = Pixmap::load_png("tests/images/mask/stroke.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -118,13 +118,13 @@ fn skip_dest() {
     );
 
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(40.0, 40.0, 40.0, 40.0).unwrap());
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(100, 100, &clip_path, FillRule::Winding, true);
+    let mut mask = Mask::new();
+    mask.set_path(100, 100, &clip_path, FillRule::Winding, true);
 
     pixmap.draw_pixmap(0, 0, pixmap2.as_ref(), &PixmapPaint::default(),
-                                Transform::identity(), Some(&clip_mask));
+                                Transform::identity(), Some(&mask));
 
-    let expected = Pixmap::load_png("tests/images/clip/skip-dest.png").unwrap();
+    let expected = Pixmap::load_png("tests/images/mask/skip-dest.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -133,9 +133,9 @@ fn intersect_aa() {
     let circle1 = PathBuilder::from_circle(75.0, 75.0, 50.0).unwrap();
     let circle2 = PathBuilder::from_circle(125.0, 125.0, 50.0).unwrap();
 
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(200, 200, &circle1, FillRule::Winding, true);
-    clip_mask.intersect_path(&circle2, FillRule::Winding, true);
+    let mut mask = Mask::new();
+    mask.set_path(200, 200, &circle1, FillRule::Winding, true);
+    mask.intersect_path(&circle2, FillRule::Winding, true);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -145,10 +145,10 @@ fn intersect_aa() {
         Rect::from_xywh(0.0, 0.0, 200.0, 200.0).unwrap(),
         &paint,
         Transform::identity(),
-        Some(&clip_mask),
+        Some(&mask),
     );
 
-    let expected = Pixmap::load_png("tests/images/clip/intersect-aa.png").unwrap();
+    let expected = Pixmap::load_png("tests/images/mask/intersect-aa.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -156,8 +156,8 @@ fn intersect_aa() {
 fn ignore_memset() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
 
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new();
+    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255);
@@ -167,10 +167,10 @@ fn ignore_memset() {
         Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap(),
         &paint,
         Transform::identity(),
-        Some(&clip_mask),
+        Some(&mask),
     );
 
-    let expected = Pixmap::load_png("tests/images/clip/ignore-memset.png").unwrap();
+    let expected = Pixmap::load_png("tests/images/mask/ignore-memset.png").unwrap();
     assert_eq!(pixmap, expected);
 }
 
@@ -178,8 +178,8 @@ fn ignore_memset() {
 fn ignore_source() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
 
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new();
+    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque.
@@ -191,9 +191,9 @@ fn ignore_source() {
         Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap(),
         &paint,
         Transform::identity(),
-        Some(&clip_mask),
+        Some(&mask),
     );
 
-    let expected = Pixmap::load_png("tests/images/clip/ignore-source.png").unwrap();
+    let expected = Pixmap::load_png("tests/images/mask/ignore-source.png").unwrap();
     assert_eq!(pixmap, expected);
 }

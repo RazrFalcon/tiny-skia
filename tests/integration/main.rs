@@ -1,4 +1,4 @@
-#[rustfmt::skip] mod clip;
+#[rustfmt::skip] mod mask;
 #[rustfmt::skip] mod dash;
 #[rustfmt::skip] mod fill;
 #[rustfmt::skip] mod gradients;

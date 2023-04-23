@@ -12,8 +12,8 @@ fn main() {
         .transform(Transform::from_row(1.0, -0.3, 0.0, 1.0, 0.0, 75.0))
         .unwrap();
 
-    let mut clip_mask = ClipMask::new();
-    clip_mask.set_path(500, 500, &clip_path, FillRule::EvenOdd, true);
+    let mut mask = Mask::new();
+    mask.set_path(500, 500, &clip_path, FillRule::EvenOdd, true);
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -23,7 +23,7 @@ fn main() {
         Rect::from_xywh(0.0, 0.0, 500.0, 500.0).unwrap(),
         &paint,
         Transform::identity(),
-        Some(&clip_mask),
+        Some(&mask),
     );
     pixmap.save_png("image.png").unwrap();
 }
