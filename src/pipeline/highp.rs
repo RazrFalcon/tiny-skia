@@ -70,6 +70,7 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     load_dst_u8,
     store_u8,
     gather,
+    load_mask_u8,
     mask_u8,
     scale_u8,
     lerp_u8,
@@ -311,6 +312,10 @@ fn gather_ix(pixmap: PixmapRef, mut x: f32x8, mut y: f32x8) -> u32x8 {
 fn ulp_sub(v: f32) -> f32 {
     // Somewhat similar to v - f32::EPSILON
     bytemuck::cast::<u32, f32>(bytemuck::cast::<f32, u32>(v) - 1)
+}
+
+fn load_mask_u8(_: &mut Pipeline) {
+    // unreachable
 }
 
 fn mask_u8(p: &mut Pipeline) {

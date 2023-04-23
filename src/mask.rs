@@ -70,10 +70,22 @@ impl Mask {
                 }
             }
             MaskType::Luminosity => {
-                for (p, a) in pixmap.pixels().iter().zip(mask.data.as_mut_slice()) {
-                    let p = p.to_premultiplied_color().demultiply();
-                    let luma = p.red() * 0.2126 + p.green() * 0.7152 + p.blue() * 0.0722;
-                    *a = ((luma * p.alpha()) * 255.0).clamp(0.0, 255.0).ceil() as u8;
+                for (p, ma) in pixmap.pixels().iter().zip(mask.data.as_mut_slice()) {
+                    // Normalize.
+                    let mut r = f32::from(p.red()) / 255.0;
+                    let mut g = f32::from(p.green()) / 255.0;
+                    let mut b = f32::from(p.blue()) / 255.0;
+                    let a = f32::from(p.alpha()) / 255.0;
+
+                    // Demultiply.
+                    if p.alpha() != 0 {
+                        r /= a;
+                        g /= a;
+                        b /= a;
+                    }
+
+                    let luma = r * 0.2126 + g * 0.7152 + b * 0.0722;
+                    *ma = ((luma * a) * 255.0).clamp(0.0, 255.0).ceil() as u8;
                 }
             }
         }
@@ -159,6 +171,48 @@ impl Mask {
             real_width: self.size.width() as usize,
             data: &mut self.data[offset..],
         })
+    }
+
+    /// Loads a PNG file into a `Mask`.
+    ///
+    /// Only grayscale images are supported.
+    #[cfg(feature = "png-format")]
+    pub fn decode_png(data: &[u8]) -> Result<Self, png::DecodingError> {
+        fn make_custom_png_error(msg: &str) -> png::DecodingError {
+            std::io::Error::new(std::io::ErrorKind::Other, msg).into()
+        }
+
+        let mut decoder = png::Decoder::new(data);
+        decoder.set_transformations(png::Transformations::normalize_to_color8());
+        let mut reader = decoder.read_info()?;
+        let mut img_data = vec![0; reader.output_buffer_size()];
+        let info = reader.next_frame(&mut img_data)?;
+
+        if info.bit_depth != png::BitDepth::Eight {
+            return Err(make_custom_png_error("unsupported bit depth"));
+        }
+
+        if info.color_type != png::ColorType::Grayscale {
+            return Err(make_custom_png_error("only grayscale masks are supported"));
+        }
+
+        let size = IntSize::from_wh(info.width, info.height)
+            .ok_or_else(|| make_custom_png_error("invalid image size"))?;
+
+        Mask::from_vec(img_data, size)
+            .ok_or_else(|| make_custom_png_error("failed to create a mask"))
+    }
+
+    /// Loads a PNG file into a `Mask`.
+    ///
+    /// Only grayscale images are supported.
+    #[cfg(feature = "png-format")]
+    pub fn load_png<P: AsRef<std::path::Path>>(path: P) -> Result<Self, png::DecodingError> {
+        // `png::Decoder` is generic over input, which means that it will instance
+        // two copies: one for `&[]` and one for `File`. Which will simply bloat the code.
+        // Therefore we're using only one type for input.
+        let data = std::fs::read(path)?;
+        Self::decode_png(&data)
     }
 
     /// Encodes mask into a PNG data.
@@ -301,6 +355,11 @@ impl Mask {
         for (a, b) in self.data.iter_mut().zip(submask.data.iter()) {
             *a = crate::color::premultiply_u8(*a, *b);
         }
+    }
+
+    /// Inverts the mask.
+    pub fn invert(&mut self) {
+        self.data.iter_mut().for_each(|a| *a = 255 - *a);
     }
 
     /// Clears the mask.

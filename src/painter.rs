@@ -9,7 +9,7 @@ use crate::*;
 use tiny_skia_path::{PathStroker, Scalar, ScreenIntRect, SCALAR_MAX};
 
 use crate::mask::SubMaskRef;
-use crate::pipeline::RasterPipelineBlitter;
+use crate::pipeline::{RasterPipelineBlitter, RasterPipelineBuilder};
 use crate::pixmap::SubPixmapMut;
 use crate::scan;
 
@@ -156,6 +156,13 @@ impl Pixmap {
     ) {
         self.as_mut()
             .draw_pixmap(x, y, pixmap, paint, transform, mask);
+    }
+
+    /// Applies a masks.
+    ///
+    /// See [`PixmapMut::apply_mask`](struct.PixmapMut.html#method.apply_mask) for details.
+    pub fn apply_mask(&mut self, mask: &Mask) {
+        self.as_mut().apply_mask(mask);
     }
 }
 
@@ -488,6 +495,42 @@ impl PixmapMut<'_> {
         };
 
         self.fill_rect(rect, &paint, transform, mask);
+    }
+
+    /// Applies a masks.
+    ///
+    /// When a `Mask` is passed to drawing methods, it will be used to mask-out
+    /// content we're about to draw.
+    /// This method masks-out an already drawn content.
+    /// It's not as fast, but can be useful when a mask is not available during drawing.
+    ///
+    /// This method is similar to filling the whole pixmap with an another,
+    /// mask-like pixmap using the `DestinationOut` blend mode.
+    ///
+    /// `Mask` must have the same size as `Pixmap`. No transform or offset are allowed.
+    pub fn apply_mask(&mut self, mask: &Mask) {
+        if self.size() != mask.size() {
+            log::warn!("Pixmap and Mask are expected to have the same size");
+            return;
+        }
+
+        // Just a dummy.
+        let pixmap_src = PixmapRef::from_bytes(&[0, 0, 0, 0], 1, 1).unwrap();
+
+        let mut p = RasterPipelineBuilder::new();
+        p.push(pipeline::Stage::LoadMaskU8);
+        p.push(pipeline::Stage::LoadDestination);
+        p.push(pipeline::Stage::DestinationIn);
+        p.push(pipeline::Stage::Store);
+        let mut p = p.compile();
+        let rect = self.size().to_screen_int_rect(0, 0);
+        p.run(
+            &rect,
+            pipeline::AAMaskCtx::default(),
+            mask.as_submask().mask_ctx(),
+            pixmap_src,
+            &mut self.as_subpixmap(),
+        );
     }
 }
 

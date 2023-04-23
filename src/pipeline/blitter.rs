@@ -39,7 +39,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
             if mask.size.width() != pixmap.size.width()
                 || mask.size.height() != pixmap.size.height()
             {
-                log::warn!("Pixmap and ClipMask are expected to have the same");
+                log::warn!("Pixmap and Mask are expected to have the same size");
                 return None;
             }
         }

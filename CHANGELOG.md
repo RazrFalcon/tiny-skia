@@ -13,10 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Mask::data`
 - `Mask::data_mut`
 - `Mask::fill_path`
+- `Mask::decode_png`
+- `Mask::load_png`
 - `Mask::encode_png`
 - `Mask::save_png`
+- `Mask::invert`
 - `MaskType`
-- `PremultipliedColorU8::to_premultiplied_color`
+- `Pixmap::apply_mask`
 
 ### Changed
 - Rename `ClipMask` into `Mask`.

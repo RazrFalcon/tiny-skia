@@ -79,6 +79,7 @@ pub enum Stage {
     LoadDestinationU8,
     StoreU8,
     Gather,
+    LoadMaskU8,
     MaskU8,
     ScaleU8,
     LerpU8,

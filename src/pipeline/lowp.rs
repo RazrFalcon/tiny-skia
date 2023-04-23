@@ -83,6 +83,7 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     load_dst_u8,
     store_u8,
     null_fn, // Gather
+    load_mask_u8,
     mask_u8,
     scale_u8,
     lerp_u8,
@@ -321,6 +322,23 @@ pub fn store_u8_tail(p: &mut Pipeline) {
             break;
         }
     }
+
+    p.next_stage();
+}
+
+// Similar to mask_u8, but only loads the mask values without actually masking the pipeline.
+fn load_mask_u8(p: &mut Pipeline) {
+    let offset = p.mask_ctx.offset(p.dx, p.dy);
+
+    let mut c = u16x16::default();
+    for i in 0..p.tail {
+        c.0[i] = u16::from(p.mask_ctx.data[offset + i]);
+    }
+
+    p.r = u16x16::splat(0);
+    p.g = u16x16::splat(0);
+    p.b = u16x16::splat(0);
+    p.a = c;
 
     p.next_stage();
 }
