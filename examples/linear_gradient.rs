@@ -2,6 +2,7 @@ use tiny_skia::*;
 
 fn main() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(100.0, 100.0),
         Point::from_xy(900.0, 900.0),

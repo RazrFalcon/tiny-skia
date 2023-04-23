@@ -16,6 +16,7 @@ fn main() {
     mask.fill_path(&clip_path, FillRule::EvenOdd, true, Transform::default());
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.set_color_rgba8(50, 127, 150, 200);
 
     let mut pixmap = Pixmap::new(500, 500).unwrap();

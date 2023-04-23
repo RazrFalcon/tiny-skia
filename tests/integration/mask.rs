@@ -8,6 +8,7 @@ fn rect() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pixmap = Pixmap::new(100, 100).unwrap();
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
@@ -25,6 +26,7 @@ fn rect_aa() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pixmap = Pixmap::new(100, 100).unwrap();
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
@@ -46,6 +48,7 @@ fn rect_ts() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
     pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&mask));
@@ -64,6 +67,7 @@ fn circle_bottom_right_aa() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
     pixmap.fill_rect(rect, &paint, Transform::identity(), Some(&mask));
@@ -82,6 +86,7 @@ fn stroke() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut stroke = Stroke::default();
     stroke.width = 10.0;
@@ -100,6 +105,8 @@ fn skip_dest() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
+
     pixmap.fill_path(
         &PathBuilder::from_rect(Rect::from_xywh(5.0, 5.0, 60.0, 60.0).unwrap()),
         &paint,
@@ -139,6 +146,7 @@ fn intersect_aa() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pixmap = Pixmap::new(200, 200).unwrap();
     pixmap.fill_rect(
@@ -161,6 +169,7 @@ fn ignore_memset() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255);
+    paint.anti_alias = false;
 
     let mut pixmap = Pixmap::new(100, 100).unwrap();
     pixmap.fill_rect(
@@ -184,6 +193,7 @@ fn ignore_source() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque.
     paint.blend_mode = BlendMode::SourceOver;
+    paint.anti_alias = false;
 
     let mut pixmap = Pixmap::new(100, 100).unwrap();
     pixmap.fill(Color::WHITE);

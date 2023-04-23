@@ -5,6 +5,7 @@ fn do_clip_tiny_skia(aa: bool, bencher: &mut Bencher) {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let path = PathBuilder::from_rect(Rect::from_xywh(0.0, 0.0, 1000.0, 1000.0).unwrap());
 

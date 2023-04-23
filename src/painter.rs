@@ -44,10 +44,9 @@ pub struct Paint<'a> {
     /// Default: SourceOver
     pub blend_mode: BlendMode,
 
-    // TODO: true by default
     /// Enables anti-aliased painting.
     ///
-    /// Default: false
+    /// Default: true
     pub anti_alias: bool,
 
     /// Forces the high quality/precision rendering pipeline.
@@ -74,7 +73,7 @@ impl Default for Paint<'_> {
         Paint {
             shader: Shader::SolidColor(Color::BLACK),
             blend_mode: BlendMode::default(),
-            anti_alias: false,
+            anti_alias: true,
             force_hq_pipeline: false,
         }
     }

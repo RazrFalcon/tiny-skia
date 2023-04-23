@@ -6,6 +6,7 @@ fn rect_tiny_skia(bencher: &mut Bencher) {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let rect = Rect::from_xywh(50.7, 20.1, 812.4, 777.3).unwrap();
 
@@ -386,6 +387,7 @@ fn source_tiny_skia(bencher: &mut Bencher) {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
     paint.blend_mode = BlendMode::Source;
+    paint.anti_alias = false;
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(100.0, 100.0, 900.0, 900.0).unwrap());
 
@@ -473,6 +475,7 @@ fn opaque_tiny_skia(bencher: &mut Bencher) {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255);
+    paint.anti_alias = false;
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(100.0, 100.0, 900.0, 900.0).unwrap());
 

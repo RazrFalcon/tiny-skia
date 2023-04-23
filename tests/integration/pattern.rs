@@ -22,6 +22,7 @@ fn pad_nearest() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Pad,
@@ -44,6 +45,7 @@ fn repeat_nearest() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Repeat,
@@ -66,6 +68,7 @@ fn reflect_nearest() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Reflect,
@@ -90,6 +93,7 @@ fn pad_bicubic() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Pad,
@@ -113,6 +117,7 @@ fn repeat_bicubic() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Repeat,
@@ -136,6 +141,7 @@ fn reflect_bicubic() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Reflect,
@@ -159,6 +165,7 @@ fn filter_nearest_no_ts() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Repeat,
@@ -181,6 +188,7 @@ fn filter_nearest() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Repeat,
@@ -203,6 +211,7 @@ fn filter_bilinear() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Repeat,
@@ -225,6 +234,7 @@ fn filter_bicubic() {
     let triangle = crate_triangle();
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = Pattern::new(
         triangle.as_ref(),
         SpreadMode::Repeat,

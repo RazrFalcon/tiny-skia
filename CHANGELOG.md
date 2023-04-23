@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Drawing on `Mask` using `Mask::fill_path` uses our SIMD pipeline now instead of a scalar code
   that should make it a bit faster.
 - Painting API no longer returns `Option<()>`, but simply adds a warning to the log.
+- `Paint::anti_alias` is set to `true` by default.
 
 ### Removed
 - `Mask::set_path`. Use `Mask::fill_path` instead.

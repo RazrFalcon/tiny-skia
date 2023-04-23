@@ -9,6 +9,7 @@ fn line() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut stroke = Stroke::default();
     stroke.dash = StrokeDash::new(vec![5.0, 10.0], 0.0);
@@ -30,6 +31,7 @@ fn quad() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut stroke = Stroke::default();
     stroke.dash = StrokeDash::new(vec![5.0, 10.0], 0.0);
@@ -51,6 +53,7 @@ fn cubic() {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut stroke = Stroke::default();
     stroke.dash = StrokeDash::new(vec![5.0, 10.0], 0.0);

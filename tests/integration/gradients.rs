@@ -3,6 +3,7 @@ use tiny_skia::*;
 #[test]
 fn two_stops_linear_pad_lq() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(190.0, 190.0),
@@ -26,6 +27,7 @@ fn two_stops_linear_pad_lq() {
 #[test]
 fn two_stops_linear_repeat_lq() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(100.0, 100.0),
@@ -49,6 +51,7 @@ fn two_stops_linear_repeat_lq() {
 #[test]
 fn two_stops_linear_reflect_lq() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(100.0, 100.0),
@@ -72,6 +75,7 @@ fn two_stops_linear_reflect_lq() {
 #[test]
 fn three_stops_evenly_spaced_lq() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(190.0, 190.0),
@@ -97,6 +101,7 @@ fn three_stops_evenly_spaced_lq() {
 #[test]
 fn two_stops_unevenly_spaced_lq() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(190.0, 190.0),
@@ -122,6 +127,7 @@ fn two_stops_unevenly_spaced_lq() {
 fn two_stops_linear_pad_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(190.0, 190.0),
@@ -146,6 +152,7 @@ fn two_stops_linear_pad_hq() {
 fn two_stops_linear_repeat_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(100.0, 100.0),
@@ -170,6 +177,7 @@ fn two_stops_linear_repeat_hq() {
 fn two_stops_linear_reflect_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(100.0, 100.0),
@@ -194,6 +202,7 @@ fn two_stops_linear_reflect_hq() {
 fn three_stops_evenly_spaced_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(190.0, 190.0),
@@ -220,6 +229,7 @@ fn three_stops_evenly_spaced_hq() {
 fn two_stops_unevenly_spaced_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(10.0, 10.0),
         Point::from_xy(190.0, 190.0),
@@ -247,6 +257,7 @@ fn two_stops_unevenly_spaced_hq() {
 #[test]
 fn well_behaved_radial() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
         Point::from_xy(120.0, 80.0),
@@ -271,6 +282,7 @@ fn well_behaved_radial() {
 #[test]
 fn focal_on_circle_radial() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
         Point::from_xy(120.0, 80.0),
@@ -295,6 +307,7 @@ fn focal_on_circle_radial() {
 #[test]
 fn conical_greater_radial() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
         Point::from_xy(120.0, 80.0),
@@ -319,6 +332,7 @@ fn conical_greater_radial() {
 #[test]
 fn simple_radial_lq() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
         Point::from_xy(100.0, 100.0),
@@ -344,6 +358,7 @@ fn simple_radial_lq() {
 fn simple_radial_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
+    paint.anti_alias = false;
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
         Point::from_xy(100.0, 100.0),
@@ -369,6 +384,7 @@ fn simple_radial_hq() {
 fn simple_radial_with_ts_hq() {
     let mut paint = Paint::default();
     paint.force_hq_pipeline = true;
+    paint.anti_alias = false;
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
         Point::from_xy(100.0, 100.0),
@@ -395,6 +411,7 @@ fn simple_radial_with_ts_hq() {
 #[test]
 fn global_opacity() {
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = RadialGradient::new(
         Point::from_xy(100.0, 100.0),
         Point::from_xy(100.0, 100.0),

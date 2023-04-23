@@ -4,6 +4,7 @@ use tiny_skia::*;
 fn horizontal_line() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 10.0);
@@ -21,6 +22,7 @@ fn horizontal_line() {
 fn vertical_line() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 10.0);
@@ -38,6 +40,7 @@ fn vertical_line() {
 fn single_line() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 10.0);
@@ -55,6 +58,7 @@ fn single_line() {
 fn int_rect() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let rect = Rect::from_xywh(10.0, 15.0, 80.0, 70.0).unwrap();
 
@@ -69,6 +73,7 @@ fn int_rect() {
 fn float_rect() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let rect = Rect::from_xywh(10.3, 15.4, 80.5, 70.6).unwrap();
 
@@ -129,6 +134,7 @@ fn float_rect_aa_highp() {
 fn tiny_float_rect() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let rect = Rect::from_xywh(1.3, 1.4, 0.5, 0.6).unwrap();
     let mut pixmap = Pixmap::new(3, 3).unwrap();
@@ -230,6 +236,7 @@ fn float_rect_clip_bottom_right_aa() {
 fn int_rect_with_ts_clip_right() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let rect = Rect::from_xywh(0.0, 0.0, 100.0, 100.0).unwrap();
 
@@ -244,6 +251,7 @@ fn int_rect_with_ts_clip_right() {
 fn open_polygon() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(75.160671, 88.756136);
@@ -265,6 +273,7 @@ fn open_polygon() {
 fn closed_polygon() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(75.160671, 88.756136);
@@ -286,6 +295,7 @@ fn closed_polygon() {
 fn winding_star() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(50.0,  7.5);
@@ -306,6 +316,7 @@ fn winding_star() {
 fn even_odd_star() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(50.0,  7.5);
@@ -326,6 +337,7 @@ fn even_odd_star() {
 fn quad_curve() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 15.0);
@@ -343,6 +355,7 @@ fn quad_curve() {
 fn cubic_curve() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 15.0);
@@ -360,6 +373,7 @@ fn cubic_curve() {
 fn memset2d() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
+    paint.anti_alias = false;
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(10.0, 10.0, 90.0, 90.0).unwrap());
 
@@ -375,6 +389,7 @@ fn memset2d() {
 fn memset2d_out_of_bounds() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque to trigger memset2d.
+    paint.anti_alias = false;
 
     let path = PathBuilder::from_rect(Rect::from_ltrb(50.0, 50.0, 120.0, 120.0).unwrap());
 
@@ -412,6 +427,7 @@ fn fill_aa() {
 fn overflow_in_walk_edges_1() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 20.0);
@@ -427,6 +443,7 @@ fn overflow_in_walk_edges_1() {
 fn clip_line_1() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(50.0, -15.0);
@@ -447,6 +464,7 @@ fn clip_line_1() {
 fn clip_line_2() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     // This strange path forces `line_clipper::clip` to return an empty array.
     // And we're checking that this case is handled correctly.
@@ -468,6 +486,7 @@ fn clip_line_2() {
 fn clip_quad() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(10.0, 85.0);
@@ -485,6 +504,7 @@ fn clip_quad() {
 fn clip_cubic_1() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     // `line_clipper::clip` produces 2 points for this path.
     let mut pb = PathBuilder::new();
@@ -503,6 +523,7 @@ fn clip_cubic_1() {
 fn clip_cubic_2() {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     // `line_clipper::clip` produces 3 points for this path.
     let mut pb = PathBuilder::new();

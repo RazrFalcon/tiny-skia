@@ -209,6 +209,7 @@ fn tiny_skia(bencher: &mut Bencher) {
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = false;
 
     let mut pb = PathBuilder::new();
     pb.move_to(497.55261, 502.44739);

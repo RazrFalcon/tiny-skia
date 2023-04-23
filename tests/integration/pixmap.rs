@@ -5,7 +5,8 @@ fn clone_rect_1() {
     let mut pixmap = Pixmap::new(200, 200).unwrap();
 
     let mut paint = Paint::default();
-    paint.set_color_rgba8(50, 127, 150, 200);    paint.anti_alias = true;
+    paint.set_color_rgba8(50, 127, 150, 200);
+    paint.anti_alias = true;
 
     pixmap.fill_path(
         &PathBuilder::from_circle(100.0, 100.0, 80.0).unwrap(),
@@ -81,6 +82,7 @@ fn draw_pixmap() {
     let sub_pixmap = {
         let mut paint = Paint::default();
         paint.set_color_rgba8(50, 127, 150, 200);
+        paint.anti_alias = false;
 
         let rect = Rect::from_xywh(0.0, 50.0, 100.0, 50.0).unwrap();
 

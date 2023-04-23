@@ -10,6 +10,7 @@ fn two_stops_linear_tiny_skia(
 
     let mut paint = Paint::default();
     paint.force_hq_pipeline = hq;
+    paint.anti_alias = false;
     paint.shader = LinearGradient::new(
         Point::from_xy(100.0, 100.0),
         Point::from_xy(900.0, 900.0),
@@ -534,6 +535,7 @@ fn simple_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = RadialGradient::new(
         Point::from_xy(500.0, 500.0),
         Point::from_xy(500.0, 500.0),
@@ -687,6 +689,7 @@ fn two_point_radial_tiny_skia(bencher: &mut Bencher) {
     use tiny_skia::*;
 
     let mut paint = Paint::default();
+    paint.anti_alias = false;
     paint.shader = RadialGradient::new(
         Point::from_xy(400.0, 400.0),
         Point::from_xy(500.0, 500.0),
