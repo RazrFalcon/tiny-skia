@@ -6,7 +6,7 @@
 
 use tiny_skia_path::ScreenIntRect;
 
-use crate::{BlendMode, LengthU32, Paint, PixmapRef, PremultipliedColorU8, Shader};
+use crate::{BlendMode, Color, LengthU32, Paint, PixmapRef, PremultipliedColorU8, Shader};
 use crate::{ALPHA_U8_OPAQUE, ALPHA_U8_TRANSPARENT};
 
 use crate::alpha_runs::AlphaRun;
@@ -25,6 +25,7 @@ pub struct RasterPipelineBlitter<'a, 'b: 'a> {
     blit_anti_h_rp: RasterPipeline,
     blit_rect_rp: RasterPipeline,
     blit_mask_rp: RasterPipeline,
+    is_mask: bool,
 }
 
 impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
@@ -180,6 +181,49 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
             blit_anti_h_rp,
             blit_rect_rp,
             blit_mask_rp,
+            is_mask: false,
+        })
+    }
+
+    pub fn new_mask(pixmap: &'a mut SubPixmapMut<'b>) -> Option<Self> {
+        let color = Color::WHITE.premultiply();
+
+        let memset2d_color = Some(color.to_color_u8());
+
+        let blit_anti_h_rp = {
+            let mut p = RasterPipelineBuilder::new();
+            p.push_uniform_color(color);
+            p.push(pipeline::Stage::LoadDestinationU8);
+            p.push(pipeline::Stage::Lerp1Float);
+            p.push(pipeline::Stage::StoreU8);
+            p.compile()
+        };
+
+        let blit_rect_rp = {
+            let mut p = RasterPipelineBuilder::new();
+            p.push_uniform_color(color);
+            p.push(pipeline::Stage::StoreU8);
+            p.compile()
+        };
+
+        let blit_mask_rp = {
+            let mut p = RasterPipelineBuilder::new();
+            p.push_uniform_color(color);
+            p.push(pipeline::Stage::LoadDestinationU8);
+            p.push(pipeline::Stage::LerpU8);
+            p.push(pipeline::Stage::StoreU8);
+            p.compile()
+        };
+
+        Some(RasterPipelineBlitter {
+            mask: None,
+            pixmap_src: PixmapRef::from_bytes(&[0, 0, 0, 0], 1, 1).unwrap(),
+            pixmap,
+            memset2d_color,
+            blit_anti_h_rp,
+            blit_rect_rp,
+            blit_mask_rp,
+            is_mask: true,
         })
     }
 }
@@ -263,14 +307,26 @@ impl Blitter for RasterPipelineBlitter<'_, '_> {
 
     fn blit_rect(&mut self, rect: &ScreenIntRect) {
         if let Some(c) = self.memset2d_color {
-            for y in 0..rect.height() {
-                let start = self
-                    .pixmap
-                    .offset(rect.x() as usize, (rect.y() + y) as usize);
-                let end = start + rect.width() as usize;
-                self.pixmap.pixels_mut()[start..end]
-                    .iter_mut()
-                    .for_each(|p| *p = c);
+            if self.is_mask {
+                for y in 0..rect.height() {
+                    let start = self
+                        .pixmap
+                        .offset(rect.x() as usize, (rect.y() + y) as usize);
+                    let end = start + rect.width() as usize;
+                    self.pixmap.data[start..end]
+                        .iter_mut()
+                        .for_each(|p| *p = c.alpha());
+                }
+            } else {
+                for y in 0..rect.height() {
+                    let start = self
+                        .pixmap
+                        .offset(rect.x() as usize, (rect.y() + y) as usize);
+                    let end = start + rect.width() as usize;
+                    self.pixmap.pixels_mut()[start..end]
+                        .iter_mut()
+                        .for_each(|p| *p = c);
+                }
             }
 
             return;

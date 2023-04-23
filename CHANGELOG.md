@@ -5,9 +5,30 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `Mask::from_vec`
+- `Mask::from_pixmap` to convert `Pixmap` into `Mask` by extracting alpha or luminosity.
+- `Mask::width`
+- `Mask::height`
+- `Mask::data`
+- `Mask::data_mut`
+- `Mask::fill_path`
+- `Mask::encode_png`
+- `Mask::save_png`
+- `MaskType`
+- `PremultipliedColorU8::to_premultiplied_color`
+
 ### Changed
-- Painting API no longer returns `Option<()>`, but simply adds a warning to the log.
 - Rename `ClipMask` into `Mask`.
+- `Mask` is closer to a 8bit (A8) `Pixmap` now, rather than being its own thing.
+- `Mask::new` requires width and height arguments now.
+- Drawing on `Mask` using `Mask::fill_path` uses our SIMD pipeline now instead of a scalar code
+  that should make it a bit faster.
+- Painting API no longer returns `Option<()>`, but simply adds a warning to the log.
+
+### Removed
+- `Mask::set_path`. Use `Mask::fill_path` instead.
+- `Mask::default()`. Mask cannot be empty anymore.
 
 ## [0.8.4] - 2023-04-22
 ### Added

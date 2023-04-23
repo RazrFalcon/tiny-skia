@@ -3,8 +3,8 @@ use tiny_skia::*;
 #[test]
 fn rect() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
-    let mut mask = Mask::new();
-    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new(100, 100).unwrap();
+    mask.fill_path(&clip_path, FillRule::Winding, false, Transform::default());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -20,8 +20,8 @@ fn rect() {
 #[test]
 fn rect_aa() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.5, 10.0, 80.0, 80.5).unwrap());
-    let mut mask = Mask::new();
-    mask.set_path(100, 100, &clip_path, FillRule::Winding, true);
+    let mut mask = Mask::new(100, 100).unwrap();
+    mask.fill_path(&clip_path, FillRule::Winding, true, Transform::default());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -41,8 +41,8 @@ fn rect_ts() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
     let clip_path = clip_path.transform(Transform::from_row(1.0, -0.3, 0.0, 1.0, 0.0, 15.0)).unwrap();
 
-    let mut mask = Mask::new();
-    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new(100, 100).unwrap();
+    mask.fill_path(&clip_path, FillRule::Winding, false, Transform::default());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -59,8 +59,8 @@ fn circle_bottom_right_aa() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
 
     let clip_path = PathBuilder::from_circle(100.0, 100.0, 50.0).unwrap();
-    let mut mask = Mask::new();
-    mask.set_path(100, 100, &clip_path, FillRule::Winding, true);
+    let mut mask = Mask::new(100, 100).unwrap();
+    mask.fill_path(&clip_path, FillRule::Winding, true, Transform::default());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -77,8 +77,8 @@ fn stroke() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
 
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
-    let mut mask = Mask::new();
-    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new(100, 100).unwrap();
+    mask.fill_path(&clip_path, FillRule::Winding, false, Transform::default());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -118,8 +118,8 @@ fn skip_dest() {
     );
 
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(40.0, 40.0, 40.0, 40.0).unwrap());
-    let mut mask = Mask::new();
-    mask.set_path(100, 100, &clip_path, FillRule::Winding, true);
+    let mut mask = Mask::new(100, 100).unwrap();
+    mask.fill_path(&clip_path, FillRule::Winding, true, Transform::default());
 
     pixmap.draw_pixmap(0, 0, pixmap2.as_ref(), &PixmapPaint::default(),
                                 Transform::identity(), Some(&mask));
@@ -133,9 +133,9 @@ fn intersect_aa() {
     let circle1 = PathBuilder::from_circle(75.0, 75.0, 50.0).unwrap();
     let circle2 = PathBuilder::from_circle(125.0, 125.0, 50.0).unwrap();
 
-    let mut mask = Mask::new();
-    mask.set_path(200, 200, &circle1, FillRule::Winding, true);
-    mask.intersect_path(&circle2, FillRule::Winding, true);
+    let mut mask = Mask::new(200, 200).unwrap();
+    mask.fill_path(&circle1, FillRule::Winding, true, Transform::default());
+    mask.intersect_path(&circle2, FillRule::Winding, true, Transform::default());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
@@ -156,8 +156,8 @@ fn intersect_aa() {
 fn ignore_memset() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
 
-    let mut mask = Mask::new();
-    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new(100, 100).unwrap();
+    mask.fill_path(&clip_path, FillRule::Winding, false, Transform::default());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255);
@@ -178,8 +178,8 @@ fn ignore_memset() {
 fn ignore_source() {
     let clip_path = PathBuilder::from_rect(Rect::from_xywh(10.0, 10.0, 80.0, 80.0).unwrap());
 
-    let mut mask = Mask::new();
-    mask.set_path(100, 100, &clip_path, FillRule::Winding, false);
+    let mut mask = Mask::new(100, 100).unwrap();
+    mask.fill_path(&clip_path, FillRule::Winding, false, Transform::default());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 255); // Must be opaque.

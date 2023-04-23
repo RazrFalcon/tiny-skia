@@ -80,6 +80,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     seed_shader,
     load_dst,
     store,
+    load_dst_u8,
+    store_u8,
     null_fn, // Gather
     mask_u8,
     scale_u8,
@@ -262,6 +264,64 @@ pub fn store(p: &mut Pipeline) {
 
 pub fn store_tail(p: &mut Pipeline) {
     store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, p.pixmap.slice_at_xy(p.dx, p.dy));
+    p.next_stage();
+}
+
+pub fn load_dst_u8(p: &mut Pipeline) {
+    load_8(p.pixmap.slice16_mask_at_xy(p.dx, p.dy), &mut p.da);
+    p.next_stage();
+}
+
+pub fn load_dst_u8_tail(p: &mut Pipeline) {
+    // Fill a dummy array with `tail` values. `tail` is always in a 1..STAGE_WIDTH-1 range.
+    // This way we can reuse the `load_8888__` method and remove any branches.
+    let data = p.pixmap.slice_mask_at_xy(p.dx, p.dy);
+    let mut tmp = [0u8; STAGE_WIDTH];
+    tmp[0..p.tail].copy_from_slice(&data[0..p.tail]);
+    load_8(&tmp, &mut p.da);
+
+    p.next_stage();
+}
+
+pub fn store_u8(p: &mut Pipeline) {
+    let data = p.pixmap.slice16_mask_at_xy(p.dx, p.dy);
+    let a = p.a.as_slice();
+
+    data[ 0] = a[ 0] as u8;
+    data[ 1] = a[ 1] as u8;
+    data[ 2] = a[ 2] as u8;
+    data[ 3] = a[ 3] as u8;
+    data[ 4] = a[ 4] as u8;
+    data[ 5] = a[ 5] as u8;
+    data[ 6] = a[ 6] as u8;
+    data[ 7] = a[ 7] as u8;
+    data[ 8] = a[ 8] as u8;
+    data[ 9] = a[ 9] as u8;
+    data[10] = a[10] as u8;
+    data[11] = a[11] as u8;
+    data[12] = a[12] as u8;
+    data[13] = a[13] as u8;
+    data[14] = a[14] as u8;
+    data[15] = a[15] as u8;
+
+    p.next_stage();
+}
+
+pub fn store_u8_tail(p: &mut Pipeline) {
+    let data = p.pixmap.slice_mask_at_xy(p.dx, p.dy);
+    let a = p.a.as_slice();
+
+    // This is better than `for i in 0..tail`, because this way the compiler
+    // knows that we have only 16 steps and slices access is guarantee to be valid.
+    // This removes bounds checking and a possible panic call.
+    for i in 0..STAGE_WIDTH {
+        data[i] = a[i] as u8;
+
+        if i + 1 == p.tail {
+            break;
+        }
+    }
+
     p.next_stage();
 }
 
@@ -737,6 +797,16 @@ fn store_8888_tail(
             break;
         }
     }
+}
+
+#[inline(always)]
+fn load_8(data: &[u8; STAGE_WIDTH], a: &mut u16x16) {
+    *a = u16x16([
+        data[ 0] as u16, data[ 1] as u16, data[ 2] as u16, data[ 3] as u16,
+        data[ 4] as u16, data[ 5] as u16, data[ 6] as u16, data[ 7] as u16,
+        data[ 8] as u16, data[ 9] as u16, data[10] as u16, data[11] as u16,
+        data[12] as u16, data[13] as u16, data[14] as u16, data[15] as u16,
+    ]);
 }
 
 #[inline(always)]

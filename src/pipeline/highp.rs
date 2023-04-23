@@ -67,6 +67,8 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     seed_shader,
     load_dst,
     store,
+    load_dst_u8,
+    store_u8,
     gather,
     mask_u8,
     scale_u8,
@@ -265,6 +267,28 @@ pub fn store(p: &mut Pipeline) {
     p.next_stage();
 }
 
+pub fn store_tail(p: &mut Pipeline) {
+    store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, p.pixmap_dst.slice_at_xy(p.dx, p.dy));
+    p.next_stage();
+}
+
+// Currently, all mask/A8 pixmaps are handled by lowp.
+pub fn load_dst_u8(_: &mut Pipeline) {
+    // unreachable
+}
+
+pub fn load_dst_u8_tail(_: &mut Pipeline) {
+    // unreachable
+}
+
+pub fn store_u8(_: &mut Pipeline) {
+    // unreachable
+}
+
+pub fn store_u8_tail(_: &mut Pipeline) {
+    // unreachable
+}
+
 pub fn gather(p: &mut Pipeline) {
     let ix = gather_ix(p.pixmap_src, p.r, p.g);
     load_8888(&p.pixmap_src.gather(ix), &mut p.r, &mut p.g, &mut p.b, &mut p.a);
@@ -287,11 +311,6 @@ fn gather_ix(pixmap: PixmapRef, mut x: f32x8, mut y: f32x8) -> u32x8 {
 fn ulp_sub(v: f32) -> f32 {
     // Somewhat similar to v - f32::EPSILON
     bytemuck::cast::<u32, f32>(bytemuck::cast::<f32, u32>(v) - 1)
-}
-
-pub fn store_tail(p: &mut Pipeline) {
-    store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, p.pixmap_dst.slice_at_xy(p.dx, p.dy));
-    p.next_stage();
 }
 
 fn mask_u8(p: &mut Pipeline) {

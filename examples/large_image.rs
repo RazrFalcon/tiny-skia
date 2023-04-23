@@ -32,8 +32,8 @@ fn main() {
         pb.finish().unwrap()
     };
 
-    let mut clip = Mask::new();
-    clip.set_path(20000, 20000, &clip_path, FillRule::Winding, true);
+    let mut mask = Mask::new(20000, 20000).unwrap();
+    mask.fill_path(&clip_path, FillRule::Winding, true, Transform::default());
 
     let mut paint = Paint::default();
     paint.set_color_rgba8(90, 175, 100, 150);
@@ -48,7 +48,7 @@ fn main() {
         &paint,
         FillRule::Winding,
         Transform::default(),
-        Some(&clip),
+        Some(&mask),
     );
 
     paint.set_color_rgba8(220, 140, 75, 180);

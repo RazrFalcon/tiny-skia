@@ -6,12 +6,12 @@ fn do_clip_tiny_skia(aa: bool, bencher: &mut Bencher) {
     let mut paint = Paint::default();
     paint.set_color_rgba8(50, 127, 150, 200);
 
-    let path = tiny_skia::PathBuilder::from_rect(Rect::from_xywh(0.0, 0.0, 1000.0, 1000.0).unwrap());
+    let path = PathBuilder::from_rect(Rect::from_xywh(0.0, 0.0, 1000.0, 1000.0).unwrap());
 
     let mut pixmap = Pixmap::new(1000, 1000).unwrap();
     bencher.iter(|| {
         let clip_path = {
-            let mut pb = tiny_skia::PathBuilder::new();
+            let mut pb = PathBuilder::new();
             pb.push_rect(100.0, 100.0, 800.0, 800.0);
             pb.push_rect(300.0, 300.0, 400.0, 400.0);
             pb.finish().unwrap()
@@ -19,8 +19,8 @@ fn do_clip_tiny_skia(aa: bool, bencher: &mut Bencher) {
 
         let clip_path = clip_path.transform(Transform::from_row(1.0, -0.5, 0.0, 1.0, 0.0, 300.0)).unwrap();
 
-        let mut mask = Mask::new();
-        mask.set_path(1000, 1000, &clip_path, FillRule::EvenOdd, aa);
+        let mut mask = Mask::new(1000, 1000).unwrap();
+        mask.fill_path(&clip_path, FillRule::EvenOdd, aa, Transform::identity());
 
         // Do not use fill_rect, because it is very slow by itself.
         pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::identity(), Some(&mask));

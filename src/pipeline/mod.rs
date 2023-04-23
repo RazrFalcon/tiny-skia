@@ -50,12 +50,11 @@ use arrayvec::ArrayVec;
 
 use tiny_skia_path::{NormalizedF32, ScreenIntRect};
 
-use crate::{Color, LengthU32, PremultipliedColor, PremultipliedColorU8, SpreadMode};
+use crate::{Color, PremultipliedColor, PremultipliedColorU8, SpreadMode};
 use crate::{PixmapRef, Transform};
 
 pub use blitter::RasterPipelineBlitter;
 
-use crate::math::LENGTH_U32_ONE;
 use crate::pixmap::SubPixmapMut;
 use crate::wide::u32x8;
 
@@ -77,6 +76,8 @@ pub enum Stage {
     SeedShader,
     LoadDestination,
     Store,
+    LoadDestinationU8,
+    StoreU8,
     Gather,
     MaskU8,
     ScaleU8,
@@ -162,6 +163,12 @@ impl<'a> SubPixmapMut<'a> {
     }
 
     #[inline(always)]
+    pub(crate) fn slice_mask_at_xy(&mut self, dx: usize, dy: usize) -> &mut [u8] {
+        let offset = self.offset(dx, dy);
+        &mut self.data[offset..]
+    }
+
+    #[inline(always)]
     pub(crate) fn slice4_at_xy(
         &mut self,
         dx: usize,
@@ -177,6 +184,15 @@ impl<'a> SubPixmapMut<'a> {
         dy: usize,
     ) -> &mut [PremultipliedColorU8; lowp::STAGE_WIDTH] {
         arrayref::array_mut_ref!(self.pixels_mut(), self.offset(dx, dy), lowp::STAGE_WIDTH)
+    }
+
+    #[inline(always)]
+    pub(crate) fn slice16_mask_at_xy(
+        &mut self,
+        dx: usize,
+        dy: usize,
+    ) -> &mut [u8; lowp::STAGE_WIDTH] {
+        arrayref::array_mut_ref!(self.data, self.offset(dx, dy), lowp::STAGE_WIDTH)
     }
 }
 
@@ -204,14 +220,14 @@ impl AAMaskCtx {
 #[derive(Copy, Clone, Debug)]
 pub struct MaskCtx<'a> {
     pub data: &'a [u8],
-    pub stride: LengthU32,
+    pub real_width: u32,
 }
 
 impl Default for MaskCtx<'_> {
     fn default() -> Self {
         MaskCtx {
             data: &[],
-            stride: LENGTH_U32_ONE,
+            real_width: 0,
         }
     }
 }
@@ -219,7 +235,7 @@ impl Default for MaskCtx<'_> {
 impl MaskCtx<'_> {
     #[inline(always)]
     fn offset(&self, dx: usize, dy: usize) -> usize {
-        self.stride.get() as usize * dy + dx
+        self.real_width as usize * dy + dx
     }
 }
 
@@ -400,6 +416,10 @@ impl RasterPipelineBuilder {
                     *fun = highp::load_dst_tail as highp::StageFn;
                 } else if highp::fn_ptr(*fun) == highp::fn_ptr(highp::store) {
                     *fun = highp::store_tail as highp::StageFn;
+                } else if highp::fn_ptr(*fun) == highp::fn_ptr(highp::load_dst_u8) {
+                    *fun = highp::load_dst_u8_tail as highp::StageFn;
+                } else if highp::fn_ptr(*fun) == highp::fn_ptr(highp::store_u8) {
+                    *fun = highp::store_u8_tail as highp::StageFn;
                 } else if highp::fn_ptr(*fun) == highp::fn_ptr(highp::source_over_rgba) {
                     // SourceOverRgba calls load/store manually, without the pipeline,
                     // therefore we have to switch it too.
@@ -429,6 +449,10 @@ impl RasterPipelineBuilder {
                     *fun = lowp::load_dst_tail as lowp::StageFn;
                 } else if lowp::fn_ptr(*fun) == lowp::fn_ptr(lowp::store) {
                     *fun = lowp::store_tail as lowp::StageFn;
+                } else if lowp::fn_ptr(*fun) == lowp::fn_ptr(lowp::load_dst_u8) {
+                    *fun = lowp::load_dst_u8_tail as lowp::StageFn;
+                } else if lowp::fn_ptr(*fun) == lowp::fn_ptr(lowp::store_u8) {
+                    *fun = lowp::store_u8_tail as lowp::StageFn;
                 } else if lowp::fn_ptr(*fun) == lowp::fn_ptr(lowp::source_over_rgba) {
                     // SourceOverRgba calls load/store manually, without the pipeline,
                     // therefore we have to switch it too.

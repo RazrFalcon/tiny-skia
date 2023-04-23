@@ -44,6 +44,7 @@ pub struct Paint<'a> {
     /// Default: SourceOver
     pub blend_mode: BlendMode,
 
+    // TODO: true by default
     /// Enables anti-aliased painting.
     ///
     /// Default: false
@@ -539,7 +540,7 @@ fn treat_as_hairline(paint: &Paint, stroke: &Stroke, mut ts: Transform) -> Optio
 /// small constants (e.g. 2,3,4). To try to preflight issues where these optionations could turn
 /// finite path values into infinities (or NaNs), we allow the upper drawing code to reject
 /// the path if its bounds (in device coordinates) is too close to max float.
-fn is_too_big_for_math(path: &Path) -> bool {
+pub(crate) fn is_too_big_for_math(path: &Path) -> bool {
     // This value is just a guess. smaller is safer, but we don't want to reject largish paths
     // that we don't have to.
     const SCALE_DOWN_TO_ALLOW_FOR_SMALL_MULTIPLIES: f32 = 0.25;

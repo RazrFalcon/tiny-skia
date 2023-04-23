@@ -162,6 +162,18 @@ impl PremultipliedColorU8 {
         self.0
     }
 
+    /// Returns `PremultipliedColorU8` as `PremultipliedColor`.
+    ///
+    /// No conversion is happening here, except `u8` to `f32` normalization.
+    pub fn to_premultiplied_color(&self) -> PremultipliedColor {
+        PremultipliedColor {
+            r: NormalizedF32::new_u8(self.red()),
+            g: NormalizedF32::new_u8(self.green()),
+            b: NormalizedF32::new_u8(self.blue()),
+            a: NormalizedF32::new_u8(self.alpha()),
+        }
+    }
+
     /// Returns a demultiplied color.
     pub fn demultiply(&self) -> ColorU8 {
         let alpha = self.alpha();
