@@ -256,7 +256,7 @@ fn mask_from_luma() {
     let mut pixmap = Pixmap::new(100, 100).unwrap();
     pixmap.fill_path(&path, &paint, FillRule::Winding, Transform::default(), None);
 
-    let mask = Mask::from_pixmap(pixmap.as_ref(), MaskType::Luminosity);
+    let mask = Mask::from_pixmap(pixmap.as_ref(), MaskType::Luminance);
 
     let expected = Mask::load_png("tests/images/mask/mask-from-luma.png").unwrap();
     assert_eq!(mask, expected);

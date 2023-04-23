@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `Mask::from_vec`
-- `Mask::from_pixmap` to convert `Pixmap` into `Mask` by extracting alpha or luminosity.
+- `Mask::from_pixmap` to convert `Pixmap` into `Mask` by extracting alpha or luminance.
 - `Mask::width`
 - `Mask::height`
 - `Mask::data`

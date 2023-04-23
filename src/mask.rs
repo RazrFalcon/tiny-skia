@@ -22,10 +22,10 @@ use crate::{FillRule, PixmapRef};
 pub enum MaskType {
     /// Transfers only the Alpha channel from `Pixmap` to `Mask`.
     Alpha,
-    /// Transfers RGB channels as perceived luminosity from `Pixmap` to `Mask`.
+    /// Transfers RGB channels as luminance from `Pixmap` to `Mask`.
     ///
     /// Formula: `Y = 0.2126 * R + 0.7152 * G + 0.0722 * B`
-    Luminosity,
+    Luminance,
 }
 
 /// A mask.
@@ -69,7 +69,7 @@ impl Mask {
                     *a = p.alpha();
                 }
             }
-            MaskType::Luminosity => {
+            MaskType::Luminance => {
                 for (p, ma) in pixmap.pixels().iter().zip(mask.data.as_mut_slice()) {
                     // Normalize.
                     let mut r = f32::from(p.red()) / 255.0;
