@@ -66,7 +66,7 @@ pub use shaders::{LinearGradient, Pattern, RadialGradient, Shader};
 
 pub use tiny_skia_path::{IntRect, Point, Rect, Transform};
 pub use tiny_skia_path::{LineCap, LineJoin, Stroke, StrokeDash};
-pub use tiny_skia_path::{Path, PathBuilder, PathSegment, PathSegmentsIter};
+pub use tiny_skia_path::{Path, PathBuilder, PathSegment, PathSegmentsIter, PathStroker};
 
 /// An integer length that is guarantee to be > 0
 type LengthU32 = core::num::NonZeroU32;
