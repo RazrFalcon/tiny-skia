@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.9.1] - 2023-05-17
 ### Added
 - Reexport `tiny_skia_path::PathStroker` in `tiny-skia`.
 
@@ -181,7 +183,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/RazrFalcon/tiny-skia/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.4...v0.9.0
 [0.8.4]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.2...v0.8.3
