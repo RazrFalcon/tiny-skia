@@ -285,17 +285,12 @@ impl PathBuilder {
     /// Adds a rectangle contour.
     ///
     /// The contour is closed and has a clock-wise direction.
-    ///
-    /// Does nothing when:
-    /// - any value is not finite or really large
-    pub fn push_rect(&mut self, x: f32, y: f32, w: f32, h: f32) {
-        if let Some(rect) = Rect::from_xywh(x, y, w, h) {
-            self.move_to(rect.left(), rect.top());
-            self.line_to(rect.right(), rect.top());
-            self.line_to(rect.right(), rect.bottom());
-            self.line_to(rect.left(), rect.bottom());
-            self.close();
-        }
+    pub fn push_rect(&mut self, rect: Rect) {
+        self.move_to(rect.left(), rect.top());
+        self.line_to(rect.right(), rect.top());
+        self.line_to(rect.right(), rect.bottom());
+        self.line_to(rect.left(), rect.bottom());
+        self.close();
     }
 
     /// Adds an oval contour bounded by the provided rectangle.
@@ -340,7 +335,15 @@ impl PathBuilder {
         }
     }
 
-    pub(crate) fn push_path(&mut self, other: &PathBuilder) {
+    /// Adds a path.
+    pub fn push_path(&mut self, other: &Path) {
+        self.last_move_to_index = self.points.len();
+
+        self.verbs.extend_from_slice(&other.verbs);
+        self.points.extend_from_slice(&other.points);
+    }
+
+    pub(crate) fn push_path_builder(&mut self, other: &PathBuilder) {
         if other.is_empty() {
             return;
         }

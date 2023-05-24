@@ -44,6 +44,7 @@ mod path_builder;
 pub mod path_geometry;
 mod rect;
 mod scalar;
+mod size;
 mod stroker;
 mod transform;
 
@@ -54,6 +55,7 @@ pub use path::*;
 pub use path_builder::*;
 pub use rect::*;
 pub use scalar::*;
+pub use size::*;
 pub use stroker::*;
 pub use transform::*;
 
@@ -322,59 +324,5 @@ impl core::ops::MulAssign for Point {
     fn mul_assign(&mut self, other: Point) {
         self.x *= other.x;
         self.y *= other.y;
-    }
-}
-
-/// An integer size.
-///
-/// # Guarantees
-///
-/// - Width and height are positive and non-zero.
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub struct IntSize {
-    width: LengthU32,
-    height: LengthU32,
-}
-
-impl IntSize {
-    /// Creates a new `IntSize` from width and height.
-    pub fn from_wh(width: u32, height: u32) -> Option<Self> {
-        Some(IntSize {
-            width: LengthU32::new(width)?,
-            height: LengthU32::new(height)?,
-        })
-    }
-
-    /// Returns width.
-    pub fn width(&self) -> u32 {
-        self.width.get()
-    }
-
-    /// Returns height.
-    pub fn height(&self) -> u32 {
-        self.height.get()
-    }
-
-    /// Converts the current size into a `IntRect` at a provided position.
-    pub fn to_int_rect(&self, x: i32, y: i32) -> IntRect {
-        IntRect::from_xywh(x, y, self.width.get(), self.height.get()).unwrap()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn int_size_tests() {
-        assert_eq!(IntSize::from_wh(0, 0), None);
-        assert_eq!(IntSize::from_wh(1, 0), None);
-        assert_eq!(IntSize::from_wh(0, 1), None);
-
-        let size = IntSize::from_wh(3, 4).unwrap();
-        assert_eq!(
-            size.to_int_rect(1, 2),
-            IntRect::from_xywh(1, 2, 3, 4).unwrap()
-        );
     }
 }

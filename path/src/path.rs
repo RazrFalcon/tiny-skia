@@ -55,11 +55,6 @@ impl Path {
         self.verbs.len()
     }
 
-    /// Checks if path is empty.
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
     /// Returns the bounds of the path's points.
     ///
     /// The value is already calculated.

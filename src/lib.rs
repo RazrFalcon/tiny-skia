@@ -65,7 +65,7 @@ pub use pixmap::{Pixmap, PixmapMut, PixmapRef, BYTES_PER_PIXEL};
 pub use shaders::{FilterQuality, GradientStop, PixmapPaint, SpreadMode};
 pub use shaders::{LinearGradient, Pattern, RadialGradient, Shader};
 
-pub use tiny_skia_path::{IntRect, Point, Rect, Transform};
+pub use tiny_skia_path::{IntRect, IntSize, NonZeroRect, Point, Rect, Size, Transform};
 pub use tiny_skia_path::{LineCap, LineJoin, Stroke, StrokeDash};
 pub use tiny_skia_path::{Path, PathBuilder, PathSegment, PathSegmentsIter, PathStroker};
 

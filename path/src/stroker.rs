@@ -900,7 +900,7 @@ impl PathStroker {
             }
 
             if !self.cusper.is_empty() {
-                self.outer.push_path(&self.cusper);
+                self.outer.push_path_builder(&self.cusper);
                 self.cusper.clear();
             }
         }

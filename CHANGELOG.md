@@ -5,8 +5,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `PathBuilder::push_path`
+- `NonZeroRect`
+- `Size`
+- `Rect::transform`
+- `Rect::bbox_transform`
+- `Transform::from_bbox`
+- `Transform::is_valid`
+- `Transform::get_scale`
+- `Transform::pre_rotate`
+- `Transform::post_rotate`
+- `Transform::pre_rotate_at`
+- `Transform::post_rotate_at`
+- `Transform::map_point`
+
+### Changed
+- `PathBuilder::push_rect` accepts `Rect` and not `f32` numbers now.
+
 ### Removed
 - `tiny_skia_path::ScreenIntRect`. It become private.
+- `Path::is_empty`. `Path` cannot be empty by design.
 
 ### Removed
 - `ColorU8::get` and `PremultipliedColorU8::get`. Use the getters instead.

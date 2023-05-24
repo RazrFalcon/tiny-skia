@@ -169,6 +169,7 @@ impl Pixmap {
 }
 
 impl PixmapMut<'_> {
+    // TODO: accept NonZeroRect?
     /// Draws a filled rectangle onto the pixmap.
     ///
     /// This function is usually slower than filling a rectangular path,

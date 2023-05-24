@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::Point;
+use crate::{NonZeroRect, Point};
 
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO};
 
@@ -76,6 +76,8 @@ impl Transform {
     }
 
     /// Creates a new rotating `Transform`.
+    ///
+    /// `angle` in degrees.
     pub fn from_rotate(angle: f32) -> Self {
         let v = angle.to_radians();
         let a = v.cos();
@@ -86,12 +88,20 @@ impl Transform {
     }
 
     /// Creates a new rotating `Transform` at the specified position.
+    ///
+    /// `angle` in degrees.
     pub fn from_rotate_at(angle: f32, tx: f32, ty: f32) -> Self {
         let mut ts = Self::default();
         ts = ts.pre_translate(tx, ty);
         ts = ts.pre_concat(Transform::from_rotate(angle));
         ts = ts.pre_translate(-tx, -ty);
         ts
+    }
+
+    /// Converts `Rect` into a bounding box `Transform`.
+    #[inline]
+    pub fn from_bbox(bbox: NonZeroRect) -> Self {
+        Transform::from_row(bbox.width(), 0.0, 0.0, bbox.height(), bbox.x(), bbox.y())
     }
 
     /// Checks that transform is finite.
@@ -104,60 +114,65 @@ impl Transform {
             && self.ty.is_finite()
     }
 
+    /// Checks that transform is finite and has non-zero scale.
+    pub fn is_valid(&self) -> bool {
+        if self.is_finite() {
+            let (sx, sy) = self.get_scale();
+            if sx.is_nearly_zero() || sy.is_nearly_zero() {
+                false
+            } else {
+                true
+            }
+        } else {
+            false
+        }
+    }
+
     /// Checks that transform is identity.
-    ///
-    /// The transform type is detected on creation, so this method is essentially free.
     pub fn is_identity(&self) -> bool {
         *self == Transform::default()
     }
 
     /// Checks that transform is scale-only.
-    ///
-    /// The transform type is detected on creation, so this method is essentially free.
     pub fn is_scale(&self) -> bool {
         self.has_scale() && !self.has_skew() && !self.has_translate()
     }
 
     /// Checks that transform is skew-only.
-    ///
-    /// The transform type is detected on creation, so this method is essentially free.
     pub fn is_skew(&self) -> bool {
         !self.has_scale() && self.has_skew() && !self.has_translate()
     }
 
     /// Checks that transform is translate-only.
-    ///
-    /// The transform type is detected on creation, so this method is essentially free.
     pub fn is_translate(&self) -> bool {
         !self.has_scale() && !self.has_skew() && self.has_translate()
     }
 
     /// Checks that transform contains only scale and translate.
-    ///
-    /// The transform type is detected on creation, so this method is essentially free.
     pub fn is_scale_translate(&self) -> bool {
         (self.has_scale() || self.has_translate()) && !self.has_skew()
     }
 
     /// Checks that transform contains a scale part.
-    ///
-    /// The transform type is detected on creation, so this method is essentially free.
     pub fn has_scale(&self) -> bool {
         self.sx != 1.0 || self.sy != 1.0
     }
 
     /// Checks that transform contains a skew part.
-    ///
-    /// The transform type is detected on creation, so this method is essentially free.
     pub fn has_skew(&self) -> bool {
         self.kx != 0.0 || self.ky != 0.0
     }
 
     /// Checks that transform contains a translate part.
-    ///
-    /// The transform type is detected on creation, so this method is essentially free.
     pub fn has_translate(&self) -> bool {
         self.tx != 0.0 || self.ty != 0.0
+    }
+
+    /// Returns transform's scale part.
+    pub fn get_scale(&self) -> (f32, f32) {
+        let x_scale = (self.sx * self.sx + self.kx * self.kx).sqrt();
+        let y_scale = (self.ky * self.ky + self.sy * self.sy).sqrt();
+        (x_scale, y_scale)
     }
 
     /// Pre-scales the current transform.
@@ -184,6 +199,38 @@ impl Transform {
         self.post_concat(Transform::from_translate(tx, ty))
     }
 
+    /// Pre-rotates the current transform.
+    ///
+    /// `angle` in degrees.
+    #[must_use]
+    pub fn pre_rotate(&self, angle: f32) -> Self {
+        self.pre_concat(Transform::from_rotate(angle))
+    }
+
+    /// Post-rotates the current transform.
+    ///
+    /// `angle` in degrees.
+    #[must_use]
+    pub fn post_rotate(&self, angle: f32) -> Self {
+        self.post_concat(Transform::from_rotate(angle))
+    }
+
+    /// Pre-rotates the current transform by the specified position.
+    ///
+    /// `angle` in degrees.
+    #[must_use]
+    pub fn pre_rotate_at(&self, angle: f32, tx: f32, ty: f32) -> Self {
+        self.pre_concat(Transform::from_rotate_at(angle, tx, ty))
+    }
+
+    /// Post-rotates the current transform by the specified position.
+    ///
+    /// `angle` in degrees.
+    #[must_use]
+    pub fn post_rotate_at(&self, angle: f32, tx: f32, ty: f32) -> Self {
+        self.post_concat(Transform::from_rotate_at(angle, tx, ty))
+    }
+
     /// Pre-concats the current transform.
     #[must_use]
     pub fn pre_concat(&self, other: Self) -> Self {
@@ -198,6 +245,24 @@ impl Transform {
 
     pub(crate) fn from_sin_cos(sin: f32, cos: f32) -> Self {
         Transform::from_row(cos, sin, -sin, cos, 0.0, 0.0)
+    }
+
+    /// Transforms a points using the current transform.
+    pub fn map_point(&self, point: &mut Point) {
+        if self.is_identity() {
+            // Do nothing.
+        } else if self.is_translate() {
+            point.x += self.tx;
+            point.y += self.ty;
+        } else if self.is_scale_translate() {
+            point.x = point.x * self.sx + self.tx;
+            point.y = point.y * self.sy + self.ty;
+        } else {
+            let x = point.x * self.sx + point.y * self.kx + self.tx;
+            let y = point.x * self.ky + point.y * self.sy + self.ty;
+            point.x = x;
+            point.y = y;
+        }
     }
 
     /// Transforms a slice of points using the current transform.

@@ -5,7 +5,7 @@
 
 use core::convert::TryFrom;
 
-use crate::{FiniteF32, IntSize, LengthU32, Point, SaturateRound};
+use crate::{FiniteF32, IntSize, LengthU32, PathBuilder, Point, SaturateRound, Size, Transform};
 
 /// An integer rectangle.
 ///
@@ -87,10 +87,7 @@ impl IntRect {
 
     /// Returns rect's size.
     pub fn size(&self) -> IntSize {
-        IntSize {
-            width: self.width,
-            height: self.height,
-        }
+        IntSize::from_wh_safe(self.width, self.height)
     }
 
     /// Checks that the rect is completely includes `other` Rect.
@@ -135,6 +132,16 @@ impl IntRect {
             self.right().saturating_add(dx),
             self.bottom().saturating_add(dy),
         )
+    }
+
+    /// Translates the rect by the specified offset.
+    pub fn translate(&self, tx: i32, ty: i32) -> Option<Self> {
+        IntRect::from_xywh(self.x() + tx, self.y() + ty, self.width(), self.height())
+    }
+
+    /// Translates the rect to the specified position.
+    pub fn translate_to(&self, x: i32, y: i32) -> Option<Self> {
+        IntRect::from_xywh(x, y, self.width(), self.height())
     }
 
     /// Converts into `Rect`.
@@ -398,6 +405,34 @@ impl Rect {
     pub fn outset(&mut self, dx: f32, dy: f32) -> Option<Self> {
         self.inset(-dx, -dy)
     }
+
+    /// Transforms the rect using the provided `Transform`.
+    ///
+    /// This method is expensive.
+    pub fn transform(&self, ts: Transform) -> Option<Self> {
+        if !ts.is_identity() {
+            // TODO: remove allocation
+            let mut path = PathBuilder::from_rect(*self);
+            path = path.transform(ts)?;
+            Some(path.bounds())
+        } else {
+            Some(*self)
+        }
+    }
+
+    /// Applies a bounding box transform.
+    pub fn bbox_transform(&self, bbox: NonZeroRect) -> Self {
+        let x = self.x() * bbox.width() + bbox.x();
+        let y = self.y() * bbox.height() + bbox.y();
+        let w = self.width() * bbox.width();
+        let h = self.height() * bbox.height();
+        Self::from_xywh(x, y, w, h).unwrap()
+    }
+
+    /// Converts into [`NonZeroRect`].
+    pub fn to_non_zero_rect(&self) -> Option<NonZeroRect> {
+        NonZeroRect::from_xywh(self.x(), self.y(), self.width(), self.height())
+    }
 }
 
 fn checked_f32_sub(a: f32, b: f32) -> Option<f32> {
@@ -451,5 +486,155 @@ mod rect_tests {
         let rect = Rect::from_xywh(x, 0.0, width, 1.0).unwrap();
         assert_eq!(rect.round(), None);
         assert_eq!(rect.round_out(), None);
+    }
+}
+
+/// A rectangle defined by left, top, right and bottom edges.
+///
+/// Similar to [`Rect`], but width and height guarantee to be non-zero and positive.
+///
+/// # Guarantees
+///
+/// - All values are finite.
+/// - Left edge is < right.
+/// - Top edge is < bottom.
+/// - Width and height are <= f32::MAX.
+/// - Width and height are > 0.0
+#[allow(missing_docs)]
+#[derive(Copy, Clone, PartialEq)]
+pub struct NonZeroRect {
+    left: FiniteF32,
+    top: FiniteF32,
+    right: FiniteF32,
+    bottom: FiniteF32,
+}
+
+impl core::fmt::Debug for NonZeroRect {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("NonZeroRect")
+            .field("left", &self.left.get())
+            .field("top", &self.top.get())
+            .field("right", &self.right.get())
+            .field("bottom", &self.bottom.get())
+            .finish()
+    }
+}
+
+impl NonZeroRect {
+    /// Creates new `NonZeroRect`.
+    pub fn from_ltrb(left: f32, top: f32, right: f32, bottom: f32) -> Option<Self> {
+        let left = FiniteF32::new(left)?;
+        let top = FiniteF32::new(top)?;
+        let right = FiniteF32::new(right)?;
+        let bottom = FiniteF32::new(bottom)?;
+
+        if left.get() < right.get() && top.get() < bottom.get() {
+            // Width and height must not overflow.
+            checked_f32_sub(right.get(), left.get())?;
+            checked_f32_sub(bottom.get(), top.get())?;
+
+            Some(Self {
+                left,
+                top,
+                right,
+                bottom,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Creates new `NonZeroRect`.
+    pub fn from_xywh(x: f32, y: f32, w: f32, h: f32) -> Option<Self> {
+        Self::from_ltrb(x, y, w + x, h + y)
+    }
+
+    /// Returns the left edge.
+    pub fn left(&self) -> f32 {
+        self.left.get()
+    }
+
+    /// Returns the top edge.
+    pub fn top(&self) -> f32 {
+        self.top.get()
+    }
+
+    /// Returns the right edge.
+    pub fn right(&self) -> f32 {
+        self.right.get()
+    }
+
+    /// Returns the bottom edge.
+    pub fn bottom(&self) -> f32 {
+        self.bottom.get()
+    }
+
+    /// Returns rect's X position.
+    pub fn x(&self) -> f32 {
+        self.left.get()
+    }
+
+    /// Returns rect's Y position.
+    pub fn y(&self) -> f32 {
+        self.top.get()
+    }
+
+    /// Returns rect's width.
+    pub fn width(&self) -> f32 {
+        self.right.get() - self.left.get()
+    }
+
+    /// Returns rect's height.
+    pub fn height(&self) -> f32 {
+        self.bottom.get() - self.top.get()
+    }
+
+    /// Returns rect's size.
+    pub fn size(&self) -> Size {
+        Size::from_wh(self.width(), self.height()).unwrap()
+    }
+
+    /// Translates the rect to the specified position.
+    pub fn translate_to(&self, x: f32, y: f32) -> Option<Self> {
+        Self::from_xywh(x, y, self.width(), self.height())
+    }
+
+    /// Transforms the rect using the provided `Transform`.
+    ///
+    /// This method is expensive.
+    pub fn transform(&self, ts: Transform) -> Option<Self> {
+        if !ts.is_identity() {
+            // TODO: remove allocation
+            let mut path = PathBuilder::from_rect(self.to_rect());
+            path = path.transform(ts)?;
+            path.bounds().to_non_zero_rect()
+        } else {
+            Some(*self)
+        }
+    }
+
+    /// Applies a bounding box transform.
+    pub fn bbox_transform(&self, bbox: NonZeroRect) -> Self {
+        let x = self.x() * bbox.width() + bbox.x();
+        let y = self.y() * bbox.height() + bbox.y();
+        let w = self.width() * bbox.width();
+        let h = self.height() * bbox.height();
+        Self::from_xywh(x, y, w, h).unwrap()
+    }
+
+    /// Converts into [`Rect`].
+    pub fn to_rect(&self) -> Rect {
+        Rect::from_xywh(self.x(), self.y(), self.width(), self.height()).unwrap()
+    }
+
+    /// Converts into [`IntRect`].
+    pub fn to_int_rect(&self) -> IntRect {
+        IntRect::from_xywh(
+            self.x().floor() as i32,
+            self.y().floor() as i32,
+            std::cmp::max(1, self.width().ceil() as u32),
+            std::cmp::max(1, self.height().ceil() as u32),
+        )
+        .unwrap()
     }
 }
