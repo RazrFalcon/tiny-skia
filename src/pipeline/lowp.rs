@@ -28,12 +28,11 @@ we are still 40-60% behind Skia built for Haswell.
 On ARM AArch64 the story is different and explicit SIMD make our code up to 2-3x faster.
 */
 
-use tiny_skia_path::ScreenIntRect;
-
 use crate::PremultipliedColorU8;
 
 use crate::pixmap::SubPixmapMut;
 use crate::wide::{f32x8, u16x16, f32x16};
+use crate::geom::ScreenIntRect;
 
 pub const STAGE_WIDTH: usize = 16;
 

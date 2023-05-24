@@ -6,12 +6,13 @@
 
 use alloc::vec::Vec;
 
-use tiny_skia_path::{PathVerb, ScreenIntRect};
+use tiny_skia_path::PathVerb;
 
 use crate::{Path, Point};
 
 use crate::edge::{CubicEdge, Edge, LineEdge, QuadraticEdge};
 use crate::edge_clipper::EdgeClipperIter;
+use crate::geom::ScreenIntRect;
 use crate::path_geometry;
 
 #[derive(Copy, Clone, PartialEq, Debug)]

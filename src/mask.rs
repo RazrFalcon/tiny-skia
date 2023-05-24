@@ -11,6 +11,7 @@ use alloc::vec::Vec;
 
 use tiny_skia_path::{IntRect, IntSize, Path, Scalar, Transform};
 
+use crate::geom::IntSizeExt;
 use crate::painter::DrawTiler;
 use crate::pipeline::RasterPipelineBlitter;
 use crate::pixmap::SubPixmapMut;

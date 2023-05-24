@@ -6,12 +6,13 @@
 
 use core::convert::TryInto;
 
-use tiny_skia_path::{f32x2, PathVerb, SaturateCast, Scalar, ScreenIntRect};
+use tiny_skia_path::{f32x2, PathVerb, SaturateCast, Scalar};
 
 use crate::{IntRect, LineCap, Path, PathSegment, Point, Rect};
 
 use crate::blitter::Blitter;
 use crate::fixed_point::{fdot16, fdot6};
+use crate::geom::ScreenIntRect;
 use crate::line_clipper;
 use crate::math::LENGTH_U32_ONE;
 use crate::path_geometry;

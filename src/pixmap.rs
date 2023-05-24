@@ -10,11 +10,12 @@ use alloc::vec::Vec;
 use core::convert::TryFrom;
 use core::num::NonZeroUsize;
 
-use tiny_skia_path::{IntSize, ScreenIntRect};
+use tiny_skia_path::IntSize;
 
 use crate::{Color, IntRect};
 
 use crate::color::PremultipliedColorU8;
+use crate::geom::{IntSizeExt, ScreenIntRect};
 
 #[cfg(feature = "png-format")]
 use crate::color::{premultiply_u8, ALPHA_U8_OPAQUE};

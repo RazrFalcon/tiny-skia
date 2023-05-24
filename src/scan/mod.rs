@@ -9,11 +9,10 @@ pub mod hairline_aa;
 pub mod path;
 pub mod path_aa;
 
-use tiny_skia_path::ScreenIntRect;
-
 use crate::{IntRect, Rect};
 
 use crate::blitter::Blitter;
+use crate::geom::{IntRectExt, ScreenIntRect};
 
 pub fn fill_rect(rect: &Rect, clip: &ScreenIntRect, blitter: &mut dyn Blitter) {
     if let Some(rect) = rect.round() {

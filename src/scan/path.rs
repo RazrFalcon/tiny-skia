@@ -6,7 +6,7 @@
 
 use core::convert::TryFrom;
 
-use tiny_skia_path::{SaturateCast, ScreenIntRect};
+use tiny_skia_path::SaturateCast;
 
 use crate::{FillRule, IntRect, LengthU32, Path, Rect};
 
@@ -14,6 +14,7 @@ use crate::blitter::Blitter;
 use crate::edge::{Edge, LineEdge};
 use crate::edge_builder::{BasicEdgeBuilder, ShiftedIntRect};
 use crate::fixed_point::{fdot16, fdot6, FDot16};
+use crate::geom::{IntRectExt, ScreenIntRect};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;

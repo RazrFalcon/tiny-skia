@@ -6,13 +6,12 @@
 
 use core::convert::TryFrom;
 
-use tiny_skia_path::ScreenIntRect;
-
 use crate::{FillRule, IntRect, LengthU32, Path, Rect};
 
 use crate::alpha_runs::AlphaRuns;
 use crate::blitter::Blitter;
 use crate::color::AlphaU8;
+use crate::geom::{IntRectExt, ScreenIntRect};
 use crate::math::left_shift;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]

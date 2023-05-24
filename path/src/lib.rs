@@ -359,11 +359,6 @@ impl IntSize {
     pub fn to_int_rect(&self, x: i32, y: i32) -> IntRect {
         IntRect::from_xywh(x, y, self.width.get(), self.height.get()).unwrap()
     }
-
-    /// Converts the current size into a `IntRect` at a provided position.
-    pub fn to_screen_int_rect(&self, x: u32, y: u32) -> ScreenIntRect {
-        ScreenIntRect::from_xywh_safe(x, y, self.width, self.height)
-    }
 }
 
 #[cfg(test)]
@@ -380,10 +375,6 @@ mod tests {
         assert_eq!(
             size.to_int_rect(1, 2),
             IntRect::from_xywh(1, 2, 3, 4).unwrap()
-        );
-        assert_eq!(
-            size.to_screen_int_rect(1, 2),
-            ScreenIntRect::from_xywh(1, 2, 3, 4).unwrap()
         );
     }
 }

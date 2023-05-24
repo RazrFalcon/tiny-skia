@@ -48,13 +48,14 @@ use alloc::vec::Vec;
 
 use arrayvec::ArrayVec;
 
-use tiny_skia_path::{NormalizedF32, ScreenIntRect};
+use tiny_skia_path::NormalizedF32;
 
 use crate::{Color, PremultipliedColor, PremultipliedColorU8, SpreadMode};
 use crate::{PixmapRef, Transform};
 
 pub use blitter::RasterPipelineBlitter;
 
+use crate::geom::ScreenIntRect;
 use crate::pixmap::SubPixmapMut;
 use crate::wide::u32x8;
 
@@ -545,6 +546,7 @@ mod blend_tests {
 
     use super::*;
     use crate::{BlendMode, Color, Pixmap, PremultipliedColorU8};
+    use crate::geom::IntSizeExt;
 
     macro_rules! test_blend {
         ($name:ident, $mode:expr, $is_highp:expr, $r:expr, $g:expr, $b:expr, $a:expr) => {

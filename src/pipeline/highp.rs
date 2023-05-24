@@ -15,10 +15,9 @@ For some reason, we are almost 2x slower. Maybe because Skia uses clang's vector
 and we're using a manual implementation.
 */
 
-use tiny_skia_path::ScreenIntRect;
-
 use crate::{PremultipliedColorU8, SpreadMode, PixmapRef};
 
+use crate::geom::ScreenIntRect;
 use crate::pixmap::SubPixmapMut;
 use crate::wide::{f32x8, i32x8, u32x8};
 

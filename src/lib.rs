@@ -42,6 +42,7 @@ mod edge;
 mod edge_builder;
 mod edge_clipper;
 mod fixed_point;
+mod geom;
 mod line_clipper;
 mod mask;
 mod math;

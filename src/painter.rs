@@ -6,13 +6,15 @@
 
 use crate::*;
 
-use tiny_skia_path::{PathStroker, Scalar, ScreenIntRect, SCALAR_MAX};
+use tiny_skia_path::{PathStroker, Scalar, SCALAR_MAX};
 
+use crate::geom::ScreenIntRect;
 use crate::mask::SubMaskRef;
 use crate::pipeline::{RasterPipelineBlitter, RasterPipelineBuilder};
 use crate::pixmap::SubPixmapMut;
 use crate::scan;
 
+use crate::geom::IntSizeExt;
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
 
