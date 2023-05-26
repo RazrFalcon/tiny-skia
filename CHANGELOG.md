@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Removed
+- `ColorU8::get` and `PremultipliedColorU8::get`. Use the getters instead.
+
 ## [0.9.1] - 2023-05-17
 ### Added
 - Reexport `tiny_skia_path::PathStroker` in `tiny-skia`.

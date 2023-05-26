@@ -23,35 +23,35 @@ pub const ALPHA_OPAQUE: NormalizedF32 = NormalizedF32::ONE;
 
 /// A 32-bit RGBA color value.
 ///
-/// Byteorder: ABGR
+/// Byteorder: RGBA (relevant for bytemuck casts)
 #[repr(transparent)]
 #[derive(Copy, Clone, PartialEq)]
-pub struct ColorU8(u32);
+pub struct ColorU8([u8; 4]);
 
 impl ColorU8 {
     /// Creates a new color.
     pub const fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
-        ColorU8(pack_rgba(r, g, b, a))
+        ColorU8([r, g, b, a])
     }
 
     /// Returns color's red component.
     pub const fn red(self) -> u8 {
-        self.0.to_ne_bytes()[0]
+        self.0[0]
     }
 
     /// Returns color's green component.
     pub const fn green(self) -> u8 {
-        self.0.to_ne_bytes()[1]
+        self.0[1]
     }
 
     /// Returns color's blue component.
     pub const fn blue(self) -> u8 {
-        self.0.to_ne_bytes()[2]
+        self.0[2]
     }
 
     /// Returns color's alpha component.
     pub const fn alpha(self) -> u8 {
-        self.0.to_ne_bytes()[3]
+        self.0[3]
     }
 
     /// Check that color is opaque.
@@ -59,11 +59,6 @@ impl ColorU8 {
     /// Alpha == 255
     pub fn is_opaque(&self) -> bool {
         self.alpha() == ALPHA_U8_OPAQUE
-    }
-
-    /// Returns the value as a primitive type.
-    pub const fn get(self) -> u32 {
-        self.0
     }
 
     /// Converts into a premultiplied color.
@@ -95,12 +90,12 @@ impl core::fmt::Debug for ColorU8 {
 
 /// A 32-bit premultiplied RGBA color value.
 ///
-/// Byteorder: ABGR
+/// Byteorder: RGBA (relevant for bytemuck casts)
 #[repr(transparent)]
 #[derive(Copy, Clone, PartialEq)]
-pub struct PremultipliedColorU8(u32);
+pub struct PremultipliedColorU8([u8; 4]);
 
-// Perfectly safe, since u32 is already Pod.
+// Perfectly safe, since [u8; 4] is already Pod.
 unsafe impl bytemuck::Zeroable for PremultipliedColorU8 {}
 unsafe impl bytemuck::Pod for PremultipliedColorU8 {}
 
@@ -113,7 +108,7 @@ impl PremultipliedColorU8 {
     /// RGB components must be <= alpha.
     pub fn from_rgba(r: u8, g: u8, b: u8, a: u8) -> Option<Self> {
         if r <= a && g <= a && b <= a {
-            Some(PremultipliedColorU8(pack_rgba(r, g, b, a)))
+            Some(PremultipliedColorU8([r, g, b, a]))
         } else {
             None
         }
@@ -121,33 +116,33 @@ impl PremultipliedColorU8 {
 
     /// Creates a new color.
     pub(crate) const fn from_rgba_unchecked(r: u8, g: u8, b: u8, a: u8) -> Self {
-        PremultipliedColorU8(pack_rgba(r, g, b, a))
+        PremultipliedColorU8([r, g, b, a])
     }
 
     /// Returns color's red component.
     ///
     /// The value is <= alpha.
     pub const fn red(self) -> u8 {
-        self.0.to_ne_bytes()[0]
+        self.0[0]
     }
 
     /// Returns color's green component.
     ///
     /// The value is <= alpha.
     pub const fn green(self) -> u8 {
-        self.0.to_ne_bytes()[1]
+        self.0[1]
     }
 
     /// Returns color's blue component.
     ///
     /// The value is <= alpha.
     pub const fn blue(self) -> u8 {
-        self.0.to_ne_bytes()[2]
+        self.0[2]
     }
 
     /// Returns color's alpha component.
     pub const fn alpha(self) -> u8 {
-        self.0.to_ne_bytes()[3]
+        self.0[3]
     }
 
     /// Check that color is opaque.
@@ -155,11 +150,6 @@ impl PremultipliedColorU8 {
     /// Alpha == 255
     pub fn is_opaque(&self) -> bool {
         self.alpha() == ALPHA_U8_OPAQUE
-    }
-
-    /// Returns the value as a primitive type.
-    pub const fn get(self) -> u32 {
-        self.0
     }
 
     /// Returns a demultiplied color.
@@ -426,10 +416,6 @@ pub fn premultiply_u8(c: u8, a: u8) -> u8 {
     ((prod + (prod >> 8)) >> 8) as u8
 }
 
-const fn pack_rgba(r: u8, g: u8, b: u8, a: u8) -> u32 {
-    u32::from_ne_bytes([r, g, b, a])
-}
-
 fn color_f32_to_u8(
     r: NormalizedF32,
     g: NormalizedF32,
@@ -486,5 +472,15 @@ mod tests {
             PremultipliedColorU8::from_rgba_unchecked(153, 99, 54, 180).demultiply(),
             ColorU8::from_rgba(217, 140, 77, 180)
         );
+    }
+
+    #[test]
+    fn bytemuck_casts_rgba() {
+        let slice = &[
+            PremultipliedColorU8::from_rgba_unchecked(0, 1, 2, 3),
+            PremultipliedColorU8::from_rgba_unchecked(10, 11, 12, 13),
+        ];
+        let bytes: &[u8] = bytemuck::cast_slice(slice);
+        assert_eq!(bytes, &[0, 1, 2, 3, 10, 11, 12, 13]);
     }
 }
