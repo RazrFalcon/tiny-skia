@@ -1,6 +1,6 @@
 [package]
 name = "tiny-skia"
-version = "0.9.1"
+version = "0.10.0"
 authors = ["Yevhenii Reizner <razrfalcon@gmail.com>"]
 edition = "2018"
 description = "A tiny Skia subset ported to Rust."
@@ -21,7 +21,7 @@ bytemuck = { version = "1.12", features = ["aarch64_simd"] }
 cfg-if = "1"
 log = "0.4"
 png = { version = "0.17", optional = true }
-tiny-skia-path = { version = "0.9.0", path = "path", default-features = false }
+tiny-skia-path = { version = "0.10.0", path = "path", default-features = false }
 
 [features]
 default = ["std", "simd", "png-format"]

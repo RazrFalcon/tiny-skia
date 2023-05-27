@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.10.0] - 2023-05-27
 ### Added
 - `PathBuilder::push_path`
 - `NonZeroRect`
@@ -21,6 +23,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `Transform::map_point`
 
 ### Changed
+- `ColorU8` and `PremultipliedColorU8` are stored as `[u8; 4]` instead of `u32`.
+  This fixes potential [alignment issues](https://github.com/RazrFalcon/tiny-skia/issues/70)
+  and make the code easier to understand.
+  Thanks to [@e00E](https://github.com/e00E)
 - `PathBuilder::push_rect` accepts `Rect` and not `f32` numbers now.
 
 ### Removed
@@ -207,7 +213,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/RazrFalcon/tiny-skia/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.4...v0.9.0
 [0.8.4]: https://github.com/RazrFalcon/tiny-skia/compare/v0.8.3...v0.8.4
