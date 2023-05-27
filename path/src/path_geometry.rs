@@ -10,9 +10,10 @@
 
 #![allow(missing_docs)]
 
+use core::simd::f32x2;
+
 use crate::{Point, Transform};
 
-use crate::f32x2_t::f32x2;
 use crate::floating_point::FLOAT_PI;
 use crate::scalar::{Scalar, SCALAR_NEARLY_ZERO, SCALAR_ROOT_2_OVER_2};
 
@@ -21,6 +22,21 @@ use crate::path_builder::PathDirection;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use crate::NoStdFloat;
+
+trait PointExt {
+    fn from_f32x2(r: f32x2) -> Self;
+    fn to_f32x2(&self) -> f32x2;
+}
+
+impl PointExt for Point {
+    fn from_f32x2(r: f32x2) -> Self {
+        Point::from_xy(r.as_array()[0], r.as_array()[1])
+    }
+
+    fn to_f32x2(&self) -> f32x2 {
+        f32x2::from_array([self.x, self.y])
+    }
+}
 
 // use for : eval(t) == A * t^2 + B * t + C
 #[derive(Clone, Copy, Default, Debug)]

@@ -13,7 +13,6 @@ use crate::{GradientStop, Point, Shader, SpreadMode, Transform};
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::pipeline;
 use crate::pipeline::RasterPipelineBuilder;
-use crate::wide::u32x8;
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use tiny_skia_path::NoStdFloat;
@@ -142,7 +141,7 @@ impl RadialGradient {
         };
 
         p.ctx.two_point_conical_gradient = pipeline::TwoPointConicalGradientCtx {
-            mask: u32x8::default(),
+            mask: core::simd::u32x8::default(),
             p0,
         };
 

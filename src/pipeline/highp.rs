@@ -15,11 +15,12 @@ For some reason, we are almost 2x slower. Maybe because Skia uses clang's vector
 and we're using a manual implementation.
 */
 
+use std::simd::{f32x8, i32x8, u32x8, StdFloat, SimdFloat, SimdPartialOrd, SimdPartialEq};
+
 use crate::{PremultipliedColorU8, SpreadMode, PixmapRef};
 
 use crate::geom::ScreenIntRect;
 use crate::pixmap::SubPixmapMut;
-use crate::wide::{f32x8, i32x8, u32x8};
 
 pub const STAGE_WIDTH: usize = 8;
 
@@ -125,6 +126,16 @@ pub fn fn_ptr(f: StageFn) -> *const () {
     f as *const ()
 }
 
+trait F32x8Ext {
+    fn normalize(self) -> Self;
+}
+
+impl F32x8Ext for f32x8 {
+    fn normalize(self) -> Self {
+        self.simd_max(f32x8::default()).simd_min(f32x8::splat(1.0))
+    }
+}
+
 #[inline(never)]
 pub fn start(
     functions: &[StageFn],
@@ -209,19 +220,19 @@ fn move_destination_to_source(p: &mut Pipeline) {
 }
 
 fn clamp_0(p: &mut Pipeline) {
-    p.r = p.r.max(f32x8::default());
-    p.g = p.g.max(f32x8::default());
-    p.b = p.b.max(f32x8::default());
-    p.a = p.a.max(f32x8::default());
+    p.r = p.r.simd_max(f32x8::default());
+    p.g = p.g.simd_max(f32x8::default());
+    p.b = p.b.simd_max(f32x8::default());
+    p.a = p.a.simd_max(f32x8::default());
 
     p.next_stage();
 }
 
 fn clamp_a(p: &mut Pipeline) {
-    p.r = p.r.min(f32x8::splat(1.0));
-    p.g = p.g.min(f32x8::splat(1.0));
-    p.b = p.b.min(f32x8::splat(1.0));
-    p.a = p.a.min(f32x8::splat(1.0));
+    p.r = p.r.simd_min(f32x8::splat(1.0));
+    p.g = p.g.simd_min(f32x8::splat(1.0));
+    p.b = p.b.simd_min(f32x8::splat(1.0));
+    p.a = p.a.simd_min(f32x8::splat(1.0));
 
     p.next_stage();
 }
@@ -301,10 +312,10 @@ fn gather_ix(pixmap: PixmapRef, mut x: f32x8, mut y: f32x8) -> u32x8 {
     // Exclusive -> inclusive.
     let w = ulp_sub(pixmap.width() as f32);
     let h = ulp_sub(pixmap.height() as f32);
-    x = x.max(f32x8::default()).min(f32x8::splat(w));
-    y = y.max(f32x8::default()).min(f32x8::splat(h));
+    x = x.simd_max(f32x8::default()).simd_min(f32x8::splat(w));
+    y = y.simd_max(f32x8::default()).simd_min(f32x8::splat(h));
 
-    (y.trunc_int() * i32x8::splat(pixmap.width() as i32) + x.trunc_int()).to_u32x8_bitcast()
+    (y.trunc().cast::<i32>() * i32x8::splat(pixmap.width() as i32) + x.trunc().cast::<i32>()).cast()
 }
 
 #[inline(always)]
@@ -405,15 +416,15 @@ blend_fn!(source_in,        |s, _,  _, da| s * da);
 blend_fn!(destination_in,   |_, d, sa,  _| d * sa);
 blend_fn!(source_out,       |s, _,  _, da| s * inv(da));
 blend_fn!(destination_out,  |_, d, sa,  _| d * inv(sa));
-blend_fn!(source_over,      |s, d, sa,  _| mad(d, inv(sa), s));
-blend_fn!(destination_over, |s, d,  _, da| mad(s, inv(da), d));
+blend_fn!(source_over,      |s, d: f32x8, sa,  _| d.mul_add(inv(sa), s));
+blend_fn!(destination_over, |s: f32x8, d,  _, da| s.mul_add(inv(da), d));
 blend_fn!(modulate,         |s, d,  _,  _| s * d);
 blend_fn!(multiply,         |s, d, sa, da| s * inv(da) + d * inv(sa) + s * d);
 blend_fn!(screen,           |s, d,  _,  _| s + d - s * d);
 blend_fn!(xor,              |s, d, sa, da| s * inv(da) + d * inv(sa));
 
 // Wants a type for some reason.
-blend_fn!(plus, |s: f32x8, d: f32x8, _, _| (s + d).min(f32x8::splat(1.0)));
+blend_fn!(plus, |s: f32x8, d: f32x8, _, _| (s + d).simd_min(f32x8::splat(1.0)));
 
 macro_rules! blend_fn2 {
     ($name:ident, $f:expr) => {
@@ -422,54 +433,54 @@ macro_rules! blend_fn2 {
             p.r = $f(p.r, p.dr, p.a, p.da);
             p.g = $f(p.g, p.dg, p.a, p.da);
             p.b = $f(p.b, p.db, p.a, p.da);
-            p.a = mad(p.da, inv(p.a), p.a);
+            p.a = p.da.mul_add(inv(p.a), p.a);
 
             p.next_stage();
         }
     };
 }
 
-blend_fn2!(darken,      |s: f32x8, d, sa, da: f32x8| s + d - (s * da).max(d * sa));
-blend_fn2!(lighten,     |s: f32x8, d, sa, da: f32x8| s + d - (s * da).min(d * sa));
-blend_fn2!(difference,  |s: f32x8, d, sa, da: f32x8| s + d - two((s * da).min(d * sa)));
+blend_fn2!(darken,      |s: f32x8, d, sa, da: f32x8| s + d - (s * da).simd_max(d * sa));
+blend_fn2!(lighten,     |s: f32x8, d, sa, da: f32x8| s + d - (s * da).simd_min(d * sa));
+blend_fn2!(difference,  |s: f32x8, d, sa, da: f32x8| s + d - two((s * da).simd_min(d * sa)));
 blend_fn2!(exclusion,   |s: f32x8, d,  _,  _| s + d - two(s * d));
 
 blend_fn2!(color_burn, |s: f32x8, d: f32x8, sa: f32x8, da: f32x8|
-    d.cmp_eq(da).blend(
+    d.simd_eq(da).select(
         d + s * inv(da),
-        s.cmp_eq(f32x8::default()).blend(
+        s.simd_eq(f32x8::default()).select(
             d * inv(sa),
-            sa * (da - da.min((da - d) * sa * s.recip_fast())) + s * inv(da) + d * inv(sa)
+            sa * (da - da.simd_min((da - d) * sa * s.recip())) + s * inv(da) + d * inv(sa)
         )
     )
 );
 
 blend_fn2!(color_dodge, |s: f32x8, d: f32x8, sa: f32x8, da: f32x8|
-    d.cmp_eq(f32x8::default()).blend(
+    d.simd_eq(f32x8::default()).select(
         s * inv(da),
-        s.cmp_eq(sa).blend(
+        s.simd_eq(sa).select(
             s + d * inv(sa),
-            sa * da.min((d * sa) * (sa - s).recip_fast()) + s * inv(da) + d * inv(sa)
+            sa * da.simd_min((d * sa) * (sa - s).recip()) + s * inv(da) + d * inv(sa)
         )
     )
 );
 
 blend_fn2!(hard_light, |s: f32x8, d: f32x8, sa, da|
-    s * inv(da) + d * inv(sa) + two(s).cmp_le(sa).blend(
+    s * inv(da) + d * inv(sa) + two(s).simd_le(sa).select(
         two(s * d),
         sa * da - two((da - d) * (sa - s))
     )
 );
 
 blend_fn2!(overlay, |s: f32x8, d: f32x8, sa, da|
-    s * inv(da) + d * inv(sa) + two(d).cmp_le(da).blend(
+    s * inv(da) + d * inv(sa) + two(d).simd_le(da).select(
         two(s * d),
         sa * da - two((da - d) * (sa - s))
     )
 );
 
 blend_fn2!(soft_light, |s: f32x8, d: f32x8, sa: f32x8, da: f32x8| {
-    let m  = da.cmp_gt(f32x8::default()).blend(d / da, f32x8::default());
+    let m  = da.simd_gt(f32x8::default()).select(d / da, f32x8::default());
     let s2 = two(s);
     let m4 = two(two(m));
 
@@ -481,9 +492,9 @@ blend_fn2!(soft_light, |s: f32x8, d: f32x8, sa: f32x8, da: f32x8| {
     let dark_dst = (m4 * m4 + m4) * (m - f32x8::splat(1.0)) + f32x8::splat(7.0) * m;
     let lite_dst = m.sqrt() - m;
     let lite_src = d * sa + da * (s2 - sa)
-        * two(two(d)).cmp_le(da).blend(dark_dst, lite_dst); // 2 or 3?
+        * two(two(d)).simd_le(da).select(dark_dst, lite_dst); // 2 or 3?
 
-    s * inv(da) + d * inv(sa) + s2.cmp_le(sa).blend(dark_src, lite_src) // 1 or (2 or 3)?
+    s * inv(da) + d * inv(sa) + s2.simd_le(sa).select(dark_src, lite_src) // 1 or (2 or 3)?
 });
 
 // We're basing our implementation of non-separable blend modes on
@@ -600,7 +611,7 @@ fn luminosity_k(
 
 #[inline(always)]
 fn sat(r: f32x8, g: f32x8, b: f32x8) -> f32x8 {
-    r.max(g.max(b)) - r.min(g.min(b))
+    r.simd_max(g.simd_max(b)) - r.simd_min(g.simd_min(b))
 }
 
 #[inline(always)]
@@ -610,13 +621,13 @@ fn lum(r: f32x8, g: f32x8, b: f32x8) -> f32x8 {
 
 #[inline(always)]
 fn set_sat(r: &mut f32x8, g: &mut f32x8, b: &mut f32x8, s: f32x8) {
-    let mn  = r.min(g.min(*b));
-    let mx  = r.max(g.max(*b));
+    let mn  = r.simd_min(g.simd_min(*b));
+    let mx  = r.simd_max(g.simd_max(*b));
     let sat = mx - mn;
 
     // Map min channel to 0, max channel to s, and scale the middle proportionally.
-    let scale = |c| sat.cmp_eq(f32x8::default())
-                       .blend(f32x8::default(), (c - mn) * s / sat);
+    let scale = |c| sat.simd_eq(f32x8::default())
+                       .select(f32x8::default(), (c - mn) * s / sat);
 
     *r = scale(*r);
     *g = scale(*g);
@@ -633,14 +644,14 @@ fn set_lum(r: &mut f32x8, g: &mut f32x8, b: &mut f32x8, l: f32x8) {
 
 #[inline(always)]
 fn clip_color(r: &mut f32x8, g: &mut f32x8, b: &mut f32x8, a: f32x8) {
-    let mn = r.min(g.min(*b));
-    let mx = r.max(g.max(*b));
+    let mn = r.simd_min(g.simd_min(*b));
+    let mx = r.simd_max(g.simd_max(*b));
     let l  = lum(*r, *g, *b);
 
     let clip = |mut c| {
-        c = mx.cmp_ge(f32x8::default()).blend(c, l + (c - l) * l / (l - mn));
-        c = mx.cmp_gt(a).blend(l + (c - l) * (a - l) / (mx - l), c);
-        c = c.max(f32x8::default()); // Sometimes without this we may dip just a little negative.
+        c = mx.simd_ge(f32x8::default()).select(c, l + (c - l) * l / (l - mn));
+        c = mx.simd_gt(a).select(l + (c - l) * (a - l) / (mx - l), c);
+        c = c.simd_max(f32x8::default()); // Sometimes without this we may dip just a little negative.
         c
     };
 
@@ -652,10 +663,10 @@ fn clip_color(r: &mut f32x8, g: &mut f32x8, b: &mut f32x8, a: f32x8) {
 pub fn source_over_rgba(p: &mut Pipeline) {
     let pixels = p.pixmap_dst.slice4_at_xy(p.dx, p.dy);
     load_8888(pixels, &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
-    p.r = mad(p.dr, inv(p.a), p.r);
-    p.g = mad(p.dg, inv(p.a), p.g);
-    p.b = mad(p.db, inv(p.a), p.b);
-    p.a = mad(p.da, inv(p.a), p.a);
+    p.r = p.dr.mul_add(inv(p.a), p.r);
+    p.g = p.dg.mul_add(inv(p.a), p.g);
+    p.b = p.db.mul_add(inv(p.a), p.b);
+    p.a = p.da.mul_add(inv(p.a), p.a);
     store_8888(&p.r, &p.g, &p.b, &p.a, pixels);
 
     p.next_stage();
@@ -664,10 +675,10 @@ pub fn source_over_rgba(p: &mut Pipeline) {
 pub fn source_over_rgba_tail(p: &mut Pipeline) {
     let pixels = p.pixmap_dst.slice_at_xy(p.dx, p.dy);
     load_8888_tail(p.tail, pixels, &mut p.dr, &mut p.dg, &mut p.db, &mut p.da);
-    p.r = mad(p.dr, inv(p.a), p.r);
-    p.g = mad(p.dg, inv(p.a), p.g);
-    p.b = mad(p.db, inv(p.a), p.b);
-    p.a = mad(p.da, inv(p.a), p.a);
+    p.r = p.dr.mul_add(inv(p.a), p.r);
+    p.g = p.dg.mul_add(inv(p.a), p.g);
+    p.b = p.db.mul_add(inv(p.a), p.b);
+    p.a = p.da.mul_add(inv(p.a), p.a);
     store_8888_tail(&p.r, &p.g, &p.b, &p.a, p.tail, pixels);
 
     p.next_stage();
@@ -676,8 +687,8 @@ pub fn source_over_rgba_tail(p: &mut Pipeline) {
 fn transform(p: &mut Pipeline) {
     let ts = &p.ctx.transform;
 
-    let tr = mad(p.r, f32x8::splat(ts.sx), mad(p.g, f32x8::splat(ts.kx), f32x8::splat(ts.tx)));
-    let tg = mad(p.r, f32x8::splat(ts.ky), mad(p.g, f32x8::splat(ts.sy), f32x8::splat(ts.ty)));
+    let tr = p.r.mul_add(f32x8::splat(ts.sx), p.g.mul_add(f32x8::splat(ts.kx), f32x8::splat(ts.tx)));
+    let tg = p.r.mul_add(f32x8::splat(ts.ky), p.g.mul_add(f32x8::splat(ts.sy), f32x8::splat(ts.ty)));
     p.r = tr;
     p.g = tg;
 
@@ -757,11 +768,9 @@ fn bicubic(p: &mut Pipeline) {
 #[inline(always)]
 fn bicubic_near(t: f32x8) -> f32x8 {
     // 1/18 + 9/18t + 27/18t^2 - 21/18t^3 == t ( t ( -21/18t + 27/18) + 9/18) + 1/18
-    mad(
-        t,
-        mad(t,
-            mad(
-                f32x8::splat(-21.0/18.0),
+    t.mul_add(
+        t.mul_add(
+            f32x8::splat(-21.0/18.0).mul_add(
                 t,
                 f32x8::splat(27.0/18.0),
             ),
@@ -774,7 +783,7 @@ fn bicubic_near(t: f32x8) -> f32x8 {
 #[inline(always)]
 fn bicubic_far(t: f32x8) -> f32x8 {
     // 0/18 + 0/18*t - 6/18t^2 + 7/18t^3 == t^2 (7/18t - 6/18)
-    (t * t) * mad(f32x8::splat(7.0/18.0), t, f32x8::splat(-6.0/18.0))
+    (t * t) * f32x8::splat(7.0/18.0).mul_add(t, f32x8::splat(-6.0/18.0))
 }
 
 #[inline(always)]
@@ -803,10 +812,10 @@ fn sampler_2x2(
             sample(pixmap, ctx, x,y, &mut rr, &mut gg, &mut bb, &mut aa);
 
             let w = wx[i] * wy[j];
-            *r = mad(w, rr, *r);
-            *g = mad(w, gg, *g);
-            *b = mad(w, bb, *b);
-            *a = mad(w, aa, *a);
+            *r = w.mul_add(rr, *r);
+            *g = w.mul_add(gg, *g);
+            *b = w.mul_add(bb, *b);
+            *a = w.mul_add(aa, *a);
 
             x += one;
         }
@@ -841,10 +850,10 @@ fn sampler_4x4(
             sample(pixmap, ctx, x,y, &mut rr, &mut gg, &mut bb, &mut aa);
 
             let w = wx[i] * wy[j];
-            *r = mad(w, rr, *r);
-            *g = mad(w, gg, *g);
-            *b = mad(w, bb, *b);
-            *a = mad(w, aa, *a);
+            *r = w.mul_add(rr, *r);
+            *g = w.mul_add(gg, *g);
+            *b = w.mul_add(bb, *b);
+            *a = w.mul_add(aa, *a);
 
             x += one;
         }
@@ -904,7 +913,7 @@ fn gradient(p: &mut Pipeline) {
     let mut idx = u32x8::default();
     for i in 1..ctx.len {
         let tt = ctx.t_values[i].get();
-        let n: u32x8 = bytemuck::cast([
+        let n = u32x8::from_array([
             (t[0] >= tt) as u32,
             (t[1] >= tt) as u32,
             (t[2] >= tt) as u32,
@@ -925,7 +934,7 @@ fn gradient_lookup(
     ctx: &super::GradientCtx, idx: &u32x8, t: f32x8,
     r: &mut f32x8, g: &mut f32x8, b: &mut f32x8, a: &mut f32x8,
 ) {
-    let idx: [u32; 8] = bytemuck::cast(*idx);
+    let idx: &[u32; 8] = idx.as_array();
 
     macro_rules! gather {
         ($d:expr, $c:ident) => {
@@ -954,20 +963,20 @@ fn gradient_lookup(
     let bb = gather!(&ctx.biases, b);
     let ba = gather!(&ctx.biases, a);
 
-    *r = mad(t, fr, br);
-    *g = mad(t, fg, bg);
-    *b = mad(t, fb, bb);
-    *a = mad(t, fa, ba);
+    *r = t.mul_add(fr, br);
+    *g = t.mul_add(fg, bg);
+    *b = t.mul_add(fb, bb);
+    *a = t.mul_add(fa, ba);
 }
 
 fn evenly_spaced_2_stop_gradient(p: &mut Pipeline) {
     let ctx = &p.ctx.evenly_spaced_2_stop_gradient;
 
     let t = p.r;
-    p.r = mad(t, f32x8::splat(ctx.factor.r), f32x8::splat(ctx.bias.r));
-    p.g = mad(t, f32x8::splat(ctx.factor.g), f32x8::splat(ctx.bias.g));
-    p.b = mad(t, f32x8::splat(ctx.factor.b), f32x8::splat(ctx.bias.b));
-    p.a = mad(t, f32x8::splat(ctx.factor.a), f32x8::splat(ctx.bias.a));
+    p.r = t.mul_add(f32x8::splat(ctx.factor.r), f32x8::splat(ctx.bias.r));
+    p.g = t.mul_add(f32x8::splat(ctx.factor.g), f32x8::splat(ctx.bias.g));
+    p.b = t.mul_add(f32x8::splat(ctx.factor.b), f32x8::splat(ctx.bias.b));
+    p.a = t.mul_add(f32x8::splat(ctx.factor.a), f32x8::splat(ctx.bias.a));
 
     p.next_stage();
 }
@@ -1012,12 +1021,12 @@ fn mask_2pt_conical_degenerates(p: &mut Pipeline) {
     let ctx = &mut p.ctx.two_point_conical_gradient;
 
     let t = p.r;
-    let is_degenerate = t.cmp_le(f32x8::default()) | t.cmp_ne(t);
-    p.r = is_degenerate.blend(f32x8::default(), t);
+    let is_degenerate = t.simd_le(f32x8::default()) | t.simd_ne(t);
+    p.r = is_degenerate.select(f32x8::default(), t);
 
-    let is_not_degenerate = !is_degenerate.to_u32x8_bitcast();
-    let is_not_degenerate: [u32; 8] = bytemuck::cast(is_not_degenerate);
-    ctx.mask = bytemuck::cast([
+    let is_not_degenerate = !is_degenerate.to_int().cast::<u32>();
+    let is_not_degenerate = is_not_degenerate.as_array();
+    ctx.mask = u32x8::from_array([
         if is_not_degenerate[0] != 0 { !0 } else { 0 },
         if is_not_degenerate[1] != 0 { !0 } else { 0 },
         if is_not_degenerate[2] != 0 { !0 } else { 0 },
@@ -1034,10 +1043,10 @@ fn mask_2pt_conical_degenerates(p: &mut Pipeline) {
 fn apply_vector_mask(p: &mut Pipeline) {
     let ctx = &p.ctx.two_point_conical_gradient;
 
-    p.r = (p.r.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
-    p.g = (p.g.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
-    p.b = (p.b.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
-    p.a = (p.a.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
+    p.r = (p.r.cast::<u32>() & ctx.mask).cast::<f32>();
+    p.g = (p.g.cast::<u32>() & ctx.mask).cast::<f32>();
+    p.b = (p.b.cast::<u32>() & ctx.mask).cast::<f32>();
+    p.a = (p.a.cast::<u32>() & ctx.mask).cast::<f32>();
 
     p.next_stage();
 }
@@ -1145,7 +1154,7 @@ fn store_8888_tail(
 
 #[inline(always)]
 fn unnorm(v: &f32x8) -> i32x8 {
-    (v.max(f32x8::default()).min(f32x8::splat(1.0)) * f32x8::splat(255.0)).round_int()
+    (v.simd_max(f32x8::default()).simd_min(f32x8::splat(1.0)) * f32x8::splat(255.0)).round().cast()
 }
 
 #[inline(always)]
@@ -1159,11 +1168,6 @@ fn two(v: f32x8) -> f32x8 {
 }
 
 #[inline(always)]
-fn mad(f: f32x8, m: f32x8, a: f32x8) -> f32x8 {
-    f * m + a
-}
-
-#[inline(always)]
 fn lerp(from: f32x8, to: f32x8, t: f32x8) -> f32x8 {
-    mad(to - from, t, from)
+    (to - from).mul_add(t, from)
 }

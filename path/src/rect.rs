@@ -345,7 +345,7 @@ impl Rect {
     ///
     /// Returns None if count is zero or if Point array contains an infinity or NaN.
     pub fn from_points(points: &[Point]) -> Option<Self> {
-        use crate::f32x4_t::f32x4;
+        use core::simd::{f32x4, SimdFloat};
 
         if points.is_empty() {
             return None;
@@ -356,13 +356,13 @@ impl Rect {
         let mut max;
         if points.len() & 1 != 0 {
             let pt = points[0];
-            min = f32x4([pt.x, pt.y, pt.x, pt.y]);
+            min = f32x4::from_array([pt.x, pt.y, pt.x, pt.y]);
             max = min;
             offset += 1;
         } else {
             let pt0 = points[0];
             let pt1 = points[1];
-            min = f32x4([pt0.x, pt0.y, pt1.x, pt1.y]);
+            min = f32x4::from_array([pt0.x, pt0.y, pt1.x, pt1.y]);
             max = min;
             offset += 2;
         }
@@ -371,17 +371,17 @@ impl Rect {
         while offset != points.len() {
             let pt0 = points[offset + 0];
             let pt1 = points[offset + 1];
-            let xy = f32x4([pt0.x, pt0.y, pt1.x, pt1.y]);
+            let xy = f32x4::from_array([pt0.x, pt0.y, pt1.x, pt1.y]);
 
             accum *= xy;
-            min = min.min(xy);
-            max = max.max(xy);
+            min = min.simd_min(xy);
+            max = max.simd_max(xy);
             offset += 2;
         }
 
         let all_finite = accum * f32x4::default() == f32x4::default();
-        let min: [f32; 4] = min.0;
-        let max: [f32; 4] = max.0;
+        let min: &[f32; 4] = min.as_array();
+        let max: &[f32; 4] = max.as_array();
         if all_finite {
             Rect::from_ltrb(
                 min[0].min(min[2]),

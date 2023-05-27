@@ -12,6 +12,7 @@
 //!
 //! Note that all types use single precision floats (`f32`), just like [Skia](https://skia.org/).
 
+#![feature(portable_simd)]
 #![no_std]
 #![warn(missing_docs)]
 #![warn(missing_copy_implementations)]
@@ -36,8 +37,6 @@ extern crate std;
 extern crate alloc;
 
 mod dash;
-mod f32x2_t;
-mod f32x4_t;
 mod floating_point;
 mod path;
 mod path_builder;
@@ -49,7 +48,6 @@ mod stroker;
 mod transform;
 
 pub use dash::StrokeDash;
-pub use f32x2_t::f32x2;
 pub use floating_point::*;
 pub use path::*;
 pub use path_builder::*;
@@ -84,16 +82,6 @@ impl Point {
     /// Creates a new `Point`.
     pub fn from_xy(x: f32, y: f32) -> Self {
         Point { x, y }
-    }
-
-    /// Creates a new `Point` from `f32x2`.
-    pub fn from_f32x2(r: f32x2) -> Self {
-        Point::from_xy(r.x(), r.y())
-    }
-
-    /// Converts a `Point` into a `f32x2`.
-    pub fn to_f32x2(&self) -> f32x2 {
-        f32x2::new(self.x, self.y)
     }
 
     /// Creates a point at 0x0 position.
