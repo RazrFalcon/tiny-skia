@@ -85,6 +85,7 @@ pub trait NoStdFloat {
     fn cos(self) -> Self;
     fn ceil(self) -> Self;
     fn floor(self) -> Self;
+    fn round(self) -> Self;
     fn powf(self, y: Self) -> Self;
     fn acos(self) -> Self;
 }
@@ -111,6 +112,9 @@ impl NoStdFloat for f32 {
     }
     fn floor(self) -> Self {
         libm::floorf(self)
+    }
+    fn round(self) -> Self {
+        libm::roundf(self)
     }
     fn powf(self, y: Self) -> Self {
         libm::powf(self, y)
@@ -142,6 +146,9 @@ impl NoStdFloat for f64 {
     }
     fn floor(self) -> Self {
         libm::floor(self)
+    }
+    fn round(self) -> Self {
+        libm::round(self)
     }
     fn powf(self, y: Self) -> Self {
         libm::pow(self, y)
