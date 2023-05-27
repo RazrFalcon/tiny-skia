@@ -635,8 +635,8 @@ impl NonZeroRect {
         IntRect::from_xywh(
             self.x().floor() as i32,
             self.y().floor() as i32,
-            std::cmp::max(1, self.width().ceil() as u32),
-            std::cmp::max(1, self.height().ceil() as u32),
+            core::cmp::max(1, self.width().ceil() as u32),
+            core::cmp::max(1, self.height().ceil() as u32),
         )
         .unwrap()
     }
