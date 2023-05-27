@@ -7,6 +7,9 @@ use strict_num::NonZeroPositiveF32;
 
 use crate::{IntRect, LengthU32, NonZeroRect, Rect};
 
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use crate::NoStdFloat;
+
 /// An integer size.
 ///
 /// # Guarantees

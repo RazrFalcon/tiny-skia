@@ -7,6 +7,9 @@ use core::convert::TryFrom;
 
 use crate::{FiniteF32, IntSize, LengthU32, PathBuilder, Point, SaturateRound, Size, Transform};
 
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use crate::NoStdFloat;
+
 /// An integer rectangle.
 ///
 /// # Guarantees
