@@ -13,8 +13,8 @@ fn do_clip_tiny_skia(aa: bool, bencher: &mut Bencher) {
     bencher.iter(|| {
         let clip_path = {
             let mut pb = PathBuilder::new();
-            pb.push_rect(100.0, 100.0, 800.0, 800.0);
-            pb.push_rect(300.0, 300.0, 400.0, 400.0);
+            pb.push_rect(Rect::from_xywh(100.0, 100.0, 800.0, 800.0).unwrap());
+            pb.push_rect(Rect::from_xywh(300.0, 300.0, 400.0, 400.0).unwrap());
             pb.finish().unwrap()
         };
 
