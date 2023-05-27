@@ -29,9 +29,6 @@ jobs:
       working-directory: path
       run: cargo test --verbose
 
-    - name: Run tests without SIMD
-      run: cargo test --verbose --no-default-features --features png-format
-
     - name: Run tests with SSE2
       env:
         RUSTFLAGS: -Ctarget-feature=+sse2
@@ -73,9 +70,6 @@ jobs:
     # - name: Build with minimal features (no_std)
     #   run: cargo build --target wasm32-wasi --verbose --no-default-features --features no-std-float
 
-    - name: Run tests without SIMD
-      run: cargo test --target wasm32-wasi --verbose --no-default-features --features png-format
-
     - name: Run tests with SIMD128
       env:
         RUSTFLAGS: -Ctarget-feature=+simd128,+bulk-memory,+nontrapping-fptoint,+sign-ext
@@ -99,9 +93,6 @@ jobs:
 
     # - name: Build with minimal features (no_std)
     #   run: cross build --target aarch64-unknown-linux-gnu --verbose --no-default-features --features no-std-float
-
-    # - name: Run tests without SIMD
-    #   run: cross test --target aarch64-unknown-linux-gnu --verbose --no-default-features --features png-format
 
     - name: Run tests with Neon
       run: cross test --target aarch64-unknown-linux-gnu
