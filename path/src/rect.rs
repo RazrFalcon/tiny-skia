@@ -395,7 +395,7 @@ impl Rect {
     }
 
     /// Insets the rectangle by the specified offset.
-    pub fn inset(&mut self, dx: f32, dy: f32) -> Option<Self> {
+    pub fn inset(&self, dx: f32, dy: f32) -> Option<Self> {
         Rect::from_ltrb(
             self.left() + dx,
             self.top() + dy,
@@ -405,7 +405,7 @@ impl Rect {
     }
 
     /// Outsets the rectangle by the specified offset.
-    pub fn outset(&mut self, dx: f32, dy: f32) -> Option<Self> {
+    pub fn outset(&self, dx: f32, dy: f32) -> Option<Self> {
         self.inset(-dx, -dy)
     }
 
