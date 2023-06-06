@@ -110,8 +110,10 @@ impl Default for LineCap {
 /// not necessarily include circles at each connected segment.
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum LineJoin {
-    /// Extends to miter limit.
+    /// Extends to miter limit, then switches to bevel.
     Miter,
+    /// Extends to miter limit, then clips the corner.
+    MiterClip,
     /// Adds circle.
     Round,
     /// Connects outside edges.
@@ -329,7 +331,7 @@ impl PathStroker {
 
         let mut inv_miter_limit = 0.0;
 
-        if line_join == LineJoin::Miter {
+        if line_join == LineJoin::Miter || line_join == LineJoin::MiterClip {
             if miter_limit <= 1.0 {
                 line_join = LineJoin::Bevel;
             } else {
@@ -1335,6 +1337,7 @@ fn square_capper(
 fn join_factory(join: LineJoin) -> JoinProc {
     match join {
         LineJoin::Miter => miter_joiner,
+        LineJoin::MiterClip => miter_clip_joiner,
         LineJoin::Round => round_joiner,
         LineJoin::Bevel => bevel_joiner,
     }
@@ -1446,6 +1449,7 @@ fn round_joiner(
     }
 }
 
+#[inline]
 fn miter_joiner(
     before_unit_normal: Point,
     pivot: Point,
@@ -1453,17 +1457,99 @@ fn miter_joiner(
     radius: f32,
     inv_miter_limit: f32,
     prev_is_line: bool,
+    curr_is_line: bool,
+    builders: SwappableBuilders,
+) {
+    miter_joiner_inner(
+        before_unit_normal,
+        pivot,
+        after_unit_normal,
+        radius,
+        inv_miter_limit,
+        false,
+        prev_is_line,
+        curr_is_line,
+        builders,
+    );
+}
+
+#[inline]
+fn miter_clip_joiner(
+    before_unit_normal: Point,
+    pivot: Point,
+    after_unit_normal: Point,
+    radius: f32,
+    inv_miter_limit: f32,
+    prev_is_line: bool,
+    curr_is_line: bool,
+    builders: SwappableBuilders,
+) {
+    miter_joiner_inner(
+        before_unit_normal,
+        pivot,
+        after_unit_normal,
+        radius,
+        inv_miter_limit,
+        true,
+        prev_is_line,
+        curr_is_line,
+        builders,
+    );
+}
+
+fn miter_joiner_inner(
+    before_unit_normal: Point,
+    pivot: Point,
+    after_unit_normal: Point,
+    radius: f32,
+    inv_miter_limit: f32,
+    miter_clip: bool,
+    prev_is_line: bool,
     mut curr_is_line: bool,
     mut builders: SwappableBuilders,
 ) {
-    fn do_blunt(
+    fn do_blunt_or_clipped(
         builders: SwappableBuilders,
         pivot: Point,
         radius: f32,
+        prev_is_line: bool,
         curr_is_line: bool,
+        mut before: Point,
+        mut mid: Point,
         mut after: Point,
+        inv_miter_limit: f32,
+        miter_clip: bool,
     ) {
         after.scale(radius);
+
+        if miter_clip {
+            mid.normalize();
+
+            let cos_beta = before.dot(mid);
+            let sin_beta = before.cross(mid);
+
+            let x = ((1.0 / inv_miter_limit) - cos_beta) / sin_beta;
+
+            before.scale(radius);
+
+            let mut before_tangent = before;
+            before_tangent.rotate_cw();
+
+            let mut after_tangent = after;
+            after_tangent.rotate_ccw();
+
+            let c1 = pivot + before + before_tangent.scaled(x);
+            let c2 = pivot + after + after_tangent.scaled(x);
+
+            if prev_is_line {
+                builders.outer.set_last_point(c1);
+            } else {
+                builders.outer.line_to(c1.x, c1.y);
+            }
+
+            builders.outer.line_to(c2.x, c2.y);
+        }
+
         if !curr_is_line {
             builders.outer.line_to(pivot.x + after.x, pivot.y + after.y);
         }
@@ -1478,8 +1564,10 @@ fn miter_joiner(
         prev_is_line: bool,
         curr_is_line: bool,
         mid: Point,
-        after: Point,
+        mut after: Point,
     ) {
+        after.scale(radius);
+
         if prev_is_line {
             builders
                 .outer
@@ -1488,7 +1576,11 @@ fn miter_joiner(
             builders.outer.line_to(pivot.x + mid.x, pivot.y + mid.y);
         }
 
-        do_blunt(builders, pivot, radius, curr_is_line, after);
+        if !curr_is_line {
+            builders.outer.line_to(pivot.x + after.x, pivot.y + after.y);
+        }
+
+        handle_inner_join(pivot, after, builders.inner);
     }
 
     // negate the dot since we're using normals instead of tangents
@@ -1504,7 +1596,21 @@ fn miter_joiner(
 
     if angle_type == AngleType::Nearly180 {
         curr_is_line = false;
-        do_blunt(builders, pivot, radius, curr_is_line, after);
+        before.rotate_cw();
+        after.rotate_ccw();
+        mid = (before + after).scaled(radius);
+        do_blunt_or_clipped(
+            builders,
+            pivot,
+            radius,
+            prev_is_line,
+            curr_is_line,
+            before,
+            mid,
+            after,
+            inv_miter_limit,
+            miter_clip,
+        );
         return;
     }
 
@@ -1534,6 +1640,16 @@ fn miter_joiner(
         return;
     }
 
+    // choose the most accurate way to form the initial mid-vector
+    if angle_type == AngleType::Sharp {
+        mid = Point::from_xy(after.y - before.y, before.x - after.x);
+        if ccw {
+            mid = -mid;
+        }
+    } else {
+        mid = Point::from_xy(before.x + after.x, before.y + after.y);
+    }
+
     // midLength = radius / sinHalfAngle
     // if (midLength > miterLimit * radius) abort
     // if (radius / sinHalf > miterLimit * radius) abort
@@ -1544,18 +1660,19 @@ fn miter_joiner(
     let sin_half_angle = (1.0 + dot_prod).half().sqrt();
     if sin_half_angle < inv_miter_limit {
         curr_is_line = false;
-        do_blunt(builders, pivot, radius, curr_is_line, after);
+        do_blunt_or_clipped(
+            builders,
+            pivot,
+            radius,
+            prev_is_line,
+            curr_is_line,
+            before,
+            mid,
+            after,
+            inv_miter_limit,
+            miter_clip,
+        );
         return;
-    }
-
-    // choose the most accurate way to form the initial mid-vector
-    if angle_type == AngleType::Sharp {
-        mid = Point::from_xy(after.y - before.y, before.x - after.x);
-        if ccw {
-            mid = -mid;
-        }
-    } else {
-        mid = Point::from_xy(before.x + after.x, before.y + after.y);
     }
 
     mid.set_length(radius / sin_half_angle);
