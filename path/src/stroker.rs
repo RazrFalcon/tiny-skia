@@ -1528,7 +1528,12 @@ fn miter_joiner_inner(
             let cos_beta = before.dot(mid);
             let sin_beta = before.cross(mid);
 
-            let x = ((1.0 / inv_miter_limit) - cos_beta) / sin_beta;
+            let x = if sin_beta.abs() <= SCALAR_NEARLY_ZERO {
+                1.0 / inv_miter_limit
+            }
+            else {
+                ((1.0 / inv_miter_limit) - cos_beta) / sin_beta
+            };
 
             before.scale(radius);
 
@@ -1596,9 +1601,7 @@ fn miter_joiner_inner(
 
     if angle_type == AngleType::Nearly180 {
         curr_is_line = false;
-        before.rotate_cw();
-        after.rotate_ccw();
-        mid = (before + after).scaled(radius);
+        mid = (after - before).scaled(radius / 2.0);
         do_blunt_or_clipped(
             builders,
             pivot,
