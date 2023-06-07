@@ -7,7 +7,7 @@ fn main() {
 
     let mut paint2 = Paint::default();
     paint2.set_color_rgba8(220, 140, 75, 180);
-    paint1.anti_alias = false;
+    paint2.anti_alias = false;
 
     let path1 = {
         let mut pb = PathBuilder::new();
