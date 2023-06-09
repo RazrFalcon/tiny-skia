@@ -45,6 +45,7 @@ and should be optimized out in the future.
 */
 
 use alloc::vec::Vec;
+use core::simd::u32x8;
 
 use arrayvec::ArrayVec;
 
@@ -57,7 +58,6 @@ pub use blitter::RasterPipelineBlitter;
 
 use crate::geom::ScreenIntRect;
 use crate::pixmap::SubPixmapMut;
-use crate::wide::u32x8;
 
 mod blitter;
 #[rustfmt::skip] mod highp;
@@ -137,7 +137,7 @@ pub const STAGES_COUNT: usize = Stage::ApplyVectorMask as usize + 1;
 impl<'a> PixmapRef<'a> {
     #[inline(always)]
     pub(crate) fn gather(&self, index: u32x8) -> [PremultipliedColorU8; highp::STAGE_WIDTH] {
-        let index: [u32; 8] = bytemuck::cast(index);
+        let index: &[u32; 8] = index.as_array();
         let pixels = self.pixels();
         [
             pixels[index[0] as usize],

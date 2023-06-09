@@ -28,10 +28,11 @@ we are still 40-60% behind Skia built for Haswell.
 On ARM AArch64 the story is different and explicit SIMD make our code up to 2-3x faster.
 */
 
+use std::simd::{u16x16, f32x16, StdFloat, SimdFloat, SimdPartialOrd};
+
 use crate::PremultipliedColorU8;
 
 use crate::pixmap::SubPixmapMut;
-use crate::wide::{f32x8, u16x16, f32x16};
 use crate::geom::ScreenIntRect;
 
 pub const STAGE_WIDTH: usize = 16;
@@ -142,6 +143,16 @@ pub fn fn_ptr_eq(f1: StageFn, f2: StageFn) -> bool {
     core::ptr::eq(f1 as *const (), f2 as *const ())
 }
 
+trait F32x16Ext {
+    fn normalize(self) -> Self;
+}
+
+impl F32x16Ext for f32x16 {
+    fn normalize(self) -> Self {
+        self.simd_max(f32x16::default()).simd_min(f32x16::splat(1.0))
+    }
+}
+
 #[inline(never)]
 pub fn start(
     functions: &[StageFn],
@@ -234,10 +245,10 @@ fn uniform_color(p: &mut Pipeline) {
 }
 
 fn seed_shader(p: &mut Pipeline) {
-    let iota = f32x16(
-        f32x8::from([0.5,  1.5,  2.5,  3.5,  4.5,  5.5,  6.5,  7.5]),
-        f32x8::from([8.5,  9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5]),
-    );
+    let iota = f32x16::from_array([
+        0.5,  1.5,  2.5,  3.5,  4.5,  5.5,  6.5,  7.5,
+        8.5,  9.5, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5,
+    ]);
 
     let x = f32x16::splat(p.dx as f32) + iota;
     let y = f32x16::splat(p.dy as f32 + 0.5);
@@ -285,7 +296,7 @@ pub fn load_dst_u8_tail(p: &mut Pipeline) {
 
 pub fn store_u8(p: &mut Pipeline) {
     let data = p.pixmap.slice16_mask_at_xy(p.dx, p.dy);
-    let a = p.a.as_slice();
+    let a = p.a.as_array();
 
     data[ 0] = a[ 0] as u8;
     data[ 1] = a[ 1] as u8;
@@ -309,7 +320,7 @@ pub fn store_u8(p: &mut Pipeline) {
 
 pub fn store_u8_tail(p: &mut Pipeline) {
     let data = p.pixmap.slice_mask_at_xy(p.dx, p.dy);
-    let a = p.a.as_slice();
+    let a = p.a.as_array();
 
     // This is better than `for i in 0..tail`, because this way the compiler
     // knows that we have only 16 steps and slices access is guarantee to be valid.
@@ -331,7 +342,7 @@ fn load_mask_u8(p: &mut Pipeline) {
 
     let mut c = u16x16::default();
     for i in 0..p.tail {
-        c.0[i] = u16::from(p.mask_ctx.data[offset + i]);
+        c.as_mut_array()[i] = u16::from(p.mask_ctx.data[offset + i]);
     }
 
     p.r = u16x16::splat(0);
@@ -347,7 +358,7 @@ fn mask_u8(p: &mut Pipeline) {
 
     let mut c = u16x16::default();
     for i in 0..p.tail {
-        c.0[i] = u16::from(p.mask_ctx.data[offset + i]);
+        c.as_mut_array()[i] = u16::from(p.mask_ctx.data[offset + i]);
     }
 
     if c == u16x16::default() {
@@ -365,7 +376,7 @@ fn mask_u8(p: &mut Pipeline) {
 fn scale_u8(p: &mut Pipeline) {
     // Load u8xTail and cast it to u16x16.
     let data = p.aa_mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
-    let c = u16x16([
+    let c = u16x16::from_array([
         u16::from(data[0]),
         u16::from(data[1]),
         0,
@@ -395,7 +406,7 @@ fn scale_u8(p: &mut Pipeline) {
 fn lerp_u8(p: &mut Pipeline) {
     // Load u8xTail and cast it to u16x16.
     let data = p.aa_mask_ctx.copy_at_xy(p.dx, p.dy, p.tail);
-    let c = u16x16([
+    let c = u16x16::from_array([
         u16::from(data[0]),
         u16::from(data[1]),
         0,
@@ -470,7 +481,7 @@ blend_fn!(screen,           |s, d,  _,  _| s + d - div255(s * d));
 blend_fn!(xor,              |s, d, sa, da| div255(s * inv(da) + d * inv(sa)));
 
 // Wants a type for some reason.
-blend_fn!(plus, |s: u16x16, d, _, _| (s + d).min(&u16x16::splat(255)));
+blend_fn!(plus, |s: u16x16, d: u16x16, _, _| (s + d).min(u16x16::splat(255)));
 
 
 macro_rules! blend_fn2 {
@@ -487,25 +498,30 @@ macro_rules! blend_fn2 {
     };
 }
 
-blend_fn2!(darken,      |s: u16x16, d, sa, da| s + d - div255((s * da).max(&(d * sa))));
-blend_fn2!(lighten,     |s: u16x16, d, sa, da| s + d - div255((s * da).min(&(d * sa))));
+blend_fn2!(darken,      |s: u16x16, d: u16x16, sa: u16x16, da: u16x16| s + d - div255((s * da).max(d * sa)));
+blend_fn2!(lighten,     |s: u16x16, d: u16x16, sa: u16x16, da: u16x16| s + d - div255((s * da).min(d * sa)));
 blend_fn2!(exclusion,   |s: u16x16, d,  _,  _| s + d - u16x16::splat(2) * div255(s * d));
 
-blend_fn2!(difference,  |s: u16x16, d, sa, da|
-    s + d - u16x16::splat(2) * div255((s * da).min(&(d * sa))));
+blend_fn2!(difference,  |s: u16x16, d, sa, da: u16x16|
+    s + d - u16x16::splat(2) * div255((s * da).min(d * sa)));
 
 blend_fn2!(hard_light, |s: u16x16, d: u16x16, sa, da| {
     div255(s * inv(da) + d * inv(sa)
-        + (s+s).cmp_le(&sa).blend(
+        + blend((s+s).simd_le(sa).to_int().cast(),
             u16x16::splat(2) * s * d,
             sa * da - u16x16::splat(2) * (sa-s)*(da-d)
         )
     )
 });
 
+#[inline]
+fn blend(a: u16x16, t: u16x16, e: u16x16) -> u16x16 {
+    (t & a) | (e & !a)
+}
+
 blend_fn2!(overlay, |s: u16x16, d: u16x16, sa, da| {
     div255(s * inv(da) + d * inv(sa)
-        + (d+d).cmp_le(&da).blend(
+        + blend((d+d).simd_le(da).to_int().cast(),
             u16x16::splat(2) * s * d,
             sa * da - u16x16::splat(2) * (sa-s)*(da-d)
         )
@@ -542,8 +558,8 @@ fn transform(p: &mut Pipeline) {
     let x = join(&p.r, &p.g);
     let y = join(&p.b, &p.a);
 
-    let nx = mad(x, f32x16::splat(ts.sx), mad(y, f32x16::splat(ts.kx), f32x16::splat(ts.tx)));
-    let ny = mad(x, f32x16::splat(ts.ky), mad(y, f32x16::splat(ts.sy), f32x16::splat(ts.ty)));
+    let nx = x.mul_add(f32x16::splat(ts.sx), y.mul_add(f32x16::splat(ts.kx), f32x16::splat(ts.tx)));
+    let ny = x.mul_add(f32x16::splat(ts.ky), y.mul_add(f32x16::splat(ts.sy), f32x16::splat(ts.ty)));
 
     split(&nx, &mut p.r, &mut p.g);
     split(&ny, &mut p.b, &mut p.a);
@@ -588,24 +604,24 @@ fn gradient(p: &mut Pipeline) {
     let mut idx = u16x16::splat(0);
     for i in 1..ctx.len {
         let tt = ctx.t_values[i].get();
-        let t0: [f32; 8] = t.0.into();
-        let t1: [f32; 8] = t.1.into();
-        idx.0[ 0] += (t0[0] >= tt) as u16;
-        idx.0[ 1] += (t0[1] >= tt) as u16;
-        idx.0[ 2] += (t0[2] >= tt) as u16;
-        idx.0[ 3] += (t0[3] >= tt) as u16;
-        idx.0[ 4] += (t0[4] >= tt) as u16;
-        idx.0[ 5] += (t0[5] >= tt) as u16;
-        idx.0[ 6] += (t0[6] >= tt) as u16;
-        idx.0[ 7] += (t0[7] >= tt) as u16;
-        idx.0[ 8] += (t1[0] >= tt) as u16;
-        idx.0[ 9] += (t1[1] >= tt) as u16;
-        idx.0[10] += (t1[2] >= tt) as u16;
-        idx.0[11] += (t1[3] >= tt) as u16;
-        idx.0[12] += (t1[4] >= tt) as u16;
-        idx.0[13] += (t1[5] >= tt) as u16;
-        idx.0[14] += (t1[6] >= tt) as u16;
-        idx.0[15] += (t1[7] >= tt) as u16;
+        let t = t.as_array();
+        let idx = idx.as_mut_array();
+        idx[ 0] += (t[ 0] >= tt) as u16;
+        idx[ 1] += (t[ 1] >= tt) as u16;
+        idx[ 2] += (t[ 2] >= tt) as u16;
+        idx[ 3] += (t[ 3] >= tt) as u16;
+        idx[ 4] += (t[ 4] >= tt) as u16;
+        idx[ 5] += (t[ 5] >= tt) as u16;
+        idx[ 6] += (t[ 6] >= tt) as u16;
+        idx[ 7] += (t[ 7] >= tt) as u16;
+        idx[ 8] += (t[ 8] >= tt) as u16;
+        idx[ 9] += (t[ 9] >= tt) as u16;
+        idx[10] += (t[10] >= tt) as u16;
+        idx[11] += (t[11] >= tt) as u16;
+        idx[12] += (t[12] >= tt) as u16;
+        idx[13] += (t[13] >= tt) as u16;
+        idx[14] += (t[14] >= tt) as u16;
+        idx[15] += (t[15] >= tt) as u16;
     }
     gradient_lookup(ctx, &idx, t, &mut p.r, &mut p.g, &mut p.b, &mut p.a);
 
@@ -617,10 +633,10 @@ fn evenly_spaced_2_stop_gradient(p: &mut Pipeline) {
 
     let t = join(&p.r, &p.g);
     round_f32_to_u16(
-        mad(t, f32x16::splat(ctx.factor.r), f32x16::splat(ctx.bias.r)),
-        mad(t, f32x16::splat(ctx.factor.g), f32x16::splat(ctx.bias.g)),
-        mad(t, f32x16::splat(ctx.factor.b), f32x16::splat(ctx.bias.b)),
-        mad(t, f32x16::splat(ctx.factor.a), f32x16::splat(ctx.bias.a)),
+        t.mul_add(f32x16::splat(ctx.factor.r), f32x16::splat(ctx.bias.r)),
+        t.mul_add(f32x16::splat(ctx.factor.g), f32x16::splat(ctx.bias.g)),
+        t.mul_add(f32x16::splat(ctx.factor.b), f32x16::splat(ctx.bias.b)),
+        t.mul_add(f32x16::splat(ctx.factor.a), f32x16::splat(ctx.bias.a)),
         &mut p.r, &mut p.g, &mut p.b, &mut p.a,
     );
 
@@ -643,32 +659,29 @@ fn gradient_lookup(
     ctx: &super::GradientCtx, idx: &u16x16, t: f32x16,
     r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
 ) {
+    let idx = idx.as_array();
     macro_rules! gather {
         ($d:expr, $c:ident) => {
             // Surprisingly, but bound checking doesn't affect the performance.
             // And since `idx` can contain any number, we should leave it in place.
-            f32x16(
-                f32x8::from([
-                    $d[idx.0[ 0] as usize].$c,
-                    $d[idx.0[ 1] as usize].$c,
-                    $d[idx.0[ 2] as usize].$c,
-                    $d[idx.0[ 3] as usize].$c,
-                    $d[idx.0[ 4] as usize].$c,
-                    $d[idx.0[ 5] as usize].$c,
-                    $d[idx.0[ 6] as usize].$c,
-                    $d[idx.0[ 7] as usize].$c,
-                ]),
-                f32x8::from([
-                    $d[idx.0[ 8] as usize].$c,
-                    $d[idx.0[ 9] as usize].$c,
-                    $d[idx.0[10] as usize].$c,
-                    $d[idx.0[11] as usize].$c,
-                    $d[idx.0[12] as usize].$c,
-                    $d[idx.0[13] as usize].$c,
-                    $d[idx.0[14] as usize].$c,
-                    $d[idx.0[15] as usize].$c,
-                ]),
-            )
+            f32x16::from_array([
+                $d[idx[ 0] as usize].$c,
+                $d[idx[ 1] as usize].$c,
+                $d[idx[ 2] as usize].$c,
+                $d[idx[ 3] as usize].$c,
+                $d[idx[ 4] as usize].$c,
+                $d[idx[ 5] as usize].$c,
+                $d[idx[ 6] as usize].$c,
+                $d[idx[ 7] as usize].$c,
+                $d[idx[ 8] as usize].$c,
+                $d[idx[ 9] as usize].$c,
+                $d[idx[10] as usize].$c,
+                $d[idx[11] as usize].$c,
+                $d[idx[12] as usize].$c,
+                $d[idx[13] as usize].$c,
+                $d[idx[14] as usize].$c,
+                $d[idx[15] as usize].$c,
+            ])
         };
     }
 
@@ -683,10 +696,10 @@ fn gradient_lookup(
     let ba = gather!(&ctx.biases, a);
 
     round_f32_to_u16(
-        mad(t, fr, br),
-        mad(t, fg, bg),
-        mad(t, fb, bb),
-        mad(t, fa, ba),
+        t.mul_add(fr, br),
+        t.mul_add(fg, bg),
+        t.mul_add(fb, bb),
+        t.mul_add(fa, ba),
         r, g, b, a,
     );
 }
@@ -704,10 +717,42 @@ fn round_f32_to_u16(
     let bf = bf.normalize() * f32x16::splat(255.0) + f32x16::splat(0.5);
     let af = af * f32x16::splat(255.0) + f32x16::splat(0.5);
 
-    rf.save_to_u16x16(r);
-    gf.save_to_u16x16(g);
-    bf.save_to_u16x16(b);
-    af.save_to_u16x16(a);
+    save_to_u16x16(rf, r);
+    save_to_u16x16(gf, g);
+    save_to_u16x16(bf, b);
+    save_to_u16x16(af, a);
+}
+
+// TODO: optimize
+// This method is too heavy and shouldn't be inlined.
+fn save_to_u16x16(src: f32x16, dst: &mut u16x16) {
+    // Do not use to_i32x8, because it involves rounding,
+    // and Skia cast's without it.
+
+    // let n0: [f32; 8] = self.0.into();
+    // let n1: [f32; 8] = self.1.into();
+    let n = src.as_array();
+    let dst = dst.as_mut_array();
+
+    dst[0] = n[0] as u16;
+    dst[1] = n[1] as u16;
+    dst[2] = n[2] as u16;
+    dst[3] = n[3] as u16;
+
+    dst[4] = n[4] as u16;
+    dst[5] = n[5] as u16;
+    dst[6] = n[6] as u16;
+    dst[7] = n[7] as u16;
+
+    dst[8] = n[8] as u16;
+    dst[9] = n[9] as u16;
+    dst[10] = n[10] as u16;
+    dst[11] = n[11] as u16;
+
+    dst[12] = n[12] as u16;
+    dst[13] = n[13] as u16;
+    dst[14] = n[14] as u16;
+    dst[15] = n[15] as u16;
 }
 
 pub fn just_return(_: &mut Pipeline) {
@@ -723,28 +768,28 @@ fn load_8888(
     data: &[PremultipliedColorU8; STAGE_WIDTH],
     r: &mut u16x16, g: &mut u16x16, b: &mut u16x16, a: &mut u16x16,
 ) {
-    *r = u16x16([
+    *r = u16x16::from_array([
         data[ 0].red() as u16, data[ 1].red() as u16, data[ 2].red() as u16, data[ 3].red() as u16,
         data[ 4].red() as u16, data[ 5].red() as u16, data[ 6].red() as u16, data[ 7].red() as u16,
         data[ 8].red() as u16, data[ 9].red() as u16, data[10].red() as u16, data[11].red() as u16,
         data[12].red() as u16, data[13].red() as u16, data[14].red() as u16, data[15].red() as u16,
     ]);
 
-    *g = u16x16([
+    *g = u16x16::from_array([
         data[ 0].green() as u16, data[ 1].green() as u16, data[ 2].green() as u16, data[ 3].green() as u16,
         data[ 4].green() as u16, data[ 5].green() as u16, data[ 6].green() as u16, data[ 7].green() as u16,
         data[ 8].green() as u16, data[ 9].green() as u16, data[10].green() as u16, data[11].green() as u16,
         data[12].green() as u16, data[13].green() as u16, data[14].green() as u16, data[15].green() as u16,
     ]);
 
-    *b = u16x16([
+    *b = u16x16::from_array([
         data[ 0].blue() as u16, data[ 1].blue() as u16, data[ 2].blue() as u16, data[ 3].blue() as u16,
         data[ 4].blue() as u16, data[ 5].blue() as u16, data[ 6].blue() as u16, data[ 7].blue() as u16,
         data[ 8].blue() as u16, data[ 9].blue() as u16, data[10].blue() as u16, data[11].blue() as u16,
         data[12].blue() as u16, data[13].blue() as u16, data[14].blue() as u16, data[15].blue() as u16,
     ]);
 
-    *a = u16x16([
+    *a = u16x16::from_array([
         data[ 0].alpha() as u16, data[ 1].alpha() as u16, data[ 2].alpha() as u16, data[ 3].alpha() as u16,
         data[ 4].alpha() as u16, data[ 5].alpha() as u16, data[ 6].alpha() as u16, data[ 7].alpha() as u16,
         data[ 8].alpha() as u16, data[ 9].alpha() as u16, data[10].alpha() as u16, data[11].alpha() as u16,
@@ -769,10 +814,10 @@ fn store_8888(
     r: &u16x16, g: &u16x16, b: &u16x16, a: &u16x16,
     data: &mut [PremultipliedColorU8; STAGE_WIDTH],
 ) {
-    let r = r.as_slice();
-    let g = g.as_slice();
-    let b = b.as_slice();
-    let a = a.as_slice();
+    let r = r.as_array();
+    let g = g.as_array();
+    let b = b.as_array();
+    let a = a.as_array();
 
     data[ 0] = PremultipliedColorU8::from_rgba_unchecked(r[ 0] as u8, g[ 0] as u8, b[ 0] as u8, a[ 0] as u8);
     data[ 1] = PremultipliedColorU8::from_rgba_unchecked(r[ 1] as u8, g[ 1] as u8, b[ 1] as u8, a[ 1] as u8);
@@ -797,10 +842,10 @@ fn store_8888_tail(
     r: &u16x16, g: &u16x16, b: &u16x16, a: &u16x16,
     tail: usize, data: &mut [PremultipliedColorU8],
 ) {
-    let r = r.as_slice();
-    let g = g.as_slice();
-    let b = b.as_slice();
-    let a = a.as_slice();
+    let r = r.as_array();
+    let g = g.as_array();
+    let b = b.as_array();
+    let a = a.as_array();
 
     // This is better than `for i in 0..tail`, because this way the compiler
     // knows that we have only 16 steps and slices access is guarantee to be valid.
@@ -818,7 +863,7 @@ fn store_8888_tail(
 
 #[inline(always)]
 fn load_8(data: &[u8; STAGE_WIDTH], a: &mut u16x16) {
-    *a = u16x16([
+    *a = u16x16::from_array([
         data[ 0] as u16, data[ 1] as u16, data[ 2] as u16, data[ 3] as u16,
         data[ 4] as u16, data[ 5] as u16, data[ 6] as u16, data[ 7] as u16,
         data[ 8] as u16, data[ 9] as u16, data[10] as u16, data[11] as u16,
@@ -830,7 +875,7 @@ fn load_8(data: &[u8; STAGE_WIDTH], a: &mut u16x16) {
 fn div255(v: u16x16) -> u16x16 {
     // Skia uses `vrshrq_n_u16(vrsraq_n_u16(v, v, 8), 8)` here when NEON is available,
     // but it doesn't affect performance much and breaks reproducible result. Ignore it.
-    // NOTE: the compiler does not replace the devision with a shift.
+    // NOTE: the compiler does not replace the division with a shift.
     (v + u16x16::splat(255)) >> u16x16::splat(8) // / u16x16::splat(256)
 }
 
@@ -852,9 +897,9 @@ fn lerp(from: u16x16, to: u16x16, t: u16x16) -> u16x16 {
 #[inline(always)]
 fn split(v: &f32x16, lo: &mut u16x16, hi: &mut u16x16) {
     // We're splitting f32x16 (512bit) into two u16x16 (256 bit).
-    let data: [u8; 64] = bytemuck::cast(*v);
-    let d0: &mut [u8; 32] = bytemuck::cast_mut(&mut lo.0);
-    let d1: &mut [u8; 32] = bytemuck::cast_mut(&mut hi.0);
+    let data: [u8; 64] = bytemuck::cast(*v.as_array());
+    let d0: &mut [u8; 32] = bytemuck::cast_mut(lo.as_mut_array());
+    let d1: &mut [u8; 32] = bytemuck::cast_mut(hi.as_mut_array());
 
     d0.copy_from_slice(&data[0..32]);
     d1.copy_from_slice(&data[32..64]);
@@ -864,20 +909,14 @@ fn split(v: &f32x16, lo: &mut u16x16, hi: &mut u16x16) {
 fn join(lo: &u16x16, hi: &u16x16) -> f32x16 {
     // We're joining two u16x16 (256 bit) into f32x16 (512bit).
 
-    let d0: [u8; 32] = bytemuck::cast(lo.0);
-    let d1: [u8; 32] = bytemuck::cast(hi.0);
+    let d0: [u8; 32] = bytemuck::cast(*lo.as_array());
+    let d1: [u8; 32] = bytemuck::cast(*hi.as_array());
 
     let mut v = f32x16::default();
-    let data: &mut [u8; 64] = bytemuck::cast_mut(&mut v);
+    let data: &mut [u8; 64] = bytemuck::cast_mut(v.as_mut_array());
 
     data[0..32].copy_from_slice(&d0);
     data[32..64].copy_from_slice(&d1);
 
     v
-}
-
-#[inline(always)]
-fn mad(f: f32x16, m: f32x16, a: f32x16) -> f32x16 {
-    // NEON vmlaq_f32 doesn't seem to affect performance in any way. Ignore it.
-    f * m + a
 }

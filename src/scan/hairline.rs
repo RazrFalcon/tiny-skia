@@ -5,8 +5,9 @@
 // found in the LICENSE file.
 
 use core::convert::TryInto;
+use core::simd::{f32x2, SimdFloat};
 
-use tiny_skia_path::{f32x2, PathVerb, SaturateCast, Scalar};
+use tiny_skia_path::{PathVerb, SaturateCast, Scalar};
 
 use crate::{IntRect, LineCap, Path, PathSegment, Point, Rect};
 
@@ -26,6 +27,48 @@ pub type LineProc = fn(&[Point], Option<&ScreenIntRect>, &mut dyn Blitter);
 
 const MAX_CUBIC_SUBDIVIDE_LEVEL: u8 = 9;
 const MAX_QUAD_SUBDIVIDE_LEVEL: u8 = 5;
+
+trait F32x2Ext {
+    fn x(self) -> f32;
+    fn y(self) -> f32;
+    fn max_component(self) -> f32;
+}
+
+impl F32x2Ext for f32x2 {
+    fn x(self) -> f32 {
+        self.as_array()[0]
+    }
+
+    fn y(self) -> f32 {
+        self.as_array()[1]
+    }
+
+    fn max_component(self) -> f32 {
+        let a = self.x();
+        let b = self.y();
+        // This is faster than `f32::max`. Unlike std one, we do not care about NaN.
+        if a < b {
+            b
+        } else {
+            a
+        }
+    }
+}
+
+trait PointExt {
+    fn from_f32x2(r: f32x2) -> Self;
+    fn to_f32x2(&self) -> f32x2;
+}
+
+impl PointExt for Point {
+    fn from_f32x2(r: f32x2) -> Self {
+        Point::from_xy(r.as_array()[0], r.as_array()[1])
+    }
+
+    fn to_f32x2(&self) -> f32x2 {
+        f32x2::from_array([self.x, self.y])
+    }
+}
 
 pub fn stroke_path(
     path: &Path,
@@ -429,8 +472,8 @@ fn compute_nocheck_quad_bounds(points: &[Point; 3]) -> Option<Rect> {
     let mut max = min;
     for i in 1..3 {
         let pair = points[i].to_f32x2();
-        min = min.min(pair);
-        max = max.max(pair);
+        min = min.simd_min(pair);
+        max = max.simd_max(pair);
     }
 
     Rect::from_ltrb(min.x(), min.y(), max.x(), max.y())
@@ -564,8 +607,8 @@ fn compute_nocheck_cubic_bounds(points: &[Point; 4]) -> Option<Rect> {
     let mut max = min;
     for i in 1..4 {
         let pair = points[i].to_f32x2();
-        min = min.min(pair);
-        max = max.max(pair);
+        min = min.simd_min(pair);
+        max = max.simd_max(pair);
     }
 
     Rect::from_ltrb(min.x(), min.y(), max.x(), max.y())
@@ -631,7 +674,7 @@ fn compute_cubic_segments(points: &[Point; 4]) -> usize {
     let p13 = one_third * p3 + two_third * p0;
     let p23 = one_third * p0 + two_third * p3;
 
-    let diff = (p1 - p13).abs().max((p2 - p23).abs()).max_component();
+    let diff = (p1 - p13).abs().simd_max((p2 - p23).abs()).max_component();
     let mut tol = 1.0 / 8.0;
 
     for i in 0..MAX_CUBIC_SUBDIVIDE_LEVEL {

@@ -9,6 +9,7 @@ and a user should manage the world transform, clipping mask and style manually.
 See the `examples/` directory for usage examples.
 */
 
+#![feature(portable_simd)]
 #![no_std]
 #![warn(missing_docs)]
 #![warn(missing_copy_implementations)]
@@ -52,7 +53,6 @@ mod pipeline;
 mod pixmap;
 mod scan;
 mod shaders;
-mod wide;
 
 mod painter; // Keep it under `pixmap` for a better order in the docs.
 

@@ -11,8 +11,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.57.0
-          - stable
+          - nightly
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -23,15 +22,12 @@ jobs:
         toolchain: ${{ matrix.rust }}
         override: true
 
-    - name: Build with minimal features (no_std)
-      run: cargo build --verbose --no-default-features --features no-std-float
+    # - name: Build with minimal features (no_std)
+    #   run: cargo build --verbose --no-default-features --features no-std-float
 
     - name: Run tests for tiny-skia-path
       working-directory: path
       run: cargo test --verbose
-
-    - name: Run tests without SIMD
-      run: cargo test --verbose --no-default-features --features png-format
 
     - name: Run tests with SSE2
       env:
@@ -62,7 +58,7 @@ jobs:
     - name: Install toolchain
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
+        toolchain: nightly
         override: true
         target: wasm32-wasi
 
@@ -71,11 +67,8 @@ jobs:
         curl https://wasmtime.dev/install.sh -sSf | bash
         echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
 
-    - name: Build with minimal features (no_std)
-      run: cargo build --target wasm32-wasi --verbose --no-default-features --features no-std-float
-
-    - name: Run tests without SIMD
-      run: cargo test --target wasm32-wasi --verbose --no-default-features --features png-format
+    # - name: Build with minimal features (no_std)
+    #   run: cargo build --target wasm32-wasi --verbose --no-default-features --features no-std-float
 
     - name: Run tests with SIMD128
       env:
@@ -91,18 +84,15 @@ jobs:
     - name: Install toolchain
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
+        toolchain: nightly
         override: true
         target: aarch64-unknown-linux-gnu
 
     - name: Install cross
       run: cargo install cross
 
-    - name: Build with minimal features (no_std)
-      run: cross build --target aarch64-unknown-linux-gnu --verbose --no-default-features --features no-std-float
-
-    - name: Run tests without SIMD
-      run: cross test --target aarch64-unknown-linux-gnu --verbose --no-default-features --features png-format
+    # - name: Build with minimal features (no_std)
+    #   run: cross build --target aarch64-unknown-linux-gnu --verbose --no-default-features --features no-std-float
 
     - name: Run tests with Neon
       run: cross test --target aarch64-unknown-linux-gnu

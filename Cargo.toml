@@ -24,17 +24,12 @@ png = { version = "0.17", optional = true }
 tiny-skia-path = { version = "0.11.0", path = "path", default-features = false }
 
 [features]
-default = ["std", "simd", "png-format"]
+default = ["std", "png-format"]
 
 # Enables the use of the standard library. Deactivate this and activate the no-std-float
 # feature to compile for targets that don't have std.
 std = ["tiny-skia-path/std"]
 no-std-float = ["tiny-skia-path/no-std-float"]
-
-# Enables SIMD instructions on x86 (from SSE up to AVX2), WebAssembly (SIMD128)
-# and AArch64 (Neon).
-# Has no effect on other targets. Present mainly for testing.
-simd = []
 
 # Allows loading and saving `Pixmap` as PNG.
 png-format = ["std", "png"]
