@@ -331,12 +331,16 @@ impl PathStroker {
 
         let mut inv_miter_limit = 0.0;
 
-        if line_join == LineJoin::Miter || line_join == LineJoin::MiterClip {
+        if line_join == LineJoin::Miter {
             if miter_limit <= 1.0 {
                 line_join = LineJoin::Bevel;
             } else {
                 inv_miter_limit = miter_limit.invert();
             }
+        }
+
+        if line_join == LineJoin::MiterClip {
+            inv_miter_limit = miter_limit.invert();
         }
 
         self.res_scale = res_scale;
