@@ -225,7 +225,7 @@ checksum = "9ac8fb7895b4afa060ad731a32860db8755da3449a47e796d5ecf758db2671d4"
 
 [[package]]
 name = "tiny-skia"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "arrayref",
  "arrayvec 0.7.2",
@@ -238,7 +238,7 @@ dependencies = [
 
 [[package]]
 name = "tiny-skia-path"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "arrayref",
  "bytemuck",
