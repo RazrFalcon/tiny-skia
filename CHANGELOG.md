@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- MSRV bumped to 1.60, because of the `log` crate.
 
 ## [0.11.0] - 2023-06-08
 ### Added
