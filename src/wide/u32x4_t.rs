@@ -13,7 +13,7 @@ cfg_if::cfg_if! {
         use core::arch::x86_64::*;
 
         // unused when AVX is available
-        #[cfg(not(target_feature = "avx2"))]
+        #[cfg(not(all(feature = "simd", target_feature = "avx2")))]
         use bytemuck::cast;
 
         #[derive(Clone, Copy, Debug)]
@@ -53,7 +53,7 @@ impl u32x4 {
     }
 
     // unused when AVX is available
-    #[cfg(not(target_feature = "avx2"))]
+    #[cfg(not(all(feature = "simd", target_feature = "avx2")))]
     pub fn cmp_eq(self, rhs: Self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
@@ -74,7 +74,7 @@ impl u32x4 {
     }
 
     // unused when AVX is available
-    #[cfg(not(target_feature = "avx2"))]
+    #[cfg(not(all(feature = "simd", target_feature = "avx2")))]
     pub fn shl<const RHS: i32>(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
@@ -97,7 +97,7 @@ impl u32x4 {
     }
 
     // unused when AVX is available
-    #[cfg(not(target_feature = "avx2"))]
+    #[cfg(not(all(feature = "simd", target_feature = "avx2")))]
     pub fn shr<const RHS: i32>(self) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
