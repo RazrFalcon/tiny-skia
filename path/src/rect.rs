@@ -171,14 +171,14 @@ mod int_rect_tests {
         assert_eq!(IntRect::from_xywh(0, 0, 0, 1), None);
 
         assert_eq!(
-            IntRect::from_xywh(0, 0, core::u32::MAX, core::u32::MAX),
+            IntRect::from_xywh(0, 0, u32::MAX, u32::MAX),
             None
         );
-        assert_eq!(IntRect::from_xywh(0, 0, 1, core::u32::MAX), None);
-        assert_eq!(IntRect::from_xywh(0, 0, core::u32::MAX, 1), None);
+        assert_eq!(IntRect::from_xywh(0, 0, 1, u32::MAX), None);
+        assert_eq!(IntRect::from_xywh(0, 0, u32::MAX, 1), None);
 
-        assert_eq!(IntRect::from_xywh(core::i32::MAX, 0, 1, 1), None);
-        assert_eq!(IntRect::from_xywh(0, core::i32::MAX, 1, 1), None);
+        assert_eq!(IntRect::from_xywh(i32::MAX, 0, 1, 1), None);
+        assert_eq!(IntRect::from_xywh(0, i32::MAX, 1, 1), None);
 
         {
             // No intersection.
@@ -444,7 +444,7 @@ fn checked_f32_sub(a: f32, b: f32) -> Option<f32> {
 
     let n = a as f64 - b as f64;
     // Not sure if this is perfectly correct.
-    if n > core::f32::MIN as f64 && n < core::f32::MAX as f64 {
+    if n > f32::MIN as f64 && n < f32::MAX as f64 {
         Some(n as f32)
     } else {
         None
@@ -459,11 +459,11 @@ mod rect_tests {
     fn tests() {
         assert_eq!(Rect::from_ltrb(10.0, 10.0, 5.0, 10.0), None);
         assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, 5.0), None);
-        assert_eq!(Rect::from_ltrb(core::f32::NAN, 10.0, 10.0, 10.0), None);
-        assert_eq!(Rect::from_ltrb(10.0, core::f32::NAN, 10.0, 10.0), None);
-        assert_eq!(Rect::from_ltrb(10.0, 10.0, core::f32::NAN, 10.0), None);
-        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, core::f32::NAN), None);
-        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, core::f32::INFINITY), None);
+        assert_eq!(Rect::from_ltrb(f32::NAN, 10.0, 10.0, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, f32::NAN, 10.0, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, f32::NAN, 10.0), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, f32::NAN), None);
+        assert_eq!(Rect::from_ltrb(10.0, 10.0, 10.0, f32::INFINITY), None);
 
         let rect = Rect::from_ltrb(10.0, 20.0, 30.0, 40.0).unwrap();
         assert_eq!(rect.left(), 10.0);
