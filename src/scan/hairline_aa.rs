@@ -209,7 +209,7 @@ fn call_hline_blitter(
             n = HLINE_STACK_BUFFER as u32;
         }
 
-        debug_assert!(n <= core::u16::MAX as u32);
+        debug_assert!(n <= u16::MAX as u32);
         runs[0] = NonZeroU16::new(n as u16);
         runs[n as usize] = None;
         if let Some(y) = y {

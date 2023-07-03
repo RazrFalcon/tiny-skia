@@ -63,7 +63,7 @@ pub mod fdot6 {
     }
 
     pub fn can_convert_to_fdot16(n: FDot6) -> bool {
-        let max_dot6 = core::i32::MAX >> (16 - 6);
+        let max_dot6 = i32::MAX >> (16 - 6);
         n.abs() <= max_dot6
     }
 

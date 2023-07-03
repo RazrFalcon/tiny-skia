@@ -129,7 +129,7 @@ impl NormalizedF32Exclusive {
     ///
     /// Returns zero in case of NaN or infinity.
     pub fn new_bounded(n: f32) -> Self {
-        let n = n.bound(core::f32::EPSILON, 1.0 - core::f32::EPSILON);
+        let n = n.bound(f32::EPSILON, 1.0 - f32::EPSILON);
         // `n` is guarantee to be finite after clamping.
         debug_assert!(n.is_finite());
         NormalizedF32Exclusive(unsafe { FiniteF32::new_unchecked(n) })

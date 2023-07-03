@@ -164,10 +164,10 @@ mod tests {
 
     #[test]
     fn bound() {
-        assert_eq!(core::f32::NAN.bound(0.0, 1.0), 1.0);
-        assert_eq!(core::f32::INFINITY.bound(0.0, 1.0), 1.0);
-        assert_eq!(core::f32::NEG_INFINITY.bound(0.0, 1.0), 0.0);
-        assert_eq!(core::f32::EPSILON.bound(0.0, 1.0), core::f32::EPSILON);
+        assert_eq!(f32::NAN.bound(0.0, 1.0), 1.0);
+        assert_eq!(f32::INFINITY.bound(0.0, 1.0), 1.0);
+        assert_eq!(f32::NEG_INFINITY.bound(0.0, 1.0), 0.0);
+        assert_eq!(f32::EPSILON.bound(0.0, 1.0), f32::EPSILON);
         assert_eq!(0.5.bound(0.0, 1.0), 0.5);
         assert_eq!((-1.0).bound(0.0, 1.0), 0.0);
         assert_eq!(2.0.bound(0.0, 1.0), 1.0);

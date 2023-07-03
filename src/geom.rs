@@ -159,21 +159,21 @@ mod screen_int_rect_tests {
         assert_eq!(ScreenIntRect::from_xywh(0, 0, 0, 1), None);
 
         assert_eq!(
-            ScreenIntRect::from_xywh(0, 0, core::u32::MAX, core::u32::MAX),
+            ScreenIntRect::from_xywh(0, 0, u32::MAX, u32::MAX),
             None
         );
-        assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, core::u32::MAX), None);
-        assert_eq!(ScreenIntRect::from_xywh(0, 0, core::u32::MAX, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, 1, u32::MAX), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, 0, u32::MAX, 1), None);
 
-        assert_eq!(ScreenIntRect::from_xywh(core::u32::MAX, 0, 1, 1), None);
-        assert_eq!(ScreenIntRect::from_xywh(0, core::u32::MAX, 1, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(u32::MAX, 0, 1, 1), None);
+        assert_eq!(ScreenIntRect::from_xywh(0, u32::MAX, 1, 1), None);
 
         assert_eq!(
             ScreenIntRect::from_xywh(
-                core::u32::MAX,
-                core::u32::MAX,
-                core::u32::MAX,
-                core::u32::MAX
+                u32::MAX,
+                u32::MAX,
+                u32::MAX,
+                u32::MAX
             ),
             None
         );
