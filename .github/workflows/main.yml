@@ -21,6 +21,11 @@ jobs:
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
+        components: rustfmt clippy
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+      if: matrix.rust == 'stable'
 
     - name: Build with minimal features (no_std)
       run: cargo build --verbose --no-default-features --features no-std-float
@@ -51,6 +56,10 @@ jobs:
       env:
         RUSTFLAGS: -Ctarget-feature=+avx2
       run: cargo test
+
+    - name: Check clippy
+      run: cargo clippy -- -D warnings
+      if: matrix.rust == 'stable'
 
   wasm:
     runs-on: ubuntu-20.04
