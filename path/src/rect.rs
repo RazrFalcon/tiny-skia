@@ -170,10 +170,7 @@ mod int_rect_tests {
         assert_eq!(IntRect::from_xywh(0, 0, 1, 0), None);
         assert_eq!(IntRect::from_xywh(0, 0, 0, 1), None);
 
-        assert_eq!(
-            IntRect::from_xywh(0, 0, u32::MAX, u32::MAX),
-            None
-        );
+        assert_eq!(IntRect::from_xywh(0, 0, u32::MAX, u32::MAX), None);
         assert_eq!(IntRect::from_xywh(0, 0, 1, u32::MAX), None);
         assert_eq!(IntRect::from_xywh(0, 0, u32::MAX, 1), None);
 
