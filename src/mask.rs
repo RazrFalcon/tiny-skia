@@ -246,10 +246,10 @@ impl Mask {
     ///
     /// Doesn't reset the existing mask content and draws the path on top of existing data.
     ///
-    /// If the above behavior is undesired, [`clear()`] should be called first.
+    /// If the above behavior is undesired, [`Mask::clear()`] should be called first.
     ///
     /// This method is intended to be used for simple cases. For more complex masks
-    /// prefer [`from_pixmap()`].
+    /// prefer [`Mask::from_pixmap()`].
     pub fn fill_path(
         &mut self,
         path: &Path,
