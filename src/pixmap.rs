@@ -525,7 +525,7 @@ impl<'a> PixmapMut<'a> {
         SubPixmapMut {
             size: self.size(),
             real_width: self.width() as usize,
-            data: &mut self.data,
+            data: self.data,
         }
     }
 

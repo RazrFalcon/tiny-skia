@@ -15,13 +15,17 @@ jobs:
           - stable
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install toolchain
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
-        override: true
+        components: rustfmt clippy
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+      if: matrix.rust == 'stable'
 
     - name: Build with minimal features (no_std)
       run: cargo build --verbose --no-default-features --features no-std-float
@@ -53,17 +57,20 @@ jobs:
         RUSTFLAGS: -Ctarget-feature=+avx2
       run: cargo test
 
+    - name: Check clippy
+      run: cargo clippy -- -D warnings
+      if: matrix.rust == 'stable'
+
   wasm:
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install toolchain
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@master
       with:
         toolchain: stable
-        override: true
         target: wasm32-wasi
 
     - name: Install wasmtime
@@ -86,13 +93,12 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install toolchain
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@master
       with:
         toolchain: stable
-        override: true
         target: aarch64-unknown-linux-gnu
 
     - name: Install cross

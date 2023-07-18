@@ -118,11 +118,7 @@ impl Transform {
     pub fn is_valid(&self) -> bool {
         if self.is_finite() {
             let (sx, sy) = self.get_scale();
-            if sx.is_nearly_zero() || sy.is_nearly_zero() {
-                false
-            } else {
-                true
-            }
+            !(sx.is_nearly_zero() || sy.is_nearly_zero())
         } else {
             false
         }

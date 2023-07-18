@@ -219,19 +219,10 @@ impl AAMaskCtx {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct MaskCtx<'a> {
     pub data: &'a [u8],
     pub real_width: u32,
-}
-
-impl Default for MaskCtx<'_> {
-    fn default() -> Self {
-        MaskCtx {
-            data: &[],
-            real_width: 0,
-        }
-    }
 }
 
 impl MaskCtx<'_> {

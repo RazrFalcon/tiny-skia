@@ -1534,8 +1534,7 @@ fn miter_joiner_inner(
 
             let x = if sin_beta.abs() <= SCALAR_NEARLY_ZERO {
                 1.0 / inv_miter_limit
-            }
-            else {
+            } else {
                 ((1.0 / inv_miter_limit) - cos_beta) / sin_beta
             };
 
