@@ -170,8 +170,8 @@ pub fn fill_path_impl(
     }
 
     let bottom = shifted_clip.shifted().bottom() as i32;
-    if !path_contained_in_clip && stop_y > bottom as i32 {
-        stop_y = bottom as i32;
+    if !path_contained_in_clip && stop_y > bottom {
+        stop_y = bottom;
     }
 
     let start_y = match u32::try_from(start_y) {

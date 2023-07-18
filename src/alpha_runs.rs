@@ -144,7 +144,7 @@ impl AlphaRuns {
                 1,
             );
             alpha_offset += x;
-            self.alpha[alpha_offset] = (self.alpha[alpha_offset] + stop_alpha) as u8;
+            self.alpha[alpha_offset] += stop_alpha;
             last_alpha_offset = alpha_offset;
         }
 
