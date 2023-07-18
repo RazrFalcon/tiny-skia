@@ -134,7 +134,7 @@ impl Mask {
         self.data.as_mut_slice()
     }
 
-    pub(crate) fn as_submask<'a>(&'a self) -> SubMaskRef<'a> {
+    pub(crate) fn as_submask(&self) -> SubMaskRef<'_> {
         SubMaskRef {
             size: self.size,
             real_width: self.size.width(),
@@ -142,7 +142,7 @@ impl Mask {
         }
     }
 
-    pub(crate) fn submask<'a>(&'a self, rect: IntRect) -> Option<SubMaskRef<'a>> {
+    pub(crate) fn submask(&self, rect: IntRect) -> Option<SubMaskRef<'_>> {
         let rect = self.size.to_int_rect(0, 0).intersect(&rect)?;
         let row_bytes = self.width() as usize;
         let offset = rect.top() as usize * row_bytes + rect.left() as usize;
@@ -154,7 +154,7 @@ impl Mask {
         })
     }
 
-    pub(crate) fn as_subpixmap<'a>(&'a mut self) -> SubPixmapMut<'a> {
+    pub(crate) fn as_subpixmap(&mut self) -> SubPixmapMut<'_> {
         SubPixmapMut {
             size: self.size,
             real_width: self.size.width() as usize,
@@ -162,7 +162,7 @@ impl Mask {
         }
     }
 
-    pub(crate) fn subpixmap<'a>(&'a mut self, rect: IntRect) -> Option<SubPixmapMut<'a>> {
+    pub(crate) fn subpixmap(&mut self, rect: IntRect) -> Option<SubPixmapMut<'_>> {
         let rect = self.size.to_int_rect(0, 0).intersect(&rect)?;
         let row_bytes = self.width() as usize;
         let offset = rect.top() as usize * row_bytes + rect.left() as usize;
