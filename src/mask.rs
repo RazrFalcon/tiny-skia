@@ -391,7 +391,7 @@ pub struct SubMaskRef<'a> {
 impl<'a> SubMaskRef<'a> {
     pub(crate) fn mask_ctx(&self) -> crate::pipeline::MaskCtx<'a> {
         crate::pipeline::MaskCtx {
-            data: &self.data,
+            data: self.data,
             real_width: self.real_width,
         }
     }
