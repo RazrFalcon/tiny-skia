@@ -307,7 +307,7 @@ impl QuadraticEdge {
         self.qy = newy;
         self.qdx = dx;
         self.qdy = dy;
-        self.curve_count = count as i8;
+        self.curve_count = count;
 
         success
     }

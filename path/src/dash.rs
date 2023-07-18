@@ -212,7 +212,7 @@ fn dash_impl(src: &Path, dash: &StrokeDash, res_scale: f32) -> Option<Path> {
             added_segment = false;
             if is_even(index) && !skip_first_segment {
                 added_segment = true;
-                contour.push_segment(distance as f32, (distance + d_len) as f32, true, &mut pb);
+                contour.push_segment(distance, distance + d_len, true, &mut pb);
             }
 
             distance += d_len;
