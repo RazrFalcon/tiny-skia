@@ -45,15 +45,21 @@ pub struct StrokeDash {
 
 impl StrokeDash {
     /// Creates a new stroke dashing object.
-    pub fn new(dash_array: Vec<f32>, dash_offset: f32) -> Option<Self> {
+    pub fn new(mut dash_array: Vec<f32>, dash_offset: f32) -> Option<Self> {
         let dash_offset = FiniteF32::new(dash_offset)?;
 
-        if dash_array.len() < 2 || dash_array.len() % 2 != 0 {
+        if dash_array.is_empty() {
             return None;
         }
 
         if dash_array.iter().any(|n| *n < 0.0) {
             return None;
+        }
+
+        if dash_array.len() % 2 != 0 {
+            // We usually need even-numbered dashes, but we can support odd numbers by just repeating
+            // the pattern twice.
+            dash_array.extend_from_within(0..dash_array.len());
         }
 
         let interval_len: f32 = dash_array.iter().sum();
