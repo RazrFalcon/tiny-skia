@@ -1,4 +1,4 @@
-use tiny_skia::*;
+use tiny_skia::{PathBuilder, Pixmap, Paint, Transform, Stroke, LineCap, StrokeDash};
 
 // Based on https://fiddle.skia.org/c/@compose_path
 
@@ -26,5 +26,5 @@ fn main() {
 
     let mut pixmap = Pixmap::new(500, 500).unwrap();
     pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None);
-    pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("stroke.png").unwrap();
 }

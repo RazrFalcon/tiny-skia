@@ -1,4 +1,4 @@
-use tiny_skia::*;
+use tiny_skia::{PathBuilder, Pixmap, Mask, FillRule, Paint, Transform, Rect, Stroke};
 
 // This example will crate a 20_000x20_000px image, which can take a while in a debug mode.
 // This example is used mainly to tests that our tiling algorithm actually works and doesn't panic.
@@ -67,5 +67,5 @@ fn main() {
     stroke.width = 0.8; // hairline
     pixmap.stroke_path(&path2, &paint, &stroke, Transform::default(), None);
 
-    pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("large_image.png").unwrap();
 }

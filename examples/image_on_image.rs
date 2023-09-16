@@ -1,4 +1,4 @@
-use tiny_skia::*;
+use tiny_skia::{Pixmap, PixmapPaint, FilterQuality, Transform, PathBuilder, Paint, FillRule, Stroke, Rect};
 
 fn main() {
     let triangle = create_triangle();
@@ -24,7 +24,7 @@ fn main() {
         now.elapsed().as_micros() as f64 / 1000.0
     );
 
-    pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("image_on_image.png").unwrap();
 }
 
 fn create_triangle() -> Pixmap {

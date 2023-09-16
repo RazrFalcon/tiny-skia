@@ -1,4 +1,4 @@
-use tiny_skia::*;
+use tiny_skia::{PathBuilder, Pixmap, Pattern, FillRule, Paint, Transform, SpreadMode, FilterQuality};
 
 fn main() {
     let triangle = crate_triangle();
@@ -23,7 +23,7 @@ fn main() {
         Transform::identity(),
         None,
     );
-    pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("pattren.png").unwrap();
 }
 
 fn crate_triangle() -> Pixmap {

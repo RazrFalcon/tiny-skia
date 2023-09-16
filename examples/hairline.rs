@@ -1,4 +1,4 @@
-use tiny_skia::*;
+use tiny_skia::{Paint, PathBuilder, Pixmap, Transform, Stroke};
 
 // This example demonstrates thin paths rendering.
 
@@ -21,5 +21,5 @@ fn main() {
         transform = transform.pre_translate(0.0, 20.0);
     }
 
-    pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("hairline.png").unwrap();
 }

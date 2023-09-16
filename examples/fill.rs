@@ -1,4 +1,4 @@
-use tiny_skia::*;
+use tiny_skia::{Paint, PathBuilder, Pixmap, FillRule, Transform};
 
 fn main() {
     let mut paint1 = Paint::default();
@@ -44,5 +44,5 @@ fn main() {
         Transform::identity(),
         None,
     );
-    pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("fill.png").unwrap();
 }

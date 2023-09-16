@@ -1,4 +1,4 @@
-use tiny_skia::*;
+use tiny_skia::{PathBuilder, Pixmap, LinearGradient, GradientStop, FillRule, Paint, Transform, Point, Color, SpreadMode};
 
 fn main() {
     let mut paint = Paint::default();
@@ -31,5 +31,5 @@ fn main() {
         Transform::identity(),
         None,
     );
-    pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("linear_gradient.png").unwrap();
 }

@@ -1,4 +1,4 @@
-use tiny_skia::*;
+use tiny_skia::{PathBuilder, Pixmap, Mask, FillRule, Paint, Transform, Rect};
 
 fn main() {
     let clip_path = {
@@ -26,5 +26,5 @@ fn main() {
         Transform::identity(),
         Some(&mask),
     );
-    pixmap.save_png("image.png").unwrap();
+    pixmap.save_png("mask.png").unwrap();
 }
