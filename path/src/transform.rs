@@ -118,7 +118,8 @@ impl Transform {
     pub fn is_valid(&self) -> bool {
         if self.is_finite() {
             let (sx, sy) = self.get_scale();
-            !(sx.is_nearly_zero() || sy.is_nearly_zero())
+            !(sx.is_nearly_zero_within_tolerance(f32::EPSILON)
+                || sy.is_nearly_zero_within_tolerance(f32::EPSILON))
         } else {
             false
         }
