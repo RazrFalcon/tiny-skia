@@ -1,6 +1,6 @@
 [package]
 name = "tiny-skia-path"
-version = "0.11.1"
+version = "0.11.2"
 authors = ["Yevhenii Reizner <razrfalcon@gmail.com>"]
 edition = "2018"
 description = "A tiny-skia Bezier path implementation"

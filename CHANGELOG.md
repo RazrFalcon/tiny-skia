@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.11.2] - 2023-10-01
+### Changed
+- MSRV bumped to stable, because of the `flate2` crate.
+
+### Fixed
+- `Transform::is_valid` was treating 1/4096 as zero. We need a higher precision.
+- Build failure on AVX2 with `--no-default-features`.
+  Thanks to [@linkmauve](https://github.com/linkmauve)
+
 ## [0.11.1] - 2023-06-17
 ### Changed
 - MSRV bumped to 1.60, because of the `log` crate.
@@ -230,7 +239,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.11.1...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.11.2...HEAD
+[0.11.2]: https://github.com/RazrFalcon/tiny-skia/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/RazrFalcon/tiny-skia/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.9.1...v0.10.0
