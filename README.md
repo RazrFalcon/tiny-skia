@@ -2,7 +2,6 @@
 ![Build Status](https://github.com/RazrFalcon/tiny-skia/workflows/Rust/badge.svg)
 [![Crates.io](https://img.shields.io/crates/v/tiny-skia.svg)](https://crates.io/crates/tiny-skia)
 [![Documentation](https://docs.rs/tiny-skia/badge.svg)](https://docs.rs/tiny-skia)
-[![Rust 1.60+](https://img.shields.io/badge/rust-1.60+-orange.svg)](https://www.rust-lang.org)
 
 `tiny-skia` is a tiny [Skia] subset ported to Rust.
 
@@ -16,6 +15,8 @@ The main missing feature is text rendering
 (see [#1](https://github.com/RazrFalcon/tiny-skia/issues/1)).
 
 **Note:** this is not a Skia replacement and never will be. It's more of a research project.
+
+MSRV: stable
 
 ## Motivation
 
