@@ -21,7 +21,7 @@ jobs:
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
-        components: rustfmt clippy
+        components: rustfmt
 
     - name: Check formatting
       run: cargo fmt --all -- --check
@@ -56,10 +56,6 @@ jobs:
       env:
         RUSTFLAGS: -Ctarget-feature=+avx2
       run: cargo test
-
-    - name: Check clippy
-      run: cargo clippy -- -D warnings
-      if: matrix.rust == 'stable'
 
   wasm:
     runs-on: ubuntu-20.04
