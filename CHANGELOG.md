@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [0.11.3] - 2023-12-03
 ### Added
 - `Path::compute_tight_bounds`
 
@@ -241,7 +243,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Bindings to a stripped down Skia fork.
 
-[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.11.2...HEAD
+[Unreleased]: https://github.com/RazrFalcon/tiny-skia/compare/v0.11.3...HEAD
+[0.11.3]: https://github.com/RazrFalcon/tiny-skia/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/RazrFalcon/tiny-skia/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/RazrFalcon/tiny-skia/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/RazrFalcon/tiny-skia/compare/v0.10.0...v0.11.0
