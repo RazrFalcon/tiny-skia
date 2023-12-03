@@ -264,3 +264,17 @@ fn circle() {
 fn large_circle() {
     assert!(PathBuilder::from_circle(250.0, 250.0, 2000.0).is_some()); // Must not panic.
 }
+
+#[test]
+fn tight_bounds_1() {
+    let mut pb = PathBuilder::new();
+    pb.move_to(50.0, 85.0);
+    pb.line_to(65.0, 135.0);
+    pb.line_to(150.0, 135.0);
+    pb.line_to(85.0, 135.0);
+    pb.quad_to(100.0, 45.0, 50.0, 85.0);
+    let path = pb.finish().unwrap();
+    let tight_bounds = path.compute_tight_bounds().unwrap();
+    assert_eq!(path.bounds(), Rect::from_ltrb(50.0, 45.0, 150.0, 135.0).unwrap());
+    assert_eq!(tight_bounds, Rect::from_ltrb(50.0, 65.0, 150.0, 135.0).unwrap());
+}

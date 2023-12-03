@@ -77,11 +77,7 @@ impl CubicCoeff {
 
 // TODO: to a custom type?
 pub fn new_t_values() -> [NormalizedF32Exclusive; 3] {
-    [
-        NormalizedF32Exclusive::ANY,
-        NormalizedF32Exclusive::ANY,
-        NormalizedF32Exclusive::ANY,
-    ]
+    [NormalizedF32Exclusive::ANY; 3]
 }
 
 pub fn chop_quad_at(src: &[Point], t: NormalizedF32Exclusive, dst: &mut [Point; 5]) {
@@ -181,6 +177,16 @@ pub fn chop_cubic_at2(src: &[Point; 4], t: NormalizedF32Exclusive, dst: &mut [Po
     dst[4] = Point::from_f32x2(bcd);
     dst[5] = Point::from_f32x2(cd);
     dst[6] = Point::from_f32x2(p3);
+}
+
+// Quad'(t) = At + B, where
+// A = 2(a - 2b + c)
+// B = 2(b - a)
+// Solve for t, only if it fits between 0 < t < 1
+pub(crate) fn find_quad_extrema(a: f32, b: f32, c: f32) -> Option<NormalizedF32Exclusive> {
+    // At + B == 0
+    // t = -B / A
+    valid_unit_divide(a - b, a - b - b + c)
 }
 
 pub fn valid_unit_divide(mut numer: f32, mut denom: f32) -> Option<NormalizedF32Exclusive> {
@@ -447,6 +453,26 @@ fn eval_cubic_derivative(src: &[Point; 4], t: NormalizedF32) -> Point {
     };
 
     Point::from_f32x2(coeff.eval(f32x2::splat(t.get())))
+}
+
+// Cubic'(t) = At^2 + Bt + C, where
+// A = 3(-a + 3(b - c) + d)
+// B = 6(a - 2b + c)
+// C = 3(b - a)
+// Solve for t, keeping only those that fit between 0 < t < 1
+pub(crate) fn find_cubic_extrema(
+    a: f32,
+    b: f32,
+    c: f32,
+    d: f32,
+    t_values: &mut [NormalizedF32Exclusive; 3],
+) -> usize {
+    // we divide A,B,C by 3 to simplify
+    let aa = d - a + 3.0 * (b - c);
+    let bb = 2.0 * (a - b - b + c);
+    let cc = b - a;
+
+    find_unit_quad_roots(aa, bb, cc, t_values)
 }
 
 // http://www.faculty.idc.ac.il/arik/quality/appendixA.html

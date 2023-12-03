@@ -10,6 +10,9 @@ use crate::path_builder::PathBuilder;
 use crate::transform::Transform;
 use crate::{Point, Rect};
 
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use crate::NoStdFloat;
+
 /// A path verb.
 #[allow(missing_docs)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
@@ -65,6 +68,47 @@ impl Path {
     /// The value is already calculated.
     pub fn bounds(&self) -> Rect {
         self.bounds
+    }
+
+    /// Calculates path's tight bounds.
+    ///
+    /// This operation can be expensive.
+    pub fn compute_tight_bounds(&self) -> Option<Rect> {
+        // big enough to hold worst-case curve type (cubic) extremas + 1
+        let mut extremas = [Point::zero(); 5];
+
+        let mut min = self.points[0];
+        let mut max = self.points[0];
+        let mut iter = self.segments();
+        while let Some(segment) = iter.next() {
+            let mut count = 0;
+            match segment {
+                PathSegment::MoveTo(p) => {
+                    extremas[0] = p;
+                    count = 1;
+                }
+                PathSegment::LineTo(p) => {
+                    extremas[0] = p;
+                    count = 1;
+                }
+                PathSegment::QuadTo(p0, p1) => {
+                    count = compute_quad_extremas(iter.last_point, p0, p1, &mut extremas);
+                }
+                PathSegment::CubicTo(p0, p1, p2) => {
+                    count = compute_cubic_extremas(iter.last_point, p0, p1, p2, &mut extremas);
+                }
+                PathSegment::Close => {}
+            }
+
+            for tmp in &extremas[0..count] {
+                min.x = min.x.min(tmp.x);
+                min.y = min.y.min(tmp.y);
+                max.x = max.x.max(tmp.x);
+                max.y = max.y.max(tmp.y);
+            }
+        }
+
+        Rect::from_ltrb(min.x, min.y, max.x, max.y)
     }
 
     /// Returns an internal vector of verbs.
@@ -146,6 +190,53 @@ impl core::fmt::Debug for Path {
             .field("bounds", &self.bounds)
             .finish()
     }
+}
+
+fn compute_quad_extremas(p0: Point, p1: Point, p2: Point, extremas: &mut [Point; 5]) -> usize {
+    use crate::path_geometry;
+
+    let src = [p0, p1, p2];
+    let mut extrema_idx = 0;
+    if let Some(t) = path_geometry::find_quad_extrema(p0.x, p1.x, p2.x) {
+        extremas[extrema_idx] = path_geometry::eval_quad_at(&src, t.to_normalized());
+        extrema_idx += 1;
+    }
+    if let Some(t) = path_geometry::find_quad_extrema(p0.y, p1.y, p2.y) {
+        extremas[extrema_idx] = path_geometry::eval_quad_at(&src, t.to_normalized());
+        extrema_idx += 1;
+    }
+    extremas[extrema_idx] = p2;
+    extrema_idx + 1
+}
+
+fn compute_cubic_extremas(
+    p0: Point,
+    p1: Point,
+    p2: Point,
+    p3: Point,
+    extremas: &mut [Point; 5],
+) -> usize {
+    use crate::path_geometry;
+
+    let mut ts0 = path_geometry::new_t_values();
+    let mut ts1 = path_geometry::new_t_values();
+    let n0 = path_geometry::find_cubic_extrema(p0.x, p1.x, p2.x, p3.x, &mut ts0);
+    let n1 = path_geometry::find_cubic_extrema(p0.y, p1.y, p2.y, p3.y, &mut ts1);
+    let total_len = n0 + n1;
+    debug_assert!(total_len <= 4);
+
+    let src = [p0, p1, p2, p3];
+    let mut extrema_idx = 0;
+    for t in &ts0[0..n0] {
+        extremas[extrema_idx] = path_geometry::eval_cubic_pos_at(&src, t.to_normalized());
+        extrema_idx += 1;
+    }
+    for t in &ts1[0..n1] {
+        extremas[extrema_idx] = path_geometry::eval_cubic_pos_at(&src, t.to_normalized());
+        extrema_idx += 1;
+    }
+    extremas[total_len] = p3;
+    total_len + 1
 }
 
 /// A path segment.
