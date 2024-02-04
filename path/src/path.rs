@@ -80,6 +80,7 @@ impl Path {
         let mut min = self.points[0];
         let mut max = self.points[0];
         let mut iter = self.segments();
+        let mut last_point = Point::zero();
         while let Some(segment) = iter.next() {
             let mut count = 0;
             match segment {
@@ -92,14 +93,15 @@ impl Path {
                     count = 1;
                 }
                 PathSegment::QuadTo(p0, p1) => {
-                    count = compute_quad_extremas(iter.last_point, p0, p1, &mut extremas);
+                    count = compute_quad_extremas(last_point, p0, p1, &mut extremas);
                 }
                 PathSegment::CubicTo(p0, p1, p2) => {
-                    count = compute_cubic_extremas(iter.last_point, p0, p1, p2, &mut extremas);
+                    count = compute_cubic_extremas(last_point, p0, p1, p2, &mut extremas);
                 }
                 PathSegment::Close => {}
             }
 
+            last_point = iter.last_point;
             for tmp in &extremas[0..count] {
                 min.x = min.x.min(tmp.x);
                 min.y = min.y.min(tmp.y);

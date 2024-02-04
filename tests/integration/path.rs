@@ -275,6 +275,22 @@ fn tight_bounds_1() {
     pb.quad_to(100.0, 45.0, 50.0, 85.0);
     let path = pb.finish().unwrap();
     let tight_bounds = path.compute_tight_bounds().unwrap();
-    assert_eq!(path.bounds(), Rect::from_ltrb(50.0, 45.0, 150.0, 135.0).unwrap());
-    assert_eq!(tight_bounds, Rect::from_ltrb(50.0, 65.0, 150.0, 135.0).unwrap());
+    assert_eq!(path.bounds(), Rect::from_xywh(50.0, 45.0, 100.0, 90.0).unwrap());
+    assert_eq!(tight_bounds, Rect::from_xywh(50.0, 72.692307, 100.0, 62.307693).unwrap());
+}
+
+#[test]
+fn tight_bounds_2() {
+    let mut pb = PathBuilder::new();
+    pb.move_to(-19.309214, 72.11173);
+    pb.cubic_to(-24.832062, 67.477516, -20.490944, 62.16584, -9.61306, 60.247776);
+    pb.cubic_to(1.2648277, 58.329712, 14.560249, 60.53159, 20.083096, 65.16581);
+    pb.cubic_to(14.560249, 60.53159, 18.901363, 55.219913, 29.779247, 53.30185);
+    pb.cubic_to(40.65713, 51.383785, 53.952557, 53.585663, 59.475407, 58.21988);
+    pb.quad_to(74.4754, 70.80637, 50.083096, 90.3388);
+    pb.quad_to(-4.3092155, 84.69823, -19.309214, 72.11173);
+    pb.close();
+    let path = pb.finish().unwrap();
+    let tight_bounds = path.compute_tight_bounds().unwrap();
+    assert_eq!(tight_bounds, Rect::from_xywh(-21.707121, 52.609154, 86.894302, 37.729645).unwrap());
 }
