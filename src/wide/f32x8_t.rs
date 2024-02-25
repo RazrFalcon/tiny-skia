@@ -239,6 +239,39 @@ impl f32x8 {
             }
         }
     }
+
+    pub fn powf(self, exp: f32) -> Self {
+        let x = self;
+        // We assume sign(x) is positive so we can use vectorized i32->f32 conversions
+        let e = x.to_i32x8_bitcast().to_f32x8() * f32x8::splat(1.0f32 / ((1 << 23) as f32));
+        let m = (x.to_u32x8_bitcast() & u32x8::splat(0x007fffff) | u32x8::splat(0x3f000000))
+            .to_f32x8_bitcast();
+
+        let log2_x = e
+            - f32x8::splat(124.225514990)
+            - f32x8::splat(1.498030302) * m
+            - f32x8::splat(1.725879990) / (f32x8::splat(0.3520887068) + m);
+
+        let x = log2_x * f32x8::splat(exp);
+
+        let f = x - x.floor();
+
+        let mut a = x + f32x8::splat(121.274057500);
+        a = a - f * f32x8::splat(1.490129070);
+        a = a + f32x8::splat(27.728023300) / (f32x8::splat(4.84252568) - f);
+        a = a * f32x8::splat((1 << 23) as f32);
+
+        let inf_bits = f32x8::splat(f32::INFINITY.to_bits() as f32);
+
+        let x = a
+            .max(f32x8::splat(0.0))
+            .min(inf_bits)
+            .round_int()
+            .to_f32x8_bitcast();
+
+        let skip = self.cmp_eq(f32x8::splat(0.0)) | self.cmp_eq(f32x8::splat(1.0));
+        skip.blend(self, x)
+    }
 }
 
 impl From<[f32; 8]> for f32x8 {

@@ -132,6 +132,15 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     null_fn, // XYTo2PtConicalGreater
     null_fn, // Mask2PtConicalDegenerates
     null_fn, // ApplyVectorMask
+    null_fn, // GammaExpand2
+    null_fn, // GammaExpandDestination2
+    null_fn, // GammaCompress2
+    null_fn, // GammaExpand22
+    null_fn, // GammaExpandDestination22
+    null_fn, // GammaCompress22
+    null_fn, // GammaExpandSrgb
+    null_fn, // GammaExpandDestinationSrgb
+    null_fn, // GammaCompressSrgb
 ];
 
 pub fn fn_ptr(f: StageFn) -> *const () {

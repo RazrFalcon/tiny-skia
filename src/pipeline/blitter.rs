@@ -83,6 +83,10 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
                 return None;
             }
 
+            if let Some(stage) = paint.colorspace.expand_stage() {
+                p.push(stage);
+            }
+
             if mask.is_some() {
                 p.push(pipeline::Stage::MaskU8);
             }
@@ -90,11 +94,17 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
             if blend_mode.should_pre_scale_coverage() {
                 p.push(pipeline::Stage::Scale1Float);
                 p.push(pipeline::Stage::LoadDestination);
+                if let Some(stage) = paint.colorspace.expand_dest_stage() {
+                    p.push(stage);
+                }
                 if let Some(blend_stage) = blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
             } else {
                 p.push(pipeline::Stage::LoadDestination);
+                if let Some(stage) = paint.colorspace.expand_dest_stage() {
+                    p.push(stage);
+                }
                 if let Some(blend_stage) = blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
@@ -102,6 +112,9 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
                 p.push(pipeline::Stage::Lerp1Float);
             }
 
+            if let Some(stage) = paint.colorspace.compress_stage() {
+                p.push(stage);
+            }
             p.push(pipeline::Stage::Store);
 
             p.compile()
@@ -125,7 +138,16 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
                 if blend_mode != BlendMode::Source {
                     p.push(pipeline::Stage::LoadDestination);
                     if let Some(blend_stage) = blend_mode.to_stage() {
+                        if let Some(stage) = paint.colorspace.expand_stage() {
+                            p.push(stage);
+                        }
+                        if let Some(stage) = paint.colorspace.expand_dest_stage() {
+                            p.push(stage);
+                        }
                         p.push(blend_stage);
+                        if let Some(stage) = paint.colorspace.compress_stage() {
+                            p.push(stage);
+                        }
                     }
                 }
 
@@ -142,6 +164,10 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
                 return None;
             }
 
+            if let Some(stage) = paint.colorspace.expand_stage() {
+                p.push(stage);
+            }
+
             if mask.is_some() {
                 p.push(pipeline::Stage::MaskU8);
             }
@@ -149,11 +175,17 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
             if blend_mode.should_pre_scale_coverage() {
                 p.push(pipeline::Stage::ScaleU8);
                 p.push(pipeline::Stage::LoadDestination);
+                if let Some(stage) = paint.colorspace.expand_dest_stage() {
+                    p.push(stage);
+                }
                 if let Some(blend_stage) = blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
             } else {
                 p.push(pipeline::Stage::LoadDestination);
+                if let Some(stage) = paint.colorspace.expand_dest_stage() {
+                    p.push(stage);
+                }
                 if let Some(blend_stage) = blend_mode.to_stage() {
                     p.push(blend_stage);
                 }
@@ -161,6 +193,9 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
                 p.push(pipeline::Stage::LerpU8);
             }
 
+            if let Some(stage) = paint.colorspace.compress_stage() {
+                p.push(stage);
+            }
             p.push(pipeline::Stage::Store);
 
             p.compile()

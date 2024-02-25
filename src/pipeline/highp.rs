@@ -119,6 +119,15 @@ pub const STAGES: &[StageFn; super::STAGES_COUNT] = &[
     xy_to_2pt_conical_greater,
     mask_2pt_conical_degenerates,
     apply_vector_mask,
+    gamma_expand_2,
+    gamma_expand_dst_2,
+    gamma_compress_2,
+    gamma_expand_22,
+    gamma_expand_dst_22,
+    gamma_compress_22,
+    gamma_expand_srgb,
+    gamma_expand_dst_srgb,
+    gamma_compress_srgb,
 ];
 
 pub fn fn_ptr(f: StageFn) -> *const () {
@@ -1038,6 +1047,92 @@ fn apply_vector_mask(p: &mut Pipeline) {
     p.g = (p.g.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
     p.b = (p.b.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
     p.a = (p.a.to_u32x8_bitcast() & ctx.mask).to_f32x8_bitcast();
+
+    p.next_stage();
+}
+
+fn gamma_expand_2(p: &mut Pipeline) {
+    p.r = p.r * p.r;
+    p.g = p.g * p.g;
+    p.b = p.b * p.b;
+
+    p.next_stage();
+}
+
+fn gamma_expand_dst_2(p: &mut Pipeline) {
+    p.dr = p.dr * p.dr;
+    p.dg = p.dg * p.dg;
+    p.db = p.db * p.db;
+
+    p.next_stage();
+}
+
+fn gamma_compress_2(p: &mut Pipeline) {
+    p.r = p.r.sqrt();
+    p.g = p.g.sqrt();
+    p.b = p.b.sqrt();
+
+    p.next_stage();
+}
+
+fn gamma_expand_22(p: &mut Pipeline) {
+    p.r = p.r.powf(2.2);
+    p.g = p.g.powf(2.2);
+    p.b = p.b.powf(2.2);
+
+    p.next_stage();
+}
+
+fn gamma_expand_dst_22(p: &mut Pipeline) {
+    p.dr = p.dr.powf(2.2);
+    p.dg = p.dg.powf(2.2);
+    p.db = p.db.powf(2.2);
+
+    p.next_stage();
+}
+
+fn gamma_compress_22(p: &mut Pipeline) {
+    p.r = p.r.powf(0.45454545);
+    p.g = p.g.powf(0.45454545);
+    p.b = p.b.powf(0.45454545);
+
+    p.next_stage();
+}
+
+fn srgb_expand(x: f32x8) -> f32x8 {
+    let small = x.cmp_le(f32x8::splat(0.04045));
+    let linear = x / f32x8::splat(12.92);
+    let exp = ((x + f32x8::splat(0.055)) / f32x8::splat(1.055)).powf(2.4);
+    small.blend(linear, exp)
+}
+
+fn srgb_compress(x: f32x8) -> f32x8 {
+    let small = x.cmp_le(f32x8::splat(0.0031308));
+    let linear = x * f32x8::splat(12.92);
+    let exp = x.powf(0.416666666) * f32x8::splat(1.055) - f32x8::splat(0.055);
+    small.blend(linear, exp)
+}
+
+fn gamma_expand_srgb(p: &mut Pipeline) {
+    p.r = srgb_expand(p.r);
+    p.g = srgb_expand(p.g);
+    p.b = srgb_expand(p.b);
+
+    p.next_stage();
+}
+
+fn gamma_expand_dst_srgb(p: &mut Pipeline) {
+    p.dr = srgb_expand(p.dr);
+    p.dg = srgb_expand(p.dg);
+    p.db = srgb_expand(p.db);
+
+    p.next_stage();
+}
+
+fn gamma_compress_srgb(p: &mut Pipeline) {
+    p.r = srgb_compress(p.r);
+    p.g = srgb_compress(p.g);
+    p.b = srgb_compress(p.b);
 
     p.next_stage();
 }

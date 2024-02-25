@@ -130,9 +130,18 @@ pub enum Stage {
     XYTo2PtConicalGreater,
     Mask2PtConicalDegenerates,
     ApplyVectorMask,
+    GammaExpand2,
+    GammaExpandDestination2,
+    GammaCompress2,
+    GammaExpand22,
+    GammaExpandDestination22,
+    GammaCompress22,
+    GammaExpandSrgb,
+    GammaExpandDestinationSrgb,
+    GammaCompressSrgb,
 }
 
-pub const STAGES_COUNT: usize = Stage::ApplyVectorMask as usize + 1;
+pub const STAGES_COUNT: usize = Stage::GammaCompressSrgb as usize + 1;
 
 impl<'a> PixmapRef<'a> {
     #[inline(always)]

@@ -51,6 +51,15 @@ pub struct Paint<'a> {
     /// Default: true
     pub anti_alias: bool,
 
+    /// Colorspace for blending.
+    ///
+    /// This enables gamma correction during the blend operation.  While skia supports
+    /// full color-space conversions, we only support a few (simple) cases.  Note that
+    /// any color space other than Linear will force using the high-quality pipeline.
+    ///
+    /// Default: Linear
+    pub colorspace: ColorSpace,
+
     /// Forces the high quality/precision rendering pipeline.
     ///
     /// `tiny-skia`, just like Skia, has two rendering pipelines:
@@ -76,6 +85,7 @@ impl Default for Paint<'_> {
             shader: Shader::SolidColor(Color::BLACK),
             blend_mode: BlendMode::default(),
             anti_alias: true,
+            colorspace: ColorSpace::default(),
             force_hq_pipeline: false,
         }
     }
@@ -495,6 +505,7 @@ impl PixmapMut<'_> {
             blend_mode: paint.blend_mode,
             anti_alias: false,        // Skia doesn't use it too.
             force_hq_pipeline: false, // Pattern will use hq anyway.
+            colorspace: ColorSpace::default(),
         };
 
         self.fill_rect(rect, &paint, transform, mask);

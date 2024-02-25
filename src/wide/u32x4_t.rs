@@ -189,3 +189,26 @@ impl core::ops::BitAnd for u32x4 {
         }
     }
 }
+
+impl core::ops::BitOr for u32x4 {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        cfg_if::cfg_if! {
+            if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
+                Self(unsafe { _mm_or_si128(self.0, rhs.0) })
+            } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(v128_or(self.0, rhs.0))
+            } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
+                Self(unsafe { vorrq_u32(self.0, rhs.0) })
+            } else {
+                Self([
+                    self.0[0] | rhs.0[0],
+                    self.0[1] | rhs.0[1],
+                    self.0[2] | rhs.0[2],
+                    self.0[3] | rhs.0[3],
+                ])
+            }
+        }
+    }
+}
