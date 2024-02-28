@@ -79,12 +79,8 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         let blit_anti_h_rp = {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(paint.force_hq_pipeline);
-            if !paint.shader.push_stages(&mut p) {
+            if !paint.shader.push_stages(paint.colorspace, &mut p) {
                 return None;
-            }
-
-            if let Some(stage) = paint.colorspace.expand_stage() {
-                p.push(stage);
             }
 
             if mask.is_some() {
@@ -123,7 +119,7 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         let blit_rect_rp = {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(paint.force_hq_pipeline);
-            if !paint.shader.push_stages(&mut p) {
+            if !paint.shader.push_stages(paint.colorspace, &mut p) {
                 return None;
             }
 
@@ -132,25 +128,25 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
             }
 
             if blend_mode == BlendMode::SourceOver && mask.is_none() {
+                if let Some(stage) = paint.colorspace.compress_stage() {
+                    p.push(stage);
+                }
                 // TODO: ignore when dither_rate is non-zero
                 p.push(pipeline::Stage::SourceOverRgba);
             } else {
                 if blend_mode != BlendMode::Source {
                     p.push(pipeline::Stage::LoadDestination);
                     if let Some(blend_stage) = blend_mode.to_stage() {
-                        if let Some(stage) = paint.colorspace.expand_stage() {
-                            p.push(stage);
-                        }
                         if let Some(stage) = paint.colorspace.expand_dest_stage() {
                             p.push(stage);
                         }
                         p.push(blend_stage);
-                        if let Some(stage) = paint.colorspace.compress_stage() {
-                            p.push(stage);
-                        }
                     }
                 }
 
+                if let Some(stage) = paint.colorspace.compress_stage() {
+                    p.push(stage);
+                }
                 p.push(pipeline::Stage::Store);
             }
 
@@ -160,12 +156,8 @@ impl<'a, 'b: 'a> RasterPipelineBlitter<'a, 'b> {
         let blit_mask_rp = {
             let mut p = RasterPipelineBuilder::new();
             p.set_force_hq_pipeline(paint.force_hq_pipeline);
-            if !paint.shader.push_stages(&mut p) {
+            if !paint.shader.push_stages(paint.colorspace, &mut p) {
                 return None;
-            }
-
-            if let Some(stage) = paint.colorspace.expand_stage() {
-                p.push(stage);
             }
 
             if mask.is_some() {

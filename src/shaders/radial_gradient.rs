@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 
 use tiny_skia_path::Scalar;
 
-use crate::{GradientStop, Point, Shader, SpreadMode, Transform};
+use crate::{ColorSpace, GradientStop, Point, Shader, SpreadMode, Transform};
 
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::pipeline;
@@ -134,7 +134,7 @@ impl RadialGradient {
         }
     }
 
-    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> bool {
+    pub(crate) fn push_stages(&self, cs: ColorSpace, p: &mut RasterPipelineBuilder) -> bool {
         let p0 = if let Some(focal_data) = self.focal_data {
             1.0 / focal_data.r1
         } else {
@@ -148,6 +148,7 @@ impl RadialGradient {
 
         self.base.push_stages(
             p,
+            cs,
             &|p| {
                 if let Some(focal_data) = self.focal_data {
                     // Unlike Skia, we have only the Focal radial gradient type.

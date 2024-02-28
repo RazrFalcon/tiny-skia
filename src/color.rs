@@ -4,7 +4,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-use crate::pipeline;
+use crate::{math::approx_powf, pipeline};
 use tiny_skia_path::{NormalizedF32, Scalar};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
@@ -468,6 +468,48 @@ impl Default for ColorSpace {
 }
 
 impl ColorSpace {
+    pub(crate) fn expand_channel(self, x: NormalizedF32) -> NormalizedF32 {
+        match self {
+            ColorSpace::Linear => x,
+            ColorSpace::Gamma2 => x * x,
+            ColorSpace::SimpleSRGB => NormalizedF32::new_clamped(approx_powf(x.get(), 2.2)),
+            ColorSpace::FullSRGBGamma => {
+                let x = x.get();
+                let x = if x <= 0.04045 {
+                    x / 12.92
+                } else {
+                    approx_powf((x + 0.055) / 1.055, 2.4)
+                };
+                NormalizedF32::new_clamped(x)
+            }
+        }
+    }
+
+    pub(crate) fn expand_color(self, mut color: Color) -> Color {
+        color.r = self.expand_channel(color.r);
+        color.g = self.expand_channel(color.g);
+        color.b = self.expand_channel(color.b);
+        color
+    }
+
+    #[allow(unused)]
+    pub(crate) fn compress_channel(self, x: NormalizedF32) -> NormalizedF32 {
+        match self {
+            ColorSpace::Linear => x,
+            ColorSpace::Gamma2 => NormalizedF32::new_clamped(x.get().sqrt()),
+            ColorSpace::SimpleSRGB => NormalizedF32::new_clamped(approx_powf(x.get(), 0.45454545)),
+            ColorSpace::FullSRGBGamma => {
+                let x = x.get();
+                let x = if x <= 0.0031308 {
+                    x * 12.92
+                } else {
+                    approx_powf(x, 0.416666666) * 1.055 - 0.055
+                };
+                NormalizedF32::new_clamped(x)
+            }
+        }
+    }
+
     pub(crate) fn expand_stage(self) -> Option<pipeline::Stage> {
         match self {
             ColorSpace::Linear => None,
