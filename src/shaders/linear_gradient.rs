@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 
 use tiny_skia_path::Scalar;
 
-use crate::{Color, GradientStop, Point, Shader, SpreadMode, Transform};
+use crate::{Color, ColorSpace, GradientStop, Point, Shader, SpreadMode, Transform};
 
 use super::gradient::{Gradient, DEGENERATE_THRESHOLD};
 use crate::pipeline::RasterPipelineBuilder;
@@ -91,8 +91,8 @@ impl LinearGradient {
         self.base.colors_are_opaque
     }
 
-    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> bool {
-        self.base.push_stages(p, &|_| {}, &|_| {})
+    pub(crate) fn push_stages(&self, cs: ColorSpace, p: &mut RasterPipelineBuilder) -> bool {
+        self.base.push_stages(p, cs, &|_| {}, &|_| {})
     }
 }
 

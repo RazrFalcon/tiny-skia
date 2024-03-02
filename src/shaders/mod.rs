@@ -16,7 +16,7 @@ pub use linear_gradient::LinearGradient;
 pub use pattern::{FilterQuality, Pattern, PixmapPaint};
 pub use radial_gradient::RadialGradient;
 
-use crate::{Color, Transform};
+use crate::{Color, ColorSpace, Transform};
 
 use crate::pipeline::RasterPipelineBuilder;
 
@@ -76,15 +76,16 @@ impl<'a> Shader<'a> {
 
     /// If this returns false, then we draw nothing (do not fall back to shader context)
     #[must_use]
-    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> bool {
+    pub(crate) fn push_stages(&self, cs: ColorSpace, p: &mut RasterPipelineBuilder) -> bool {
         match self {
             Shader::SolidColor(color) => {
-                p.push_uniform_color(color.premultiply());
+                let color = cs.expand_color(*color).premultiply();
+                p.push_uniform_color(color);
                 true
             }
-            Shader::LinearGradient(ref g) => g.push_stages(p),
-            Shader::RadialGradient(ref g) => g.push_stages(p),
-            Shader::Pattern(ref patt) => patt.push_stages(p),
+            Shader::LinearGradient(ref g) => g.push_stages(cs, p),
+            Shader::RadialGradient(ref g) => g.push_stages(cs, p),
+            Shader::Pattern(ref patt) => patt.push_stages(cs, p),
         }
     }
 

@@ -125,3 +125,17 @@ impl core::ops::BitAnd for u32x8 {
         }
     }
 }
+
+impl core::ops::BitOr for u32x8 {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        cfg_if::cfg_if! {
+            if #[cfg(all(feature = "simd", target_feature = "avx2"))] {
+                Self(unsafe { _mm256_or_si256(self.0, rhs.0) })
+            } else {
+                Self(self.0 | rhs.0, self.1 | rhs.1)
+            }
+        }
+    }
+}

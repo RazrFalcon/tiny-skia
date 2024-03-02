@@ -6,7 +6,7 @@
 
 use tiny_skia_path::NormalizedF32;
 
-use crate::{BlendMode, PixmapRef, Shader, SpreadMode, Transform};
+use crate::{BlendMode, ColorSpace, PixmapRef, Shader, SpreadMode, Transform};
 
 use crate::pipeline;
 use crate::pipeline::RasterPipelineBuilder;
@@ -94,7 +94,7 @@ impl<'a> Pattern<'a> {
         })
     }
 
-    pub(crate) fn push_stages(&self, p: &mut RasterPipelineBuilder) -> bool {
+    pub(crate) fn push_stages(&self, cs: ColorSpace, p: &mut RasterPipelineBuilder) -> bool {
         let ts = match self.transform.invert() {
             Some(v) => v,
             None => {
@@ -175,6 +175,12 @@ impl<'a> Pattern<'a> {
             );
             p.ctx.current_coverage = self.opacity.get();
             p.push(pipeline::Stage::Scale1Float);
+        }
+
+        if let Some(stage) = cs.expand_stage() {
+            // TODO: it would be better to gamma-expand prior to sampling, but
+            // there isn't currently an intermediate pipeline stage for that.
+            p.push(stage);
         }
 
         true

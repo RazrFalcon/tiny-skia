@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 
 use tiny_skia_path::{NormalizedF32, Scalar};
 
-use crate::{Color, SpreadMode, Transform};
+use crate::{Color, ColorSpace, SpreadMode, Transform};
 
 use crate::pipeline::RasterPipelineBuilder;
 use crate::pipeline::{self, EvenlySpaced2StopGradientCtx, GradientColor, GradientCtx};
@@ -106,6 +106,7 @@ impl Gradient {
     pub fn push_stages(
         &self,
         p: &mut RasterPipelineBuilder,
+        cs: ColorSpace,
         push_stages_pre: &dyn Fn(&mut RasterPipelineBuilder),
         push_stages_post: &dyn Fn(&mut RasterPipelineBuilder),
     ) -> bool {
@@ -145,8 +146,8 @@ impl Gradient {
         if self.stops.len() == 2 {
             debug_assert!(self.has_uniform_stops);
 
-            let c0 = self.stops[0].color;
-            let c1 = self.stops[1].color;
+            let c0 = cs.expand_color(self.stops[0].color);
+            let c1 = cs.expand_color(self.stops[1].color);
 
             p.ctx.evenly_spaced_2_stop_gradient = EvenlySpaced2StopGradientCtx {
                 factor: GradientColor::new(
@@ -196,13 +197,13 @@ impl Gradient {
             };
 
             let mut t_l = self.stops[first_stop].position.get();
-            let mut c_l = GradientColor::from(self.stops[first_stop].color);
+            let mut c_l = GradientColor::from(cs.expand_color(self.stops[first_stop].color));
             ctx.push_const_color(c_l);
             ctx.t_values.push(NormalizedF32::ZERO);
             // N.B. lastStop is the index of the last stop, not one after.
             for i in first_stop..last_stop {
                 let t_r = self.stops[i + 1].position.get();
-                let c_r = GradientColor::from(self.stops[i + 1].color);
+                let c_r = GradientColor::from(cs.expand_color(self.stops[i + 1].color));
                 debug_assert!(t_l <= t_r);
                 if t_l < t_r {
                     // For each stop we calculate a bias B and a scale factor F, such that

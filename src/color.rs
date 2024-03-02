@@ -4,7 +4,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+use crate::{math::approx_powf, pipeline};
 use tiny_skia_path::{NormalizedF32, Scalar};
+
+#[cfg(all(not(feature = "std"), feature = "no-std-float"))]
+use tiny_skia_path::NoStdFloat;
 
 /// 8-bit type for an alpha value. 255 is 100% opaque, zero is 100% transparent.
 pub type AlphaU8 = u8;
@@ -428,6 +432,108 @@ fn color_f32_to_u8(
         (b.get() * 255.0 + 0.5) as u8,
         (a.get() * 255.0 + 0.5) as u8,
     ]
+}
+
+/// The colorspace used to interpret pixel values.
+///
+/// This is a very limited subset of SkColorSpace.
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+pub enum ColorSpace {
+    /// Linear RGB, the default.  Assumes #7f7f7f is half as bright as #ffffff.
+    Linear,
+
+    /// Apply a gamma factor of 2.
+    ///
+    /// This is the fastest gamma correction to apply, and produces reasonable
+    /// quality blending.
+    Gamma2,
+
+    /// Apply a gamma factor of 2.2.
+    ///
+    /// This is also known as "simple sRGB"; it's very close to the actual gamma
+    /// function specified by the sRGB color space, but much faster to compute.
+    SimpleSRGB,
+
+    /// Apply the full sRGB gamma function.
+    ///
+    /// This does not convert the RGB colors to CIE XYZ for blending; it only
+    /// applies the (full) gamma function.
+    FullSRGBGamma,
+}
+
+impl Default for ColorSpace {
+    fn default() -> Self {
+        ColorSpace::Linear
+    }
+}
+
+impl ColorSpace {
+    pub(crate) fn expand_channel(self, x: NormalizedF32) -> NormalizedF32 {
+        match self {
+            ColorSpace::Linear => x,
+            ColorSpace::Gamma2 => x * x,
+            ColorSpace::SimpleSRGB => NormalizedF32::new_clamped(approx_powf(x.get(), 2.2)),
+            ColorSpace::FullSRGBGamma => {
+                let x = x.get();
+                let x = if x <= 0.04045 {
+                    x / 12.92
+                } else {
+                    approx_powf((x + 0.055) / 1.055, 2.4)
+                };
+                NormalizedF32::new_clamped(x)
+            }
+        }
+    }
+
+    pub(crate) fn expand_color(self, mut color: Color) -> Color {
+        color.r = self.expand_channel(color.r);
+        color.g = self.expand_channel(color.g);
+        color.b = self.expand_channel(color.b);
+        color
+    }
+
+    #[allow(unused)]
+    pub(crate) fn compress_channel(self, x: NormalizedF32) -> NormalizedF32 {
+        match self {
+            ColorSpace::Linear => x,
+            ColorSpace::Gamma2 => NormalizedF32::new_clamped(x.get().sqrt()),
+            ColorSpace::SimpleSRGB => NormalizedF32::new_clamped(approx_powf(x.get(), 0.45454545)),
+            ColorSpace::FullSRGBGamma => {
+                let x = x.get();
+                let x = if x <= 0.0031308 {
+                    x * 12.92
+                } else {
+                    approx_powf(x, 0.416666666) * 1.055 - 0.055
+                };
+                NormalizedF32::new_clamped(x)
+            }
+        }
+    }
+
+    pub(crate) fn expand_stage(self) -> Option<pipeline::Stage> {
+        match self {
+            ColorSpace::Linear => None,
+            ColorSpace::Gamma2 => Some(pipeline::Stage::GammaExpand2),
+            ColorSpace::SimpleSRGB => Some(pipeline::Stage::GammaExpand22),
+            ColorSpace::FullSRGBGamma => Some(pipeline::Stage::GammaExpandSrgb),
+        }
+    }
+    pub(crate) fn expand_dest_stage(self) -> Option<pipeline::Stage> {
+        match self {
+            ColorSpace::Linear => None,
+            ColorSpace::Gamma2 => Some(pipeline::Stage::GammaExpandDestination2),
+            ColorSpace::SimpleSRGB => Some(pipeline::Stage::GammaExpandDestination22),
+            ColorSpace::FullSRGBGamma => Some(pipeline::Stage::GammaExpandDestinationSrgb),
+        }
+    }
+    pub(crate) fn compress_stage(self) -> Option<pipeline::Stage> {
+        match self {
+            ColorSpace::Linear => None,
+            ColorSpace::Gamma2 => Some(pipeline::Stage::GammaCompress2),
+            ColorSpace::SimpleSRGB => Some(pipeline::Stage::GammaCompress22),
+            ColorSpace::FullSRGBGamma => Some(pipeline::Stage::GammaCompressSrgb),
+        }
+    }
 }
 
 #[cfg(test)]
