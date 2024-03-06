@@ -512,7 +512,7 @@ fn diff_to_shift(dx: FDot6, dy: FDot6, shift_aa: i32) -> i32 {
     // ... but small enough so that our curves still look smooth
     // When shift > 0, we're using AA and everything is scaled up so we can
     // lower the accuracy.
-    dist = (dist + (1 << 4)) >> (3 + shift_aa);
+    dist = (dist + (1 << (2 + shift_aa))) >> (3 + shift_aa);
 
     // each subdivision (shift value) cuts this dist (error) by 1/4
     (32 - dist.leading_zeros() as i32) >> 1
