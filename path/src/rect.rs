@@ -5,7 +5,7 @@
 
 use core::convert::TryFrom;
 
-use crate::{FiniteF32, IntSize, LengthU32, PathBuilder, Point, SaturateRound, Size, Transform};
+use crate::{FiniteF32, IntSize, LengthU32, Point, SaturateRound, Size, Transform};
 
 #[cfg(all(not(feature = "std"), feature = "no-std-float"))]
 use crate::NoStdFloat;
@@ -301,6 +301,12 @@ impl Rect {
         self.bottom.get() - self.top.get()
     }
 
+    /// Returns true if the rect is empty.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.left == self.right || self.top == self.bottom
+    }
+
     /// Converts into an `IntRect` by adding 0.5 and discarding the fractional portion.
     ///
     /// Width and height are guarantee to be >= 1.
@@ -338,30 +344,65 @@ impl Rect {
         Rect::from_ltrb(left, top, right, bottom)
     }
 
+    /// Returns the union of two rectangles.
+    ///
+    /// Returns `None` if the width or height would overflow.
+    pub fn join(&self, other: &Self) -> Option<Self> {
+        if other.is_empty() {
+            return Some(*self);
+        }
+        if self.is_empty() {
+            return Some(*other);
+        }
+
+        let left = self.x().min(other.x());
+        let top = self.y().min(other.y());
+
+        let right = self.right().max(other.right());
+        let bottom = self.bottom().max(other.bottom());
+
+        Rect::from_ltrb(left, top, right, bottom)
+    }
+
     /// Creates a Rect from Point array.
     ///
     /// Returns None if count is zero or if Point array contains an infinity or NaN.
     pub fn from_points(points: &[Point]) -> Option<Self> {
         use crate::f32x4_t::f32x4;
 
-        if points.is_empty() {
-            return None;
-        }
-
-        let mut offset = 0;
+        let mut offset;
         let mut min;
         let mut max;
-        if points.len() & 1 != 0 {
-            let pt = points[0];
-            min = f32x4([pt.x, pt.y, pt.x, pt.y]);
-            max = min;
-            offset += 1;
-        } else {
-            let pt0 = points[0];
-            let pt1 = points[1];
-            min = f32x4([pt0.x, pt0.y, pt1.x, pt1.y]);
-            max = min;
-            offset += 2;
+
+        // Handle trivial-size lists without creating vectors, since they won't
+        // actually use the vector min/max code
+        match points.len() {
+            0 => return None,
+            1 => {
+                let Point { x, y } = points[0];
+                return Rect::from_xywh(x, y, 0.0, 0.0);
+            }
+            2 => {
+                let Point { x: x0, y: y0 } = points[0];
+                let Point { x: x1, y: y1 } = points[1];
+                // Avoid min/max to preserve a NaN for rejection by from_ltrb
+                let (l, r) = if x0 < x1 { (x0, x1) } else { (x1, x0) };
+                let (t, b) = if y0 < y1 { (y0, y1) } else { (y1, y0) };
+                return Rect::from_ltrb(l, t, r, b);
+            }
+            i if i & 1 != 0 => {
+                let pt = points[0];
+                min = f32x4([pt.x, pt.y, pt.x, pt.y]);
+                max = min;
+                offset = 1;
+            }
+            _ => {
+                let pt0 = points[0];
+                let pt1 = points[1];
+                min = f32x4([pt0.x, pt0.y, pt1.x, pt1.y]);
+                max = min;
+                offset = 2;
+            }
         }
 
         let mut accum = f32x4::default();
@@ -408,15 +449,26 @@ impl Rect {
 
     /// Transforms the rect using the provided `Transform`.
     ///
-    /// This method is expensive.
+    /// If the transform is a skew, the result will be a bounding box around the skewed rectangle.
     pub fn transform(&self, ts: Transform) -> Option<Self> {
-        if !ts.is_identity() {
-            // TODO: remove allocation
-            let mut path = PathBuilder::from_rect(*self);
-            path = path.transform(ts)?;
-            Some(path.bounds())
-        } else {
+        if ts.is_identity() {
             Some(*self)
+        } else if ts.has_skew() {
+            // we need to transform all 4 corners
+            let tl = Point::from_xy(self.top(), self.left());
+            let tr = Point::from_xy(self.top(), self.right());
+            let bl = Point::from_xy(self.bottom(), self.left());
+            let br = Point::from_xy(self.bottom(), self.right());
+            let mut pts = [tl, tr, bl, br];
+            ts.map_points(&mut pts);
+            Self::from_points(&pts)
+        } else {
+            // Faster (more common) case
+            let tl = Point::from_xy(self.top(), self.left());
+            let br = Point::from_xy(self.bottom(), self.right());
+            let mut pts = [tl, br];
+            ts.map_points(&mut pts);
+            Self::from_points(&pts)
         }
     }
 
@@ -601,15 +653,12 @@ impl NonZeroRect {
 
     /// Transforms the rect using the provided `Transform`.
     ///
-    /// This method is expensive.
+    /// If the transform is a skew, the result will be a bounding box around the skewed rectangle.
     pub fn transform(&self, ts: Transform) -> Option<Self> {
-        if !ts.is_identity() {
-            // TODO: remove allocation
-            let mut path = PathBuilder::from_rect(self.to_rect());
-            path = path.transform(ts)?;
-            path.bounds().to_non_zero_rect()
-        } else {
+        if ts.is_identity() {
             Some(*self)
+        } else {
+            self.to_rect().transform(ts)?.to_non_zero_rect()
         }
     }
 
