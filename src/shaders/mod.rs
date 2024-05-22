@@ -21,10 +21,11 @@ use crate::{Color, ColorSpace, Transform};
 use crate::pipeline::RasterPipelineBuilder;
 
 /// A shader spreading mode.
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub enum SpreadMode {
     /// Replicate the edge color if the shader draws outside of its
     /// original bounds.
+    #[default]
     Pad,
 
     /// Repeat the shader's image horizontally and vertically, alternating
@@ -33,12 +34,6 @@ pub enum SpreadMode {
 
     /// Repeat the shader's image horizontally and vertically.
     Repeat,
-}
-
-impl Default for SpreadMode {
-    fn default() -> Self {
-        SpreadMode::Pad
-    }
 }
 
 /// A shader specifies the source color(s) for what is being drawn.

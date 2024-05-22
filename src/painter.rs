@@ -19,18 +19,13 @@ use crate::geom::IntSizeExt;
 use tiny_skia_path::NoStdFloat;
 
 /// A path filling rule.
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub enum FillRule {
     /// Specifies that "inside" is computed by a non-zero sum of signed edge crossings.
+    #[default]
     Winding,
     /// Specifies that "inside" is computed by an odd number of edge crossings.
     EvenOdd,
-}
-
-impl Default for FillRule {
-    fn default() -> Self {
-        FillRule::Winding
-    }
 }
 
 /// Controls how a shape should be painted.
