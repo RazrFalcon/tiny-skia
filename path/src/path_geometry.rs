@@ -316,7 +316,7 @@ fn formulate_f1_dot_f2(src: &[f32; 4]) -> [f32; 4] {
     [c * c, 3.0 * b * c, 2.0 * b * b + c * a, a * b]
 }
 
-/// Solve coeff(t) == 0, returning the number of roots that lie withing 0 < t < 1.
+/// Solve coeff(t) == 0, returning the number of roots that lie within 0 < t < 1.
 /// coeff[0]t^3 + coeff[1]t^2 + coeff[2]t + coeff[3]
 ///
 /// Eliminates repeated roots (so that all t_values are distinct, and are always
@@ -762,7 +762,7 @@ impl Conic {
             dst[i] = Conic::from_points(&quadrant_points[i * 2..], QUADRANT_WEIGHT);
         }
 
-        // Now compute any remaing (sub-90-degree) arc for the last conic
+        // Now compute any remaining (sub-90-degree) arc for the last conic
         let final_pt = Point::from_xy(x, y);
         let last_q = quadrant_points[quadrant * 2]; // will already be a unit-vector
         let dot = last_q.dot(final_pt);
