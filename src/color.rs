@@ -437,9 +437,10 @@ fn color_f32_to_u8(
 /// The colorspace used to interpret pixel values.
 ///
 /// This is a very limited subset of SkColorSpace.
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum ColorSpace {
     /// Linear RGB, the default.  Assumes #7f7f7f is half as bright as #ffffff.
+    #[default]
     Linear,
 
     /// Apply a gamma factor of 2.
@@ -459,12 +460,6 @@ pub enum ColorSpace {
     /// This does not convert the RGB colors to CIE XYZ for blending; it only
     /// applies the (full) gamma function.
     FullSRGBGamma,
-}
-
-impl Default for ColorSpace {
-    fn default() -> Self {
-        ColorSpace::Linear
-    }
 }
 
 impl ColorSpace {

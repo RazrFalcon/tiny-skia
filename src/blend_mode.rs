@@ -1,7 +1,7 @@
 use crate::pipeline;
 
 /// A blending mode.
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Default, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum BlendMode {
     /// Replaces destination with zero: fully transparent.
     Clear,
@@ -10,6 +10,7 @@ pub enum BlendMode {
     /// Preserves destination.
     Destination,
     /// Source over destination.
+    #[default]
     SourceOver,
     /// Destination over source.
     DestinationOver,
@@ -61,12 +62,6 @@ pub enum BlendMode {
     Color,
     /// Luminosity of source with hue and saturation of destination.
     Luminosity,
-}
-
-impl Default for BlendMode {
-    fn default() -> Self {
-        BlendMode::SourceOver
-    }
 }
 
 impl BlendMode {
