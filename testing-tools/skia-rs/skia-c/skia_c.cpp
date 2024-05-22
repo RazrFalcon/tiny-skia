@@ -43,7 +43,7 @@ static skiac_transform conv_to_transform(const SkMatrix &matrix)
 
 static SkSurface* skiac_surface_create(int width, int height, SkAlphaType alphaType)
 {
-    // Init() is indempotent, so can be called more than once with no adverse effect.
+    // Init() is idempotent, so can be called more than once with no adverse effect.
     SkGraphics::Init();
 
     auto info = SkImageInfo::Make(width, height, kRGBA_8888_SkColorType, alphaType);

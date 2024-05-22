@@ -177,7 +177,7 @@ pub fn stroke_path_impl(
 
         if !clip.to_int_rect().contains(&ibounds) {
             // We now cache two scalar rects, to use for culling per-segment (e.g. cubic).
-            // Since we're hairlining, the "bounds" of the control points isn't necessairly the
+            // Since we're hairlining, the "bounds" of the control points isn't necessarily the
             // limit of where a segment can draw (it might draw up to 1 pixel beyond in aa-hairs).
             //
             // Compute the pt-bounds per segment is easy, so we do that, and then inversely adjust
