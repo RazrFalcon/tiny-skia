@@ -187,8 +187,6 @@ impl PixmapMut<'_> {
     /// clipping of horizontal/vertical edges.
     ///
     /// Used mainly to render a pixmap onto a pixmap.
-    ///
-    /// Returns `None` when there is nothing to fill or in case of a numeric overflow.
     pub fn fill_rect(
         &mut self,
         rect: Rect,
