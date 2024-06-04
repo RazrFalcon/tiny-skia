@@ -44,9 +44,7 @@ pub struct Mask {
 }
 
 impl Mask {
-    /// Creates a new mask by taking ownership over a mask buffer.
-    ///
-    /// The size needs to match the data provided.
+    /// Creates a new mask, allocating a buffer of the given size.
     pub fn new(width: u32, height: u32) -> Option<Self> {
         let size = IntSize::from_wh(width, height)?;
         Some(Mask {
