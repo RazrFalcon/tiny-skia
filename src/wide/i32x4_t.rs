@@ -56,6 +56,8 @@ impl i32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse4.1"))] {
                 Self(unsafe { _mm_blendv_epi8(f.0, t.0, self.0) })
+            } else if #[cfg(all(feature = "simd", target_feature = "relaxed-simd"))] {
+                Self(i32x4_relaxed_laneselect(t.0, f.0, self.0))
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_bitselect(t.0, f.0, self.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {

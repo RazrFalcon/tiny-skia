@@ -31,8 +31,8 @@ default = ["std", "simd", "png-format"]
 std = ["tiny-skia-path/std"]
 no-std-float = ["tiny-skia-path/no-std-float"]
 
-# Enables SIMD instructions on x86 (from SSE up to AVX2), WebAssembly (SIMD128)
-# and AArch64 (Neon).
+# Enables SIMD instructions on x86 (from SSE up to AVX2), WebAssembly (SIMD128,
+# Relaxed SIMD) and AArch64 (Neon).
 # Has no effect on other targets. Present mainly for testing.
 simd = []
 
