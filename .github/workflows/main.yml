@@ -84,6 +84,11 @@ jobs:
         RUSTFLAGS: -Ctarget-feature=+simd128,+bulk-memory,+nontrapping-fptoint,+sign-ext
       run: cargo test --target wasm32-wasi
 
+    - name: Run tests with Relaxed SIMD
+      env:
+        RUSTFLAGS: -Ctarget-feature=+simd128,+relaxed-simd,+bulk-memory,+nontrapping-fptoint,+sign-ext
+      run: cargo test --target wasm32-wasi
+
   aarch64:
     runs-on: ubuntu-20.04
     steps:
