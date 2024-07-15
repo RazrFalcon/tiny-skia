@@ -211,7 +211,7 @@ mod int_rect_tests {
 /// - Top edge is <= bottom.
 /// - Width and height are <= f32::MAX.
 #[allow(missing_docs)]
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Hash, Eq)]
 pub struct Rect {
     left: FiniteF32,
     top: FiniteF32,

@@ -15,7 +15,7 @@ use crate::NoStdFloat;
 
 /// A path verb.
 #[allow(missing_docs)]
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Hash)]
 pub enum PathVerb {
     Move,
     Line,
