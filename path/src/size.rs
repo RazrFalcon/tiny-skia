@@ -128,7 +128,7 @@ mod tests {
 /// # Guarantees
 ///
 /// - Width and height are positive, non-zero and finite.
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Hash, Eq)]
 pub struct Size {
     width: NonZeroPositiveF32,
     height: NonZeroPositiveF32,
