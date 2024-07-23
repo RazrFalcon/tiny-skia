@@ -455,17 +455,17 @@ impl Rect {
             Some(*self)
         } else if ts.has_skew() {
             // we need to transform all 4 corners
-            let tl = Point::from_xy(self.top(), self.left());
-            let tr = Point::from_xy(self.top(), self.right());
-            let bl = Point::from_xy(self.bottom(), self.left());
-            let br = Point::from_xy(self.bottom(), self.right());
+            let tl = Point::from_xy(self.left(), self.top());
+            let tr = Point::from_xy(self.right(), self.top());
+            let bl = Point::from_xy(self.left(), self.bottom());
+            let br = Point::from_xy(self.right(), self.bottom());
             let mut pts = [tl, tr, bl, br];
             ts.map_points(&mut pts);
             Self::from_points(&pts)
         } else {
             // Faster (more common) case
-            let tl = Point::from_xy(self.top(), self.left());
-            let br = Point::from_xy(self.bottom(), self.right());
+            let tl = Point::from_xy(self.left(), self.top());
+            let br = Point::from_xy(self.right(), self.bottom());
             let mut pts = [tl, br];
             ts.map_points(&mut pts);
             Self::from_points(&pts)
