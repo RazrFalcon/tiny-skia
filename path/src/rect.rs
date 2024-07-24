@@ -455,18 +455,18 @@ impl Rect {
             Some(*self)
         } else if ts.has_skew() {
             // we need to transform all 4 corners
-            let tl = Point::from_xy(self.top(), self.left());
-            let tr = Point::from_xy(self.top(), self.right());
-            let bl = Point::from_xy(self.bottom(), self.left());
-            let br = Point::from_xy(self.bottom(), self.right());
-            let mut pts = [tl, tr, bl, br];
+            let lt = Point::from_xy(self.left(), self.top());
+            let rt = Point::from_xy(self.right(), self.top());
+            let lb = Point::from_xy(self.left(), self.bottom());
+            let rb = Point::from_xy(self.right(), self.bottom());
+            let mut pts = [lt, rt, lb, rb];
             ts.map_points(&mut pts);
             Self::from_points(&pts)
         } else {
             // Faster (more common) case
-            let tl = Point::from_xy(self.top(), self.left());
-            let br = Point::from_xy(self.bottom(), self.right());
-            let mut pts = [tl, br];
+            let lt = Point::from_xy(self.left(), self.top());
+            let rb = Point::from_xy(self.right(), self.bottom());
+            let mut pts = [lt, rb];
             ts.map_points(&mut pts);
             Self::from_points(&pts)
         }
@@ -538,6 +538,31 @@ mod rect_tests {
         let rect = Rect::from_xywh(x, 0.0, width, 1.0).unwrap();
         assert_eq!(rect.round(), None);
         assert_eq!(rect.round_out(), None);
+    }
+
+    #[test]
+    fn transform() {
+        // Tests based on 2x2 rectangle
+        let rect = Rect::from_ltrb(1.0, 2.0, 3.0, 4.0).unwrap();
+
+        let ts = Transform::identity();
+        assert_eq!(rect.transform(ts).unwrap(), rect);
+
+        // Scale x by 1x, y by 2x
+        let ts = Transform::from_scale(1.0, 2.0);
+        let rect_ts: Rect = Rect::from_ltrb(1.0, 4.0, 3.0, 8.0).unwrap();
+        assert_eq!(rect.transform(ts).unwrap(), rect_ts);
+
+        // Skew box along x-axis - vertical lines at y=c go to y=c+x and
+        // horizonal lines stay put. Result is bounding box
+        let ts = Transform::from_skew(1.0, 0.0);
+        let bounding_rect: Rect = Rect::from_ltrb(3.0, 2.0, 7.0, 4.0).unwrap();
+        assert_eq!(rect.transform(ts).unwrap(), bounding_rect);
+
+        // Skew box along y-axis - horizonal lines at x=c go to x=c+2y
+        let ts = Transform::from_skew(0.0, 2.0);
+        let bounding_rect: Rect = Rect::from_ltrb(1.0, 4.0, 3.0, 10.0).unwrap();
+        assert_eq!(rect.transform(ts).unwrap(), bounding_rect);
     }
 }
 
