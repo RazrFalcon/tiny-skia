@@ -43,11 +43,17 @@ impl f32x8 {
     }
 
     pub fn floor(self) -> Self {
-        let roundtrip: f32x8 = cast(self.trunc_int().to_f32x8());
-        roundtrip
-            - roundtrip
-                .cmp_gt(self)
-                .blend(f32x8::splat(1.0), f32x8::default())
+        cfg_if::cfg_if! {
+            if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
+                Self(self.0.floor(), self.1.floor())
+            } else {
+                let roundtrip: f32x8 = cast(self.trunc_int().to_f32x8());
+                roundtrip
+                    - roundtrip
+                        .cmp_gt(self)
+                        .blend(f32x8::splat(1.0), f32x8::default())
+            }
+        }
     }
 
     pub fn fract(self) -> Self {
