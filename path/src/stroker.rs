@@ -80,20 +80,15 @@ impl Default for Stroke {
 }
 
 /// Draws at the beginning and end of an open path contour.
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub enum LineCap {
     /// No stroke extension.
+    #[default]
     Butt,
     /// Adds circle.
     Round,
     /// Adds square.
     Square,
-}
-
-impl Default for LineCap {
-    fn default() -> Self {
-        LineCap::Butt
-    }
 }
 
 /// Specifies how corners are drawn when a shape is stroked.
@@ -108,9 +103,10 @@ impl Default for LineCap {
 /// The fill path constructed to describe the stroked path respects the join setting but may
 /// not contain the actual join. For instance, a fill path constructed with round joins does
 /// not necessarily include circles at each connected segment.
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, Default, PartialEq, Debug)]
 pub enum LineJoin {
     /// Extends to miter limit, then switches to bevel.
+    #[default]
     Miter,
     /// Extends to miter limit, then clips the corner.
     MiterClip,
@@ -118,12 +114,6 @@ pub enum LineJoin {
     Round,
     /// Connects outside edges.
     Bevel,
-}
-
-impl Default for LineJoin {
-    fn default() -> Self {
-        LineJoin::Miter
-    }
 }
 
 const QUAD_RECURSIVE_LIMIT: usize = 3;
