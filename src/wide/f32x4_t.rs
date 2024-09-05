@@ -90,6 +90,8 @@ impl f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(unsafe { _mm_max_ps(self.0, rhs.0) })
+            } else if #[cfg(all(feature = "simd", target_feature = "relaxed-simd"))] {
+                Self(f32x4_relaxed_max(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_pmax(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
@@ -111,6 +113,8 @@ impl f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 Self(unsafe { _mm_min_ps(self.0, rhs.0) })
+            }  else if #[cfg(all(feature = "simd", target_feature = "relaxed-simd"))] {
+                Self(f32x4_relaxed_min(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(f32x4_pmin(self.0, rhs.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
@@ -245,6 +249,8 @@ impl f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse4.1"))] {
                 Self(unsafe { _mm_blendv_ps(f.0, t.0, self.0) })
+            } else if #[cfg(all(feature = "simd", target_feature = "relaxed-simd"))] {
+                Self(i32x4_relaxed_laneselect(t.0, f.0, self.0))
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 Self(v128_bitselect(t.0, f.0, self.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
@@ -302,6 +308,8 @@ impl f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 i32x4(unsafe { _mm_cvtps_epi32(self.0) })
+            } else if #[cfg(all(feature = "simd", target_feature = "relaxed-simd"))] {
+                i32x4(i32x4_relaxed_trunc_f32x4(self.round().0))
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 i32x4(i32x4_trunc_sat_f32x4(self.round().0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {
@@ -325,6 +333,8 @@ impl f32x4 {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "simd", target_feature = "sse2"))] {
                 i32x4(unsafe { _mm_cvttps_epi32(self.0) })
+            } else if #[cfg(all(feature = "simd", target_feature = "relaxed-simd"))] {
+                i32x4(i32x4_relaxed_trunc_f32x4(self.0))
             } else if #[cfg(all(feature = "simd", target_feature = "simd128"))] {
                 i32x4(i32x4_trunc_sat_f32x4(self.0))
             } else if #[cfg(all(feature = "simd", target_arch = "aarch64", target_feature = "neon"))] {

@@ -66,7 +66,7 @@ jobs:
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: stable
-        target: wasm32-wasi
+        target: wasm32-wasip1
 
     - name: Install wasmtime
       run: |
@@ -74,15 +74,20 @@ jobs:
         echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
 
     - name: Build with minimal features (no_std)
-      run: cargo build --target wasm32-wasi --verbose --no-default-features --features no-std-float
+      run: cargo build --target wasm32-wasip1 --verbose --no-default-features --features no-std-float
 
     - name: Run tests without SIMD
-      run: cargo test --target wasm32-wasi --verbose --no-default-features --features png-format
+      run: cargo test --target wasm32-wasip1 --verbose --no-default-features --features png-format
 
     - name: Run tests with SIMD128
       env:
         RUSTFLAGS: -Ctarget-feature=+simd128,+bulk-memory,+nontrapping-fptoint,+sign-ext
-      run: cargo test --target wasm32-wasi
+      run: cargo test --target wasm32-wasip1
+
+    - name: Run tests with Relaxed SIMD
+      env:
+        RUSTFLAGS: -Ctarget-feature=+simd128,+relaxed-simd,+bulk-memory,+nontrapping-fptoint,+sign-ext
+      run: cargo test --target wasm32-wasip1
 
   aarch64:
     runs-on: ubuntu-20.04
