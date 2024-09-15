@@ -84,7 +84,7 @@ impl<'a> Pattern<'a> {
         quality: FilterQuality,
         opacity: f32,
         transform: Transform,
-    ) -> Shader {
+    ) -> Shader<'a> {
         Shader::Pattern(Pattern {
             pixmap,
             spread_mode,
