@@ -554,12 +554,12 @@ mod rect_tests {
         assert_eq!(rect.transform(ts).unwrap(), rect_ts);
 
         // Skew box along x-axis - vertical lines at y=c go to y=c+x and
-        // horizonal lines stay put. Result is bounding box
+        // horizontal lines stay put. Result is bounding box
         let ts = Transform::from_skew(1.0, 0.0);
         let bounding_rect: Rect = Rect::from_ltrb(3.0, 2.0, 7.0, 4.0).unwrap();
         assert_eq!(rect.transform(ts).unwrap(), bounding_rect);
 
-        // Skew box along y-axis - horizonal lines at x=c go to x=c+2y
+        // Skew box along y-axis - horizontal lines at x=c go to x=c+2y
         let ts = Transform::from_skew(0.0, 2.0);
         let bounding_rect: Rect = Rect::from_ltrb(1.0, 4.0, 3.0, 10.0).unwrap();
         assert_eq!(rect.transform(ts).unwrap(), bounding_rect);
